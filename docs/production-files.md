@@ -4,6 +4,8 @@ Il JSON è il progetto sorgente riapribile nel laboratorio, con UUID, versione s
 
 Fixture: `fixtures/illustrator/stamp.TEST.json` e `stamp.TEST.svg`. Profilo isolato, non collegato a un ID Shopify: area 58×22 mm, Arial 9 pt nel campione, minimo TEST 7 pt, nero/bianco, margine TEST 1 mm. Il canvas visualizza 8 px/mm, mentre l'export imposta misure fisiche e viewBox 464×176. Lo zoom non cambia le dimensioni fisiche del file.
 
+Il canvas interattivo ora si apre da un prodotto reale, a differenza della fixture di riferimento: JSON include Product/Variant ID e versioni catalogo/profilo commerciale. SVG usa le dimensioni nominali del modello corrente (47×18, 58×22 o 70×25 nel campione). I vincoli di impaginazione rimangono TEST, con `validatedForProduction: false`; l'area nominale non è ancora area utile certificata. Aggiunto testo multilinea fino a 8 righe: richiede un nuovo collaudo umano Illustrator, non deducibile dal golden SVG monoriga.
+
 `npm run fixtures:editor` rigenera il JSON canonico. Con il server locale acceso, `npm run capture:lab` genera SVG effettivo da Fabric e anteprime locali. Per aggiornare il riferimento SVG, rivedere la diff e annotare il motivo; non trattare una rigenerazione come verifica Illustrator. Il test golden confronta il riferimento con un nuovo export dopo import del JSON.
 
 ## Checklist umana obbligatoria

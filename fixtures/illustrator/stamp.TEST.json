@@ -4,6 +4,8 @@
   "revision": 0,
   "productId": null,
   "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
   "productProfileVersion": "TEST-stamp-v1",
   "fixture": true,
   "validatedForProduction": false,

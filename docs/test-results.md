@@ -1,5 +1,21 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Collegamento selezione/canvas e testo diretto — 5 novembre 2026
+
+Implementato il percorso candidato → `Prova nel canvas`: ID prodotto/variante e versioni nel JSON, dimensioni nominali del modello nel canvas e nello SVG. Il testo ora si modifica dentro il canvas con IText (doppio clic, Invio per nuova riga, Esc per validare), con gli stessi comandi/store del pannello sviluppatore. Rimosso il campo di testo esterno. Il cambio modello conserva oggetti e ID se entrano; altrimenti conserva il documento precedente e sospende editor/export finché si risolve il conflitto. Import di un prodotto/versione/area differente rifiutato. Profilo tecnico sempre TEST, area utile non certificata.
+
+Verifiche effettive:
+
+- `npm test`: **38/38 superati**. Nuovi casi: associazione completa al catalogo, cambio prodotto atomico, conservazione oggetti/revisioni, confine undo e import coerente.
+- `npm run build`: **superato**, TypeScript strict e Vite.
+- `npm run test:e2e`: **9/9 superati**. Richiesta/chiarimenti e test precedenti mantenuti; scrittura diretta su una/due righe, blocco export durante la scrittura, validazione/ripristino per testo fuori area, cambio 4912→4913 senza perdere la composizione e rifiuto 4913→4912 se non entra. SVG del 4912: 47mm×18mm, viewBox 376×144, due righe vettoriali; golden SVG 58×22 invariato.
+- `npm run schemas`, `npm run fixtures:editor`: **superati**; contratti rigenerati e metadati nullable aggiunti alla fixture storica.
+- `npm run capture:lab`: **superato**, screenshot desktop/mobile e SVG Fabric; anteprima editor desktop ispezionata visivamente, senza sovrapposizioni rilevate.
+
+Una prima esecuzione browser ha rilevato un'attesa insufficiente nel test di cambio prodotto: cercava le dimensioni anche nel testo del modello richiesto prima del commit. Corretto il test per attendere area effettiva e revisione, poi ripetuta la suite. Il server/browser richiedono esecuzione fuori sandbox per accesso al loopback; nessuna destinazione esterna visitata dai test.
+
+Limiti invariati: **nessun LLM reale e nessuna sincronizzazione Shopify**. La UI ora lo dichiara esplicitamente. Provider server/quote e catalogo notificato/riconciliato sono il seguito descritto in `iteration-canvas.md`. Nessun nuovo accesso allo store, costo AI, modifica BSS/PitchPrint o deploy. Il multilinea richiede un nuovo collaudo umano Illustrator, non eseguito. Le prove mobile sono Chromium emulato, non tastiere di dispositivi fisici.
+
 ## Correzione del riscontro delle azioni — 5 novembre 2026
 
 Segnalazione riprodotta: `Voglio fare un timbro per le fatture` registrava famiglia `stamp`, senza conferma esplicita; `Non so le misure` registrava `sizeUnknown`, ma prima della scelta montatura non spiegava il motivo dell'assenza di candidati. La richiesta non era ignorata dal motore: il riscontro UI era insufficiente.

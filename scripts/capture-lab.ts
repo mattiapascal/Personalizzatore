@@ -16,7 +16,7 @@ try {
   await page.getByRole('button', { name: 'Conferma ingombro' }).click();
   mkdirSync('.local/previews', { recursive: true });
   await page.screenshot({ path: '.local/previews/selection-desktop.png', fullPage: true });
-  await page.getByRole('button', { name: '02 · Editor Fabric.js' }).click();
+  await page.locator('.product-card').first().getByRole('button', { name: 'Prova nel canvas' }).click();
   await page.getByLabel('Riapri progetto JSON').setInputFiles(resolve('fixtures/illustrator/stamp.TEST.json'));
   await page.getByTestId('revision').filter({ hasText: 'Revisione grafica: 1 ·' }).waitFor();
   const pending = page.waitForEvent('download');

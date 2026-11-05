@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useReducer, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { fixtureCatalog, productPage, snapshot } from './catalog/adapter';
 import { interpret } from './ai/contract';
 import { mockProvider } from './ai/mock-provider';
@@ -21,7 +21,9 @@ export function App() {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<'selection' | 'editor'>('selection');
-  const [editorOpened, setEditorOpened] = useState(false);
+  const [editorProductId, setEditorProductId] = useState<string | null>(session.selectedProductId);
+  const [editorEditing, setEditorEditing] = useState(false);
+  const editorProduct = useMemo(() => editorProductId ? fixtureCatalog.get(editorProductId) : null, [editorProductId]);
   const feedbackRef = useRef<HTMLDivElement>(null);
   const candidatesRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => { try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch { setNotice('Persistenza non disponibile: la sessione resta in memoria.'); } }, [session]);
@@ -41,9 +43,10 @@ export function App() {
     <header><div className="brand">IS<span> / laboratorio digitale</span></div><span className="badge">Solo locale · 0.1</span></header>
     <main>
       <div className="intro"><span className="eyebrow">Incisoria Sacchetti / Prototipo</span><h1>Dal bisogno al<br/><em>prodotto giusto.</em></h1><p>Selezione guidata dei timbri e prova di personalizzazione grafica. Un passo verificabile alla volta.</p></div>
-      <aside className="notice"><strong>Ambiente di prova.</strong> Catalogo TEST da Shopify, catturato il {snapshot.capturedOn}. Assistente simulato, nessun modello AI collegato. BSS e PitchPrint restano il percorso attuale sulla pagina prodotto.</aside>
-      <nav aria-label="Sezioni del laboratorio"><button aria-pressed={tab === 'selection'} onClick={() => setTab('selection')}>01 · Scegli il timbro</button><button aria-pressed={tab === 'editor'} onClick={() => { setEditorOpened(true); setTab('editor'); }}>02 · Editor Fabric.js</button></nav>
-      {editorOpened && <div hidden={tab !== 'editor'}><Suspense fallback={<p role="status">Caricamento laboratorio…</p>}><EditorLab/></Suspense></div>}
+      <aside className="notice"><strong>Ambiente di prova.</strong> Catalogo TEST da Shopify, catturato il {snapshot.capturedOn}; gli aggiornamenti Shopify non vengono ancora importati. Interpretazione dimostrativa a parole chiave, nessun modello AI collegato. BSS e PitchPrint restano il percorso attuale sulla pagina prodotto.</aside>
+      <nav aria-label="Sezioni del laboratorio"><button disabled={editorEditing} aria-pressed={tab === 'selection'} onClick={() => setTab('selection')}>01 · Scegli il timbro</button><button disabled={!editorProduct} aria-pressed={tab === 'editor'} onClick={() => setTab('editor')}>02 · Editor Fabric.js</button></nav>
+      {!editorProduct && <p className="caption">Per aprire il canvas, scegli un modello dai risultati e premi «Prova nel canvas».</p>}
+      {editorProduct && <div hidden={tab !== 'editor'}><Suspense fallback={<p role="status">Caricamento laboratorio…</p>}><EditorLab product={editorProduct} catalogVersion={fixtureCatalog.version} onEditingChange={setEditorEditing} onKeepProduct={setEditorProductId}/></Suspense></div>}
       <div hidden={tab !== 'selection'}><div className="selection-grid">
         <section className="panel" aria-labelledby="assistant-title">
           <span className="eyebrow">01 / Assistente di selezione</span><h2 id="assistant-title">Di cosa hai bisogno?</h2>
@@ -75,6 +78,7 @@ export function App() {
             <div className="product-number">{String(index + 1).padStart(2, '0')}<span>{p.nominalAreaMm.width} × {p.nominalAreaMm.height} mm nominali</span></div><h3>{p.title}</h3><p className="caption">Fixture reale · profilo v{p.profileVersion} · idoneità produttiva non verificata</p>
             <ul className="reasons">{candidate.reasons.map(r => <li key={r.ruleId}><span className="rule">{r.ruleId}</span>{r.explanation}</li>)}</ul>
             <details><summary>Verifiche ancora necessarie</summary><ul>{candidate.pending.map(item => <li key={item}>{item}</li>)}</ul></details>
+            <button className="primary canvas-link" onClick={() => { dispatch({ type: 'choose', productId: p.productId }); setEditorProductId(p.productId); setTab('editor'); }}>Prova nel canvas →</button>
             <a className="product-link" href={productPage(fixtureCatalog, p.productId)} target="_blank" rel="noopener noreferrer" onClick={() => dispatch({ type: 'choose', productId: p.productId })}>Personalizza sulla pagina prodotto ↗</a>
             <p className="caption">Prezzo e disponibilità sulla pagina attuale. Apertura in una nuova scheda; nessun trasferimento automatico di opzioni.</p>
           </article>; })}</div>

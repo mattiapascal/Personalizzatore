@@ -18,3 +18,11 @@ Conferma tag No-AI, profili produttivi e area utile; verifica umana Illustrator;
 ## 2026-11-05 — Riscontro visibile per ogni azione di selezione
 
 La prova dell'utente ha evidenziato che un aggiornamento dei requisiti senza conferma sembra un pulsante non funzionante. Il prototipo deve confermare dati riconosciuti e scelte, spiegare quale criterio manca e rendere raggiungibili i risultati. Una UI con reducer aggiorna insieme stato e messaggio, mantenendo il controllo delle revisioni. Le misure ignote possono essere indicate prima della montatura e non vanno perse; nessuna montatura o idoneità per fatture viene presunta. La correzione resta locale e senza costi AI.
+
+## 2026-11-05 — Percorso selezione → canvas e scrittura diretta
+
+La prova separata del primo incremento non esprimeva il percorso atteso dall'utente. Il canvas ora si apre da un candidato e usa identità/versioni commerciali e area nominale del catalogo. I vincoli del renderer rimangono TEST; l'associazione non implica validazione produttiva. IText permette scrittura diretta, multilinea e trascinamento; tutte le modifiche confermate passano dallo store. Gli strumenti JSON di prova sono in un pannello sviluppatore, non nel flusso principale.
+
+Cambio modello conservativo: non deformare né ridurre; rifiuto atomico se non entra, undo azzerato al successo per mantenere coerente l'identità prodotto. Non azzerare la grafica quando si cambiano soltanto i requisiti. Import coerente con prodotto/versione/area; adozione compatibile della fixture storica.
+
+La consultazione della skill e documentazione Shopify conferma l'uso futuro di notifiche prodotto e riconciliazione, senza supporre che tutti i cambi di pubblicazione siano notificati a ogni app. Nessuna sottoscrizione creata. Parser e catalogo statico sono limiti espliciti, non soluzioni definitive: [piano del seguito](iteration-canvas.md).

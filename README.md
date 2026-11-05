@@ -28,7 +28,13 @@ Il campione è snapshot TEST del 5 novembre 2026: ID reali, prezzi e disponibili
 
 Anche `Voglio fare un timbro per le fatture` viene riconosciuto come richiesta di un timbro: il riquadro di risposta conferma cosa è stato riconosciuto e chiede la montatura. L'uso «per le fatture» non viene ancora interpretato per dedurre caratteristiche tecniche. `Non so le misure` conferma la scelta e permette di proseguire; se manca la montatura, continua a chiederla, altrimenti indica quanti modelli esplorare. Il pulsante `Mostra i modelli` porta ai risultati, anche su mobile. Gli input dimensionali vengono svuotati quando si scelgono misure ignote.
 
-Apri `Editor Fabric.js`: modifica `text-1` dal campo manuale o trascinandolo; prepara un comando aggiornato ed eseguilo. Un comando con revisione precedente viene rifiutato. Prova annulla/ripristina, esporta JSON/SVG e riapri il JSON. Il documento resta in memoria cambiando sezione; per conservarlo dopo reload esporta il JSON. Testo singola riga Arial e rettangolo sono il perimetro attuale, senza import loghi o scene complesse.
+Da un candidato premi `Prova nel canvas`: il laboratorio si apre con modello scelto, dimensioni nominali e riferimenti Shopify nel JSON. Fai doppio clic sul testo e scrivi dentro il canvas; Invio aggiunge una riga, Esc oppure `Termina modifica` valida. Trascina testo e bordo. Non serve un campo esterno per scrivere. Testi fuori area vengono rifiutati ripristinando la versione precedente; durante la scrittura export e altri comandi sono sospesi.
+
+Torna alla selezione e prova un altro modello: se la composizione entra, conserva documento e oggetti; altrimenti mantiene il progetto precedente e segnala il conflitto. Nessuna riduzione automatica di caratteri o deformazione. Un cambio prodotto riuscito azzera lo storico undo per evitare ritorni al prodotto precedente. Dimensioni nominali e vincoli TEST non certificano l'area produttiva.
+
+Gli strumenti JSON simulati sono sotto `Strumenti sviluppatore`; usano lo stesso motore delle modifiche nel canvas. Un comando con revisione precedente viene rifiutato. Prova annulla/ripristina, esporta JSON/SVG e riapri il JSON. Il documento resta in memoria cambiando sezione; per conservarlo dopo reload esporta il JSON. Import associati ad altro prodotto/versione/area vengono rifiutati. Testi Arial fino a 8 righe e rettangolo sono il perimetro attuale, senza loghi o scene complesse. Il campione storico senza prodotto si può importare nel 4913, che ha la stessa area 58×22 mm.
+
+**AI e aggiornamenti:** il prompt usa ancora un parser dimostrativo a parole chiave; non è sufficiente per il comportamento conversazionale richiesto. Il catalogo è un file statico e NON rileva modifiche Shopify. LLM server con tool tipizzati e sincronizzazione catalogo sono lavoro ancora da implementare, descritto in [docs/iteration-canvas.md](docs/iteration-canvas.md). Nessuna chiave o nuova spesa attivata.
 
 ## Verifiche ripetibili
 

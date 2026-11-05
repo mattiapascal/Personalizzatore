@@ -17,10 +17,51 @@
       "maximum": 9007199254740991
     },
     "productId": {
-      "type": "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "variantId": {
-      "type": "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "catalogVersion": {
+      "default": null,
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "catalogProductProfileVersion": {
+      "default": null,
+      "anyOf": [
+        {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "productProfileVersion": {
       "type": "string",
@@ -84,7 +125,7 @@
               "text": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 120
+                "maxLength": 480
               },
               "fontSizePt": {
                 "type": "number",
@@ -181,6 +222,8 @@
     "revision",
     "productId",
     "variantId",
+    "catalogVersion",
+    "catalogProductProfileVersion",
     "productProfileVersion",
     "fixture",
     "validatedForProduction",
