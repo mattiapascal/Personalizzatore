@@ -1,21 +1,23 @@
 import type { CatalogAdapter } from '../catalog/adapter.ts';
 import { RequirementsSchema, type MissingField, type Recommendation, type Requirements } from './schema.ts';
+import { profileKey } from '../catalog/schema.ts';
 
 export function missingInformation(input: Requirements): MissingField[] {
   const r = RequirementsSchema.parse(input);
   if (!r.family) return ['family'];
   if (r.family !== 'stamp') return [];
   if (!r.mechanism) return ['mechanism'];
-  if (r.mechanism !== 'automatic' || r.shape === 'round') return [];
+  if (r.mechanism === 'manual' && !r.material) return ['material'];
   if (!r.shape) return ['shape'];
-  if (!r.minimumAreaMm && !r.sizeUnknown) return ['minimumAreaMm'];
+  if (!r.minimumAreaMm && !(r.shape === 'round' && r.diameterMm) && !r.sizeUnknown) return ['minimumAreaMm'];
   return [];
 }
 export const questions: Record<MissingField, string> = {
   family: 'Che prodotto cerchi? In questo laboratorio possiamo cercare timbri.',
-  mechanism: 'Preferisci un timbro autoinchiostrante, manuale o tascabile?',
-  shape: 'Vuoi un’impronta rettangolare o rotonda?',
-  minimumAreaMm: 'Quale ingombro minimo deve avere l’impronta (larghezza × altezza in mm)? Se non lo sai, scegli «Non so le misure». Il numero di righe da solo non garantisce che il testo entri.',
+  mechanism: 'Preferisci un timbro autoinchiostrante, manuale, tascabile oppure a secco (in rilievo)?',
+  material: 'Per la montatura manuale preferisci legno, plastica, metallo oppure non hai preferenze?',
+  shape: 'Vuoi un’impronta rettangolare, quadrata o rotonda?',
+  minimumAreaMm: 'Quali misure minime deve avere l’impronta in mm (larghezza × altezza, lato per il quadrato o diametro per il tondo)? Puoi rispondere «Non so le misure». Il numero di righe da solo non garantisce che il testo entri.',
 };
 
 export function recommendProducts(catalog: CatalogAdapter, input: Requirements): Recommendation[] {
@@ -23,18 +25,21 @@ export function recommendProducts(catalog: CatalogAdapter, input: Requirements):
   if (missingInformation(r).length || r.family !== 'stamp') return [];
   return catalog.list().filter(p =>
     p.status === 'ACTIVE' && p.family === r.family && p.mechanism === r.mechanism &&
-    (!r.shape || p.shape === r.shape) && (!r.hasLogo || p.supportsLogo) &&
-    (!r.minimumAreaMm || (p.nominalAreaMm.width >= r.minimumAreaMm.width && p.nominalAreaMm.height >= r.minimumAreaMm.height))
-  ).sort((a, b) => a.nominalAreaMm.width * a.nominalAreaMm.height - b.nominalAreaMm.width * b.nominalAreaMm.height || a.productId.localeCompare(b.productId))
+    (!r.shape || p.shape === r.shape) && (!r.hasLogo || p.supportsLogo === true) &&
+    (r.mechanism !== 'manual' || !r.material || r.material === 'any' || p.materials?.includes(r.material)) &&
+    (!r.diameterMm || (p.shape === 'round' && p.nominalAreaMm.width >= r.diameterMm)) &&
+    (!r.minimumAreaMm || (p.shape === 'round' ? p.nominalAreaMm.width >= Math.hypot(r.minimumAreaMm.width, r.minimumAreaMm.height) : p.nominalAreaMm.width >= r.minimumAreaMm.width && p.nominalAreaMm.height >= r.minimumAreaMm.height))
+  ).sort((a, b) => a.nominalAreaMm.width * a.nominalAreaMm.height - b.nominalAreaMm.width * b.nominalAreaMm.height || profileKey(a).localeCompare(profileKey(b)))
     .map(p => ({
-      productId: p.productId, profileVersion: p.profileVersion, catalogVersion: catalog.version,
+      productId: p.productId, ...(p.profileId ? { profileId: profileKey(p) } : {}), profileVersion: p.profileVersion, catalogVersion: catalog.version,
       reasons: [
         { ruleId: 'R1_CATALOG', explanation: 'Referenza reale presente nello snapshot Shopify, stato ACTIVE alla cattura.' },
-        { ruleId: 'R2_MECHANISM', explanation: 'Montatura autoinchiostrante coerente con la scelta.' },
-        { ruleId: 'R3_NOMINAL_SIZE', explanation: r.minimumAreaMm
-          ? `Dimensioni nominali ${p.nominalAreaMm.width} × ${p.nominalAreaMm.height} mm ≥ ingombro minimo richiesto ${r.minimumAreaMm.width} × ${r.minimumAreaMm.height} mm; orientamento fisso.`
+        { ruleId: 'R2_MECHANISM', explanation: `Montatura ${p.mechanism === 'emboss' ? 'a secco' : p.mechanism === 'pocket' ? 'tascabile' : p.mechanism === 'manual' ? 'manuale' : 'autoinchiostrante'} coerente con la scelta.` },
+        ...(r.mechanism === 'manual' && r.material && r.material !== 'any' ? [{ ruleId: 'R6_MATERIAL', explanation: `Materiale ${r.material === 'wood' ? 'legno' : r.material === 'plastic' ? 'plastica' : 'metallo'} dichiarato nella montatura Shopify.` }] : []),
+        { ruleId: 'R3_NOMINAL_SIZE', explanation: r.diameterMm ? `Diametro nominale ${p.nominalAreaMm.width} mm ≥ diametro minimo richiesto ${r.diameterMm} mm.` : r.minimumAreaMm
+          ? p.shape === 'round' ? `Diametro ${p.nominalAreaMm.width} mm ≥ diagonale dell’ingombro rettangolare ${r.minimumAreaMm.width} × ${r.minimumAreaMm.height} mm.` : `Dimensioni nominali ${p.nominalAreaMm.width} × ${p.nominalAreaMm.height} mm ≥ ingombro minimo richiesto ${r.minimumAreaMm.width} × ${r.minimumAreaMm.height} mm; orientamento fisso.`
           : `Misure non note: ${p.nominalAreaMm.width} × ${p.nominalAreaMm.height} mm è una possibilità da esplorare.` },
-        ...(r.hasLogo ? [{ ruleId: 'R4_LOGO', explanation: 'La descrizione Shopify prevede l’inserimento del logo; il file specifico va verificato.' }] : []),
+        ...(r.hasLogo ? [{ ruleId: 'R4_LOGO', explanation: 'La descrizione Shopify prevede logo/grafica personalizzata; il file specifico va verificato.' }] : []),
         { ruleId: 'R5_ORDER', explanation: 'Ordinamento per superficie nominale crescente, senza usare prezzo o disponibilità.' },
       ],
       pending: [

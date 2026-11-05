@@ -1,5 +1,15 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Montature e aggiornamento automatico — ultimo incremento
+
+`npm run check`: **69/69 unit test**, **18/18 browser e2e**, build TypeScript/Vite e controllo credenziali nel bundle superati. Nuovi casi: profilazione da fonti reali, conflitti/varianti, nuovi ID coerenti senza registro statico, link alla variante, cerchio geometrico, scrittura diretta nel tondo, cambio variante sullo stesso prodotto, tascabile 12×12, a secco e reset bozza, cache incompatibile e catalogo obsoleto. Nel browser tutti i **62 profili** aprono documenti validi con metriche Fabric reali. Golden SVG storico invariato. Nessuna chiamata AI a pagamento nei test automatici.
+
+Lettura Shopify reale e query validata Admin 2026-10/read_products: 228 prodotti letti, 214 attivi con URL, **62 profili su 50 prodotti**. 165 prodotti esclusi/da verificare; uno ha anche tre varianti utilizzabili. Aggiornamento automatico ogni cinque minuti a server aperto, applicazione UI entro il poll di dieci secondi fuori da richieste/gesti, conservazione bozze e blocco proposte/SVG su catalogo obsoleto. I numeri dell'incremento precedente riportati sotto sono storici.
+
+`npm run eval:ai -- --mounts`: **4/4 prove reali** superate con prompt v5 e frasi inventate (manuale/diametro cm, tascabile quadrato, a secco, materiale con refuso/contesto). 6.367 token input/300 output; stima standard 0,00612525 USD, riserva 0,05445 USD. Il corpus storico completo non è stato ripetuto con v5. Registro dopo la prova: 82 richieste, 86.841 input/6.972 output noti, stima standard totale 0,09650475 USD e riserva 0,95626725 USD su 1 USD. Non è fattura né verifica della promozione.
+
+`npm run schemas` e `npm run capture:mounts` superati. Esempi JSON/SVG in `fixtures/illustrator/`: legno Ø35, tascabile 12×12, a secco Ø41. Anteprime tondo desktop/mobile ispezionate. Nessun test umano Illustrator o dispositivo fisico. Profili sempre TEST, altri dati discordanti e meccanismi speciali restano in revisione; dettagli e prossimi passi in [iteration-mounts.md](iteration-mounts.md).
+
 ## Backend, AI reale, catalogo e chat con riepilogo — 5 novembre 2026
 
 Consegna successiva autorizzata dall'utente: API locali, provider OpenAI reale, catalogo Shopify in sola lettura aggiornabile e dialogo senza form esterni. Sotto la chat il riepilogo Prodotto/Montatura/Forma/Dimensioni passa da rosso a verde con le risposte; un campo ritirato torna rosso. Testo/stato e valori accompagnano i colori. «Non so le misure» è risposta ricevuta, non idoneità produttiva.

@@ -5,6 +5,9 @@
     "productId": {
       "type": "string"
     },
+    "profileId": {
+      "type": "string"
+    },
     "profileVersion": {
       "type": "number",
       "const": 1

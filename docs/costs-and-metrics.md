@@ -14,6 +14,8 @@ Limiti ulteriori: una chiamata AI alla volta, 10 richieste/minuto, massimo richi
 
 ## Collaudi effettivi
 
+Ultimo incremento montature, prompt v5: quattro frasi inventate superate, 6.367 token input e 300 output, stima a listino 0,00612525 USD, riserva 0,05445 USD. Registro complessivo osservato dopo la prova: 82 richieste, 86.841 input e 6.972 output noti, stima standard 0,09650475 USD; riserva prudenziale 0,95626725 USD su limite 1 USD. Il poco margine della riserva può interrompere presto nuovi collaudi: non azzerare il registro né aumentare il tetto senza autorizzazione. Gli aggiornamenti del catalogo non effettuano chiamate AI.
+
 I primi 20 casi linguistici TEST hanno superato 16/20 prove. Dopo la revisione del contesto: 18/20 (uno dei due insuccessi era un errore di trasporto/contratto). La successiva regressione con contesto esteso ha superato 19/20: il modello chiedeva inutilmente al cliente di riscrivere in mm una misura esplicita in cm. Il prompt v4 chiarisce che la conversione è aritmetica consentita; il caso mirato è poi passato.
 
 Sono inoltre stati eseguiti due dialoghi end-to-end reali di quattro risposte, incluso il percorso finale con catalogo collegato: montatura, forma, dimensioni, riepilogo verde e candidati 4913/4915. Dati inventati, nessun cliente reale. I risultati non garantiscono affidabilità assoluta né costituiscono un'eval di traffico produttivo.

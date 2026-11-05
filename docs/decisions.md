@@ -1,5 +1,13 @@
 # Registro decisioni
 
+## 2026-11-05 — Montature e mantenimento del catalogo
+
+Richiesta del titolare: usare altre montature e mantenere il sistema aggiornato. Un profilo per variante, chiave composta da GID prodotto/variante, link alla variante reale. Estesi meccanismi manuale/tascabile/a secco e forme quadrata/tonda; materiale richiesto ai manuali e diametro separato dall'ingombro rettangolare. Nessuna nuova regola produttiva universale.
+
+Profilazione deterministica versionata dai dati Shopify letti a ogni import, senza registro statico limitato ai tre modelli iniziali. Fonti esplicite e controlli su descrizione breve; conflitti restano in revisione. Il parser riguarda dati tecnici di catalogo: la richiesta del cliente resta interpretata dall'AI, salvo demo selezionata. Cache invalidata al cambio regole/ambito. UI applica aggiornamenti automaticamente fuori da gesti/richieste in corso; dopo dieci minuti senza lettura valida sospende candidati e SVG. Poll solo locale a server aperto, non nuovi webhook o servizi.
+
+Canvas circolare con validazione geometrica e clipPath SVG, documenti iniziali adatti anche ai modelli piccoli. Il cambio variante rivalida la composizione; in caso di conflitto si conserva il progetto e si può creare esplicitamente una nuova bozza. Nessuna modifica al negozio, ai sistemi correnti o deploy. Il collaudo Illustrator rimane umano e non eseguito.
+
 ## 2026-11-05 — Primo incremento
 
 - Fonte autorevole: specifica MD effettivamente presente; riferimento `_Codex` in AGENTS non trovato. Conservata specifica originale.

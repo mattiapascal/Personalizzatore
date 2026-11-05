@@ -34,7 +34,7 @@ export class LocalApi {
       csrfToken: this.token,
       ai: { mode: this.config.AI_PROVIDER, ready: !reason, reason, model: this.config.OPENAI_MODEL, budgetUsd: this.config.AI_BUDGET_USD, reservedUsd: this.meter.state.reservedUsd, requests: this.meter.state.requests },
       catalog: this.catalog.state,
-      sync: { configured: this.catalog.configured, intervalSeconds: this.config.CATALOG_POLL_SECONDS, lastError: this.catalog.lastError, refreshing: this.catalog.refreshing },
+      sync: { configured: this.catalog.configured, intervalSeconds: this.config.CATALOG_POLL_SECONDS, lastError: this.catalog.lastError, refreshing: this.catalog.refreshing, stale: this.catalog.configured && (!this.catalog.state.checkedAt || Date.now() - Date.parse(this.catalog.state.checkedAt) > Math.max(600, this.config.CATALOG_POLL_SECONDS * 2) * 1000) },
     };
   }
   async request(method: string, path: string, body: unknown): Promise<unknown> {

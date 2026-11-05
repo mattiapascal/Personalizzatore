@@ -85,6 +85,12 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "profileId": {
+                    "type": "string"
+                  },
+                  "variantLabel": {
+                    "type": "string"
+                  },
                   "productId": {
                     "type": "string",
                     "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"
@@ -133,11 +139,20 @@
                   },
                   "mechanism": {
                     "type": "string",
-                    "const": "automatic"
+                    "enum": [
+                      "automatic",
+                      "manual",
+                      "pocket",
+                      "emboss"
+                    ]
                   },
                   "shape": {
                     "type": "string",
-                    "const": "rectangle"
+                    "enum": [
+                      "rectangle",
+                      "square",
+                      "round"
+                    ]
                   },
                   "nominalAreaMm": {
                     "type": "object",
@@ -159,11 +174,28 @@
                     ],
                     "additionalProperties": false
                   },
+                  "materials": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "wood",
+                        "plastic",
+                        "metal"
+                      ]
+                    }
+                  },
+                  "mechanismSource": {
+                    "type": "string"
+                  },
                   "areaSource": {
                     "type": "string"
                   },
                   "supportsLogo": {
-                    "type": "boolean"
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
                   },
                   "logoSource": {
                     "type": "string"
@@ -320,6 +352,9 @@
           ]
         },
         "refreshing": {
+          "type": "boolean"
+        },
+        "stale": {
           "type": "boolean"
         }
       },

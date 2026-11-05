@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { createCatalog, fixtureCatalog, productPage, snapshot, type CatalogAdapter } from './catalog/adapter';
+import { createCatalog, mountFixtureCatalog as fixtureCatalog, productPage, mountSnapshot as snapshot, type CatalogAdapter } from './catalog/adapter';
 import type { ProductProfile } from './catalog/schema';
+import { profileKey } from './catalog/schema';
 import { RuntimeSchema, type RuntimeState } from './runtime/schema';
 import { missingInformation } from './selection/rules';
 import { SelectionChat } from './selection/SelectionChat';
@@ -27,6 +28,7 @@ export function App() {
 }
 function Laboratory({ initial }: { initial: RuntimeState }) {
   const [runtime, setRuntime] = useState(initial);
+  const [now, setNow] = useState(Date.now);
   const [catalogState, setCatalogState] = useState(initial.catalog);
   const catalog = useMemo(() => createCatalog(catalogState.snapshot, catalogState.version), [catalogState]);
   const [{ session, feedback, feedbackRevision, clarification }, dispatch] = useReducer(
@@ -39,20 +41,23 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
   const [syncBusy, setSyncBusy] = useState(false);
   const [mode, setMode] = useState<'server' | 'mock'>(initial.ai.mode === 'openai' ? 'server' : 'mock');
   const [tab, setTab] = useState<'selection' | 'editor'>('selection');
-  const [editorBinding, setEditorBinding] = useState<{ product: ProductProfile; version: string } | null>(() => session.selectedProductId ? { product: catalog.get(session.selectedProductId), version: catalog.version } : null);
+  const [editorBinding, setEditorBinding] = useState<{ product: ProductProfile; version: string } | null>(() => session.selectedProductId ? { product: catalog.get(session.selectedProfileId ?? session.selectedProductId), version: catalog.version } : null);
   const [editorEditing, setEditorEditing] = useState(false);
   const editorProduct = editorBinding?.product ?? null;
   const candidatesRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => { try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch { setNotice('Persistenza non disponibile: la sessione resta in memoria.'); } }, [session]);
   useEffect(() => {
     const timer = setInterval(() => {
+      setNow(Date.now());
       void fetch('/api/bootstrap', { signal: AbortSignal.timeout(5000) }).then(response => response.json()).then(data => setRuntime(RuntimeSchema.parse(data))).catch(() => {});
     }, 10_000);
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
     if (runtime.catalog.version === catalogState.version && runtime.catalog.checkedAt !== catalogState.checkedAt) setCatalogState(runtime.catalog);
-  }, [runtime.catalog, catalogState.version, catalogState.checkedAt]);
+    else if (runtime.catalog.version !== catalogState.version && !busy && !editorEditing) { setCatalogState(runtime.catalog); dispatch({ type: 'catalog' }); }
+  }, [runtime.catalog, catalogState.version, catalogState.checkedAt, busy, editorEditing]);
+  const catalogStale = runtime.sync.stale === true || (!catalogState.snapshot.fixture && (!catalogState.checkedAt || now - Date.parse(catalogState.checkedAt) > Math.max(600, runtime.sync.intervalSeconds * 2) * 1000));
   const missing = missingInformation(session.requirements);
   const refreshRuntime = () => { void fetch('/api/bootstrap').then(response => response.json()).then(data => setRuntime(RuntimeSchema.parse(data))).catch(() => {}); };
   const refreshCatalog = async () => {
@@ -77,13 +82,14 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
         <p>{runtime.sync.configured ? `Lettura Shopify automatica ogni ${runtime.sync.intervalSeconds} secondi a server aperto.` : 'Lettura Shopify non configurata: il catalogo non si aggiorna automaticamente.'} Ultima lettura completa: {runtime.catalog.checkedAt ?? 'mai (campione iniziale)'}.</p>
         {runtime.sync.lastError && <p role="status">{runtime.sync.lastError}</p>}
         <button disabled={!runtime.sync.configured || syncBusy || runtime.sync.refreshing} onClick={() => void refreshCatalog()}>{syncBusy ? 'Lettura Shopify…' : 'Aggiorna da Shopify'}</button>
-        {!!runtime.catalog.pending.length && <><h3>Modelli da verificare ({runtime.catalog.pending.length})</h3><ul>{runtime.catalog.pending.map(product => <li key={product.productId}>{product.title}: {product.reason}</li>)}</ul></>}
+        {!!runtime.catalog.pending.length && <><h3>Prodotti esclusi o da verificare ({runtime.catalog.pending.length})</h3><ul>{runtime.catalog.pending.map(product => <li key={product.productId}>{product.title}: {product.reason}</li>)}</ul></>}
       </details>
       {runtime.catalog.version !== catalogState.version && <aside className="notice" role="status">È disponibile una nuova versione del catalogo. La bozza aperta conserva il proprio prodotto e non viene approvata automaticamente.<button disabled={busy || editorEditing} onClick={() => { setCatalogState(runtime.catalog); dispatch({ type: 'catalog' }); }}>Applica aggiornamento ai risultati</button></aside>}
+      {catalogStale && <p role="alert" className="notice">Catalogo da aggiornare: le nuove proposte e lo SVG sono sospesi finché Shopify non viene riletto. Conversazione e bozza sono conservate; puoi salvare il JSON.</p>}
       {editorBinding && editorBinding.version !== catalogState.version && <p className="notice">La bozza usa una versione precedente del catalogo. Per esportare lo SVG, torna alla scelta e riapri un candidato aggiornato; la composizione verrà rivalidata. Puoi salvare subito il JSON della bozza.</p>}
       <nav aria-label="Sezioni del laboratorio"><button disabled={editorEditing} aria-pressed={tab === 'selection'} onClick={() => setTab('selection')}>01 · Scegli il timbro</button><button disabled={!editorProduct} aria-pressed={tab === 'editor'} onClick={() => setTab('editor')}>02 · Editor Fabric.js</button></nav>
       {!editorProduct && <p className="caption">Per aprire il canvas, scegli un modello dai risultati e premi «Prova nel canvas».</p>}
-      {editorBinding && <div hidden={tab !== 'editor'}><Suspense fallback={<p role="status">Caricamento laboratorio…</p>}><EditorLab product={editorBinding.product} catalogVersion={editorBinding.version} catalogOutdated={editorBinding.version !== catalogState.version} onEditingChange={setEditorEditing} onKeepProduct={id => { const product = catalog.list().find(p => p.productId === id); if (product) setEditorBinding({ product, version: catalog.version }); }}/></Suspense></div>}
+      {editorBinding && <div hidden={tab !== 'editor'}><Suspense fallback={<p role="status">Caricamento laboratorio…</p>}><EditorLab product={editorBinding.product} catalogVersion={editorBinding.version} catalogOutdated={catalogStale || editorBinding.version !== catalogState.version} onEditingChange={setEditorEditing} onKeepProduct={(id, variantId) => { const product = catalog.list().find(p => p.productId === id && p.variantIds.includes(variantId)); if (product) setEditorBinding({ product, version: catalog.version }); }}/></Suspense></div>}
       <div hidden={tab !== 'selection'}><div className="selection-grid">
         <section className="panel" aria-labelledby="assistant-title">
           <span className="eyebrow">01 / Assistente di selezione</span><h2 id="assistant-title">Di cosa hai bisogno?</h2>
@@ -92,12 +98,12 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
         </section>
         <section aria-labelledby="candidate-title"><span className="eyebrow">Catalogo / {catalog.list().length} referenze censite</span><h2 id="candidate-title" ref={candidatesRef} tabIndex={-1}>Possibilità da verificare</h2>
           {!session.candidates.length && <div className="empty panel"><span className="empty-mark">↗</span><h3>{missing.length ? 'Partiamo dalle tue esigenze' : 'Nessun candidato nel campione'}</h3><p>{missing.length ? 'Raccogliamo i criteri prima di proporti una referenza.' : 'La ricerca usa soltanto i profili censiti. Non significa che il prodotto manchi nel catalogo completo.'}</p></div>}
-          <div className="candidates">{(!clarification ? session.candidates : []).map((candidate, index) => { const p = catalog.get(candidate.productId); return <article className="product-card panel" key={p.productId}>
-            <div className="product-number">{String(index + 1).padStart(2, '0')}<span>{p.nominalAreaMm.width} × {p.nominalAreaMm.height} mm nominali</span></div><h3>{p.title}</h3><p className="caption">Referenza Shopify · profilo TEST v{p.profileVersion} · idoneità produttiva non verificata</p>
+          <div className="candidates">{(!clarification && !catalogStale ? session.candidates : []).map((candidate, index) => { const p = catalog.get(candidate.profileId ?? candidate.productId); return <article className="product-card panel" key={profileKey(p)}>
+            <div className="product-number">{String(index + 1).padStart(2, '0')}<span>{p.shape === 'round' ? `Ø ${p.nominalAreaMm.width}` : `${p.nominalAreaMm.width} × ${p.nominalAreaMm.height}`} mm nominali</span></div><h3>{p.title}</h3>{p.variantLabel && <p className="variant-label">Variante: {p.variantLabel}</p>}<p className="caption">Referenza Shopify · profilo TEST v{p.profileVersion} · idoneità produttiva non verificata</p>
             <ul className="reasons">{candidate.reasons.map(r => <li key={r.ruleId}><span className="rule">{r.ruleId}</span>{r.explanation}</li>)}</ul>
             <details><summary>Verifiche ancora necessarie</summary><ul>{candidate.pending.map(item => <li key={item}>{item}</li>)}</ul></details>
-            <button className="primary canvas-link" onClick={() => { dispatch({ type: 'choose', productId: p.productId }); setEditorBinding({ product: p, version: catalog.version }); setTab('editor'); }}>Prova nel canvas →</button>
-            <a className="product-link" href={productPage(catalog, p.productId)} target="_blank" rel="noopener noreferrer" onClick={() => dispatch({ type: 'choose', productId: p.productId })}>Personalizza sulla pagina prodotto ↗</a>
+            <button className="primary canvas-link" onClick={() => { dispatch({ type: 'choose', productId: profileKey(p) }); setEditorBinding({ product: p, version: catalog.version }); setTab('editor'); }}>Prova nel canvas →</button>
+            <a className="product-link" href={productPage(catalog, profileKey(p))} target="_blank" rel="noopener noreferrer" onClick={() => dispatch({ type: 'choose', productId: profileKey(p) })}>Personalizza sulla pagina prodotto ↗</a>
             <p className="caption">Prezzo e disponibilità sulla pagina attuale. Apertura in una nuova scheda; nessun trasferimento automatico di opzioni.</p>
           </article>; })}</div>
         </section>

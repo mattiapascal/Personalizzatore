@@ -5,10 +5,10 @@ import type { CatalogAdapter } from '../catalog/adapter.ts';
 import { updateRequirements } from '../selection/session.ts';
 
 const envelope = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), expectedSessionId: z.string().uuid().optional() };
-export const RequirementFieldSchema = z.enum(['family', 'mechanism', 'shape', 'lines', 'hasLogo', 'minimumAreaMm', 'sizeUnknown']);
+export const RequirementFieldSchema = z.enum(['family', 'mechanism', 'material', 'shape', 'diameterMm', 'lines', 'hasLogo', 'minimumAreaMm', 'sizeUnknown']);
 export const AiToolSchema = z.discriminatedUnion('tool', [
   z.strictObject({ ...envelope, tool: z.literal('collectRequirements'), arguments: RequirementsSchema,
-    clearFields: z.array(RequirementFieldSchema).max(7).optional(), clarification: z.string().min(1).max(300).nullable().optional() }),
+    clearFields: z.array(RequirementFieldSchema).max(9).optional(), clarification: z.string().min(1).max(300).nullable().optional() }),
   z.strictObject({ ...envelope, tool: z.literal('searchProducts'), arguments: RequirementsSchema }),
   z.strictObject({ ...envelope, tool: z.literal('recommendProducts'), arguments: z.strictObject({}) }),
   z.strictObject({ ...envelope, tool: z.literal('getProductProfile'), arguments: z.strictObject({ productId: z.string() }) }),

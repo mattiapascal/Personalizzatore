@@ -24,8 +24,10 @@ export function initialInteraction(session: SelectionSession): SelectionInteract
 function recognizedInformation(requirements: Requirements): string {
   const parts: string[] = [];
   if (requirements.family) parts.push(requirements.family === 'stamp' ? 'un timbro' : 'un prodotto diverso dai timbri');
-  if (requirements.mechanism) parts.push({ automatic: 'autoinchiostrante', manual: 'manuale', pocket: 'tascabile' }[requirements.mechanism]);
-  if (requirements.shape) parts.push(requirements.shape === 'rectangle' ? 'forma rettangolare' : 'forma rotonda');
+  if (requirements.mechanism) parts.push({ automatic: 'autoinchiostrante', manual: 'manuale', pocket: 'tascabile', emboss: 'a secco' }[requirements.mechanism]);
+  if (requirements.shape) parts.push({ rectangle: 'forma rettangolare', square: 'forma quadrata', round: 'forma rotonda' }[requirements.shape]);
+  if (requirements.diameterMm) parts.push(`diametro minimo ${requirements.diameterMm} mm`);
+  if (requirements.material) parts.push({ wood: 'legno', plastic: 'plastica', metal: 'metallo', any: 'materiale indifferente' }[requirements.material]);
   if (requirements.lines) parts.push(`${requirements.lines} righe`);
   if (requirements.hasLogo !== undefined) parts.push(requirements.hasLogo ? 'con logo' : 'senza logo');
   if (requirements.minimumAreaMm) parts.push(`ingombro minimo ${requirements.minimumAreaMm.width} × ${requirements.minimumAreaMm.height} mm`);

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "documentId": "e958c48e-e84f-4687-a4da-d31a60159f67",
+  "revision": 0,
+  "productId": "gid://shopify/Product/15104977633660",
+  "variantId": "gid://shopify/ProductVariant/55827724861820",
+  "catalogVersion": "TEST-2026-11-05-mounts-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 41,
+    "height": 41
+  },
+  "shape": "round",
+  "objects": [
+    {
+      "id": "frame-1",
+      "type": "circle",
+      "xMm": 2,
+      "yMm": 2,
+      "radiusMm": 18.5,
+      "strokeMm": 0.25,
+      "stroke": "#000000"
+    },
+    {
+      "id": "text-1",
+      "type": "text",
+      "xMm": 16.5,
+      "yMm": 18.5,
+      "text": "TEST",
+      "fontSizePt": 7,
+      "fontFamily": "Arial",
+      "fill": "#000000"
+    }
+  ]
+}

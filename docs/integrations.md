@@ -2,6 +2,10 @@
 
 ## Aggiornamento backend/chat — 5 novembre 2026
 
+Aggiornamento successivo montature: letti anche descrizioni, `custom.short_description`, titoli/opzioni delle varianti; nessun campo creato o modificato. 228 prodotti nell'ambito, 214 attivi con URL, 62 profili su 50 prodotti. 165 prodotti esclusi o da verificare, inclusa una referenza con tre varianti utilizzabili e una discordante. Dettagli e regole in [iteration-mounts.md](iteration-mounts.md); i conteggi sotto descrivono l'incremento precedente.
+
+La sincronizzazione ricostruisce i profili e li applica automaticamente ai risultati quando non ci sono gesti/richieste in corso. Oltre dieci minuti senza lettura riuscita, proposte e SVG sono sospesi; JSON e requisiti restano disponibili. La nuova query è **VALID** contro Admin 2026-10 (`read_products`), eseguita in sola lettura anche dal backend reale.
+
 Il titolare ha configurato direttamente chiave OpenAI e token Admin nel file privato `.env.local`. Nessuna credenziale è stata copiata dagli handoff o inviata in chat/Git. Provider reale verificato con frasi inventate. Catalogo Admin collegato in sola lettura, query `title:timbr*`, API 2026-10: lettura completa riuscita, 3 profili censiti e 211 prodotti attivi/pubblicati da verificare. Timer 300 secondi a server aperto, cache atomica, versioni e aggiornamento manuale. Il numero dipende dall'ambito query, non è un censimento di tutti i prodotti del negozio.
 
 La query è stata validata sia dal connettore sia dal validatore Shopify 2026-10: **VALID**, scope `read_products`. Nessuna mutazione, nuova app, nuova sottoscrizione webhook, modifica tema, BSS, PitchPrint, prezzo, variante o checkout. La conferma nel browser del cliente dell'acquistabilità resta distinta dalla presenza dell'URL Admin.
@@ -34,6 +38,7 @@ Il contratto **Preventivometro V2** non è la migrazione **BSS Storefront V2**. 
 
 - `No-AI` chiarito dal titolare come sopra; verificare gli avvisi e il percorso PitchPrint per ogni futura integrazione pubblica.
 - Profili stampabili per modello/variante: area utile, margini, minimo font, colori, linee, regole logo e font disponibili. Le dimensioni del titolo sono nominali, non collaudo grafico.
+- Dati discordanti: plastica tondo variante 45 mm contro scheda 30/35/40; Q30 nominale 30×30 contro descrizione breve 17×17; altri modelli con misure/forme discordanti nell'elenco locale. Non correggere automaticamente Shopify né scegliere la fonte più comoda. Datari/numeratori richiedono aree riservate documentate; i timbri a secco richiedono specifiche proprie su carta, tratto e rilievo.
 - Definizioni e valori correnti dei metafield dimensionali variante (`custom.larghezza/altezza/spessore`, mm secondo handoff). Non sono stati letti in questa iterazione.
 - Stato attuale tema pubblicato e app blocks; la copia locale del tema è indietro di 12 commit rispetto al proprio tracking locale, senza fetch effettuato. Gli handoff non provano lo stato live di novembre.
 - Accesso dev store/tema duplicato per il rilascio. Il backend locale legge già con accesso Admin; servono ancora profili dei nuovi modelli, servizio persistente e gestione produttiva dei casi/varianti speciali.

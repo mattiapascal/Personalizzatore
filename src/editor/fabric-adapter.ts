@@ -1,4 +1,4 @@
-import { Canvas, FabricText, IText, Rect, type FabricObject } from 'fabric';
+import { Canvas, FabricText, IText, Rect, Circle, type FabricObject } from 'fabric';
 import type { GraphicDocument, Measure, SceneObject } from './model';
 
 export const PX_PER_MM = 8; // Solo zoom di visualizzazione, indipendente da DPI fisici.
@@ -9,6 +9,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
     const options = { ...common, fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: o.fontFamily, fill: o.fill, strokeWidth: 0 };
     return editable ? new IText(o.text, options) : new FabricText(o.text, options);
   }
+  if (o.type === 'circle') return new Circle({ ...common, radius: o.radiusMm * PX_PER_MM, fill: 'transparent', stroke: o.stroke, strokeWidth: o.strokeMm * PX_PER_MM });
   return new Rect({ ...common, width: o.widthMm * PX_PER_MM, height: o.heightMm * PX_PER_MM, fill: 'transparent', stroke: o.stroke, strokeWidth: o.strokeMm * PX_PER_MM });
 }
 export const measureFabric: Measure = object => {
@@ -54,6 +55,7 @@ export class FabricAdapter {
   render(document: GraphicDocument): void {
     this.canvas.clear();
     this.canvas.backgroundColor = '#ffffff';
+    this.canvas.clipPath = document.shape === 'round' ? new Circle({ radius: document.areaMm.width * PX_PER_MM / 2, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true }) : undefined;
     this.canvas.setDimensions({ width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM });
     for (const object of document.objects) {
       const f = renderObject(object, true); this.idByObject.set(f, object.id); this.canvas.add(f);

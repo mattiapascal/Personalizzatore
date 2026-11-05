@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { fixtureCatalog, snapshot } from '../../src/catalog/adapter';
+import { fixtureCatalog, snapshot, mountSnapshot, mountFixtureCatalog } from '../../src/catalog/adapter';
 import type { RuntimeState } from '../../src/runtime/schema';
 
 function demoRuntime(): RuntimeState {
@@ -37,7 +37,7 @@ test('conversazione senza campi esterni: domande successive e riepilogo rosso/ve
   await page.setViewportSize({ width: 390, height: 844 }); await page.goto('/');
   for (const field of ['prodotto', 'montatura', 'forma', 'dimensioni']) await expect(page.getByTestId('field-' + field)).toHaveClass(/missing/);
   await sendMessage(page, 'Voglio fare un timbro per le fatture');
-  await expect(latest(page)).toContainText('autoinchiostrante, manuale o tascabile');
+  await expect(latest(page)).toContainText('autoinchiostrante, manuale, tascabile oppure a secco');
   await expect(page.getByTestId('field-prodotto')).toHaveClass(/answered/);
   await expect(page.getByTestId('field-montatura')).toHaveClass(/missing/);
   await sendMessage(page, 'Non so le misure');
@@ -45,7 +45,7 @@ test('conversazione senza campi esterni: domande successive e riepilogo rosso/ve
   await expect(page.getByTestId('field-dimensioni')).toHaveClass(/answered/);
   await expect(page.getByTestId('field-dimensioni')).toContainText('Non note');
   await sendMessage(page, 'Autoinchiostrante');
-  await expect(latest(page)).toContainText('rettangolare o rotonda');
+  await expect(latest(page)).toContainText('rettangolare, quadrata o rotonda');
   await expect.poll(() => page.getByTestId('chat-log').evaluate(el => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(3);
   await expect(page.locator('.product-card')).toHaveCount(0);
   await sendMessage(page, 'Rettangolare');
@@ -83,7 +83,7 @@ test('richieste ignote e nessun candidato hanno riscontro; reset azzera anche il
   await page.goto('/');
   await sendMessage(page, 'abracadabra');
   await expect(latest(page)).toContainText('Non ho riconosciuto');
-  await sendMessage(page, 'Timbro manuale');
+  await sendMessage(page, 'Timbro manuale in legno rettangolare, non so le misure');
   await expect(latest(page)).toContainText('Nessun modello corrisponde');
   await expect(page.locator('.product-card')).toHaveCount(0);
   await page.getByRole('button', { name: 'Azzera conversazione e requisiti' }).click();
@@ -197,7 +197,7 @@ test('AI server pone domande, aggiorna riepilogo e rifiuta fallback silenzioso',
   await sendMessage(page, 'quello che si inchiostra da solo');
   await expect(latest(page)).toContainText('rettangolare');
   await sendMessage(page, 'rettangolo');
-  await expect(latest(page)).toContainText('ingombro');
+  await expect(latest(page)).toContainText('Quali misure');
   await sendMessage(page, 'non ne ho idea');
   await expect(page.locator('.product-card')).toHaveCount(3);
   expect(requests[1]).toMatchObject({ requirements: { family: 'stamp' } }); expect(JSON.stringify(requests)).not.toContain('gid://shopify');
@@ -219,15 +219,15 @@ test('una risposta ritirata torna rossa e riprende la domanda necessaria', async
   await sendMessage(page, 'togli la scelta sulla montatura');
   await expect(page.getByTestId('field-montatura')).toHaveClass(/missing/);
   await expect(page.getByTestId('field-forma')).toHaveClass(/answered/);
-  await expect(latest(page)).toContainText('manuale o tascabile');
+  await expect(latest(page)).toContainText('manuale, tascabile');
   await expect(page.locator('.product-card')).toHaveCount(0);
 });
 
 test('aggiornamento catalogo rivaluta candidati, preserva bozza e richiede nuova validazione SVG', async ({ page }) => {
-  let runtime = demoRuntime(); runtime.sync.configured = true;
+  let runtime = demoRuntime(); runtime.sync.configured = true; runtime.catalog.checkedAt = new Date().toISOString();
   await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
   await page.route('**/api/catalog/refresh', async route => {
-    runtime = { ...runtime, catalog: { ...runtime.catalog, version: 'SHOPIFY-updated-test', checkedAt: '2026-11-05T18:00:00Z', snapshot: { ...runtime.catalog.snapshot, fixture: false, products: runtime.catalog.snapshot.products.filter(p => p.handle !== 'trodat-4912') } } };
+    runtime = { ...runtime, catalog: { ...runtime.catalog, version: 'SHOPIFY-updated-test', checkedAt: new Date().toISOString(), snapshot: { ...runtime.catalog.snapshot, fixture: false, products: runtime.catalog.snapshot.products.filter(p => p.handle !== 'trodat-4912') } } };
     await route.fulfill({ json: runtime });
   });
   await openProductCanvas(page, '4912'); await writeOnCanvas(page, 'Bozza');
@@ -235,7 +235,6 @@ test('aggiornamento catalogo rivaluta candidati, preserva bozza e richiede nuova
   const original = JSON.parse(await page.getByTestId('graphic-state').innerText());
   await page.getByText('Collegamenti AI e catalogo', { exact: true }).click();
   await page.getByRole('button', { name: 'Aggiorna da Shopify', exact: true }).click();
-  await page.getByRole('button', { name: 'Applica aggiornamento ai risultati' }).click();
   await expect(page.getByRole('button', { name: 'Esporta SVG' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Esporta JSON' })).toBeEnabled();
   expect(JSON.parse(await page.getByTestId('graphic-state').innerText())).toEqual(original);
@@ -268,4 +267,86 @@ test('backend offline non attiva automaticamente il parser dimostrativo', async 
   await page.getByRole('button', { name: 'Demo a parole chiave', exact: true }).click();
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   await expect(page.getByTestId('field-prodotto')).toHaveClass(/answered/);
+});
+
+test('montature manuali: domande, variante esatta, testo nel canvas tondo e SVG fisico', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/'); await sendMessage(page, 'Timbro manuale');
+  await expect(latest(page)).toContainText('legno, plastica, metallo');
+  await expect(page.getByTestId('field-materiale')).toHaveClass(/missing/);
+  await sendMessage(page, 'In legno, rotondo, diametro 35 mm');
+  await expect(page.getByTestId('field-materiale')).toHaveClass(/answered/);
+  await expect(page.getByTestId('field-dimensioni')).toContainText('35 mm');
+  const card = page.locator('.product-card').filter({ has: page.getByRole('heading', { name: 'Timbro in legno tondo', exact: true }) }).first();
+  await expect(card.getByRole('link')).toHaveAttribute('href', /\?variant=55676402958716$/);
+  await card.getByRole('button', { name: 'Prova nel canvas' }).click();
+  await expect(page.getByTestId('editor-product')).toContainText('Ø 35 mm');
+  const canvas = page.locator('.upper-canvas'); await canvas.scrollIntoViewIfNeeded();
+  await canvas.dblclick({ position: { x: 120, y: 135 } });
+  const input = page.getByLabel('Testo nel canvas', { exact: true }); await expect(input).toBeFocused();
+  await input.fill('IS'); await input.press('Escape');
+  await page.getByText('Stato e storico del documento').click();
+  const original = JSON.parse(await page.getByTestId('graphic-state').innerText());
+  expect(original.objects[1].text).toBe('IS'); expect(original.variantId).toBe('gid://shopify/ProductVariant/55676402958716');
+  const pending = page.waitForEvent('download'); await page.getByRole('button', { name: 'Esporta SVG' }).click();
+  const svg = await readFile(await (await pending).path(), 'utf8');
+  expect(svg).toContain('width="35mm"'); expect(svg).toContain('height="35mm"'); expect(svg).toContain('<clipPath'); expect(svg).toContain('<circle'); expect(svg).toContain('<text'); expect(svg).not.toContain('<image');
+  await page.getByRole('button', { name: '01 · Scegli il timbro' }).click();
+  const larger = page.locator('.product-card').filter({ has: page.getByRole('heading', { name: 'Timbro in legno tondo', exact: true }) }).filter({ hasText: 'Variante: 40' });
+  await larger.getByRole('button', { name: 'Prova nel canvas' }).click();
+  await expect(page.getByTestId('editor-product')).toContainText('Ø 40 mm');
+  const updated = JSON.parse(await page.getByTestId('graphic-state').innerText());
+  expect(updated.documentId).toBe(original.documentId); expect(updated.objects).toEqual(original.objects); expect(updated.variantId).toBe('gid://shopify/ProductVariant/55676402991484');
+  expect(errors).toEqual([]);
+});
+
+test('tutte le montature censite aprono documenti validi con le metriche reali di Fabric', async ({ page }) => {
+  await page.goto('/');
+  const results = await page.evaluate(async products => {
+    const modelPath = '/src/editor/model.ts', fabricPath = '/src/editor/fabric-adapter.ts';
+    const { createDocument, DocumentStore } = await import(modelPath);
+    const { measureFabric } = await import(fabricPath);
+    return products.map(p => { try { const store = new DocumentStore(createDocument(p, 'TEST-mounts'), measureFabric); return { id: p.profileId, shape: store.document.shape, error: null }; } catch (e) { return { id: p.profileId, error: String(e) }; } });
+  }, mountSnapshot.products);
+  expect(results).toHaveLength(mountSnapshot.products.length);
+  expect(results.filter(r => r.error)).toEqual([]);
+});
+
+test('tascabile quadrato e timbro a secco aprono formato e variante selezionati', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  await page.goto('/'); await sendMessage(page, 'Timbro tascabile quadrato 12 x 12 mm');
+  await page.locator('.product-card').filter({ hasText: 'Q12' }).getByRole('button', { name: 'Prova nel canvas' }).click();
+  await expect(page.getByTestId('editor-product')).toContainText('12 × 12 mm');
+  await expect(page.getByRole('button', { name: 'Esporta SVG' })).toBeEnabled();
+  await page.getByRole('button', { name: '01 · Scegli il timbro' }).click();
+  await sendMessage(page, 'Timbro a secco rotondo diametro 41 mm');
+  const first = page.locator('.product-card').first();
+  await expect(first.getByRole('link')).toHaveAttribute('href', /\?variant=55827724861820$/);
+  await first.getByRole('button', { name: 'Prova nel canvas' }).click();
+  // La composizione quadrata non entra automaticamente nel cerchio: il cliente può iniziare una nuova bozza.
+  await expect(page.getByRole('alert')).toContainText('composizione non entra');
+  await page.getByRole('button', { name: 'Crea nuova bozza per questo formato' }).click();
+  await expect(page.getByTestId('editor-product')).toContainText('Ø 41 mm');
+  await expect(page.getByRole('button', { name: 'Esporta SVG' })).toBeEnabled();
+});
+
+test('catalogo obsoleto sospende candidati e SVG mantenendo chat e progetto JSON', async ({ page }) => {
+  let runtime = demoRuntime(); runtime.sync.configured = true; runtime.catalog.checkedAt = new Date().toISOString();
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  await page.route('**/api/catalog/refresh', route => {
+    runtime = { ...runtime, sync: { ...runtime.sync, stale: true, lastError: 'Shopify temporaneamente non raggiungibile' } };
+    return route.fulfill({ json: runtime });
+  });
+  await openProductCanvas(page);
+  await page.getByText('Collegamenti AI e catalogo', { exact: true }).click();
+  await page.getByRole('button', { name: 'Aggiorna da Shopify', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Catalogo da aggiornare');
+  await expect(page.getByRole('button', { name: 'Esporta SVG' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Esporta JSON' })).toBeEnabled();
+  await page.getByRole('button', { name: '01 · Scegli il timbro' }).click();
+  await expect(page.locator('.product-card')).toHaveCount(0);
+  await expect(page.getByTestId('field-montatura')).toContainText('Autoinchiostrante');
 });

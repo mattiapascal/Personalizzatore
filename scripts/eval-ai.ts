@@ -3,6 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { resolve } from 'node:path';
 import { z } from 'zod';
 import casesJson from '../fixtures/ai/requirements.TEST.json' with { type: 'json' };
+import mountsJson from '../fixtures/ai/mounts.TEST.json' with { type: 'json' };
 import { RequirementsSchema } from '../src/selection/schema.ts';
 import { fixtureCatalog } from '../src/catalog/adapter.ts';
 import { executeTool, RequirementFieldSchema } from '../src/ai/contract.ts';
@@ -12,12 +13,14 @@ import { Meter } from '../server/meter.ts';
 import { proposeOpenAi, PROMPT_VERSION } from '../server/openai.ts';
 import { writeJson } from '../server/files.ts';
 
-const cases = z.object({ fixture: z.literal(true), cases: z.array(z.object({ id: z.string(), message: z.string(), requirements: RequirementsSchema, lastQuestion: z.string().nullable(), expected: RequirementsSchema, absent: z.array(RequirementFieldSchema).optional(), clarification: z.boolean().optional() })) }).parse(casesJson).cases;
+const mounts = process.argv[2] === '--mounts';
+const cases = z.object({ fixture: z.literal(true), cases: z.array(z.object({ id: z.string(), message: z.string(), requirements: RequirementsSchema, lastQuestion: z.string().nullable(), expected: RequirementsSchema, absent: z.array(RequirementFieldSchema).optional(), clarification: z.boolean().optional() })) }).parse(mounts ? mountsJson : casesJson).cases;
 const config = readConfig({ ...loadEnv('development', process.cwd(), ''), ...process.env });
 if (config.AI_PROVIDER !== 'openai' || !config.OPENAI_API_KEY || config.AI_BUDGET_USD <= 0) throw new Error('Configurare chiave e budget in .env.local prima del collaudo reale');
 const meter = new Meter(resolve('.local/ai-meter.json')); await meter.load();
 const start = structuredClone(meter.state);
-const selected = process.argv[2] ? cases.filter(c => c.id === process.argv[2]) : cases;
+const id = process.argv[mounts ? 3 : 2];
+const selected = id ? cases.filter(c => c.id === id) : cases;
 if (!selected.length) throw new Error('Caso di collaudo sconosciuto');
 const results: { id: string; passed: boolean; mismatches: string[]; actual?: unknown }[] = [];
 for (const c of selected) {

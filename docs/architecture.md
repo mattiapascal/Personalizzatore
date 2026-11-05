@@ -26,7 +26,7 @@ Schemi Zod in `src/catalog/schema.ts`, `src/selection/schema.ts`, `src/ai/contra
 | Modello | Contenuto / confine |
 |---|---|
 | ProductProfile | Product/Variant GID reali, URL Admin, provenienza, versione, dimensioni nominali; vincoli ignoti null |
-| Requirements | Famiglia, montatura, forma, righe/logo facoltativi, ingombro minimo o scelta non so |
+| Requirements | Famiglia, montatura, materiale manuale, forma, righe/logo facoltativi, ingombro minimo o diametro o scelta non so |
 | Recommendation | Solo ID del catalogo, versione, ruleId e spiegazioni, verifiche pendenti |
 | SelectionSession | UUID pseudonimo, revisione, requisiti e candidati ricostruibili, selezione, versione catalogo, timestamp |
 | GraphicDocument | UUID, revisione, area nominale mm, oggetti con ID stabili; Product/Variant ID, versione catalogo e profilo commerciale; vincoli grafici ancora TEST |
@@ -38,13 +38,13 @@ Whitelist grafica di questo incremento: `setText`, `moveObject`, `setObjectStyle
 
 ## Selezione verificabile
 
-1. Se manca la famiglia, chiederla; poi la montatura. Campione: solo timbri rettangolari autoinchiostranti.
-2. Per gli automatici chiedere forma, poi ingombro minimo o «non so». Non assumere che sei righe entrino in un determinato modello. Montature/forme fuori dal campione vengono segnalate senza interrogare inutilmente sulle misure.
-3. Filtrare per stato ACTIVE alla cattura, montatura, forma, logo dichiarato e dimensioni nominali in orientamento fisso.
+1. Se manca la famiglia, chiederla; poi la montatura (automatico, manuale, tascabile, a secco).
+2. Per i manuali chiedere materiale o nessuna preferenza; per tutte le montature chiedere forma, poi ingombro minimo/diametro o «non so». Non assumere che sei righe entrino in un determinato modello.
+3. Filtrare per stato ACTIVE alla cattura, montatura, materiale pertinente, forma, logo dichiarato e dimensioni nominali in orientamento fisso. Un ingombro rettangolare deve avere diagonale non maggiore del diametro del tondo.
 4. Ordinare per area crescente, spareggio per ID. Nessun prezzo, disponibilità, punteggio AI o capacità di righe inventato.
 5. Mostrare dimensioni nominali e motivazioni; con misure ignote presentare possibilità esplorative. Layout e area utile richiedono conferma.
 
-Esempio ripetibile, tutto in chat: «timbro aziendale con logo e sei righe» → montatura → «autoinchiostrante» → forma → «rettangolare» → ingombro → 50×20 mm → 4913 (58×22) e 4915 (70×25), ordinati per area. Nuovo requisito 60×23 → solo 4915, stesso UUID e logo conservato, vecchia selezione azzerata. Ambiguità semantiche sospendono l'esposizione dei candidati fino alla risposta al chiarimento.
+Esempio storico nella fixture dei primi tre prodotti: 50×20 mm → 4913 (58×22) e 4915 (70×25). Il catalogo ampliato può restituire più alternative, sempre ordinate per area. Esempio nuovo: manuale/legno/tondo/diametro minimo 35 mm → varianti in legno da 35 e 40 mm, con ID distinti. Ambiguità semantiche sospendono l'esposizione dei candidati fino alla risposta al chiarimento.
 
 ## Stato e persistenza
 
@@ -64,6 +64,10 @@ Endpoint: `GET /api/bootstrap`, `POST /api/ai/interpret`, `POST /api/catalog/ref
 
 `AiProvider` riceve dati strutturati e restituisce `unknown`, con timeout e `AbortSignal`; ogni output è poi validato. Errori lasciano invariati i requisiti. Il client non attiva il mock quando il server/provider manca: per usarlo va selezionata esplicitamente la demo. Modello fissato, prompt versionato, budget locale 1 USD entro il tetto di collaudo utente 2 EUR. Configurazione in `.env.local`; niente chiavi `VITE_*`, credenziali copiate dagli handoff o valori segreti nel bundle. `store:false` non equivale a zero retention né revoca la condivisione dati scelta dal titolare.
 
-`CatalogService` importa con query fissa di sola lettura Admin 2026-10, pagine da 50 prodotti, fino a 5000. Timeout completo 30 secondi, controlli cursori/errori/duplicati e sostituzione atomica. Varianti oltre la prima pagina mettono il modello in revisione, anziché usare un profilo incompleto. Cache privata locale associata all'ambito query, versione hash dei dati e timestamp separato: letture identiche non invalidano le sessioni. Poll all'avvio/ogni 300 secondi e pulsante manuale; richieste concorrenti aggregate. La UI controlla novità ogni 10 secondi e le applica ai risultati con azione esplicita, conservando le bozze e bloccando SVG non rivalidati.
+`CatalogService` importa con query fissa di sola lettura Admin 2026-10, pagine da 50 prodotti, fino a 5000. Timeout completo 30 secondi, controlli cursori/errori/duplicati e sostituzione atomica. Varianti oltre la prima pagina mettono il modello in revisione, anziché usare un profilo incompleto. Cache privata locale associata all'ambito query e alla versione delle regole, hash dei dati e timestamp separato: letture identiche non invalidano le sessioni. Poll all'avvio/ogni 300 secondi e pulsante manuale; richieste concorrenti aggregate. La UI controlla novità ogni 10 secondi e le applica automaticamente fuori da richieste AI o scrittura nel canvas, conservando le bozze e bloccando SVG non rivalidati.
 
-Nuovi modelli, titoli cambiati o varianti del profilo rimosse richiedono verifica tecnica; nessun profilo dedotto arbitrariamente. Prodotti archiviati/non pubblicati/assenti vengono esclusi. La query `title:timbr*` è un ambito configurato, non una classificazione esaustiva del negozio. Il timer non lavora a server spento: webhook, riconciliazione produttiva, autenticazione, retention e permessi di un servizio pubblico restano da sviluppare in un ambiente autorizzato.
+`deriveMountProfiles` ricostruisce i profili a ogni lettura da dati espliciti: meccanismo da titolo/tag, formato da opzione diametro con unità, titolo variante o prodotto; descrizione breve come controllo di coerenza, mai codici modello/handle. Un profilo per variante con chiave Product GID + Variant GID; il link finale usa `onlineStoreUrl?variant=ID`. Le fonti commerciali restano separate dal profilo grafico TEST. Nuovi modelli coerenti entrano automaticamente; dati discordanti o incompleti restano in revisione. Accessori, diciture fisse e meccanismi con layout riservati sono esclusi.
+
+Prodotti archiviati/non pubblicati/assenti vengono esclusi. Oltre `max(600, 2 × intervallo)` secondi dall'ultima lettura completa, candidati e SVG vengono sospesi, con requisiti/bozza e JSON conservati. Una lettura riuscita ripristina la freschezza anche a hash invariato. La query `title:timbr*` è un ambito configurato, non una classificazione esaustiva del negozio. Il timer non lavora a server spento: webhook, riconciliazione produttiva, autenticazione, retention e permessi di un servizio pubblico restano da sviluppare in un ambiente autorizzato.
+
+Estensione canvas: cerchio vettoriale e `shape` nel documento; tutti gli angoli del riquadro dei testi devono entrare nel cerchio meno margine TEST. I cerchi usano centro/raggio comprensivi del tratto; Fabric imposta un clipPath circolare. Documenti piccoli partono con testo breve. Cambi di variante sullo stesso prodotto rivalidano geometrie e ID come i cambi prodotto; un conflitto consente di esportare JSON e creare esplicitamente una bozza nuova.

@@ -16,10 +16,10 @@ const directories: string[] = [];
 async function directory() { const path = await mkdtemp(join(tmpdir(), 'customizer-test-')); directories.push(path); return path; }
 afterEach(async () => { for (const path of directories.splice(0)) await rm(path, { recursive: true, force: true }); vi.restoreAllMocks(); });
 const config = () => readConfig({ AI_PROVIDER: 'openai', OPENAI_API_KEY: 'test-not-a-real-key', AI_BUDGET_USD: '1', SHOPIFY_SHOP_DOMAIN: 'zqu2eg-72.myshopify.com', SHOPIFY_ADMIN_ACCESS_TOKEN: 'test-not-a-real-token' });
-const argumentsFor = (patch: Record<string, unknown> = {}) => ({ family: null, mechanism: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const argumentsFor = (patch: Record<string, unknown> = {}) => ({ family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 const request = () => AiRequestSchema.parse({ message: 'timbro per le fatture', sessionId: crypto.randomUUID(), revision: 3, requirements: { family: 'stamp' }, lastQuestion: 'Preferisci un autoinchiostrante?' });
 const answer = (args = argumentsFor({ family: 'stamp' }), extra = {}) => new Response(JSON.stringify({ status: 'completed', output: [{ type: 'function_call', name: 'collect_requirements', arguments: JSON.stringify(args) }], usage: { input_tokens: 100, output_tokens: 50 }, ...extra }), { status: 200 });
-const rawProducts = (): RawProduct[] => snapshot.products.map(p => ({ id: p.productId, title: p.title, handle: p.handle, status: p.status, onlineStoreUrl: p.url, updatedAt: '2026-10-26T17:46:07Z', tags: p.tags, variants: { nodes: p.variantIds.map(id => ({ id })), pageInfo: { hasNextPage: false, endCursor: null } } }));
+const rawProducts = (): RawProduct[] => snapshot.products.map(p => ({ id: p.productId, title: p.title, handle: p.handle, status: p.status, onlineStoreUrl: p.url, updatedAt: '2026-10-26T17:46:07Z', tags: p.tags, descriptionHtml: '<p>Timbro personalizzabile con logo</p>', vendor: '', variants: { nodes: p.variantIds.map(id => ({ id, title: 'Default Title', selectedOptions: [] })), pageInfo: { hasNextPage: false, endCursor: null } } }));
 const catalogResponse = (nodes: RawProduct[], hasNextPage = false, endCursor: string | null = null) => new Response(JSON.stringify({ data: { products: { nodes, pageInfo: { hasNextPage, endCursor } } } }));
 
 describe('OpenAI server: output tipizzato, contesto e quote', () => {
@@ -101,11 +101,11 @@ describe('Catalogo server: import atomico e aggiornamenti in sola lettura', () =
     expect(normalizeCatalog(raw, new Date()).snapshot.products.map(p => p.productId)).toEqual([raw[2]!.id]);
     expect(normalizeCatalog([], new Date()).snapshot.products).toHaveLength(0);
   });
-  it('nuovi modelli, titoli dimensionali modificati e varianti incomplete restano in revisione', () => {
-    const raw = rawProducts(); raw[0]!.title += ' misura nuova'; raw[1]!.id = 'gid://shopify/Product/999'; raw[2]!.variants.pageInfo.hasNextPage = true;
+  it('dati dimensionali mancanti, descrizioni vuote e varianti incomplete restano in revisione', () => {
+    const raw = rawProducts(); raw[0]!.title = 'Timbro autoinchiostrante senza misure'; raw[1]!.descriptionHtml = ''; raw[2]!.variants.pageInfo.hasNextPage = true;
     const state = normalizeCatalog(raw, new Date());
     expect(state.snapshot.products).toHaveLength(0); expect(state.pending).toHaveLength(3);
-    expect(state.pending.some(p => p.reason.includes('Profilo tecnico'))).toBe(true);
+    expect(state.pending.every(p => p.reason.startsWith('Da verificare'))).toBe(true);
     expect(() => normalizeCatalog([raw[0]!, raw[0]!], new Date())).toThrow('duplicato');
   });
   it('aggiorna handle/URL e tag ma non prezzi, e rifiuta URL esterni', () => {
@@ -134,9 +134,29 @@ describe('Catalogo server: import atomico e aggiornamenti in sola lettura', () =
     expect(service.state).toEqual(before); expect(await readJson(path)).toEqual(cached);
     const restored = new CatalogService(readConfig({}), path); await restored.load(); expect(restored.state).toEqual(before); expect(restored.configured).toBe(false);
   });
+  it('cache di un altro ambito o versione regole non viene riutilizzata', async () => {
+    const path = join(await directory(), 'catalog.json');
+    const service = new CatalogService(config(), path, vi.fn(async () => catalogResponse(rawProducts())));
+    await service.refresh();
+    const original = await readJson(path) as Record<string, unknown>;
+    for (const patch of [{ scopeQuery: 'tag:altro' }, { profileRulesVersion: 'obsolete' }]) {
+      await writeJson(path, { ...original, ...patch });
+      const restored = new CatalogService(config(), path); await restored.load();
+      expect(restored.state.snapshot.fixture).toBe(true); expect(restored.state.checkedAt).toBeNull();
+    }
+  });
 });
 
 describe('API locale e confini di accesso', () => {
+  it('distingue catalogo iniziale, fresco e obsoleto senza perdere i dati precedenti', async () => {
+    const api = new LocalApi(config(), await directory()); await api.init();
+    expect(api.status().sync.stale).toBe(true);
+    api.catalog.state = normalizeCatalog(rawProducts(), new Date());
+    expect(api.status().sync.stale).toBe(false);
+    api.catalog.state.checkedAt = new Date(Date.now() - 601_000).toISOString();
+    expect(api.status().sync.stale).toBe(true);
+    expect(api.status().catalog.snapshot.products).toHaveLength(3);
+  });
   it('rifiuta cross-origin, rebinding e porte diverse', () => {
     expect(allowedRequest({ headers: { host: '127.0.0.1:5173', origin: 'http://127.0.0.1:5173', 'sec-fetch-site': 'same-origin' } }, 5173)).toBe(true);
     for (const headers of [{ host: 'evil.example:5173' }, { host: 'localhost:5173', origin: 'https://evil.example' }, { host: '127.0.0.1:5173', 'sec-fetch-site': 'cross-site' }, { host: '127.0.0.1:5174' }]) expect(allowedRequest({ headers }, 5173)).toBe(false);

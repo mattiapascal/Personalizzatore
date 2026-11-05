@@ -3,7 +3,7 @@ import { createDocument, DocumentSchema, DocumentStore, type Measure } from '../
 import { fixtureCatalog } from '../src/catalog/adapter';
 
 // Geometria deterministica di test. Le metriche browser reali sono verificate negli e2e Fabric.
-const measure: Measure = o => o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : { widthMm: Math.max(...o.text.split('\n').map(line => line.length)) * o.fontSizePt * 25.4 / 72 * 0.6, heightMm: o.text.split('\n').length * o.fontSizePt * 25.4 / 72 * 1.2 };
+const measure: Measure = o => o.type === 'circle' ? { widthMm: o.radiusMm * 2 + o.strokeMm, heightMm: o.radiusMm * 2 + o.strokeMm } : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : { widthMm: Math.max(...o.text.split('\n').map(line => line.length)) * o.fontSizePt * 25.4 / 72 * 0.6, heightMm: o.text.split('\n').length * o.fontSizePt * 25.4 / 72 * 1.2 };
 const move = (revision: number, xMm = 10) => ({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId: 'text-1', arguments: { xMm, yMm: 8 } });
 describe('documento unico e comandi revisionati', () => {
   it('UI e AI modificano lo stesso oggetto senza cambiare ID', () => {

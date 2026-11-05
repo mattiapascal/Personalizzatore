@@ -18,9 +18,10 @@ export function nextSelectionQuestion(session: SelectionSession): string {
 export function RequirementSummary({ requirements: r }: { requirements: Requirements }) {
   const rows = [
     { label: 'Prodotto', value: r.family ? r.family === 'stamp' ? 'Timbro' : 'Altro prodotto (fuori dal campione)' : null },
-    { label: 'Montatura', value: r.mechanism ? { automatic: 'Autoinchiostrante', manual: 'Manuale', pocket: 'Tascabile' }[r.mechanism] : null },
-    { label: 'Forma', value: r.shape ? r.shape === 'rectangle' ? 'Rettangolare' : 'Rotonda' : null },
-    { label: 'Dimensioni', value: r.minimumAreaMm ? `${r.minimumAreaMm.width} × ${r.minimumAreaMm.height} mm minimi` : r.sizeUnknown ? 'Non note — idoneità da verificare nel canvas' : null },
+    { label: 'Montatura', value: r.mechanism ? { automatic: 'Autoinchiostrante', manual: 'Manuale', pocket: 'Tascabile', emboss: 'A secco (rilievo)' }[r.mechanism] : null },
+    ...(r.mechanism === 'manual' || r.material ? [{ label: 'Materiale', value: r.material ? { wood: 'Legno', plastic: 'Plastica', metal: 'Metallo', any: 'Nessuna preferenza' }[r.material] : null }] : []),
+    { label: 'Forma', value: r.shape ? { rectangle: 'Rettangolare', square: 'Quadrata', round: 'Rotonda' }[r.shape] : null },
+    { label: 'Dimensioni', value: r.diameterMm ? `Ø ${r.diameterMm} mm minimi` : r.minimumAreaMm ? `${r.minimumAreaMm.width} × ${r.minimumAreaMm.height} mm minimi` : r.sizeUnknown ? 'Non note — idoneità da verificare nel canvas' : null },
   ];
   return <section className="requirements-summary" aria-labelledby="requirements-title"><h3 id="requirements-title">Il tuo timbro, fin qui</h3>
     <p className="caption">Rosso: da chiarire · Verde: risposta raccolta. La risposta non equivale a una verifica produttiva.</p>

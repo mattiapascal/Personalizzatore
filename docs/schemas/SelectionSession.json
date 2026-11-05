@@ -31,14 +31,37 @@
           "enum": [
             "automatic",
             "manual",
-            "pocket"
+            "pocket",
+            "emboss"
           ]
         },
         "shape": {
           "type": "string",
           "enum": [
             "rectangle",
+            "square",
             "round"
+          ]
+        },
+        "material": {
+          "type": "string",
+          "enum": [
+            "wood",
+            "plastic",
+            "metal",
+            "any"
+          ]
+        },
+        "diameterMm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1000
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "lines": {
@@ -90,6 +113,9 @@
           "productId": {
             "type": "string"
           },
+          "profileId": {
+            "type": "string"
+          },
           "profileVersion": {
             "type": "number",
             "const": 1
@@ -136,6 +162,12 @@
       }
     },
     "selectedProductId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selectedProfileId": {
       "type": [
         "string",
         "null"

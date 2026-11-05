@@ -33,27 +33,29 @@ Il server è solo loopback/dev. La build genera asset frontend, non un backend p
 3. Rispondi sulla forma, ad esempio Rettangolare.
 4. Indica le dimensioni, ad esempio 50 x 20 mm, oppure rispondi Non so le misure.
 
-Il sistema raccoglie i parametri senza campi numerici o selettori esterni. Sotto la chat, Prodotto, Montatura, Forma e Dimensioni sono rossi finché manca una risposta e verdi quando viene raccolta, con valore e stato testuale. Una risposta ritirata torna da chiarire. Non so le misure è una risposta valida, ma non garantisce la compatibilità della grafica.
+Il sistema raccoglie i parametri senza campi numerici o selettori esterni. Sotto la chat, Prodotto, Montatura, Forma e Dimensioni sono rossi finché manca una risposta e verdi quando viene raccolta, con valore e stato testuale. Per una montatura manuale viene chiesto anche il materiale. Una risposta ritirata torna da chiarire. Non so le misure è una risposta valida, ma non garantisce la compatibilità della grafica.
 
 Puoi dare più informazioni insieme, correggerti e rispondere ai chiarimenti. Righe/logo sono annotati quando indicati; non vengono trasformati in capacità di un modello inventate. La chat resta in memoria, senza salvataggio del testo libero. Nel browser persistono solo requisiti e selezione per 24 ore; un catalogo nuovo rivaluta i requisiti senza cancellarli. Azzera conversazione e requisiti riparte da zero.
 
-Il campione con profili censiti contiene i Printy 4912, 4913 e 4915. Per 50×20 mm il motore propone 4913/4915, ordinati per area, con motivazioni verificabili. Il prezzo resta sulla pagina Shopify. Il significato di No-AI è stato chiarito dal titolare: limita le funzioni generative di PitchPrint e non questo assistente.
+Il campione aggiornato comprende 62 profili di variante su 50 prodotti reali: autoinchiostranti, manuali, tascabili e a secco, con forme rettangolari, quadrate e tonde. Prova anche «Timbro manuale in legno, rotondo, diametro 35 mm» oppure «Timbro a secco rotondo, diametro 41 mm». Sono filtri minimi: una misura maggiore può comparire come alternativa. Il prezzo resta sulla pagina Shopify. Il significato di No-AI è stato chiarito dal titolare: limita le funzioni generative di PitchPrint e non questo assistente.
 
 ## Catalogo aggiornabile
 
 Il backend legge Shopify all'avvio, ogni 5 minuti mentre è aperto e con Aggiorna da Shopify. L'import è paginato e atomico, con cache locale e versione del contenuto; errori o pagine incomplete conservano l'ultima copia valida. La data dell'ultima lettura è visibile.
 
-Una nuova versione compare con Applica aggiornamento ai risultati: i requisiti vengono rivalutati e la bozza aperta conserva il suo stato/versione. Puoi salvarne il JSON; lo SVG richiede la rivalidazione con un candidato corrente. Prodotti rimossi, archiviati o non pubblicati vengono esclusi. I nuovi modelli o profili cambiati sono elencati come da verificare, senza misure/compatibilità dedotte arbitrariamente.
+La UI controlla il backend ogni 10 secondi e applica automaticamente le nuove versioni quando non è in corso una richiesta AI o la scrittura nel canvas. I requisiti vengono rivalutati e la bozza aperta conserva il suo stato/versione. Puoi salvarne il JSON; lo SVG richiede la rivalidazione con un candidato corrente. Prodotti rimossi, archiviati o non pubblicati vengono esclusi. Se l'ultima lettura completa supera 10 minuti (oppure due intervalli se maggiori), nuove proposte e SVG restano sospesi fino alla rilettura riuscita.
 
-Lettura reale verificata: 3 modelli censiti e 211 prodotti pubblicati da profilare, nell'ambito title:timbr*. Non è ancora un assistente per l'intero catalogo. Il timer funziona solo a server aperto; webhook e servizio persistente restano lavoro per un ambiente autorizzato.
+Ogni lettura ricostruisce i profili da titolo, descrizione, varianti/opzioni e `custom.short_description` già esistente, con regole versionate: nuovi modelli con dati espliciti coerenti diventano disponibili senza aggiornare una lista manuale. Non vengono indovinate misure dai codici modello o dagli handle. ID e link identificano la variante esatta. La cache è legata anche alla versione delle regole.
+
+Lettura reale verificata: 228 prodotti letti, 214 attivi con URL pubblico; 62 profili utilizzabili su 50 prodotti e 165 prodotti esclusi o da verificare (un prodotto ha sia varianti utilizzabili sia una variante discordante). Esempio: plastica tondo 45 mm presente fra le varianti, ma assente nell'elenco 30/35/40 della scheda: resta da verificare. Datari/numeratori, diciture fisse, componibili e accessori richiedono percorsi dedicati. Non è ancora un assistente per l'intero negozio: l'ambito è `title:timbr*`. Il timer funziona solo a server aperto e riparte all'avvio; webhook e servizio persistente richiedono un ambiente autorizzato.
 
 ## Canvas
 
 Da un candidato premi Prova nel canvas. Il progetto usa modello, ID/versioni Shopify e dimensioni nominali. Doppio clic sul testo per scrivere, Invio per una nuova riga, Esc o Termina modifica per validare. Testo e bordo si possono trascinare.
 
-Modifiche manuali e comandi strutturati passano dallo stesso store revisionato. Il passaggio a un altro modello conserva gli oggetti solo se entrano; altrimenti mantiene il progetto precedente. Non riduce font o deforma automaticamente. Il cambio modello riuscito ricomincia lo storico undo.
+Modifiche manuali e comandi strutturati passano dallo stesso store revisionato. Il passaggio a un altro modello o variante conserva gli oggetti solo se entrano; altrimenti mantiene il progetto precedente, con possibilità di salvarlo in JSON e creare una nuova bozza per il formato scelto. Non riduce font o deforma automaticamente. Il cambio modello riuscito ricomincia lo storico undo. Nei formati tondi la validazione usa il cerchio reale e il renderer esporta un ritaglio circolare.
 
-Esporta JSON per riaprire il progetto dopo reload; la bozza rimane in memoria cambiando sezione. Esporta SVG per il collaudo Illustrator. Testo Arial fino a 8 righe e rettangolo sono il perimetro attuale; loghi, gruppi e scene complesse restano da sviluppare. Il golden storico senza prodotto è importabile sul 4913, con la stessa area nominale 58×22 mm.
+Esporta JSON per riaprire il progetto dopo reload; la bozza rimane in memoria cambiando sezione. Esporta SVG per il collaudo Illustrator. Testo Arial fino a 8 righe, rettangolo e cerchio sono il perimetro attuale; loghi, gruppi e scene complesse restano da sviluppare. Il golden storico senza prodotto è importabile sul 4913, con la stessa area nominale 58×22 mm.
 
 ## Verifiche
 
@@ -72,6 +74,7 @@ I collaudi **reali**, separati dai test automatici, richiedono chiave e budget e
 ~~~sh
 npm run eval:ai
 npm run eval:ai -- conversione-cm
+npm run eval:ai -- --mounts
 npm run eval:chat
 ~~~
 

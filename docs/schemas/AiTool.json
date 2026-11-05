@@ -37,14 +37,37 @@
               "enum": [
                 "automatic",
                 "manual",
-                "pocket"
+                "pocket",
+                "emboss"
               ]
             },
             "shape": {
               "type": "string",
               "enum": [
                 "rectangle",
+                "square",
                 "round"
+              ]
+            },
+            "material": {
+              "type": "string",
+              "enum": [
+                "wood",
+                "plastic",
+                "metal",
+                "any"
+              ]
+            },
+            "diameterMm": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "lines": {
@@ -89,14 +112,16 @@
           "additionalProperties": false
         },
         "clearFields": {
-          "maxItems": 7,
+          "maxItems": 9,
           "type": "array",
           "items": {
             "type": "string",
             "enum": [
               "family",
               "mechanism",
+              "material",
               "shape",
+              "diameterMm",
               "lines",
               "hasLogo",
               "minimumAreaMm",
@@ -161,14 +186,37 @@
               "enum": [
                 "automatic",
                 "manual",
-                "pocket"
+                "pocket",
+                "emboss"
               ]
             },
             "shape": {
               "type": "string",
               "enum": [
                 "rectangle",
+                "square",
                 "round"
+              ]
+            },
+            "material": {
+              "type": "string",
+              "enum": [
+                "wood",
+                "plastic",
+                "metal",
+                "any"
+              ]
+            },
+            "diameterMm": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "lines": {
@@ -330,6 +378,7 @@
                 "enum": [
                   "family",
                   "mechanism",
+                  "material",
                   "shape",
                   "minimumAreaMm"
                 ]

@@ -95,6 +95,15 @@
       ],
       "additionalProperties": false
     },
+    "shape": {
+      "default": "rectangle",
+      "type": "string",
+      "enum": [
+        "rectangle",
+        "square",
+        "round"
+      ]
+    },
     "objects": {
       "minItems": 1,
       "maxItems": 30,
@@ -211,6 +220,56 @@
               "stroke"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+              },
+              "type": {
+                "type": "string",
+                "const": "circle"
+              },
+              "xMm": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              "yMm": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              "radiusMm": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 500
+              },
+              "strokeMm": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 2
+              },
+              "stroke": {
+                "type": "string",
+                "enum": [
+                  "#000000",
+                  "#ffffff"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "xMm",
+              "yMm",
+              "radiusMm",
+              "strokeMm",
+              "stroke"
+            ],
+            "additionalProperties": false
           }
         ]
       }
@@ -228,6 +287,7 @@
     "fixture",
     "validatedForProduction",
     "areaMm",
+    "shape",
     "objects"
   ],
   "additionalProperties": false

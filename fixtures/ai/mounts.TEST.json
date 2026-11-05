@@ -1,0 +1,10 @@
+{
+  "fixture": true,
+  "description": "Frasi inventate per collaudare le nuove montature; nessun dato cliente.",
+  "cases": [
+    { "id": "manuale-diametro-cm", "message": "vorrei un timpro manuale di legno tondo diametro 3,5 cm", "requirements": {}, "lastQuestion": null, "expected": { "family": "stamp", "mechanism": "manual", "material": "wood", "shape": "round", "diameterMm": 35, "sizeUnknown": false } },
+    { "id": "tascabile-quadrato", "message": "timbro tascabile autoinchiostrante quadrato lato 12 mm", "requirements": {}, "lastQuestion": null, "expected": { "family": "stamp", "mechanism": "pocket", "shape": "square", "minimumAreaMm": { "width": 12, "height": 12 }, "sizeUnknown": false } },
+    { "id": "secco-rilievo", "message": "mi serve un timbro a secco per imprimere in rilievo, rotondo diametro 41 mm", "requirements": {}, "lastQuestion": null, "expected": { "family": "stamp", "mechanism": "emboss", "shape": "round", "diameterMm": 41, "sizeUnknown": false } },
+    { "id": "materiale-contesto", "message": "la plastca, grazie", "requirements": { "family": "stamp", "mechanism": "manual", "shape": "round", "diameterMm": 35 }, "lastQuestion": "Per la montatura manuale preferisci legno, plastica, metallo oppure non hai preferenze?", "expected": { "material": "plastic", "mechanism": "manual", "shape": "round", "diameterMm": 35 } }
+  ]
+}

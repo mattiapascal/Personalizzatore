@@ -1,16 +1,18 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { snapshot as fixture, fixtureCatalog } from '../src/catalog/adapter.ts';
-import { CatalogSchema, ProductProfileSchema, type ProductProfile } from '../src/catalog/schema.ts';
+import { mountSnapshot as fixture, mountFixtureCatalog as fixtureCatalog } from '../src/catalog/adapter.ts';
+import { CatalogSchema } from '../src/catalog/schema.ts';
 import { CatalogStateSchema, type CatalogState } from '../src/runtime/schema.ts';
 import type { Config } from './config.ts';
 import { readJson, writeJson, missingFile } from './files.ts';
+import { deriveMountProfiles, PROFILE_RULES_VERSION } from './mount-profiles.ts';
 
 export const CATALOG_QUERY = `query StampCatalog($query: String!, $after: String) {
   products(first: 50, after: $after, query: $query) {
     nodes {
-      id title handle status onlineStoreUrl updatedAt tags
-      variants(first: 50) { nodes { id } pageInfo { hasNextPage endCursor } }
+      id title handle status onlineStoreUrl updatedAt tags descriptionHtml vendor
+      technicalSummary: metafield(namespace: "custom", key: "short_description") { jsonValue }
+      variants(first: 50) { nodes { id title selectedOptions { name value } } pageInfo { hasNextPage endCursor } }
     }
     pageInfo { hasNextPage endCursor }
   }
@@ -19,29 +21,25 @@ const pageInfo = z.object({ hasNextPage: z.boolean(), endCursor: z.string().null
 export const RawProductSchema = z.object({
   id: z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/), title: z.string(), handle: z.string(),
   status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT', 'UNLISTED']), onlineStoreUrl: z.url().nullable(), updatedAt: z.iso.datetime(), tags: z.array(z.string()),
-  variants: z.object({ nodes: z.array(z.object({ id: z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/) })), pageInfo }),
+  descriptionHtml: z.string().default(''), vendor: z.string().default(''), technicalSummary: z.object({ jsonValue: z.unknown() }).nullable().optional(),
+  variants: z.object({ nodes: z.array(z.object({ id: z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/), title: z.string().default(''), selectedOptions: z.array(z.object({ name: z.string(), value: z.string() })).default([]) })), pageInfo }),
 });
 export type RawProduct = z.infer<typeof RawProductSchema>;
 
-export function normalizeCatalog(raw: readonly RawProduct[], now: Date, profiles: readonly ProductProfile[] = fixture.products): CatalogState {
-  const products: ProductProfile[] = [], pending: CatalogState['pending'] = [];
+export function normalizeCatalog(raw: readonly RawProduct[], now: Date): CatalogState {
+  const products: CatalogState['snapshot']['products'] = [], pending: CatalogState['pending'] = [];
   const seen = new Set<string>();
   for (const p of raw) {
     if (seen.has(p.id)) throw new Error('Import catalogo duplicato o instabile');
     seen.add(p.id);
     if (p.status !== 'ACTIVE' || !p.onlineStoreUrl) continue;
-    const profile = profiles.find(item => item.productId === p.id);
-    const reason = !profile ? 'Profilo tecnico da censire: modello nuovo, nessuna misura presunta.'
-      : profile.title !== p.title ? 'Titolo modificato: verificare dimensioni e profilo prima di proporre il modello.'
-      : p.variants.pageInfo.hasNextPage ? 'Elenco varianti incompleto: revisione necessaria.'
-      : !profile.variantIds.every(id => p.variants.nodes.some(v => v.id === id)) ? 'Variante del profilo rimossa: revisione necessaria.' : null;
-    if (reason || !profile) { pending.push({ productId: p.id, title: p.title, reason: reason! }); continue; }
-    products.push(ProductProfileSchema.parse({ ...profile, title: p.title, handle: p.handle, tags: [...p.tags].sort(), url: p.onlineStoreUrl, status: p.status }));
+    const derived = deriveMountProfiles(p); products.push(...derived.profiles);
+    if (derived.reason) pending.push({ productId: p.id, title: p.title, reason: derived.reason });
   }
-  products.sort((a, b) => a.productId.localeCompare(b.productId));
+  products.sort((a, b) => (a.profileId ?? a.productId).localeCompare(b.profileId ?? b.productId));
   pending.sort((a, b) => a.productId.localeCompare(b.productId));
-  const version = `SHOPIFY-${createHash('sha256').update(JSON.stringify({ products, pending })).digest('hex').slice(0, 20)}`;
-  return CatalogStateSchema.parse({ version, snapshot: { ...fixture, fixture: false, source: 'Shopify Admin GraphQL 2026-10, lettura; profili TEST censiti separatamente', capturedOn: now.toISOString().slice(0, 10), products }, checkedAt: now.toISOString(), pending });
+  const version = `SHOPIFY-${createHash('sha256').update(JSON.stringify({ rules: PROFILE_RULES_VERSION, products, pending })).digest('hex').slice(0, 20)}`;
+  return CatalogStateSchema.parse({ version, snapshot: { ...fixture, fixture: false, source: 'Shopify Admin GraphQL 2026-10, lettura; profili TEST da fonti esplicite, ' + PROFILE_RULES_VERSION, capturedOn: now.toISOString().slice(0, 10), products }, checkedAt: now.toISOString(), pending });
 }
 
 export async function fetchCatalog(config: Config, fetcher: typeof fetch = fetch): Promise<RawProduct[]> {
@@ -78,8 +76,8 @@ export class CatalogService {
   constructor(private config: Config, private cachePath: string, private fetcher: typeof fetch = fetch) {}
   async load() {
     try {
-      const saved = z.object({ scopeQuery: z.string(), catalog: CatalogStateSchema }).parse(await readJson(this.cachePath));
-      if (saved.scopeQuery !== this.config.SHOPIFY_CATALOG_QUERY) throw new Error('Ambito catalogo diverso dalla cache');
+      const saved = z.object({ scopeQuery: z.string(), profileRulesVersion: z.string(), catalog: CatalogStateSchema }).parse(await readJson(this.cachePath));
+      if (saved.scopeQuery !== this.config.SHOPIFY_CATALOG_QUERY || saved.profileRulesVersion !== PROFILE_RULES_VERSION) throw new Error('Ambito o regole catalogo diversi dalla cache');
       const cached = saved.catalog;
       CatalogSchema.parse(cached.snapshot); this.state = cached;
     } catch (error) { if (!missingFile(error)) this.lastError = 'Cache catalogo illeggibile: ripartito dal campione TEST'; }
@@ -90,7 +88,7 @@ export class CatalogService {
       try {
         const raw = await fetchCatalog(this.config, this.fetcher);
         const next = normalizeCatalog(raw, new Date());
-        await writeJson(this.cachePath, { scopeQuery: this.config.SHOPIFY_CATALOG_QUERY, catalog: next });
+        await writeJson(this.cachePath, { scopeQuery: this.config.SHOPIFY_CATALOG_QUERY, profileRulesVersion: PROFILE_RULES_VERSION, catalog: next });
         this.state = next; this.lastError = null; return next;
       } catch (error) { this.lastError = error instanceof Error ? error.message : 'Aggiornamento non riuscito'; throw new Error(this.lastError); }
       finally { this.running = null; }

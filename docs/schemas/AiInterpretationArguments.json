@@ -23,7 +23,24 @@
           "enum": [
             "automatic",
             "manual",
-            "pocket"
+            "pocket",
+            "emboss"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "material": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "wood",
+            "plastic",
+            "metal",
+            "any"
           ]
         },
         {
@@ -37,8 +54,21 @@
           "type": "string",
           "enum": [
             "rectangle",
+            "square",
             "round"
           ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "diameterMm": {
+      "anyOf": [
+        {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
         },
         {
           "type": "null"
@@ -96,14 +126,16 @@
       ]
     },
     "clearFields": {
-      "maxItems": 7,
+      "maxItems": 9,
       "type": "array",
       "items": {
         "type": "string",
         "enum": [
           "family",
           "mechanism",
+          "material",
           "shape",
+          "diameterMm",
           "lines",
           "hasLogo",
           "minimumAreaMm",
@@ -127,7 +159,9 @@
   "required": [
     "family",
     "mechanism",
+    "material",
     "shape",
+    "diameterMm",
     "lines",
     "hasLogo",
     "widthMm",

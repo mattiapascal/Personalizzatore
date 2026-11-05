@@ -28,7 +28,7 @@ try {
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   await page.locator('.product-card').first().waitFor();
   await page.screenshot({ path: '.local/previews/selection-desktop.png', fullPage: true });
-  await page.locator('.product-card').first().getByRole('button', { name: 'Prova nel canvas' }).click();
+  await page.locator('.product-card').filter({ has: page.getByRole('heading', { name: /4913/ }) }).getByRole('button', { name: 'Prova nel canvas' }).click();
   await page.getByLabel('Riapri progetto JSON').setInputFiles(resolve('fixtures/illustrator/stamp.TEST.json'));
   await page.getByTestId('revision').filter({ hasText: 'Revisione grafica: 1 ·' }).waitFor();
   const pending = page.waitForEvent('download');

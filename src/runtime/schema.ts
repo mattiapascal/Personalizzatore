@@ -11,6 +11,6 @@ export const RuntimeSchema = z.strictObject({
   csrfToken: z.string().min(32),
   ai: z.strictObject({ mode: z.enum(['demo', 'openai']), ready: z.boolean(), reason: z.string().nullable(), model: z.string(), budgetUsd: z.number(), reservedUsd: z.number(), requests: z.number().int() }),
   catalog: CatalogStateSchema,
-  sync: z.strictObject({ configured: z.boolean(), intervalSeconds: z.number(), lastError: z.string().nullable(), refreshing: z.boolean() }),
+  sync: z.strictObject({ configured: z.boolean(), intervalSeconds: z.number(), lastError: z.string().nullable(), refreshing: z.boolean(), stale: z.boolean().optional() }),
 });
 export type RuntimeState = z.infer<typeof RuntimeSchema>;
