@@ -1,5 +1,31 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Backend, AI reale, catalogo e chat con riepilogo — 5 novembre 2026
+
+Consegna successiva autorizzata dall'utente: API locali, provider OpenAI reale, catalogo Shopify in sola lettura aggiornabile e dialogo senza form esterni. Sotto la chat il riepilogo Prodotto/Montatura/Forma/Dimensioni passa da rosso a verde con le risposte; un campo ritirato torna rosso. Testo/stato e valori accompagnano i colori. «Non so le misure» è risposta ricevuta, non idoneità produttiva.
+
+### Controlli automatici
+
+- `npm run check`: **56/56 unit test**, **14/14 browser e2e**, build TypeScript/Vite e controllo credenziali nel bundle **superati**. Nessuna chiamata AI a pagamento nella suite automatica; trasporti controllati e API HTTP locale.
+- Copertura server nuova: tool strict, campi nullable/correzioni, quote atomiche persistenti anche fra processi, errori/provider malformato, nessuna rete senza configurazione, origine/host/nonce/body limit, endpoint non autorizzati, file `.env.local` non servito, bootstrap privo di credenziali.
+- Copertura catalogo: paginazione/cursori, duplicati, import atomico, conservazione cache su errore, query solo lettura, tag/URL aggiornati, prodotti ritirati/non pubblicati esclusi e nuovi modelli/varianti/titoli in revisione.
+- Browser: conversazione una domanda alla volta; niente input dimensionali/montatura; riepilogo rosso/verde e ritiro risposta; correzioni e sessione preservate dopo reload; nessun fallback nascosto; aggiornamento catalogo senza perdita bozza e blocco SVG obsoleto. Regressioni Fabric, drag, multilinea, JSON e golden SVG mantenute.
+- `npm run schemas`: contratti pubblici rigenerati, incluse API/Runtime. `capture:lab`: screenshot desktop/mobile e SVG; riepilogo misto rosso/verde ispezionato su mobile. Nessuna sovrapposizione rilevata.
+
+### Prove reali separate
+
+- Provider: `gpt-5.4-mini-2026-03-17`, Responses/function calling strict. La chiave è stata configurata dal titolare nel file privato; non mostrata o pubblicata.
+- Corpus inventato di 20 richieste: prima revisione **16/20**, poi **18/20** (incluso un errore di contratto/trasporto), poi **19/20** con prompt v3. Ultimo insuccesso: richiesta di riscrivere in mm misure già esplicite in cm, anziché convertirle. Prompt v4 e descrizioni degli argomenti chiariti; il caso mirato `conversione-cm` è poi passato. Non è stata dichiarata una nuova regressione completa 20/20 del prompt v4.
+- **Due dialoghi reali di quattro risposte superati**, incluso quello finale con prompt v4, contesto recente e catalogo collegato: richiesta per fatture → autoinchiostrante → rettangolare → 50×20 mm → riepilogo verde e candidati 4913/4915. Nessun dato cliente reale.
+- Registro locale dopo i collaudi: **71 richieste riservate, 70.698 token input noti e 6.159 output noti**, stima standard conservativa sui token noti **0,080739 USD**, riserva **0,81033075 USD** su massimo locale 1 USD. La stima non è la fattura, non include usage non restituito da errori e non presume lo sconto promozionale. Budget utente autorizzato: massimo 2 EUR. Dettagli in `costs-and-metrics.md`.
+- Shopify: dominio riconfermato, query API 2026-10 validata dal connettore e dal validatore della skill (**VALID**, `read_products`); lettura completa dal backend riuscita. **3 modelli con profilo TEST e 211 attivi/pubblicati da profilare** nell'ambito `title:timbr*`. Poll ogni 300 secondi, attivo solo a server aperto. Nessuna scrittura sul negozio.
+
+### Limiti e prossimi passi
+
+L'AI resta statistica: i risultati sono un campione di sviluppo, non una garanzia su frasi reali. Censire i 211 prodotti in revisione con fonti tecniche, estendere gli scenari e continuare il collaudo di ambiguità/correzioni. I tre profili e i vincoli grafici restano TEST; nessuna prova umana Illustrator eseguita. Loghi, scene complesse e comandi grafici AI in linguaggio naturale non sono ancora implementati.
+
+La promozione token è stata riferita dal titolare; API funzionante verificata, sconto effettivo in Usage/Billing non verificato. No-AI chiarito dal titolare: riguarda solo funzioni generative PitchPrint. Nessuna modifica BSS/PitchPrint, tema, prezzo, variante, carrello/checkout, app o deploy.
+
 ## Collegamento selezione/canvas e testo diretto — 5 novembre 2026
 
 Implementato il percorso candidato → `Prova nel canvas`: ID prodotto/variante e versioni nel JSON, dimensioni nominali del modello nel canvas e nello SVG. Il testo ora si modifica dentro il canvas con IText (doppio clic, Invio per nuova riga, Esc per validare), con gli stessi comandi/store del pannello sviluppatore. Rimosso il campo di testo esterno. Il cambio modello conserva oggetti e ID se entrano; altrimenti conserva il documento precedente e sospende editor/export finché si risolve il conflitto. Import di un prodotto/versione/area differente rifiutato. Profilo tecnico sempre TEST, area utile non certificata.

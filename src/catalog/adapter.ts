@@ -1,5 +1,5 @@
-import fixture from '../../fixtures/products/shopify-stamps.TEST.json';
-import { CatalogSchema, type ProductProfile } from './schema';
+import fixture from '../../fixtures/products/shopify-stamps.TEST.json' with { type: 'json' };
+import { CatalogSchema, type ProductProfile, type CatalogSnapshot } from './schema.ts';
 
 export interface CatalogAdapter {
   readonly version: string;
@@ -7,16 +7,20 @@ export interface CatalogAdapter {
   get(productId: string): ProductProfile;
 }
 export const snapshot = CatalogSchema.parse(fixture);
-if (new Set(snapshot.products.map(p => p.productId)).size !== snapshot.products.length) throw new Error('ID catalogo duplicati');
-export const fixtureCatalog: CatalogAdapter = {
-  version: `TEST-${snapshot.capturedOn}-v1`,
-  list: () => structuredClone(snapshot.products),
-  get: productId => {
-    const product = snapshot.products.find(p => p.productId === productId);
-    if (!product) throw new Error('Prodotto assente dal catalogo');
-    return structuredClone(product);
-  },
-};
+export function createCatalog(raw: CatalogSnapshot, version: string): CatalogAdapter {
+  const data = CatalogSchema.parse(raw);
+  if (new Set(data.products.map(p => p.productId)).size !== data.products.length) throw new Error('ID catalogo duplicati');
+  return {
+    version,
+    list: () => structuredClone(data.products),
+    get: productId => {
+      const product = data.products.find(p => p.productId === productId);
+      if (!product) throw new Error('Prodotto assente dal catalogo');
+      return structuredClone(product);
+    },
+  };
+}
+export const fixtureCatalog = createCatalog(snapshot, `TEST-${snapshot.capturedOn}-v1`);
 
 // Adattatore finale attuale: solo navigazione, nessuna scrittura Shopify/BSS/PitchPrint.
 export function productPage(catalog: CatalogAdapter, productId: string): string {

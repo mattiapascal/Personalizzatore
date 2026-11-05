@@ -1,5 +1,5 @@
-import type { CatalogAdapter } from '../catalog/adapter';
-import { RequirementsSchema, type MissingField, type Recommendation, type Requirements } from './schema';
+import type { CatalogAdapter } from '../catalog/adapter.ts';
+import { RequirementsSchema, type MissingField, type Recommendation, type Requirements } from './schema.ts';
 
 export function missingInformation(input: Requirements): MissingField[] {
   const r = RequirementsSchema.parse(input);
@@ -7,12 +7,14 @@ export function missingInformation(input: Requirements): MissingField[] {
   if (r.family !== 'stamp') return [];
   if (!r.mechanism) return ['mechanism'];
   if (r.mechanism !== 'automatic' || r.shape === 'round') return [];
+  if (!r.shape) return ['shape'];
   if (!r.minimumAreaMm && !r.sizeUnknown) return ['minimumAreaMm'];
   return [];
 }
 export const questions: Record<MissingField, string> = {
   family: 'Che prodotto cerchi? In questo laboratorio possiamo cercare timbri.',
   mechanism: 'Preferisci un timbro autoinchiostrante, manuale o tascabile?',
+  shape: 'Vuoi un’impronta rettangolare o rotonda?',
   minimumAreaMm: 'Quale ingombro minimo deve avere l’impronta (larghezza × altezza in mm)? Se non lo sai, scegli «Non so le misure». Il numero di righe da solo non garantisce che il testo entri.',
 };
 
@@ -39,7 +41,7 @@ export function recommendProducts(catalog: CatalogAdapter, input: Requirements):
         'Area utile, margini, font minimo e impaginazione da confermare con il laboratorio.',
         ...(r.lines ? [`Compatibilità delle ${r.lines} righe non verificata graficamente.`] : []),
         'Prezzo finale, disponibilità e pubblicazione da verificare sulla pagina attuale.',
-        'Tag Shopify No-AI e warning-pitchprint: significato da confermare prima del rilascio.',
+        'Percorso grafico in negozio e avvisi PitchPrint da verificare prima del rilascio.',
       ],
     }));
 }

@@ -17,7 +17,7 @@
 
 ## Gate ancora richiesti
 
-- Confermare area utile e profili stampabili, tag No-AI, disponibilità/pubblicazione corrente e metafield dimensionali reali.
+- Confermare area utile e profili stampabili, disponibilità/pubblicazione corrente e metafield dimensionali reali. No-AI è stato chiarito dal titolare: riguarda solo PitchPrint.
 - Integrare provider server e valutare 10–20 conversazioni con risposte LLM, chiarimenti, cambi requisiti, prompt injection e fallback; misurare token/costi con budget.
 - Eseguire la checklist Illustrator con prove umane e registrare misure/font/editabilità.
 - Aggiungere fixture 3–8 righe, font, loghi vettoriali/raster, gruppi e casi complessi prima dell'adozione editor.

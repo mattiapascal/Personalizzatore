@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "family": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "stamp",
+            "other"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mechanism": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "manual",
+            "pocket"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "shape": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "rectangle",
+            "round"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lines": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "hasLogo": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "widthMm": {
+      "anyOf": [
+        {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Larghezza minima richiesta in millimetri; convertire i cm moltiplicando per 10, senza chiedere al cliente di convertirli."
+    },
+    "heightMm": {
+      "anyOf": [
+        {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Altezza minima richiesta in millimetri; convertire i cm moltiplicando per 10."
+    },
+    "sizeUnknown": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "clearFields": {
+      "maxItems": 7,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "family",
+          "mechanism",
+          "shape",
+          "lines",
+          "hasLogo",
+          "minimumAreaMm",
+          "sizeUnknown"
+        ]
+      }
+    },
+    "clarification": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "family",
+    "mechanism",
+    "shape",
+    "lines",
+    "hasLogo",
+    "widthMm",
+    "heightMm",
+    "sizeUnknown",
+    "clearFields",
+    "clarification"
+  ],
+  "additionalProperties": false
+}

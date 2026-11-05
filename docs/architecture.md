@@ -1,13 +1,15 @@
 # Architettura del laboratorio
 
-Una sola app React/TypeScript, senza backend connesso, autenticazione Shopify, tunnel o deploy. Vite serve solo su `127.0.0.1`. Questo non è lo scaffold di un'app Shopify installabile: la documentazione ufficiale raccomanda React Router per la futura app, da inizializzare su ambiente dev dopo consenso. I moduli di dominio restano trasferibili.
+Una sola app React/TypeScript con API locali Node integrate nel server Vite, solo su `127.0.0.1`. Provider OpenAI e lettura Admin Shopify collegati mediante configurazione privata server. Nessun tunnel, registrazione app o deploy. Questo non è lo scaffold di un'app Shopify installabile: per l'ambiente produttivo servirà un backend persistente e autenticato, da progettare e autorizzare separatamente. La build contiene soltanto asset frontend; il backend funziona con `npm run dev`.
 
 ```text
-UI richiesta / chiarimenti
-    → AiProvider.propose (mock esplicito, output unknown)
+Chat / riepilogo rosso-verde / contesto recente limitato
+    → AiProvider (HTTP reale oppure demo esplicita)
+    → API locale: origine + nonce + limiti + quota persistente
+    → Responses / function calling strict (un tool, nessun catalogo inviato)
     → AiToolSchema + revisione sessione
     → updateRequirements → motore deterministico
-    → snapshot CatalogAdapter → motivazioni + verifiche residue
+    → CatalogAdapter → motivazioni + verifiche residue
     → productPage → onlineStoreUrl acquisito da Shopify
 
 Candidato → Prova nel canvas → Product/Variant ID + versione + area nominale
@@ -30,25 +32,25 @@ Schemi Zod in `src/catalog/schema.ts`, `src/selection/schema.ts`, `src/ai/contra
 | GraphicDocument | UUID, revisione, area nominale mm, oggetti con ID stabili; Product/Variant ID, versione catalogo e profilo commerciale; vincoli grafici ancora TEST |
 | GraphicCommand | Whitelist, ID oggetto, revisione attesa e argomenti stretti |
 
-Whitelist selezione: `collectRequirements`, `searchProducts`, `getProductProfile`, `recommendProducts`, `askMissingInformation`. La lettura del profilo rifiuta ID estranei; le domande devono essere ancora pertinenti. Il mock propone soltanto `collectRequirements`; il dispatcher è pronto per gli altri strumenti. La raccomandazione e il link vengono sempre dal catalogo/motore, mai dalla prosa di un provider.
+Whitelist selezione: `collectRequirements`, `searchProducts`, `getProductProfile`, `recommendProducts`, `askMissingInformation`. La lettura del profilo rifiuta ID estranei; le domande devono essere ancora pertinenti. Il provider reale può chiamare solo `collect_requirements`: restituisce attributi nullable (nessun aggiornamento), campi da ritirare e una domanda semantica facoltativa. Il server normalizza la proposta in `collectRequirements`, aggiunge UUID/revisione attesi e il client valida prima di eseguire. I campi non menzionati restano invariati; ritiri e assegnazioni ridondanti sono normalizzati. La raccomandazione e il link vengono sempre dal catalogo/motore, mai dalla prosa del modello.
 
 Whitelist grafica di questo incremento: `setText`, `moveObject`, `setObjectStyle`. Nessun JavaScript, HTML, URL logo o SVG arbitrario accettato. Non sono ancora implementati `addText`, logo, gruppi, rotazione o ridimensionamento. `DocumentStore.changeProduct` è un'azione esplicita della UI: conserva oggetti, verifica ingombri, aggiorna riferimenti e area e invalida revisioni precedenti. Fallimento atomico: documento e storico immutati. Successo: storico undo ricomincia, per non ripristinare un prodotto differente. Font/colore/margine attuali appartengono esclusivamente a `TEST-stamp-v1`, distinto da `catalogProductProfileVersion`.
 
 ## Selezione verificabile
 
 1. Se manca la famiglia, chiederla; poi la montatura. Campione: solo timbri rettangolari autoinchiostranti.
-2. Per gli automatici chiedere ingombro minimo o «non so». Non assumere che sei righe entrino in un determinato modello.
+2. Per gli automatici chiedere forma, poi ingombro minimo o «non so». Non assumere che sei righe entrino in un determinato modello. Montature/forme fuori dal campione vengono segnalate senza interrogare inutilmente sulle misure.
 3. Filtrare per stato ACTIVE alla cattura, montatura, forma, logo dichiarato e dimensioni nominali in orientamento fisso.
 4. Ordinare per area crescente, spareggio per ID. Nessun prezzo, disponibilità, punteggio AI o capacità di righe inventato.
 5. Mostrare dimensioni nominali e motivazioni; con misure ignote presentare possibilità esplorative. Layout e area utile richiedono conferma.
 
-Esempio ripetibile: «timbro aziendale con logo e sei righe» → richiesta montatura → «autoinchiostrante» → richiesta ingombro → 50×20 mm → 4913 (58×22) e 4915 (70×25), ordinati per area. Nuovo requisito 60×23 → solo 4915, stesso UUID e logo conservato, vecchia selezione azzerata.
+Esempio ripetibile, tutto in chat: «timbro aziendale con logo e sei righe» → montatura → «autoinchiostrante» → forma → «rettangolare» → ingombro → 50×20 mm → 4913 (58×22) e 4915 (70×25), ordinati per area. Nuovo requisito 60×23 → solo 4915, stesso UUID e logo conservato, vecchia selezione azzerata. Ambiguità semantiche sospendono l'esposizione dei candidati fino alla risposta al chiarimento.
 
 ## Stato e persistenza
 
-La sessione salva solo attributi strutturati nel localStorage, con scadenza logica di ripristino a 24 ore dall'ultima modifica; il ripristino ricalcola i candidati ed esclude versioni catalogo incompatibili e ID manipolati. Alla riapertura dati scaduti sono sostituiti dalla sessione vuota: il browser chiuso non può cancellarli automaticamente. La richiesta libera non è salvata; nessun log remoto o analytics. È una persistenza locale sostituibile, non un database produttivo. `Azzera sessione` cancella i requisiti.
+La sessione salva solo attributi strutturati nel localStorage, con scadenza logica di ripristino a 24 ore dall'ultima modifica; il ripristino ricalcola i candidati ed esclude ID manipolati. Una versione catalogo nuova conserva i requisiti validi, aggiorna la revisione e invalida la vecchia selezione. Alla riapertura dati scaduti sono sostituiti dalla sessione vuota: il browser chiuso non può cancellarli automaticamente. È una persistenza locale sostituibile, non un database produttivo. `Azzera conversazione e requisiti` riparte da zero.
 
-`selection/interaction.ts` gestisce insieme sessione e riscontro transitorio della UI, senza salvare messaggi nel localStorage. Ogni analisi o scelta conferma l'azione e porta il focus al riquadro con domanda successiva, numero di risultati o assenza di candidati. «Non so le misure» viene conservato anche prima della scelta montatura; il pulsante per vedere i modelli porta il focus al titolo dei risultati. Il reducer mantiene il controllo delle revisioni e non avvia aggiornamenti React dentro altri updater.
+`selection/interaction.ts` gestisce insieme sessione e riscontro transitorio. `SelectionChat` conserva in memoria al massimo 40 messaggi, mostra una domanda alla volta e riporta il focus al compositore. Non esistono più campi dimensionali o montatura esterni. Il riepilogo deriva dai requisiti validati: rosso/Da chiarire, verde/Risposta raccolta, valore e marcatura testuale. «Non so» sulle misure è verde come risposta ricevuta ma non certifica l'idoneità. Righe/logo facoltativi sono annotati separatamente. La conversazione non viene salvata localmente né loggata dal backend; il modello riceve messaggio, requisiti, ultima domanda ed estratti degli ultimi sei scambi (400 caratteri ciascuno). Nessun elenco o profilo del catalogo viene inviato al provider.
 
 Il documento grafico è l'unico stato autorevole. Fabric è una vista: al termine di un trascinamento emette un comando manuale; se rifiutato, il canvas viene ripristinato dal documento. Le misure browser di Fabric verificano l'ingombro prima del commit. Undo/redo/import incrementano sempre la revisione locale, invalidando i comandi precedenti. Storico di sessione in memoria; JSON contiene lo stato editabile, non lo storico completo. Cambiare sezione non azzera il documento; un reload richiede la riapertura del JSON esportato.
 
@@ -56,8 +58,12 @@ La scena è ristretta a testo Arial fino a 8 righe/480 caratteri e rettangolo ve
 
 Il primo canvas si apre soltanto da un candidato reale. I successivi cambi di requisiti non cancellano una composizione aperta: si cambia modello con `Prova nel canvas`. La sessione di selezione e il documento sono distinti: aprire un prodotto Shopify esterno non trasferisce la grafica. Gli import non possono sostituire associazione o dimensioni del prodotto corrente. Fixture storiche senza associazione sono adottate solo a parità di area, dopo validazione. L'associazione non certifica l'area utile o la variante di acquisto; nel campione ogni profilo contiene un riferimento variante.
 
-## Provider reale e sicurezza futura
+## Provider reale, catalogo e sicurezza
 
-`AiProvider` riceve dati strutturati e restituisce `unknown`, con timeout e `AbortSignal`; ogni output è poi validato. Errori e risposta malformata lasciano praticabili le scelte guidate. Attualmente non esiste endpoint HTTP AI né uso LLM. Il mock riconosce un piccolo vocabolario italiano e non comprende negazioni o dialoghi generici in modo affidabile.
+Endpoint: `GET /api/bootstrap`, `POST /api/ai/interpret`, `POST /api/catalog/refresh`. Host e origine loopback, nonce di processo, JSON limitato a 16 KB. Il nonce è una protezione contro richieste web estranee, non un'autenticazione produttiva. Una chiamata AI alla volta, 10/minuto, quota persistente con lock inter-processo e riserva prima della rete. Chiavi esclusivamente server; risposta bootstrap priva di credenziali. Registro solo di consumi; errori sanitizzati. Nessun retry a pagamento automatico.
 
-Prima di un provider reale: backend con autenticazione/sessioni, body limit, rate limit, quota token e spesa, logging redatto, TTL server, prompt/model versionati e consenso su dati inviati. Nessuna chiave `VITE_*`: tutti gli asset frontend sono pubblici. Non copiare credenziali dai repository di handoff. L'assenza di API amministrative e carrello è un confine attuale di esecuzione, non una dichiarazione di sicurezza per un futuro deploy.
+`AiProvider` riceve dati strutturati e restituisce `unknown`, con timeout e `AbortSignal`; ogni output è poi validato. Errori lasciano invariati i requisiti. Il client non attiva il mock quando il server/provider manca: per usarlo va selezionata esplicitamente la demo. Modello fissato, prompt versionato, budget locale 1 USD entro il tetto di collaudo utente 2 EUR. Configurazione in `.env.local`; niente chiavi `VITE_*`, credenziali copiate dagli handoff o valori segreti nel bundle. `store:false` non equivale a zero retention né revoca la condivisione dati scelta dal titolare.
+
+`CatalogService` importa con query fissa di sola lettura Admin 2026-10, pagine da 50 prodotti, fino a 5000. Timeout completo 30 secondi, controlli cursori/errori/duplicati e sostituzione atomica. Varianti oltre la prima pagina mettono il modello in revisione, anziché usare un profilo incompleto. Cache privata locale associata all'ambito query, versione hash dei dati e timestamp separato: letture identiche non invalidano le sessioni. Poll all'avvio/ogni 300 secondi e pulsante manuale; richieste concorrenti aggregate. La UI controlla novità ogni 10 secondi e le applica ai risultati con azione esplicita, conservando le bozze e bloccando SVG non rivalidati.
+
+Nuovi modelli, titoli cambiati o varianti del profilo rimosse richiedono verifica tecnica; nessun profilo dedotto arbitrariamente. Prodotti archiviati/non pubblicati/assenti vengono esclusi. La query `title:timbr*` è un ambito configurato, non una classificazione esaustiva del negozio. Il timer non lavora a server spento: webhook, riconciliazione produttiva, autenticazione, retention e permessi di un servizio pubblico restano da sviluppare in un ambiente autorizzato.

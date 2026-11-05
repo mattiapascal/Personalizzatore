@@ -6,5 +6,5 @@
     "noUnusedParameters": true, "skipLibCheck": true, "resolveJsonModule": true,
     "allowImportingTsExtensions": true, "noEmit": true, "types": ["node"]
   },
-  "include": ["src", "tests", "scripts", "vite.config.ts", "playwright.config.ts"]
+  "include": ["src", "server", "tests", "scripts", "vite.config.ts", "playwright.config.ts"]
 }

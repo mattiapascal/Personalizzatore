@@ -13,7 +13,8 @@ export const ProductProfileSchema = z.strictObject({
   validatedForProduction: z.literal(false), price: z.null(), availability: z.null(),
 });
 export const CatalogSchema = z.strictObject({
-  schemaVersion: z.literal(1), fixture: z.literal(true), source: z.string(), capturedOn: z.iso.date(),
-  shopDomain: z.literal('www.incisoriasacchetti.it'), products: z.array(ProductProfileSchema).min(1),
+  schemaVersion: z.literal(1), fixture: z.boolean(), source: z.string(), capturedOn: z.iso.date(),
+  shopDomain: z.literal('www.incisoriasacchetti.it'), products: z.array(ProductProfileSchema),
 });
 export type ProductProfile = z.infer<typeof ProductProfileSchema>;
+export type CatalogSnapshot = z.infer<typeof CatalogSchema>;

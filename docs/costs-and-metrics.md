@@ -1,17 +1,29 @@
-# Costi e misure
+# Costi e misure — aggiornamento 5 novembre 2026
 
-Questo incremento esegue **zero chiamate a modelli AI**, non richiede chiavi e non produce consumo token. Il mock è un parser locale; zero spesa API in questa prova non è una stima di costo per una sessione con LLM. Nessun costo mensile misurato, nessuna infrastruttura acquistata.
+Il titolare ha autorizzato un massimo di **2 EUR per il collaudo**. La configurazione privata usa un limite locale prudente di **1 USD** e 100 richieste. Nessun hosting o servizio aggiuntivo acquistato.
 
-Prima di scegliere provider/modello, concordare budget e dati trattabili, poi misurare almeno 20 sessioni sugli stessi scenari di `tests/selection.test.ts` includendo chiarimenti, correzioni e fallback.
+Modello configurato: gpt-5.4-mini-2026-03-17, Responses API con function calling strict e prompt versionato. Listino standard verificato il 5 novembre 2026: 0,75 USD/milione token input e 4,50 USD/milione token output. Per prudenza non scontiamo il caching nel contatore. [Fonte OpenAI](https://developers.openai.com/api/docs/models/gpt-5.4-mini).
 
-Record minimo server redatto: session ID pseudonimo, prompt/model version, tool, input/output/cached tokens riportati dal provider, latenza, numero di richieste, errori e retry. Non conservare testo personale o loghi nei log. Tariffe da verificare alla data della misura, nella valuta dichiarata dal fornitore.
+## Quote locali
 
-```text
-costo_sessione = Σ (input_non_cached * tariffa_input
-                  + input_cached * tariffa_cached
-                  + output * tariffa_output) / unità_tariffa
-costo_mese = sessioni_previste * costo_medio_misurato
-             + backend + storage + eventuali servizi
-```
+Prima di ogni chiamata si riserva il costo di un input sovrastimato (byte UTF-8 del payload più overhead) e dell'output massimo. La riserva non viene rimborsata su errori/timeout: è un limite conservativo, non la spesa fatturata. Si blocca prima di oltrepassare la quota configurata. Il registro .local/ai-meter.json conserva soltanto contatori, token e riserva USD; nessun prompt o dato cliente.
 
-Riportare media, mediana, p95, campione e casi massimi, distinguendo errori/retry. Definire quote per richieste/token/sessione, timeout, limite mensile e blocco prima di superare il budget. L'API sostituibile non implementa ancora questi controlli server: restano gate prima dell'AI reale e del deploy.
+Scritture atomiche e lock fra processi impediscono di azzerare o sovrascrivere la quota facendo partire più istanze. Se un crash lascia la directory di lock, il servizio si blocca: prima di rimuoverla occorre verificare che non ci siano richieste in corso. Non cancellare il registro per aggirare il limite. Il massimale vale per questo laboratorio, non per altre applicazioni che usino lo stesso account OpenAI.
+
+Limiti ulteriori: una chiamata AI alla volta, 10 richieste/minuto, massimo richieste totale, input 1200 caratteri, body HTTP 16 KB, output massimo 1600 token, timeout provider 20 secondi e client 25 secondi. Nessun retry automatico a pagamento.
+
+## Collaudi effettivi
+
+I primi 20 casi linguistici TEST hanno superato 16/20 prove. Dopo la revisione del contesto: 18/20 (uno dei due insuccessi era un errore di trasporto/contratto). La successiva regressione con contesto esteso ha superato 19/20: il modello chiedeva inutilmente al cliente di riscrivere in mm una misura esplicita in cm. Il prompt v4 chiarisce che la conversione è aritmetica consentita; il caso mirato è poi passato.
+
+Sono inoltre stati eseguiti due dialoghi end-to-end reali di quattro risposte, incluso il percorso finale con catalogo collegato: montatura, forma, dimensioni, riepilogo verde e candidati 4913/4915. Dati inventati, nessun cliente reale. I risultati non garantiscono affidabilità assoluta né costituiscono un'eval di traffico produttivo.
+
+Ogni report locale contiene data, modello, versione prompt, oracoli TEST, esiti e token aggregati. La stima a listino è (input * 0,75 + output * 4,50) / 1.000.000 USD. I timeout senza usage restano coperti dalla riserva ma non sono quantificati nella stima a consuntivo dei token noti.
+
+## Token promozionali e dati
+
+Il titolare ha riferito di aver abilitato la condivisione per il progetto Personalizzatore Shopify. La sua schermata elenca gpt-5.4-mini fra i modelli del gruppo con quota gratuita giornaliera. La chiave locale è stata fornita dal titolare e il provider risponde; non abbiamo verificato nel pannello Billing l'effettivo sconto o consumo della promozione. Il contatore non assume costo zero e non misura la quota gratuita residua.
+
+La condivisione è un opt-in distinto da store:false. Quest'ultimo evita la persistenza dello stato della Response, non revoca le impostazioni di condivisione e non promette zero retention. Per il collaudo usiamo solo testi inventati. [OpenAI Data controls](https://developers.openai.com/api/docs/guides/your-data).
+
+Prima di stimare un costo mensile servono sessioni rappresentative, media/mediana/p95 di richieste, token e latenza, traffico atteso, storage e backend. Queste misure di carico e una fattura effettiva non sono ancora disponibili.

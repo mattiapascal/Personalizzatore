@@ -1,6 +1,14 @@
 # Confini e conferme necessarie
 
-## Stato verificato in questa iterazione
+## Aggiornamento backend/chat — 5 novembre 2026
+
+Il titolare ha configurato direttamente chiave OpenAI e token Admin nel file privato `.env.local`. Nessuna credenziale è stata copiata dagli handoff o inviata in chat/Git. Provider reale verificato con frasi inventate. Catalogo Admin collegato in sola lettura, query `title:timbr*`, API 2026-10: lettura completa riuscita, 3 profili censiti e 211 prodotti attivi/pubblicati da verificare. Timer 300 secondi a server aperto, cache atomica, versioni e aggiornamento manuale. Il numero dipende dall'ambito query, non è un censimento di tutti i prodotti del negozio.
+
+La query è stata validata sia dal connettore sia dal validatore Shopify 2026-10: **VALID**, scope `read_products`. Nessuna mutazione, nuova app, nuova sottoscrizione webhook, modifica tema, BSS, PitchPrint, prezzo, variante o checkout. La conferma nel browser del cliente dell'acquistabilità resta distinta dalla presenza dell'URL Admin.
+
+Conferma esplicita del titolare: **No-AI limita le funzioni generative offerte da PitchPrint all'utente e non riguarda questo progetto**. Il tag rimane nei dati Shopify e non viene modificato. Le vecchie note di audit che lo indicavano ignoto sono superate da questa conferma. `warning-pitchprint` e il funzionamento futuro dell'integrazione rimangono da collaudare, senza modificarli.
+
+## Verifiche iniziali del primo incremento
 
 Shopify connesso al dominio atteso, piano Basic. Letti soltanto metadati negozio, risultati di ricerche circoscritte, dettagli di tre prodotti e `Product.onlineStoreUrl`. URL canonici restituiti dall'Admin API, non emessi dal modello. Nessuna mutazione, installazione app, login CLI con nuovi permessi, intervento sul tema, test carrello o ordine. HTTP diretto alle pagine limitato con 429: la raggiungibilità reale tramite browser cliente rimane da ricontrollare. Non ripetuti tentativi automatici.
 
@@ -24,11 +32,11 @@ Il contratto **Preventivometro V2** non è la migrazione **BSS Storefront V2**. 
 
 ## Da confermare con Shopify / titolare
 
-- Significato dei tag `No-AI` e `warning-pitchprint` nei prodotti scelti; prima di provider reale o uso pubblico, confermare eventuali restrizioni. Non inferire che No-AI significhi NO-PITCH.
+- `No-AI` chiarito dal titolare come sopra; verificare gli avvisi e il percorso PitchPrint per ogni futura integrazione pubblica.
 - Profili stampabili per modello/variante: area utile, margini, minimo font, colori, linee, regole logo e font disponibili. Le dimensioni del titolo sono nominali, non collaudo grafico.
 - Definizioni e valori correnti dei metafield dimensionali variante (`custom.larghezza/altezza/spessore`, mm secondo handoff). Non sono stati letti in questa iterazione.
 - Stato attuale tema pubblicato e app blocks; la copia locale del tema è indietro di 12 commit rispetto al proprio tracking locale, senza fetch effettuato. Gli handoff non provano lo stato live di novembre.
-- Accesso dev store/tema duplicato e permessi minimi per un futuro adapter catalogo server. Snapshot/cache con scadenza, gestione prodotti ritirati e varianti speciali prima del rilascio.
+- Accesso dev store/tema duplicato per il rilascio. Il backend locale legge già con accesso Admin; servono ancora profili dei nuovi modelli, servizio persistente e gestione produttiva dei casi/varianti speciali.
 - Politica retention e trattamento dati per richieste reali, loghi e progetti.
 
 ## Da supporto BSS, senza migrazione

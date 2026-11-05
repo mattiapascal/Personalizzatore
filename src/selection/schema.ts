@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AreaSchema } from '../catalog/schema';
+import { AreaSchema } from '../catalog/schema.ts';
 
 export const RequirementsSchema = z.strictObject({
   family: z.enum(['stamp', 'other']).optional(),
@@ -11,7 +11,7 @@ export const RequirementsSchema = z.strictObject({
   sizeUnknown: z.boolean().optional(),
 });
 export type Requirements = z.infer<typeof RequirementsSchema>;
-export const MissingFieldSchema = z.enum(['family', 'mechanism', 'minimumAreaMm']);
+export const MissingFieldSchema = z.enum(['family', 'mechanism', 'shape', 'minimumAreaMm']);
 export type MissingField = z.infer<typeof MissingFieldSchema>;
 export const ReasonSchema = z.strictObject({ ruleId: z.string(), explanation: z.string() });
 export const RecommendationSchema = z.strictObject({

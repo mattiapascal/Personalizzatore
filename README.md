@@ -1,74 +1,86 @@
-# Assistente e personalizzatore Shopify — laboratorio locale
+# Assistente AI e personalizzatore Shopify — laboratorio locale
 
-Primo incremento del progetto per Incisoria Sacchetti. Repository: [mattiapascal/Personalizzatore](https://github.com/mattiapascal/Personalizzatore).
+Progetto per Incisoria Sacchetti. Repository: [mattiapascal/Personalizzatore](https://github.com/mattiapascal/Personalizzatore).
 
-**Prototipo TEST, nessun deploy.** Assistente simulato e sostituibile, regole deterministiche su tre timbri reali Shopify, laboratorio Fabric.js con stato condiviso UI/comandi, JSON e SVG. BSS/PitchPrint continuano a essere usati sulla pagina prodotto; nessuna modifica al negozio è necessaria.
+**Prototipo locale, nessun deploy.** Chat con AI reale, selezione deterministica da catalogo Shopify aggiornabile, canvas Fabric.js collegato al prodotto e JSON/SVG. I profili grafici sono ancora TEST. BSS e PitchPrint continuano a funzionare nel negozio attuale.
 
 ## Avvio
 
-Node 24.17.0 (`.nvmrc`), npm e Git. Se usi nvm:
+Node 24.17.0 (fissato in .nvmrc), npm e Git:
 
-```sh
+~~~sh
 nvm use
 npm ci
 npm run dev
-```
+~~~
 
-Apri `http://127.0.0.1:5173`. Nessun `.env` o token necessario. Il server è limitato al loopback; non esporlo online come servizio di produzione.
+Apri http://127.0.0.1:5173 e lascia il terminale aperto. Frontend e API locali partono insieme. Dopo modifiche a .env.local riavvia il server se Vite non lo ha già fatto.
 
-## Prova del percorso completo
+Le credenziali sono **soltanto** in .env.local, ignorato da Git e privato. .env.example documenta la configurazione senza valori segreti. Per una nuova installazione copialo in .env.local e configura:
 
-1. Scrivi `Un timbro aziendale con logo e sei righe` e analizza la richiesta di prova.
-2. Scegli `Autoinchiostrante`.
-3. Conferma ingombro minimo 50×20 mm: il motore mostra Printy 4913 e 4915, motivando nominali e ordinamento per area. Sei righe e logo richiedono ancora verifica grafica.
-4. `Personalizza sulla pagina prodotto` apre l'URL reale acquisito da Shopify, senza trasferire opzioni o creare righe carrello.
-5. Modifica ingombro a 60×23: resta 4915, stessa sessione. `Non so le misure` apre l'esplorazione delle tre referenze senza garantire idoneità.
+- AI_PROVIDER=openai, OPENAI_API_KEY, modello fissato e AI_BUDGET_USD positivo per AI reale.
+- SHOPIFY_SHOP_DOMAIN e SHOPIFY_ADMIN_ACCESS_TOKEN con read_products per aggiornare il catalogo.
+- SHOPIFY_CATALOG_QUERY definisce l'ambito della lettura; CATALOG_POLL_SECONDS vale 300 per default.
 
-Il campione è snapshot TEST del 5 novembre 2026: ID reali, prezzi e disponibilità non mostrati. Il parser riconosce solo poche espressioni; non è un LLM. Si può sempre proseguire tramite scelte guidate.
+Senza credenziali il pannello Collegamenti AI e catalogo spiega cosa manca. La demo a parole chiave rimane selezionabile esplicitamente; un errore dell'AI non attiva il parser di nascosto. Senza configurazione su una nuova installazione la demo è il default.
 
-Anche `Voglio fare un timbro per le fatture` viene riconosciuto come richiesta di un timbro: il riquadro di risposta conferma cosa è stato riconosciuto e chiede la montatura. L'uso «per le fatture» non viene ancora interpretato per dedurre caratteristiche tecniche. `Non so le misure` conferma la scelta e permette di proseguire; se manca la montatura, continua a chiederla, altrimenti indica quanti modelli esplorare. Il pulsante `Mostra i modelli` porta ai risultati, anche su mobile. Gli input dimensionali vengono svuotati quando si scelgono misure ignote.
+Il server è solo loopback/dev. La build genera asset frontend, non un backend produttivo: non pubblicarla come applicazione completa.
 
-Da un candidato premi `Prova nel canvas`: il laboratorio si apre con modello scelto, dimensioni nominali e riferimenti Shopify nel JSON. Fai doppio clic sul testo e scrivi dentro il canvas; Invio aggiunge una riga, Esc oppure `Termina modifica` valida. Trascina testo e bordo. Non serve un campo esterno per scrivere. Testi fuori area vengono rifiutati ripristinando la versione precedente; durante la scrittura export e altri comandi sono sospesi.
+## Prova della conversazione
 
-Torna alla selezione e prova un altro modello: se la composizione entra, conserva documento e oggetti; altrimenti mantiene il progetto precedente e segnala il conflitto. Nessuna riduzione automatica di caratteri o deformazione. Un cambio prodotto riuscito azzera lo storico undo per evitare ritorni al prodotto precedente. Dimensioni nominali e vincoli TEST non certificano l'area produttiva.
+1. Scrivi nella chat: Voglio fare un timbro per le fatture.
+2. Rispondi alla domanda sulla montatura, ad esempio Autoinchiostrante.
+3. Rispondi sulla forma, ad esempio Rettangolare.
+4. Indica le dimensioni, ad esempio 50 x 20 mm, oppure rispondi Non so le misure.
 
-Gli strumenti JSON simulati sono sotto `Strumenti sviluppatore`; usano lo stesso motore delle modifiche nel canvas. Un comando con revisione precedente viene rifiutato. Prova annulla/ripristina, esporta JSON/SVG e riapri il JSON. Il documento resta in memoria cambiando sezione; per conservarlo dopo reload esporta il JSON. Import associati ad altro prodotto/versione/area vengono rifiutati. Testi Arial fino a 8 righe e rettangolo sono il perimetro attuale, senza loghi o scene complesse. Il campione storico senza prodotto si può importare nel 4913, che ha la stessa area 58×22 mm.
+Il sistema raccoglie i parametri senza campi numerici o selettori esterni. Sotto la chat, Prodotto, Montatura, Forma e Dimensioni sono rossi finché manca una risposta e verdi quando viene raccolta, con valore e stato testuale. Una risposta ritirata torna da chiarire. Non so le misure è una risposta valida, ma non garantisce la compatibilità della grafica.
 
-**AI e aggiornamenti:** il prompt usa ancora un parser dimostrativo a parole chiave; non è sufficiente per il comportamento conversazionale richiesto. Il catalogo è un file statico e NON rileva modifiche Shopify. LLM server con tool tipizzati e sincronizzazione catalogo sono lavoro ancora da implementare, descritto in [docs/iteration-canvas.md](docs/iteration-canvas.md). Nessuna chiave o nuova spesa attivata.
+Puoi dare più informazioni insieme, correggerti e rispondere ai chiarimenti. Righe/logo sono annotati quando indicati; non vengono trasformati in capacità di un modello inventate. La chat resta in memoria, senza salvataggio del testo libero. Nel browser persistono solo requisiti e selezione per 24 ore; un catalogo nuovo rivaluta i requisiti senza cancellarli. Azzera conversazione e requisiti riparte da zero.
 
-## Verifiche ripetibili
+Il campione con profili censiti contiene i Printy 4912, 4913 e 4915. Per 50×20 mm il motore propone 4913/4915, ordinati per area, con motivazioni verificabili. Il prezzo resta sulla pagina Shopify. Il significato di No-AI è stato chiarito dal titolare: limita le funzioni generative di PitchPrint e non questo assistente.
 
-```sh
-npm test
-npm run build
-npx playwright install chromium
-npm run test:e2e
+## Catalogo aggiornabile
+
+Il backend legge Shopify all'avvio, ogni 5 minuti mentre è aperto e con Aggiorna da Shopify. L'import è paginato e atomico, con cache locale e versione del contenuto; errori o pagine incomplete conservano l'ultima copia valida. La data dell'ultima lettura è visibile.
+
+Una nuova versione compare con Applica aggiornamento ai risultati: i requisiti vengono rivalutati e la bozza aperta conserva il suo stato/versione. Puoi salvarne il JSON; lo SVG richiede la rivalidazione con un candidato corrente. Prodotti rimossi, archiviati o non pubblicati vengono esclusi. I nuovi modelli o profili cambiati sono elencati come da verificare, senza misure/compatibilità dedotte arbitrariamente.
+
+Lettura reale verificata: 3 modelli censiti e 211 prodotti pubblicati da profilare, nell'ambito title:timbr*. Non è ancora un assistente per l'intero catalogo. Il timer funziona solo a server aperto; webhook e servizio persistente restano lavoro per un ambiente autorizzato.
+
+## Canvas
+
+Da un candidato premi Prova nel canvas. Il progetto usa modello, ID/versioni Shopify e dimensioni nominali. Doppio clic sul testo per scrivere, Invio per una nuova riga, Esc o Termina modifica per validare. Testo e bordo si possono trascinare.
+
+Modifiche manuali e comandi strutturati passano dallo stesso store revisionato. Il passaggio a un altro modello conserva gli oggetti solo se entrano; altrimenti mantiene il progetto precedente. Non riduce font o deforma automaticamente. Il cambio modello riuscito ricomincia lo storico undo.
+
+Esporta JSON per riaprire il progetto dopo reload; la bozza rimane in memoria cambiando sezione. Esporta SVG per il collaudo Illustrator. Testo Arial fino a 8 righe e rettangolo sono il perimetro attuale; loghi, gruppi e scene complesse restano da sviluppare. Il golden storico senza prodotto è importabile sul 4913, con la stessa area nominale 58×22 mm.
+
+## Verifiche
+
+~~~sh
+npm run check
 npm run schemas
 npm run fixtures:editor
-```
+~~~
 
-`npm run check` esegue unit test, build e browser e2e. Chromium è necessario solo per gli e2e. Questi test navigano esclusivamente sul laboratorio locale e controllano gli URL prodotto senza visitarli. Per generare un SVG campione da Fabric e screenshot, con `npm run dev` aperto in un altro terminale:
+check esegue unit test, build, controllo delle credenziali nel bundle e browser e2e. Per Chromium, se necessario: npx playwright install chromium. La suite automatica usa trasporti controllati e non genera costi AI.
 
-```sh
-npm run capture:lab
-```
+Con server aperto, npm run capture:lab produce screenshot e un SVG campione, usando la demo e bloccando chiamate AI.
 
-Risultati e limiti: [docs/test-results.md](docs/test-results.md). Collaudo Illustrator ancora richiesto, indipendentemente dai test automatici.
+I collaudi **reali**, separati dai test automatici, richiedono chiave e budget e possono consumare credito:
 
-## Struttura
+~~~sh
+npm run eval:ai
+npm run eval:ai -- conversione-cm
+npm run eval:chat
+~~~
 
-```text
-src/catalog/       snapshot, profili, confine lettura e link prodotto
-src/selection/     requisiti, domande, regole spiegabili e sessione
-src/ai/            contratto tipizzato, dispatcher e mock senza rete
-src/editor/        stato canonico, comandi, FabricAdapter e laboratorio
-fixtures/          prodotti TEST reali; campione Illustrator JSON/SVG
-tests/             scenari, contratti, comandi e browser e2e
-docs/              audit, architettura, decisioni, integrazioni, checklist
-```
+La quota persistente limita richieste e consumi stimati, anche dopo riavvio e con più processi. I report TEST sono in .local/evals, ignorati da Git. Il contatore usa una stima prudente a tariffa standard, indipendentemente da promozioni: Usage/Billing del provider è il riferimento della fatturazione effettiva.
 
-Fonte iniziale: [01_Specifica_Progetto.md](01_Specifica_Progetto.md) e [AGENTS.md](AGENTS.md). Non esiste il file `_Codex` citato in AGENTS: non è stata creata una specifica alternativa. [Piano 2–4 settimane](docs/audit-and-plan.md), [architettura e schemi](docs/architecture.md), [handoff esistenti](docs/handoff-review.md), [dati da confermare](docs/integrations.md), [file e checklist Illustrator](docs/production-files.md), [metodo costi AI](docs/costs-and-metrics.md).
+## Documenti e struttura
 
-## Gate prima di un rilascio
+server/ contiene API, provider reale, registro quote e lettura catalogo. src/ contiene catalogo, selezione/chat, contratti AI ed editor. fixtures/ e tests/ contengono dati TEST e regressioni; docs/ contiene schemi e risultati.
 
-Profili e tag No-AI confermati, catalogo aggiornabile, provider server con quote/budget e retention, costo per sessione misurato, prove Illustrator, accessibilità e test su ambiente dev/tema duplicato. BSS rollback da supporto prima di qualsiasi eventuale migrazione futura. Nessun deploy, installazione app, modifica tema/prezzi/varianti/carrello/checkout o invio al supporto senza autorizzazione esplicita. Il contratto Preventivometro V2 è distinto da BSS Storefront V2.
+Riferimenti: [specifica originale](01_Specifica_Progetto.md), [AGENTS](AGENTS.md), [architettura](docs/architecture.md), [piano backend e conferme](docs/iteration-backend.md), [risultati](docs/test-results.md), [costi](docs/costs-and-metrics.md), [integrazioni](docs/integrations.md), [collaudo Illustrator](docs/production-files.md). Il file _Codex citato in AGENTS non era presente; la specifica originale è preservata.
+
+Prima di un rilascio occorrono profili produttivi confermati, censimento dei modelli, miglioramento/valutazione del dialogo su frasi reali, collaudo umano Illustrator, accessibilità su dispositivi fisici, privacy e controlli di produzione. Nessun deploy o modifica a tema/BSS/PitchPrint, prezzi, varianti, carrello o checkout è incluso.

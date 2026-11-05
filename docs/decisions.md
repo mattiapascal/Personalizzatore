@@ -13,7 +13,7 @@
 
 ## Questioni aperte
 
-Conferma tag No-AI, profili produttivi e area utile; verifica umana Illustrator; backend/provider e budget; catalogo server/cache; accessibilità su dispositivi reali; supporto rollback BSS. Dettagli in `integrations.md`, `production-files.md` e `audit-and-plan.md`.
+Profili produttivi e area utile; verifica umana Illustrator; servizio produttivo e carico; accessibilità su dispositivi reali; supporto rollback BSS. No-AI, backend/provider locale, budget e catalogo server sono stati affrontati nell'incremento successivo descritto sotto.
 
 ## 2026-11-05 — Riscontro visibile per ogni azione di selezione
 
@@ -26,3 +26,13 @@ La prova separata del primo incremento non esprimeva il percorso atteso dall'ute
 Cambio modello conservativo: non deformare né ridurre; rifiuto atomico se non entra, undo azzerato al successo per mantenere coerente l'identità prodotto. Non azzerare la grafica quando si cambiano soltanto i requisiti. Import coerente con prodotto/versione/area; adozione compatibile della fixture storica.
 
 La consultazione della skill e documentazione Shopify conferma l'uso futuro di notifiche prodotto e riconciliazione, senza supporre che tutti i cambi di pubblicazione siano notificati a ogni app. Nessuna sottoscrizione creata. Parser e catalogo statico sono limiti espliciti, non soluzioni definitive: [piano del seguito](iteration-canvas.md).
+
+## 2026-11-05 — AI reale, catalogo collegato e conversazione senza form
+
+Il titolare ha autorizzato massimo 2 EUR per collaudo e configurato le due credenziali nel file privato. Budget locale prudente 1 USD, nessun retry automatico, quota persistente e lock fra processi. OpenAI Docs ha guidato function calling strict, assenza di tool amministrativi, modello fissato e separazione fra store:false e condivisione dati. La gratuità promozionale non viene presunta dal contatore.
+
+La skill e lo schema Shopify hanno guidato query paginata, onlineStoreUrl per escludere prodotti non pubblicati, API 2026-10 e accesso read_products. Poll locale ogni cinque minuti al posto di registrare webhook/servizi non autorizzati. Nuovi modelli e profili modificati richiedono revisione tecnica. No-AI chiarito dal titolare: riguarda solo la generazione grafica PitchPrint.
+
+Su richiesta successiva dell'utente il percorso principale usa soltanto chat e domande successive: rimossi form dimensionali e pulsanti montatura. Stato raccolto in riepilogo rosso/verde derivato dal dominio, con valori e stato testuale. Forma esplicita richiesta prima delle misure; nessuna forma rettangolare sottintesa. Misure ignote distinguono una risposta ricevuta dall'idoneità da verificare. Le correzioni ritirano campi senza perdere gli altri, e le risposte obsolete sono respinte per UUID/revisione.
+
+La conversazione resta in memoria (massimo 40 messaggi); al modello passano requisiti, ultima domanda ed estratti degli ultimi sei scambi. Nessuna scheda del catalogo o credenziale. Rilettura catalogo e ripristino sessione preservano requisiti ma rivalutano candidati e vecchie selezioni; la bozza resta sulla propria versione finché rivalidata. JSON sempre salvabile fuori da un gesto, SVG sospeso con catalogo obsoleto/conflitto.

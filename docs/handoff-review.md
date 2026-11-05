@@ -21,7 +21,7 @@ Conferme nel codice locale, non certificazioni live:
 
 - `assets/product-costing-surcharge.js:12–13`: fallback dimensionali includono ancora `po_number_field926202/926203`, oltre a name generici. Gli handoff citano anche altri ID reali di test: non esiste un selettore universale da assumere.
 - `assets/custom-scripts.js`: hook `bssFixSupportCustomExtraPrice`, `bssFixSupportCustomAttributeWhenAddToCart` e concatenazione degli originali; funzione `ppSyncCurrentVariantToPitchPrint`.
-- Il registro personalizzazioni descrive l'invio dei tag prodotto all'iframe PitchPrint. Non trovato nei tre file ispezionati un significato esplicito di `No-AI`: resta da confermare con il titolare/PitchPrint.
+- Il registro personalizzazioni descrive l'invio dei tag prodotto all'iframe PitchPrint. Non trovato nei tre file ispezionati un significato esplicito di `No-AI`; successivamente il titolare ha confermato che disabilita solo le funzioni generative PitchPrint e non riguarda questo progetto.
 
 ## Decisioni per questo progetto
 

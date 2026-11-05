@@ -11,7 +11,7 @@ export function download(name: string, content: string, type: string): void {
 function example(revision: number): string {
   return JSON.stringify({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId: 'text-1', arguments: { xMm: 10, yMm: 8 } }, null, 2);
 }
-export function EditorLab({ product, catalogVersion, onEditingChange, onKeepProduct }: { product: ProductProfile; catalogVersion: string; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string) => void }) {
+export function EditorLab({ product, catalogVersion, catalogOutdated = false, onEditingChange, onKeepProduct }: { product: ProductProfile; catalogVersion: string; catalogOutdated?: boolean; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const adapter = useRef<FabricAdapter | null>(null);
   const storeRef = useRef<DocumentStore | null>(null);
@@ -56,9 +56,10 @@ export function EditorLab({ product, catalogVersion, onEditingChange, onKeepProd
     {editing && <div role="status" className="notice">Scrittura nel canvas in corso. Premi Esc o <button onClick={() => adapter.current?.finishEditing()}>Termina modifica</button> per validare il testo.</div>}
     {conflict && <div className="notice"><p>Il documento è ancora associato al prodotto precedente. Nessuna modifica grafica è stata eliminata o ridotta.</p><button onClick={() => { setError(''); onKeepProduct(doc.productId!); }}>Torna al prodotto del progetto</button></div>}
     <p className="caption" data-testid="revision">Revisione grafica: {doc.revision} · oggetto stabile text-1 · esportazione non approvata per produzione</p>
-    <fieldset className="editor-actions" disabled={editing || conflict}><legend>Progetto</legend>
+    <button disabled={editing} onClick={() => download('progetto.TEST.json', JSON.stringify(storeRef.current!.document, null, 2), 'application/json')}>Esporta JSON</button>
+    <fieldset className="editor-actions" disabled={editing || conflict || catalogOutdated}><legend>Progetto</legend>
       <div className="button-row"><button onClick={() => act(() => storeRef.current!.undo())}>Annulla</button><button onClick={() => act(() => storeRef.current!.redo())}>Ripristina</button></div>
-      <div className="button-row"><button onClick={() => download('progetto.TEST.json', JSON.stringify(storeRef.current!.document, null, 2), 'application/json')}>Esporta JSON</button><button onClick={() => act(() => download('impronta.TEST.svg', adapter.current!.exportSvg(storeRef.current!.document), 'image/svg+xml'))}>Esporta SVG</button></div>
+      <div className="button-row"><button onClick={() => act(() => download('impronta.TEST.svg', adapter.current!.exportSvg(storeRef.current!.document), 'image/svg+xml'))}>Esporta SVG</button></div>
       <label htmlFor="json-import">Riapri progetto JSON (max 100 KB)</label><input id="json-import" type="file" accept=".json,application/json" onChange={async e => {
         const file = e.target.files?.[0]; if (!file) return;
         if (file.size > 100_000) { setError('File oltre 100 KB'); return; }

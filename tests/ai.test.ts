@@ -11,11 +11,11 @@ describe('contratto AI e fallback', () => {
     const first = await interpret(mockProvider, 'Un timbro aziendale con logo e sei righe', s);
     s = executeTool(first, s, fixtureCatalog).session;
     expect(s.requirements).toEqual({ family: 'stamp', hasLogo: true, lines: 6 }); expect(s.candidates).toHaveLength(0);
-    s = executeTool(await interpret(mockProvider, 'Autoinchiostrante 50 x 20 mm', s), s, fixtureCatalog).session;
+    s = executeTool(await interpret(mockProvider, 'Autoinchiostrante rettangolare 50 x 20 mm', s), s, fixtureCatalog).session;
     expect(fixtureCatalog.get(s.candidates[0]!.productId).handle).toBe('trodat-4913');
   });
   it('gestisce non so eliminando le vecchie misure', async () => {
-    let s = updateRequirements(newSession(fixtureCatalog), { family: 'stamp', mechanism: 'automatic', minimumAreaMm: { width: 80, height: 30 } }, fixtureCatalog);
+    let s = updateRequirements(newSession(fixtureCatalog), { family: 'stamp', mechanism: 'automatic', shape: 'rectangle', minimumAreaMm: { width: 80, height: 30 } }, fixtureCatalog);
     s = executeTool(await interpret(mockProvider, 'non so', s), s, fixtureCatalog).session;
     expect(s.requirements.minimumAreaMm).toBeNull(); expect(s.candidates).toHaveLength(3);
   });
@@ -32,6 +32,7 @@ describe('contratto AI e fallback', () => {
   it('rifiuta risposte obsolete', () => {
     const s = updateRequirements(newSession(fixtureCatalog), { family: 'stamp' }, fixtureCatalog);
     expect(() => executeTool({ schemaVersion: 1, expectedRevision: 0, tool: 'collectRequirements', arguments: {} }, s, fixtureCatalog)).toThrow('obsoleta');
+    expect(() => executeTool({ schemaVersion: 1, expectedRevision: s.revision, expectedSessionId: crypto.randomUUID(), tool: 'collectRequirements', arguments: {} }, s, fixtureCatalog)).toThrow('sessione');
   });
   it('una risposta tardiva non annulla non so le misure né il suo riscontro', async () => {
     const start = initialInteraction(newSession(fixtureCatalog));
@@ -56,7 +57,7 @@ describe('contratto AI e fallback', () => {
     await expect(interpret(unavailable, 'test', s)).rejects.toThrow('offline');
     await expect(interpret(invalid, 'test', s)).rejects.toThrow();
     await expect(interpret(hung, 'test', s, 10)).rejects.toThrow('non disponibile');
-    expect(updateRequirements(s, { family: 'stamp', mechanism: 'automatic', sizeUnknown: true }, fixtureCatalog).candidates).toHaveLength(3);
+    expect(updateRequirements(s, { family: 'stamp', mechanism: 'automatic', shape: 'rectangle', sizeUnknown: true }, fixtureCatalog).candidates).toHaveLength(3);
   });
   it('limita input, convalida getProductProfile e domande pertinenti', async () => {
     const s = newSession(fixtureCatalog);
