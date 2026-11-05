@@ -3,6 +3,7 @@ import { executeTool, interpret, type AiProvider } from '../src/ai/contract';
 import { mockProvider } from '../src/ai/mock-provider';
 import { fixtureCatalog } from '../src/catalog/adapter';
 import { newSession, updateRequirements } from '../src/selection/session';
+import { initialInteraction, selectionInteraction } from '../src/selection/interaction';
 
 describe('contratto AI e fallback', () => {
   it('percorso richiesta → chiarimento → candidati con schema validato', async () => {
@@ -31,6 +32,21 @@ describe('contratto AI e fallback', () => {
   it('rifiuta risposte obsolete', () => {
     const s = updateRequirements(newSession(fixtureCatalog), { family: 'stamp' }, fixtureCatalog);
     expect(() => executeTool({ schemaVersion: 1, expectedRevision: 0, tool: 'collectRequirements', arguments: {} }, s, fixtureCatalog)).toThrow('obsoleta');
+  });
+  it('una risposta tardiva non annulla non so le misure né il suo riscontro', async () => {
+    const start = initialInteraction(newSession(fixtureCatalog));
+    const pending = await interpret(mockProvider, 'timbro 50 x 20 mm', start.session);
+    const current = selectionInteraction(start, { type: 'patch', patch: { minimumAreaMm: null, sizeUnknown: true } }, fixtureCatalog);
+    const next = selectionInteraction(current, { type: 'tool', call: pending }, fixtureCatalog);
+    expect(next.session).toEqual(current.session);
+    expect(next.session.requirements.sizeUnknown).toBe(true);
+    expect(next.feedback).toContain('obsoleta');
+  });
+  it('un ingombro invalido non cambia requisiti o candidati e produce un riscontro', () => {
+    const start = initialInteraction(newSession(fixtureCatalog));
+    const next = selectionInteraction(start, { type: 'patch', patch: { minimumAreaMm: { width: -1, height: 10 } } }, fixtureCatalog);
+    expect(next.session).toEqual(start.session);
+    expect(next.feedback).toContain('dati non validi');
   });
   it('provider in errore, timeout e risposta malformata restano gestibili', async () => {
     const s = newSession(fixtureCatalog);

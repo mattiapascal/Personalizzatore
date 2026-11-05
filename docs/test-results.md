@@ -1,5 +1,22 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Correzione del riscontro delle azioni — 5 novembre 2026
+
+Segnalazione riprodotta: `Voglio fare un timbro per le fatture` registrava famiglia `stamp`, senza conferma esplicita; `Non so le misure` registrava `sizeUnknown`, ma prima della scelta montatura non spiegava il motivo dell'assenza di candidati. La richiesta non era ignorata dal motore: il riscontro UI era insufficiente.
+
+Correzione in `src/App.tsx`, `src/selection/interaction.ts` e CSS: aggiornamento atomico di sessione/riscontro, conferma delle informazioni riconosciute, domanda successiva oppure numero di candidati, focus sul riquadro dopo ogni azione e pulsante per raggiungere i risultati. Con misure ignote gli input dimensionali sono vuoti; il criterio resta conservato scegliendo successivamente la montatura. Nessuna nuova deduzione su uso fatture, capacità righe, dimensioni o idoneità produttiva.
+
+Verifiche effettive successive alla correzione:
+
+- `npm test`: **35/35 superati**, inclusi risposta tardiva e argomenti invalidi senza perdita dello stato.
+- `npm run build`: **superato**, TypeScript strict e Vite.
+- `npm run test:e2e`: **7/7 superati**, ultima esecuzione 7,2 s. Nuovi casi: frase esatta dell'utente a 390×844, misure ignote prima/dopo montatura, domanda ancora mancante, tre candidati e navigazione ai risultati; riscontri per input sconosciuti e campione senza candidati. Tutti i cinque e2e precedenti superati.
+- `git diff --check`: superato sui file modificati.
+
+L'assistente rimane simulato; nessun provider reale, accesso allo store o deploy aggiunto. I limiti Illustrator e i gate del primo incremento riportati sotto rimangono aperti.
+
+## Evidenze del primo incremento
+
 Esecuzione effettiva su macOS, Node 24.17.0, npm e dipendenze fissate dal lockfile. Nessun test sul carrello o checkout reale.
 
 | Comando / controllo | Risultato |

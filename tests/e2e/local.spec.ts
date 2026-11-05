@@ -1,6 +1,50 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('richiesta per fatture e non so le misure spiegano sempre il passo successivo', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByLabel('Descrivi il tuo timbro').fill('Voglio fare un timbro per le fatture');
+  await page.getByRole('button', { name: 'Analizza richiesta' }).click();
+  const feedback = page.getByTestId('selection-feedback');
+  await expect(feedback).toContainText('Ho riconosciuto: un timbro');
+  await expect(feedback.getByTestId('clarification')).toContainText('autoinchiostrante, manuale o tascabile');
+  await expect(feedback).toBeFocused();
+  await expect(feedback).toBeInViewport();
+  await expect(page.locator('.product-card')).toHaveCount(0);
+
+  // La misura può essere ignota prima che venga scelta la montatura.
+  await page.getByRole('button', { name: 'Non so le misure' }).click();
+  await expect(feedback).toContainText('proseguiamo senza misure');
+  await expect(feedback.getByTestId('clarification')).toContainText('autoinchiostrante');
+  await expect(feedback).toBeFocused();
+  await expect(page.getByLabel('Larghezza minima in mm')).toHaveValue('');
+  await expect(page.getByLabel('Altezza minima in mm')).toHaveValue('');
+
+  await page.getByRole('button', { name: 'Autoinchiostrante', exact: true }).click();
+  await expect(feedback).toContainText('Ho trovato 3 modelli da esplorare');
+  await expect(feedback).toContainText('non abbiamo ancora definito le misure');
+  await expect(page.locator('.product-card')).toHaveCount(3);
+  await feedback.getByRole('button', { name: 'Mostra i 3 modelli' }).click();
+  await expect(page.getByRole('heading', { name: 'Possibilità da verificare' })).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Possibilità da verificare' })).toBeInViewport();
+});
+
+test('non so le misure dopo la montatura mostra risultati, richieste ignote e zero risultati hanno riscontro', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Autoinchiostrante', exact: true }).click();
+  await page.getByRole('button', { name: 'Non so le misure' }).click();
+  const feedback = page.getByTestId('selection-feedback');
+  await expect(feedback).toContainText('proseguiamo senza misure');
+  await expect(feedback).toContainText('Ho trovato 3 modelli');
+  await page.getByLabel('Descrivi il tuo timbro').fill('abracadabra');
+  await page.getByRole('button', { name: 'Analizza richiesta' }).click();
+  await expect(feedback).toContainText('Non ho riconosciuto nuove informazioni');
+  await page.getByRole('button', { name: 'Manuale', exact: true }).click();
+  await expect(feedback).toContainText('Nessun candidato in questo campione');
+  await expect(page.locator('.product-card')).toHaveCount(0);
+});
+
 test('richiesta, domande, candidato reale, link senza chiamate esterne e persistenza', async ({ page }) => {
   const external: string[] = [];
   page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:5173') && !request.url().startsWith('data:')) external.push(request.url()); });

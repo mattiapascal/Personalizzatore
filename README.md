@@ -26,6 +26,8 @@ Apri `http://127.0.0.1:5173`. Nessun `.env` o token necessario. Il server è lim
 
 Il campione è snapshot TEST del 5 novembre 2026: ID reali, prezzi e disponibilità non mostrati. Il parser riconosce solo poche espressioni; non è un LLM. Si può sempre proseguire tramite scelte guidate.
 
+Anche `Voglio fare un timbro per le fatture` viene riconosciuto come richiesta di un timbro: il riquadro di risposta conferma cosa è stato riconosciuto e chiede la montatura. L'uso «per le fatture» non viene ancora interpretato per dedurre caratteristiche tecniche. `Non so le misure` conferma la scelta e permette di proseguire; se manca la montatura, continua a chiederla, altrimenti indica quanti modelli esplorare. Il pulsante `Mostra i modelli` porta ai risultati, anche su mobile. Gli input dimensionali vengono svuotati quando si scelgono misure ignote.
+
 Apri `Editor Fabric.js`: modifica `text-1` dal campo manuale o trascinandolo; prepara un comando aggiornato ed eseguilo. Un comando con revisione precedente viene rifiutato. Prova annulla/ripristina, esporta JSON/SVG e riapri il JSON. Il documento resta in memoria cambiando sezione; per conservarlo dopo reload esporta il JSON. Testo singola riga Arial e rettangolo sono il perimetro attuale, senza import loghi o scene complesse.
 
 ## Verifiche ripetibili

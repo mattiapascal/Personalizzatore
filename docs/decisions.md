@@ -14,3 +14,7 @@
 ## Questioni aperte
 
 Conferma tag No-AI, profili produttivi e area utile; verifica umana Illustrator; backend/provider e budget; catalogo server/cache; accessibilità su dispositivi reali; supporto rollback BSS. Dettagli in `integrations.md`, `production-files.md` e `audit-and-plan.md`.
+
+## 2026-11-05 — Riscontro visibile per ogni azione di selezione
+
+La prova dell'utente ha evidenziato che un aggiornamento dei requisiti senza conferma sembra un pulsante non funzionante. Il prototipo deve confermare dati riconosciuti e scelte, spiegare quale criterio manca e rendere raggiungibili i risultati. Una UI con reducer aggiorna insieme stato e messaggio, mantenendo il controllo delle revisioni. Le misure ignote possono essere indicate prima della montatura e non vanno perse; nessuna montatura o idoneità per fatture viene presunta. La correzione resta locale e senza costi AI.
