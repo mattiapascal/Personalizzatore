@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "documentId": "00000000-0000-4000-8000-000000000001",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "objects": [
+    {
+      "id": "frame-1",
+      "type": "rect",
+      "xMm": 2,
+      "yMm": 2,
+      "widthMm": 54,
+      "heightMm": 18,
+      "strokeMm": 0.25,
+      "stroke": "#000000"
+    },
+    {
+      "id": "text-1",
+      "type": "text",
+      "xMm": 5,
+      "yMm": 7,
+      "text": "TEST · Città",
+      "fontSizePt": 9,
+      "fontFamily": "Arial",
+      "fill": "#000000"
+    }
+  ]
+}

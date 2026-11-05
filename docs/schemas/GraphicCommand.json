@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "objectId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
+        "tool": {
+          "type": "string",
+          "const": "moveObject"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "xMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "yMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          "required": [
+            "xMm",
+            "yMm"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "objectId",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "objectId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
+        "tool": {
+          "type": "string",
+          "const": "setText"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "objectId",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "objectId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
+        "tool": {
+          "type": "string",
+          "const": "setObjectStyle"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "fontSizePt": {
+              "type": "number",
+              "minimum": 7,
+              "maximum": 48
+            },
+            "fill": {
+              "type": "string",
+              "enum": [
+                "#000000",
+                "#ffffff"
+              ]
+            }
+          },
+          "required": [
+            "fontSizePt",
+            "fill"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "objectId",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

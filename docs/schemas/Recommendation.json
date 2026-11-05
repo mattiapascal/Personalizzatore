@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "productId": {
+      "type": "string"
+    },
+    "profileVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "catalogVersion": {
+      "type": "string"
+    },
+    "reasons": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ruleId",
+          "explanation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "pending": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "productId",
+    "profileVersion",
+    "catalogVersion",
+    "reasons",
+    "pending"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,300 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tool": {
+          "type": "string",
+          "const": "collectRequirements"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "enum": [
+                "stamp",
+                "other"
+              ]
+            },
+            "mechanism": {
+              "type": "string",
+              "enum": [
+                "automatic",
+                "manual",
+                "pocket"
+              ]
+            },
+            "shape": {
+              "type": "string",
+              "enum": [
+                "rectangle",
+                "round"
+              ]
+            },
+            "lines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            },
+            "hasLogo": {
+              "type": "boolean"
+            },
+            "minimumAreaMm": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "width": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000
+                    },
+                    "height": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "height"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sizeUnknown": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tool": {
+          "type": "string",
+          "const": "searchProducts"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "enum": [
+                "stamp",
+                "other"
+              ]
+            },
+            "mechanism": {
+              "type": "string",
+              "enum": [
+                "automatic",
+                "manual",
+                "pocket"
+              ]
+            },
+            "shape": {
+              "type": "string",
+              "enum": [
+                "rectangle",
+                "round"
+              ]
+            },
+            "lines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            },
+            "hasLogo": {
+              "type": "boolean"
+            },
+            "minimumAreaMm": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "width": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000
+                    },
+                    "height": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "height"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sizeUnknown": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tool": {
+          "type": "string",
+          "const": "recommendProducts"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tool": {
+          "type": "string",
+          "const": "getProductProfile"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "productId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "productId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tool": {
+          "type": "string",
+          "const": "askMissingInformation"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "fields": {
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "family",
+                  "mechanism",
+                  "minimumAreaMm"
+                ]
+              }
+            }
+          },
+          "required": [
+            "fields"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

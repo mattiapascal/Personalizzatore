@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "fixture": true,
+  "source": "Shopify Admin connector: search_products + get_product + product.onlineStoreUrl (read-only)",
+  "capturedOn": "2026-11-05",
+  "shopDomain": "www.incisoriasacchetti.it",
+  "products": [
+    {
+      "productId": "gid://shopify/Product/15106099904892",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55021456032124"
+      ],
+      "handle": "trodat-4912",
+      "title": "Timbro autoinchiostrante Trodat Printy 4912 – 47 × 18 mm",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/trodat-4912",
+      "tags": [
+        "Automatici per ufficio",
+        "faq-upload",
+        "No-AI",
+        "No-reso",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 47,
+        "height": 18
+      },
+      "areaSource": "Shopify product title; usable print area NOT production-verified",
+      "supportsLogo": true,
+      "logoSource": "Shopify description (text and logo customization)",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "productId": "gid://shopify/Product/15106096497020",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55021442564476"
+      ],
+      "handle": "trodat-4913",
+      "title": "Timbro autoinchiostrante Trodat Printy 4913 – 58 × 22 mm",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/trodat-4913",
+      "tags": [
+        "Automatici per ufficio",
+        "faq-upload",
+        "No-AI",
+        "No-reso",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 58,
+        "height": 22
+      },
+      "areaSource": "Shopify product title; usable print area NOT production-verified",
+      "supportsLogo": true,
+      "logoSource": "Shopify description (text and logo customization)",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "productId": "gid://shopify/Product/15106117566844",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55021526548860"
+      ],
+      "handle": "trodat-4915",
+      "title": "Timbro autoinchiostrante Trodat Printy 4915 – 70 × 25 mm",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/trodat-4915",
+      "tags": [
+        "Automatici per ufficio",
+        "faq-upload",
+        "No-AI",
+        "No-reso",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 70,
+        "height": 25
+      },
+      "areaSource": "Shopify product title; usable print area NOT production-verified",
+      "supportsLogo": true,
+      "logoSource": "Shopify description (text and logo customization)",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    }
+  ]
+}

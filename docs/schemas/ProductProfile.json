@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "productId": {
+      "type": "string",
+      "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"
+    },
+    "variantIds": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+      }
+    },
+    "handle": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "ARCHIVED",
+        "DRAFT"
+      ]
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "profileVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "family": {
+      "type": "string",
+      "const": "stamp"
+    },
+    "mechanism": {
+      "type": "string",
+      "const": "automatic"
+    },
+    "shape": {
+      "type": "string",
+      "const": "rectangle"
+    },
+    "nominalAreaMm": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "areaSource": {
+      "type": "string"
+    },
+    "supportsLogo": {
+      "type": "boolean"
+    },
+    "logoSource": {
+      "type": "string"
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "minFontSizePt": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "safeMarginMm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "allowedColors": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "minFontSizePt",
+        "safeMarginMm",
+        "allowedColors"
+      ],
+      "additionalProperties": false
+    },
+    "validatedForProduction": {
+      "type": "boolean",
+      "const": false
+    },
+    "price": {
+      "type": "null"
+    },
+    "availability": {
+      "type": "null"
+    }
+  },
+  "required": [
+    "productId",
+    "variantIds",
+    "handle",
+    "title",
+    "status",
+    "url",
+    "tags",
+    "profileVersion",
+    "family",
+    "mechanism",
+    "shape",
+    "nominalAreaMm",
+    "areaSource",
+    "supportsLogo",
+    "logoSource",
+    "constraints",
+    "validatedForProduction",
+    "price",
+    "availability"
+  ],
+  "additionalProperties": false
+}
