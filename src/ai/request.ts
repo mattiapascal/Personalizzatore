@@ -9,5 +9,6 @@ export const AiRequestSchema = z.strictObject({
   recentMessages: z.array(z.strictObject({ role: z.enum(['user', 'assistant']), text: z.string().max(400) })).max(6).default([]),
   contentBrief: ContentBriefSchema.optional(), lastQuestionField: QuestionFieldSchema.optional(),
   privacyReviewed: z.boolean().default(false),
+  publicFragments: z.array(z.string().trim().min(1).max(480)).max(24).default([]),
 });
 export type AiRequest = z.infer<typeof AiRequestSchema>;

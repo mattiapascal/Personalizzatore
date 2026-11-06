@@ -224,6 +224,16 @@
     "privacyReviewed": {
       "default": false,
       "type": "boolean"
+    },
+    "publicFragments": {
+      "default": [],
+      "maxItems": 24,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 480
+      }
     }
   },
   "required": [
@@ -233,7 +243,8 @@
     "requirements",
     "lastQuestion",
     "recentMessages",
-    "privacyReviewed"
+    "privacyReviewed",
+    "publicFragments"
   ],
   "additionalProperties": false
 }

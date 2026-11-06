@@ -1,5 +1,11 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Privacy compatta, classificazione e originali per il timbro — 6 novembre 2026
+
+**169 unit test e 38 browser e2e superati**, build e controllo segreti superati, schema richiesta aggiornato. Nuovo flusso compatto a due passaggi: Sì/No iniziale, parti rosse e classificazione puntuale soltanto dopo il Sì. Originali conservati per il canvas senza riscrittura, privati opachi e generici con eccezioni circoscritte validate localmente; niente mappa al provider. Protezione dello storico prima del taglio, scelte eliminate al reset, no riclassificazione dei medesimi dati.
+
+Rimosso il criterio «parola sconosciuta=dato personale». Corpus locale inventato: 22/22 frasi ordinarie passano, 20/20 casi identificativi segnalati. Non è una stima del tasso di errore produttivo né una garanzia universale di anonimizzazione. Catture dei due passaggi desktop/mobile ispezionate, rosso e compattezza verificati, zero richieste AI durante la cattura. Nessuna chiamata a pagamento, modifica Shopify o deploy; collaudo umano Illustrator non eseguito. [Resoconto](iteration-privacy-routing.md).
+
 ## Apostrofi e input visibile all’apertura — 6 novembre 2026
 
 **116 unit test, 33 browser e2e, build e controllo segreti superati.** Riprodotti sei falsi positivi del filtro, corretti apostrofi diritti/tipografici, elisioni e composti tecnici senza ammettere i nomi dopo gli stessi prefissi. La frase esatta del titolare viene inviata integra senza anteprima privacy nei test browser, con risposta controllata e proposta Q12. Ridotto spazio superiore e chat dimensionata sullo spazio residuo del compositore; input e pulsante visibili senza scroll su cinque viewport, fino a 360×640. Catture iniziali desktop/mobile ispezionate. Nessuna chiamata AI a pagamento, modifica configurazione privata, Shopify o deploy; nessun test umano Illustrator. Dettagli in [iteration-elisions-layout.md](iteration-elisions-layout.md).

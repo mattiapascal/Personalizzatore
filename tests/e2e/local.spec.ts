@@ -18,19 +18,27 @@ async function sendMessage(page: Page, message: string) {
   await page.getByLabel('Scrivi un messaggio', { exact: true }).fill(message);
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   await expect.poll(async () => await page.locator('.chat-message.assistant').count() > before || await page.getByRole('region', { name: 'Verifica privacy prima dell’invio' }).count() > 0).toBe(true);
-  if (await page.getByRole('region', { name: 'Verifica privacy prima dell’invio' }).count()) await page.getByRole('button', { name: 'Conferma e invia testo protetto' }).click();
+  if (await page.getByRole('region', { name: 'Verifica privacy prima dell’invio' }).count()) await classifyPrivate(page);
   await expect(page.locator('.chat-message.assistant')).toHaveCount(before + 1);
+}
+async function classifyPrivate(page: Page) {
+  const panel = page.getByRole('region', { name: 'Verifica privacy prima dell’invio' });
+  await panel.getByRole('button', { name: 'Sì, controlliamo', exact: true }).click();
+  while (await panel.count()) await panel.getByRole('button', { name: 'Sì, è riservata', exact: true }).click();
 }
 const latest = (page: Page) => page.locator('.chat-message.assistant').last();
 
-for (const apostrophe of ["'", '’']) test(`frase segnalata con apostrofo ${apostrophe}: invio diretto, senza falsa verifica privacy`, async ({ page }) => {
+for (const { label, message } of [
+  { label: 'apostrofo diritto', message: "Vorrei fare un timbro per le tessere dell'abbonamento al caffè per il mio bar" },
+  { label: 'apostrofo tipografico', message: 'Vorrei fare un timbro per le tessere dell’abbonamento al caffè per il mio bar' },
+  { label: 'degli abbonamenti', message: 'Vorrei fare un timbro per le tessere degli abbonamenti del caffè del mio bar' },
+]) test(`frase segnalata ${label}: invio diretto, senza falsa verifica privacy`, async ({ page }) => {
   const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
   runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
   await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
   const messages: string[] = [];
   await page.route('**/api/ai/interpret', route => { const body = route.request().postDataJSON(); messages.push(body.message); return route.fulfill({ json: { schemaVersion: 1, expectedRevision: body.revision, expectedSessionId: body.sessionId, tool: 'collectRequirements', arguments: { family: 'stamp' }, contentBrief: { purpose: 'loyalty' } } }); });
   await page.goto('/');
-  const message = `Vorrei fare un timbro per le tessere dell${apostrophe}abbonamento al caffè per il mio bar`;
   await page.getByLabel('Scrivi un messaggio', { exact: true }).fill(message);
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   await expect(latest(page)).toContainText('Quanto misurano le caselline');
@@ -63,15 +71,21 @@ test('privacy: nessuna rete prima della verifica, annullamento, storico protetto
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   const preview = page.getByRole('region', { name: 'Verifica privacy prima dell’invio' });
   await expect(preview).toBeVisible(); expect(requests).toHaveLength(0);
-  await expect(page.getByLabel('Testo protetto da inviare a OpenAI')).not.toHaveValue(/Mario|Aurora|example/);
-  await page.getByRole('button', { name: 'Torna al messaggio' }).click();
+  await expect(preview.locator('.privacy-original')).toHaveCount(0);
+  expect((await preview.boundingBox())!.height).toBeLessThan(190);
+  await preview.getByRole('button', { name: 'Sì, controlliamo', exact: true }).click();
+  await expect(preview.locator('.privacy-original')).toContainText('Mario Rossi');
+  await expect(preview.locator('textarea')).toHaveCount(0);
+  await expect(preview.locator('mark')).toHaveCSS('color', 'rgb(146, 36, 30)');
+  await page.getByRole('button', { name: 'Annulla invio' }).click();
   expect(requests).toHaveLength(0); await expect(preview).toHaveCount(0);
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
-  await page.getByRole('button', { name: 'Conferma e invia testo protetto' }).click();
+  await classifyPrivate(page);
   await expect(latest(page)).toContainText('possibilità');
   expect(requests).toHaveLength(1); expect(requests[0]!.privacyReviewed).toBe(true);
   await expect(page.getByRole('region', { name: 'Contenuto del timbro' })).toContainText('3 righe');
   await sendMessage(page, 'rettangolare');
+  await expect(preview).toHaveCount(0);
   for (const data of ['Mario', 'Aurora', 'example.test']) expect(JSON.stringify(requests)).not.toContain(data);
   expect(JSON.stringify(requests[1]!.contentBrief)).toContain('RISERVATO');
   expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain('Mario');
@@ -85,17 +99,73 @@ test('privacy: nessuna rete prima della verifica, annullamento, storico protetto
   await expect(page.getByRole('log')).not.toContainText('Mario');
 });
 
-test('privacy: richieste tecniche ordinarie passano direttamente; parole sconosciute sono oscurate e verificate', async ({ page }) => {
+test('privacy: richieste tecniche e termini nuovi passano direttamente; un nome plausibile chiede conferma', async ({ page }) => {
   const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
   await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
   let count = 0;
   await page.route('**/api/ai/interpret', route => { const b = route.request().postDataJSON(); count++; return route.fulfill({ json: { schemaVersion: 1, expectedRevision: b.revision, tool: 'collectRequirements', arguments: { family: 'stamp' } } }); });
   await page.goto('/'); await sendMessage(page, 'Voglio fare un timbro per le fatture');
   expect(count).toBe(1); await expect(page.getByRole('region', { name: 'Verifica privacy prima dell’invio' })).toHaveCount(0);
+  await sendMessage(page, 'un piccolo logo stilizzato con una tazzina e tesserine');
+  expect(count).toBe(2);
   await page.getByLabel('Scrivi un messaggio', { exact: true }).fill('un timbro per officina aurora');
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   await expect(page.getByRole('region', { name: 'Verifica privacy prima dell’invio' })).toBeVisible();
-  expect(count).toBe(1); await expect(page.getByLabel('Testo protetto da inviare a OpenAI')).not.toHaveValue(/officina|aurora/);
+  expect(count).toBe(2); await expect(page.locator('.privacy-original')).toHaveCount(0);
+});
+
+test('falso positivo: il cliente classifica testo generico senza riscriverlo; eccezione puntuale nella richiesta', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  const requests: Record<string, unknown>[] = [];
+  await page.route('**/api/ai/interpret', route => { const body = route.request().postDataJSON(); requests.push(body); return route.fulfill({ json: { schemaVersion: 1, tool: 'collectRequirements', expectedRevision: body.revision, arguments: { family: 'stamp' } } }); });
+  await page.goto('/'); const original = 'un logo con Rosa';
+  await page.getByLabel('Scrivi un messaggio', { exact: true }).fill(original); await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  const panel = page.getByRole('region', { name: 'Verifica privacy prima dell’invio' });
+  await expect(panel.locator('.privacy-original')).toHaveCount(0); expect(requests).toHaveLength(0);
+  await panel.getByRole('button', { name: 'No, è un falso allarme', exact: true }).click();
+  await expect.poll(() => requests.length).toBe(1);
+  expect(requests[0]).toMatchObject({ message: original, privacyReviewed: true, publicFragments: ['Rosa'] });
+  await expect(panel).toHaveCount(0);
+  await sendMessage(page, 'Rosa quadrata');
+  expect(requests[1]).toMatchObject({ message: 'Rosa quadrata' });
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain('Rosa');
+});
+
+for (const nature of ['private', 'generic'] as const) test(`autocomposizione ${nature}: originale nel canvas, destinazione AI scelta dall’app`, async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  let request: Record<string, unknown> | undefined;
+  await page.route('**/api/ai/interpret', route => { const body = route.request().postDataJSON(); request = body; return route.fulfill({ json: { schemaVersion: 1, tool: 'collectRequirements', expectedRevision: body.revision, arguments: { family: 'stamp', mechanism: 'automatic', shape: 'rectangle', sizeUnknown: true } } }); });
+  await page.goto('/'); const original = 'Rosa';
+  await page.getByLabel('Scrivi un messaggio', { exact: true }).fill('Testo: ' + original); await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  const panel = page.getByRole('region', { name: 'Verifica privacy prima dell’invio' });
+  await panel.getByRole('button', { name: 'Sì, controlliamo', exact: true }).click();
+  await expect(panel.locator('.privacy-original')).toHaveText(original);
+  await panel.getByRole('button', { name: nature === 'private' ? 'Sì, è riservata' : 'No, è testo generico', exact: true }).click();
+  await expect.poll(() => !!request).toBe(true);
+  expect(JSON.stringify(request).includes(original)).toBe(nature === 'generic');
+  await page.locator('.product-card').filter({ has: page.getByRole('heading', { name: /4913/ }) }).getByRole('button', { name: 'Prova nel canvas' }).click();
+  await page.getByText('Stato e storico del documento').click();
+  expect(JSON.parse(await page.getByTestId('graphic-state').innerText()).objects[1].text).toBe(original);
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain(original);
+});
+
+test('classificazione mista: due scelte locali mantengono privato il nome e liberano solo il termine generico', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  let request: Record<string, unknown> | undefined;
+  await page.route('**/api/ai/interpret', route => { const body = route.request().postDataJSON(); request = body; return route.fulfill({ json: { schemaVersion: 1, tool: 'collectRequirements', expectedRevision: body.revision, arguments: { family: 'stamp' } } }); });
+  await page.goto('/');
+  await page.getByLabel('Scrivi un messaggio', { exact: true }).fill('un logo di Rosa per Mario Rossi'); await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  const panel = page.getByRole('region', { name: 'Verifica privacy prima dell’invio' });
+  await panel.getByRole('button', { name: 'Sì, controlliamo', exact: true }).click();
+  await expect(panel.locator('.privacy-original')).toHaveText('Rosa');
+  await panel.getByRole('button', { name: 'No, è testo generico', exact: true }).click();
+  expect(request).toBeUndefined(); await expect(panel.locator('.privacy-original')).toHaveText('Mario Rossi');
+  await panel.getByRole('button', { name: 'Sì, è riservata', exact: true }).click();
+  await expect.poll(() => !!request).toBe(true);
+  expect(JSON.stringify(request)).not.toContain('Mario'); expect(request).toMatchObject({ publicFragments: ['Rosa'] });
 });
 
 test('tessere bar: proposta reale anticipata, domanda sulle caselline e accettazione nel canvas', async ({ page }) => {

@@ -21,7 +21,11 @@ try {
     await page.getByLabel('Scrivi un messaggio', { exact: true }).fill(message);
     await page.getByRole('button', { name: 'Invia messaggio' }).click();
     await expect.poll(async () => await page.locator('.chat-message.assistant').count() > before || await page.getByRole('region', { name: 'Verifica privacy prima dell’invio' }).count() > 0, { timeout: 30_000 }).toBe(true);
-    if (await page.getByRole('region', { name: 'Verifica privacy prima dell’invio' }).count()) await page.getByRole('button', { name: 'Conferma e invia testo protetto' }).click();
+    if (await page.getByRole('region', { name: 'Verifica privacy prima dell’invio' }).count()) {
+      const panel = page.getByRole('region', { name: 'Verifica privacy prima dell’invio' });
+      await panel.getByRole('button', { name: 'Sì, controlliamo', exact: true }).click();
+      while (await panel.count()) await panel.getByRole('button', { name: 'Sì, è riservata', exact: true }).click();
+    }
     await expect(page.locator('.chat-message.assistant')).toHaveCount(before + 1, { timeout: 30_000 });
     const reply = await page.locator('.chat-message.assistant').last().innerText();
     if (/non disponibile|non valida|Quota|Riserva prudenziale|Limite locale|non raggiungibile|occupato|rifiutato/i.test(reply)) throw new Error('Colloquio interrotto: servizio o quota non disponibile');

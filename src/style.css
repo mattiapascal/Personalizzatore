@@ -14,3 +14,6 @@ main,header{max-width:1440px}.intro{padding:24px 0 16px;max-width:none}.intro h1
 header{padding-top:12px;padding-bottom:12px}.brand{font-size:23px}.intro{padding:12px 0 8px}.intro>.eyebrow{display:none}.intro h1{font-size:36px;margin:6px 0}.intro p{margin:6px 0}.environment-notice{padding:8px 12px}.connection-status{margin:8px 0;padding:8px 12px}nav{margin:12px 0}nav button{padding:8px 12px}.chat-panel{padding:16px}.chat-panel h2{font-size:26px;margin:6px 0 12px}.chat-log{height:var(--chat-height,220px)}.chat-composer label{margin:8px 0 6px}.chat-composer textarea{min-height:60px;padding:8px 12px}.chat-composer button{padding:8px 12px}
 @media(max-width:520px){.intro h1{font-size:28px}.intro p{display:none}.chat-log{height:var(--chat-height,180px)}}
 @media(max-height:680px){header{padding-top:6px;padding-bottom:6px}nav{margin:8px 0}}
+.privacy-preview{scroll-margin-top:16px}.privacy-original{white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto;margin:4px 0 10px}.privacy-original mark{padding:2px 4px}
+.privacy-compact{padding:10px 12px}.privacy-compact>p{margin:0 0 8px}.privacy-compact .button-row{margin:8px 0}.privacy-compact .privacy-original{max-height:100px}.privacy-compact .text-button{font-size:11px}
+.privacy-compact .privacy-original mark{color:#92241e;background:#fff0ed;border-bottom:1px solid #d99b95}

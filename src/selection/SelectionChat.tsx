@@ -11,7 +11,8 @@ export { nextSelectionQuestion } from './dialogue';
 import { ContentEstimate } from './ContentEstimate';
 import type { ContentBrief } from './content';
 import type { CatalogAdapter } from '../catalog/adapter';
-import { PrivacyVault } from '../privacy/redaction';
+import { PrivacyVault, type PreparedPrivacy } from '../privacy/redaction';
+import { PrivacyReview } from '../privacy/PrivacyReview';
 import { AiRequestSchema, type AiRequest } from '../ai/request';
 import type { SessionUsage } from '../ai/usage';
 
@@ -41,8 +42,7 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
   const [message, setMessage] = useState('');
   const vault = useRef(new PrivacyVault(catalog.list().map(p => p.title)));
   useEffect(() => { vault.current.allowCatalogTitles(catalog.list().map(p => p.title)); }, [catalog]);
-  const [pending, setPending] = useState<{ original: string; request: AiRequest; localText?: string } | null>(null);
-  const [protectedMessage, setProtectedMessage] = useState('');
+  const [pending, setPending] = useState<{ original: string; prepared: PreparedPrivacy } | null>(null);
   const [usage, setUsage] = useState<SessionUsage | null>(null);
   const [turns, setTurns] = useState<{ id: number; role: 'user' | 'assistant'; text: string; contextText?: string }[]>(() => [{ id: 0, role: 'assistant', text: nextSelectionQuestion(session) }]);
   const counter = useRef(1), processed = useRef(feedbackRevision);
@@ -120,9 +120,9 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
     const original = message.trim();
     if (mode === 'mock') { await send(original); return; }
     try {
-      const input = AiRequestSchema.parse({ message: original, sessionId: session.sessionId, revision: session.revision, requirements: session.requirements, lastQuestion: (clarification ?? modelQuestion(prompt)).slice(0, 300), recentMessages: turns.slice(-6).map(turn => ({ role: turn.role, text: (turn.role === 'user' ? turn.text : turn.contextText ?? 'Proseguiamo con i dati mancanti del timbro.').slice(-400) })), contentBrief, lastQuestionField: prompt.field });
+      const input = AiRequestSchema.parse({ message: original, sessionId: session.sessionId, revision: session.revision, requirements: session.requirements, lastQuestion: (clarification ?? modelQuestion(prompt)).slice(0, 300), recentMessages: vault.current.protectHistory(turns.slice(-6).map(turn => ({ role: turn.role, text: turn.role === 'user' ? turn.text : turn.contextText ?? 'Proseguiamo con i dati mancanti del timbro.' }))), contentBrief, lastQuestionField: prompt.field });
       const prepared = vault.current.prepare(input);
-      if (prepared.needsReview) { setPending({ original, request: prepared.request, localText: prepared.localText }); setProtectedMessage(prepared.request.message); }
+      if (prepared.needsReview) setPending({ original, prepared });
       else await send(original, prepared.request, prepared.localText);
     } catch { dispatch({ type: 'error', message: 'Non riesco a preparare il testo protetto. Riduci il messaggio e verifica i dati da imprimere (massimo 480 caratteri).' }); }
   };
@@ -138,20 +138,10 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
       <label htmlFor="request">Scrivi un messaggio</label><textarea ref={inputRef} id="request" rows={2} maxLength={1200} disabled={!!pending} value={message} placeholder="Raccontami cosa vuoi mettere nel timbro…" onChange={event => setMessage(event.target.value)}/>
       <button type="submit" className="primary" disabled={busy || !!pending || !message.trim() || (mode === 'server' && !runtime.ai.ready)}>{busy ? 'Attendi…' : 'Invia messaggio →'}</button>
     </form>
-    {pending && <section className="privacy-preview notice" aria-label="Verifica privacy prima dell’invio">
-      <h3>Controlla il testo protetto</h3><p>Questa anteprima è ancora nel browser. Ho oscurato i dati riconosciuti e le parole dubbie. Controlla che non restino nomi, aziende, recapiti o altri dati identificativi; puoi sostituirli con [DATO]. I contenuti originali restano disponibili per il timbro.</p>
-      <label htmlFor="protected-message">Testo protetto da inviare a OpenAI</label><textarea id="protected-message" rows={4} maxLength={1200} value={protectedMessage} onChange={e => setProtectedMessage(e.target.value)}/>
-      <details><summary>Contesto protetto incluso nell’invio</summary>
-        {pending.request.lastQuestion && <p>Domanda precedente: {pending.request.lastQuestion}</p>}
-        <ul>{pending.request.recentMessages.map((turn, index) => <li key={index}>{turn.role === 'user' ? 'Tu' : 'Assistente'}: {turn.text}</li>)}</ul>
-        {pending.request.contentBrief?.text && <p>Testo da imprimere: {pending.request.contentBrief.text}</p>}
-        {pending.request.contentBrief?.graphicSubject && <p>Grafica: {pending.request.contentBrief.graphicSubject}</p>}
-      </details>
-      <div className="button-row"><button className="primary" disabled={!protectedMessage.trim()} onClick={() => {
-        try { const reviewed = AiRequestSchema.parse({ ...pending.request, message: vault.current.protect(protectedMessage), privacyReviewed: true }); void send(pending.original, reviewed, pending.localText); }
-        catch { dispatch({ type: 'error', message: 'Controlla lunghezza e segnaposto del testo protetto prima di inviare.' }); }
-      }}>Conferma e invia testo protetto</button><button onClick={() => setPending(null)}>Torna al messaggio</button></div>
-    </section>}
+    {pending && <PrivacyReview prepared={pending.prepared} onContinue={choices => {
+      try { const reviewed = vault.current.review(pending.prepared, choices); void send(pending.original, reviewed.request, reviewed.localText); }
+      catch { dispatch({ type: 'error', message: 'Indica la natura di ogni parte evidenziata per continuare.' }); }
+    }} onCancel={() => setPending(null)}/>}
     {mode === 'server' && <p className="caption" aria-live="polite">Costo stimato di questa chat: {usage ? usage.estimatedUsd.toFixed(4) + ' USD' : 'non ancora disponibile'} · tetto {usage?.budgetUsd.toFixed(2) ?? runtime.ai.sessionBudgetUsd?.toFixed(2) ?? '0.05'} USD. Dati originali conservati solo in memoria nel browser.</p>}
     <div className="chat-next">{!clarificationBlocksSelection && hasSuggestions && <button onClick={onShowResults}>Mostra i modelli →</button>}</div>
     <RequirementSummary requirements={session.requirements}/>

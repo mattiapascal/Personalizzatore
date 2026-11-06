@@ -26,7 +26,7 @@ const messages = ['Voglio fare un timbro per le tessere abbonamento del mio bar'
 for (const [index, message] of messages.entries()) {
   const prompt = nextSelectionPrompt(state.session, state.contentBrief, mountFixtureCatalog);
   const question = state.clarification ?? modelQuestion(prompt);
-  const prepared = vault.prepare({ message, sessionId: state.session.sessionId, revision: state.session.revision, requirements: state.session.requirements, contentBrief: state.contentBrief, lastQuestionField: prompt.field, lastQuestion: question.slice(0, 300), recentMessages: history.slice(-6).map(m => ({ ...m, text: m.text.slice(-400) })), privacyReviewed: false });
+  const prepared = vault.prepare({ message, sessionId: state.session.sessionId, revision: state.session.revision, requirements: state.session.requirements, contentBrief: state.contentBrief, lastQuestionField: prompt.field, lastQuestion: question.slice(0, 300), recentMessages: history.slice(-6).map(m => ({ ...m, text: m.text.slice(-400) })), privacyReviewed: false, publicFragments: [] });
   const input: AiRequest = { ...prepared.request, privacyReviewed: true };
   const body = JSON.stringify(makeOpenAiBody(input, config, mountFixtureCatalog));
   const payload = JSON.parse(makeOpenAiBody(input, config, mountFixtureCatalog).input[0]!.content);

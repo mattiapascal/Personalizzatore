@@ -18,10 +18,17 @@ try {
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   const preview = page.getByRole('region', { name: 'Verifica privacy prima dell’invio' });
   await expect(preview).toBeVisible();
-  await expect(page.getByLabel('Testo protetto da inviare a OpenAI')).not.toHaveValue(/Persona|Fittizia|example/);
+  await expect(preview.locator('.privacy-original')).toHaveCount(0);
   await preview.screenshot({ path: '.local/previews/privacy-desktop.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await preview.screenshot({ path: '.local/previews/privacy-detection-mobile.png' });
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await preview.getByRole('button', { name: 'Sì, controlliamo', exact: true }).click();
+  await expect(preview.locator('.privacy-original')).toContainText('Persona Esempio');
+  await expect(preview.locator('mark')).toHaveCSS('color', 'rgb(146, 36, 30)');
+  await preview.screenshot({ path: '.local/previews/privacy-part-desktop.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
   await preview.screenshot({ path: '.local/previews/privacy-mobile.png' });
   expect(aiRequests).toBe(0);
   console.log(JSON.stringify({ captured: ['desktop', 'mobile'], aiRequests }));
