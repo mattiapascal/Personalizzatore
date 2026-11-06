@@ -2,6 +2,8 @@
 
 Stato: piano verificabile, non autorizzazione a pubblicare, installare app, attivare servizi a pagamento o modificare il tema. Nessuna operazione Shopify, DNS, account hosting o scrittura nel repository tema eseguita. Correzioni editoriali richieste registrate in [next-release.md](next-release.md).
 
+**Aggiornamento del titolare:** scelta iniziale **Cloudflare Workers Free**, con eventuale passaggio a Paid solo se necessario e approvato. La precedente preferenza tecnica Node è superata da questa scelta. Preparazione, limiti e verifiche necessarie sono in [cloudflare-free.md](cloudflare-free.md). Il backend Workers non è ancora implementato né pubblicato.
+
 ## Ambito consigliato
 
 Primo rilascio: una pagina pilota con assistente, riepilogo essenziale, anteprime e link ai prodotti attuali. Il cliente prosegue nei percorsi BSS/PitchPrint già esistenti. L'editor Fabric rimane nel laboratorio fino al collaudo produttivo di file, font, area utile e compatibilità Illustrator. Nessun trasferimento grafico/opzioni al carrello incluso. Se il titolare vuole rendere pubblico anche il canvas, serve un ambito e collaudo separato; non si presenta l'export TEST come file di produzione.
@@ -57,4 +59,4 @@ Render dichiara servizi web da 7 USD/mese e dischi da 0,25 USD/GB-mese. Un servi
 
 Costi AI separati: nel precedente test tre turni sono costati circa 0,00875625 USD a tariffa standard. A parità di quel solo scenario, 100 conversazioni sono circa 0,88 USD, 1.000 circa 8,76 USD; non è una media o un preventivo produttivo. Il tetto attuale per chat è 0,05 USD, ma servono anche un tetto globale e protezioni antiabuso. Non assumere token promozionali gratuiti senza riscontro di fatturazione. Hosting a zero non implica costo AI a zero.
 
-Raccomandazione: per il primo pilota privilegiare il percorso Node, vicino al codice attuale, se non c'è già un hosting idoneo. Valutare Cloudflare se la priorità è il canone minimo accettando l'adattamento iniziale. Il primo incremento autorizzabile è preparazione locale della versione pubblica e pacchetto tema, senza attivare ancora hosting/app o caricare nulla nello store. Scegliere definitivamente il servizio dopo la prova tecnica e un budget operativo esplicito.
+Decisione successiva del titolare: partire da Cloudflare Free. Il confronto con Node resta come riferimento alternativo se la prova tecnica evidenzia limiti rilevanti; non è la destinazione scelta. La preparazione locale procede senza attivare hosting/app o caricare nulla nello store; il piano operativo è in [cloudflare-free.md](cloudflare-free.md).

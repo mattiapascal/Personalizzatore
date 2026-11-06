@@ -5,6 +5,11 @@
   "type": "module",
   "engines": { "node": ">=24.17.0 <25" },
   "scripts": {
+    "assistant:generate": "node --import tsx scripts/compile-assistant-policy.ts",
+    "assistant:check": "node --import tsx scripts/compile-assistant-policy.ts --check",
+    "predev": "npm run assistant:generate",
+    "prebuild": "npm run assistant:check",
+    "pretest": "npm run assistant:check",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",

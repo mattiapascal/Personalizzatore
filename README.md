@@ -4,6 +4,8 @@ Progetto per Incisoria Sacchetti. Repository: [mattiapascal/Personalizzatore](ht
 
 **Prototipo locale, nessun deploy.** Chat con AI reale, selezione deterministica da catalogo Shopify aggiornabile, canvas Fabric.js collegato al prodotto e JSON/SVG. I profili grafici sono ancora TEST. BSS e PitchPrint continuano a funzionare nel negozio attuale.
 
+Per correggere il comportamento: **[REGOLE_ASSISTENTE.md](REGOLE_ASSISTENTE.md)** è la guida per il titolare, con istruzioni realmente compilate nel prompt, esempi e mappa delle regole applicative. Modifica il testo, esegui `npm run assistant:generate` e `npm run check`, poi riavvia il server. `npm run dev` rigenera all'avvio; test e build rifiutano un artefatto obsoleto. Le modifiche locali non pubblicano nulla. Destinazione scelta per il primo pilota: [Cloudflare Workers Free](docs/cloudflare-free.md), adattamento backend ancora da realizzare.
+
 Aggiornamento interfaccia: chat più larga ad altezza fissa con scroll, requisiti compatti (quattro colonne desktop/due mobile), risultati come schede con foto Shopify e dettagli richiudibili. Il dialogo può partire dal contenuto: testo esatto → stima indicativa → scelta del formato → prima bozza nel canvas. Ex-libris e grafica vengono raccolti come brief, senza inventare un formato dal solo numero di righe. [Dettagli e verifiche](docs/iteration-chat-layout.md).
 
 ## Avvio

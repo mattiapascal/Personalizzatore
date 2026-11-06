@@ -11,7 +11,7 @@ export function adviseProducts(catalog: CatalogAdapter, requirements: Requiremen
   return catalog.list().filter(p => p.useCases?.some(c => c.purpose === purpose) && productMatches(p, requirements))
     .sort((a, b) => a.nominalAreaMm.width * a.nominalAreaMm.height - b.nominalAreaMm.width * b.nominalAreaMm.height || profileKey(a).localeCompare(profileKey(b))).slice(0, 3)
     .map(p => ({ productId: p.productId, profileId: profileKey(p), profileVersion: p.profileVersion, catalogVersion: catalog.version,
-      reasons: [{ ruleId: 'P1_CATALOG_USE', explanation: 'La scheda Shopify indica questo uso: ' + p.useCases!.find(c => c.purpose === purpose)!.evidence }, { ruleId: 'P2_PROVISIONAL', explanation: 'Proposta iniziale da confermare: nessuna preferenza di montatura o forma è stata assegnata al cliente.' }],
+      reasons: [{ ruleId: 'P1_CATALOG_USE', explanation: 'La scheda prodotto indica: ' + p.useCases!.find(c => c.purpose === purpose)!.evidence }],
       pending: [...(p.dataWarnings ?? []), ...(!requirements.maximumAreaMm && purpose === 'loyalty' ? ['Misure delle caselline e ingombro del logo ancora da verificare.'] : []), 'Area utile, impaginazione, prezzo e disponibilità da verificare prima della conferma.'],
     }));
 }

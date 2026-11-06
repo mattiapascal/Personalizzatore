@@ -65,6 +65,8 @@ describe('Regressione tessere abbonamento: memoria, delta e misure contestuali',
     const advice = adviseProducts(mountFixtureCatalog, current.requirements, brief);
     expect(advice[0]!.productId).toBe('gid://shopify/Product/15106215805308');
     expect(advice[0]!.reasons[0]!.explanation).toMatch(/tessere|abbonamenti/i);
+    expect(advice[0]!.reasons[0]!.explanation).toMatch(/^La scheda prodotto indica:/);
+    expect(advice[0]!.reasons.map(r => r.explanation).join(' ')).not.toMatch(/Shopify|assegnata al cliente|nessuna preferenza/i);
     const prompt = nextSelectionPrompt(current, brief, mountFixtureCatalog);
     expect(prompt.text).toContain('Colop Printer Q12'); expect(prompt.field).toBe('targetArea'); expect(prompt.question).toContain('caselline');
     expect(current).toEqual(before); expect(current.requirements.mechanism).toBeUndefined();

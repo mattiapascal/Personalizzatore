@@ -18,6 +18,12 @@ Leggi prima e considera autorevole `01_Specifica_Progetto_Codex.md`. Questa è l
 - Per timbri, i 7 pt minimi e nero/bianco sono esempi di profili tecnici specifici, non regole universali.
 - Mantieni integrazioni Shopify/BSS dietro adattatori e non usare selettori non documentati senza test.
 
+## Comportamento dell'assistente e manutenzione delle istruzioni
+- Prima di modificare interpretazione, tono, domande o casi gestiti, leggi `REGOLE_ASSISTENTE.md`: contiene la sezione attiva per il modello e la mappa delle regole applicative.
+- Modifica le istruzioni editoriali nel documento sorgente, non in `server/assistant-policy.generated.ts`; poi esegui `npm run assistant:generate` e i controlli pertinenti. Mantieni documento e artefatto nello stesso commit.
+- Non dichiarare supportato un caso nuovo aggiungendo soltanto una frase al prompt: verifica contratti, filtri, domanda successiva e test. I test strutturali non certificano la comprensione del modello reale.
+- Destinazione iniziale concordata: Cloudflare Workers Free, secondo `docs/cloudflare-free.md`. Preparazione locale autorizzata; risorse remote, upgrade e deploy rimangono soggetti ad autorizzazione esplicita.
+
 ## Workflow in ogni iterazione
 1. Controlla stato del repository e strumenti disponibili.
 2. Elenca piano, assunzioni e rischi prima di cambiamenti importanti.
