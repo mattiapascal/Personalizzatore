@@ -1,64 +1,33 @@
-# Primo rilascio nel tema — proposta, 6 novembre 2026
+# Pubblicazione e gestione dei due repository
 
-Stato: piano verificabile, non autorizzazione a pubblicare, installare app, attivare servizi a pagamento o modificare il tema. Nessuna operazione Shopify, DNS, account hosting o scrittura nel repository tema eseguita. Correzioni editoriali richieste registrate in [next-release.md](next-release.md).
+Il primo rilascio è stato autorizzato e attivato il 6 novembre 2026 nella sola pagina [Crea il tuo timbro](https://www.incisoriasacchetti.it/pages/crea-timbro-online). Il [registro del rilascio](release-cloudflare.md) contiene verifiche, risorse e ripristino; [Cloudflare Free](cloudflare-free.md) descrive il piano scelto e i limiti. Un push Git non equivale a un deploy.
 
-**Aggiornamento del titolare:** scelta iniziale **Cloudflare Workers Free**, con eventuale passaggio a Paid solo se necessario e approvato. La precedente preferenza tecnica Node è superata da questa scelta. Preparazione, limiti e verifiche necessarie sono in [cloudflare-free.md](cloudflare-free.md). Il backend Workers non è ancora implementato né pubblicato.
+## Ambito pubblico
 
-**Autorizzazione successiva:** il titolare ha richiesto il primo rilascio diretto sulla pagina `/pages/crea-timbro-online`, dichiarando una copia di backup, e ha richiesto uno stile uniforme al tema. Backend Workers e UI pubblica sono ora implementati e collaudati localmente; l'attivazione online e le evidenze vanno registrate nel [registro del rilascio](release-cloudflare.md). I paragrafi iniziali conservano lo stato della proposta prima del consenso.
+Chat, riepilogo, anteprime e link alle varianti attuali. Il cliente prosegue sulla pagina prodotto con BSS/PitchPrint. Nessun trasferimento automatico dei contenuti della chat al personalizzatore e nessun intervento su prezzi, varianti, carrello o checkout. Fabric e gli export TEST restano nel laboratorio; il collaudo produttivo Illustrator richiede un percorso separato.
 
-## Ambito consigliato
+Il frontend cliente e il backend risiedono su Workers, con SQLite e aggiornamento pianificato del catalogo. Il tema incorpora il frontend in un iframe isolato e trasmette solo font, colori e altezza disponibile. Nessun CSS globale del tema viene sostituito, nessuna nuova app Shopify installata.
 
-Primo rilascio: una pagina pilota con assistente, riepilogo essenziale, anteprime e link ai prodotti attuali. Il cliente prosegue nei percorsi BSS/PitchPrint già esistenti. L'editor Fabric rimane nel laboratorio fino al collaudo produttivo di file, font, area utile e compatibilità Illustrator. Nessun trasferimento grafico/opzioni al carrello incluso. Se il titolare vuole rendere pubblico anche il canvas, serve un ambito e collaudo separato; non si presenta l'export TEST come file di produzione.
+## Dove lavorare
 
-## Audit locale e repository
+| Repository | Contenuti | Ramo usato nel primo rilascio |
+|---|---|---|
+| `mattiapascal/Personalizzatore` | UI, backend, regole umane, contratti, catalogo, test, manifest | `main` |
+| `mattiapascal/Mode-mio-5.2.0` | Sezione/template dedicati, caricatore, chiavi locali e documenti tema | `feature/ai-stamp-assistant` |
 
-Personalizzatore: base pulita `9730b97` su `main`, repository `mattiapascal/Personalizzatore`. UI, motore, contratti, test, backend e futuro adattatore hosting restano qui come fonte autorevole.
+La worktree tema isolata si trova in `.local/theme-ai-release`, dalla base remota verificata `e465ac6`. La cartella originale `/Users/davide/Documents/Shopify/Temi/Mode mio 5.2.0` non viene sovrascritta. I Git restano distinti; chiavi e cartelle locali non entrano nel tema. Una traduzione italiana preesistente online è stata preservata nel commit separato `d5a908f`.
 
-Tema: `/Users/davide/Documents/Shopify/Temi/Mode mio 5.2.0`, cartella pulita su `master` a `dc11b47`. Il tracking **già presente in locale** punta a `origin/master` `e465ac6`; divergenza 0 avanti / 12 indietro. Nessun fetch nel repository tema durante questo audit, quindi non è una conferma dello stato attuale del remoto o del tema pubblicato. Tra i commit del tracking ci sono modifiche a breadcrumb/ricerca, barra annunci e recupero progetti PitchPrint: la vecchia base non va usata per copiare un intero tema online.
+Regole lette nell'handoff del tema: commit piccoli e tematici; aggiornare sempre `MIGRAZIONE_MODE_5_2_0_HANDOFF.md` e `MIGRAZIONE_MODE_5_2_0_PERSONALIZZAZIONI.md`; validare Liquid e Theme Check; distinguere push Git e upload Shopify. Il caricamento diretto di questa pagina è autorizzato esplicitamente dal titolare, in deroga al normale caricamento manuale del tema.
 
-Letti gli aggiornamenti iniziali e le regole di `MIGRAZIONE_MODE_5_2_0_HANDOFF.md`, e consultato anche il documento nel tracking `origin/master`. Nessun `AGENTS.md` trovato nel percorso del tema o nei suoi genitori ispezionati. Regole rilevanti:
+## Procedura per una modifica successiva
 
-- Commit piccoli e tematici; interventi generali separati dalle funzioni specifiche di altri progetti.
-- Aggiornare `MIGRAZIONE_MODE_5_2_0_PERSONALIZZAZIONI.md` per ogni nuova personalizzazione, con scopo, file e note di migrazione.
-- Aggiornare l'handoff e indicare pagine, comportamento atteso e regressioni da provare.
-- Validazione Liquid/Theme Check e test specifici della funzione quando si scrive codice tema.
-- Nessuno ZIP o `shopify theme push` senza richiesta esplicita. L'handoff assegna normalmente i caricamenti al titolare. Push Git e pubblicazione sono fasi distinte.
+1. Controllare entrambi gli stati Git e rileggere i file remoti interessati. Preservare modifiche concorrenti e mantenere una copia dei soli file da cambiare.
+2. Modificare le istruzioni in `REGOLE_ASSISTENTE.md`, non nel modulo generato. Eseguire `npm run assistant:generate` e i test pertinenti. Casi nuovi possono richiedere anche contratti, regole deterministiche e test reali, oltre al prompt.
+3. Prima di rilasciare l'app usare `npm run check:release`: test locale e pubblico, build Workers, SQLite, privacy e controllo segreti. I collaudi AI reali sono separati e consumano token.
+4. Fare commit/push nel repository corrispondente. Registrare commit sorgente, versione API, hash asset e versione Worker. In assenza di autorizzazione al rilascio fermarsi al pacchetto verificato.
+5. Per regole/UI/backend compatibili pubblicare soltanto il Worker autorizzato. Il tema non richiede un upload se URL e contratto rimangono compatibili. Per caricatore/sezione/template fare anche commit tematico e upload dei soli file cambiati, senza cancellazioni o sostituzione dell'intero tema.
+6. Rileggere versione, checksum e pagina pubblica; provare la conversazione e la navigazione al prodotto. Non dichiarare una prova visiva o produttiva non eseguita.
 
-Workflow proposto: nuovo fetch e verifica della base, poi ramo/worktree isolato `feature/ai-stamp-assistant` dalla base remota verificata. Non si aggiorna o sovrascrive la cartella corrente alla cieca. Nel tema entrano solo sezione/template e piccoli asset di integrazione dell'assistente, oltre ai documenti obbligatori. Non si uniscono i Git, non si copiano `server/`, chiavi, `.local/` o tutto il laboratorio nel tema.
+## Ripristino
 
-Ogni versione pubblicabile del Personalizzatore produce un pacchetto frontend ripetibile e un manifest con commit sorgente, versione API e hash degli asset. Un commit tematico nel Git del tema adotta quella versione e registra il riferimento. Per aggiornare soltanto backend/regole compatibili non serve una modifica tema; per un nuovo frontend si aggiorna il riferimento o il pacchetto attraverso un commit controllato. Nessun deploy automatico ad ogni push su `main`/`master`.
-
-## Architettura minima di rilascio
-
-Il tema contiene una sezione dedicata che carica l'interfaccia pubblica solo nella pagina pilota. CSS/DOM isolati (preferenza: componente con Shadow DOM) per evitare che gli attuali selettori globali `header`, `nav`, `button` o `main` interferiscano con Mode. Niente inserimento del laboratorio completo in `theme.liquid` o modifica degli script BSS/PitchPrint.
-
-Il backend deve essere online e autonomo: attualmente le API sono un plugin del server di sviluppo Vite, limitato a localhost. La build genera solo asset frontend. Vanno estratti un ingresso HTTP di produzione, configurazione segreti server, endpoint pubblici ridotti e persistenza affidabile. Il computer del titolare non deve rimanere acceso.
-
-Per le richieste del tema è preferibile valutare un **app proxy Shopify** autenticato; richiede configurazione di un'app e scope `write_app_proxy`, da autorizzare separatamente. La firma identifica il negozio, non il visitatore, quindi non sostituisce sessioni, antiautomazione e limiti di spesa. Alternativa iniziale: backend HTTPS dedicato, challenge verificata dal server, sessioni e controlli origine; CORS o un nonce pubblico da soli non costituiscono autenticazione. [Proxy](https://shopify.dev/docs/apps/build/online-store/app-proxies), [autenticazione](https://shopify.dev/docs/apps/build/security/app-server/authenticate-every-request).
-
-## Lavoro necessario prima del pubblico
-
-1. Versione cliente dell'interfaccia e correzioni editoriali; esclusione diagnostica e pulsanti di laboratorio. Frontend/API pubblici non devono esporre gli elenchi interni di prodotti sospesi o configurazioni del titolare.
-2. Servizio HTTP, segreti server e storage per catalogo/registro. Adattare la singola chiamata AI globale e i limiti oggi di processo a sessioni concorrenti controllate; limite globale oltre a quello per chat, protezione dai reset di sessione usati per aggirare la quota.
-3. Aggiornamento catalogo indipendente dal laptop, tramite scheduler e riconciliazione; webhook eventuali richiedono nuova configurazione autorizzata. Conservare versioni, import atomico e gestione del catalogo obsoleto.
-4. Collaudo privacy sui payload e sulle due destinazioni dei dati, controllo log/retention e testo informativo pubblico. Il filtro attuale è euristico: la promozione alla produzione non è certificata dai soli 42 esempi TEST. Verificare le impostazioni di condivisione dell'account AI prima di traffico reale, senza cambiarle automaticamente.
-5. Test su copia/anteprima del tema, collisioni CSS, mobile e percorso chat→prodotto. Nessuna modifica a opzioni, varianti, prezzi, carrello o checkout. Pagina inizialmente non promossa; fallback alle pagine prodotto quando l'AI non è disponibile.
-6. Consegna concreta: diff dei soli file tema, versione app/API e hash, checklist mirata, budget configurato e rollback. Pubblicazione e attivazione del canone solo dopo autorizzazione esplicita. Rollback: disattivare la sezione/pagina pilota o ripristinare la versione precedente dei soli asset introdotti.
-
-## Hosting e costi verificati
-
-Importi in USD, consultati il 6 novembre 2026; esclusi imposte, eventuale dominio aggiuntivo, sviluppo iniziale ed extra oltre le quote. Nessun piano attivato.
-
-| Strada | Canone indicativo | Impatto sul codice |
-|---|---:|---|
-| Cloudflare Workers Free | 0 entro quote | Richiede adattare storage/lock su file e timer al runtime, non caricamento diretto dell'app Node |
-| Cloudflare Workers Paid | Da 5/mese, più extra oltre le quote | Stesso adattamento; margine operativo maggiore |
-| Servizio Node Render a pagamento + piccolo disco persistente | Compute da 7/mese; disco 0,25/GB-mese | Più vicino all'attuale backend Node; restano necessari servizio di produzione e controlli pubblici |
-
-Cloudflare Free ha 100.000 richieste/giorno e 10 ms di CPU per invocazione: prima di sceglierlo serve misurare import catalogo e validazioni. Il pagamento minimo Workers è 5 USD/mese; storage/altre risorse hanno le proprie quote. [Prezzi](https://developers.cloudflare.com/workers/platform/pricing/), [limiti](https://developers.cloudflare.com/workers/platform/limits/).
-
-Render dichiara servizi web da 7 USD/mese e dischi da 0,25 USD/GB-mese. Un servizio con 1 GB di disco porta a circa 7,25 USD/mese di base, da confermare al checkout e con carico reale. Il piano gratuito sospende dopo 15 minuti di inattività, riparte lentamente e perde le modifiche al filesystem: non è il candidato consigliato per la chat commerciale. [Servizi](https://render.com/articles/best-netlify-alternatives-in-2026), [storage/costi](https://render.com/articles/how-much-does-cloud-application-hosting-cost-for-small-businesses), [limiti free](https://render.com/docs/free).
-
-Costi AI separati: nel precedente test tre turni sono costati circa 0,00875625 USD a tariffa standard. A parità di quel solo scenario, 100 conversazioni sono circa 0,88 USD, 1.000 circa 8,76 USD; non è una media o un preventivo produttivo. Il tetto attuale per chat è 0,05 USD, ma servono anche un tetto globale e protezioni antiabuso. Non assumere token promozionali gratuiti senza riscontro di fatturazione. Hosting a zero non implica costo AI a zero.
-
-Decisione successiva del titolare: partire da Cloudflare Free. Il confronto con Node resta come riferimento alternativo se la prova tecnica evidenzia limiti rilevanti; non è la destinazione scelta. La preparazione locale procede senza attivare hosting/app o caricare nulla nello store; il piano operativo è in [cloudflare-free.md](cloudflare-free.md).
+Riassegnare `wide` alla pagina `689437639036`: titolo, URL e corpo originale sono conservati. Il template condiviso `wide` è intatto. Per un problema del solo backend ripristinare una versione verificata del Worker senza cancellare il registro consumi. Un upgrade Cloudflare, una migrazione BSS o un ampliamento del perimetro richiedono nuova autorizzazione.

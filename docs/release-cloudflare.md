@@ -4,7 +4,11 @@
 
 Il titolare ha autorizzato il primo rilascio diretto sulla pagina `https://www.incisoriasacchetti.it/pages/crea-timbro-online`, riferendo di aver creato una copia di backup. Scelta: Cloudflare Free e aspetto coerente con il tema. Nessun piano a pagamento o modifica a BSS, PitchPrint, prodotti, prezzi, varianti, carrello o checkout.
 
-Preparazione locale completata; attivazione e verifica live ancora da completare. Il login Wrangler precedente è scaduto: richiesta ufficiale OAuth aperta per consenso del titolare. Nessuna credenziale va incollata in chat. Finché l'accesso non è ristabilito non dichiarare il servizio pubblicato o la pagina sostituita.
+**Primo rilascio attivato il 6 novembre 2026.** Backend pubblicato, piano Free verificato nel pannello, widget Turnstile dedicato e catalogo aggiornato dal Cron. Il titolare ha verificato l’anteprima: «Chat visibile e risposta ricevuta». Assegnato poi `ai-timbro` alla sola pagina autorizzata: API riletta, titolo/handle/corpo identici a prima, URL normale HTTP 200 con iframe del servizio. In questa sessione l’ispezione nativa del browser non era affidabile (bianco anche sulla vecchia pagina; errore di acquisizione Safari): non dichiarare un collaudo visivo remoto desktop/mobile autonomo. Le verifiche responsive automatizzate sono locali.
+
+## Versione distribuita
+
+Revisione grafica pubblicata sullo stesso servizio, piano Free, senza nuove migrazioni o modifiche ai segreti. Sorgente applicazione `aeb1f22`, versione Worker `59f55727-dbe8-49ff-ae43-4f653322831e`. La sola sezione tema è stata ricaricata per ridurre l’intestazione; i dodici file del rilascio sono stati riletti e confrontati con la worktree. [Manifest con commit, hash ed esiti](releases/2026-11-06.json).
 
 ## Due repository e base verificata
 
@@ -43,14 +47,22 @@ Un cambiamento delle sole istruzioni richiede rilascio del backend; il tema non 
 
 ## Verifiche e completamento prima dell'attivazione della pagina
 
-Verifiche locali già eseguite: 189 unit test, 38 browser laboratorio, cinque browser cliente, build TypeScript dei due runtime e controllo credenziali negli asset. Test runtime Workers/SQLite superato con soli dati TEST e rete simulata: import multipagina, errore conservativo, privacy prima della rete, origine, quota server indipendente dal reset, concorrenza, contatori/catalogo dopo riavvio e limiti di apertura sessioni. Non è un test CPU del servizio remoto né un collaudo Illustrator.
+Verifiche locali già eseguite: 189 unit test, 38 browser laboratorio, sette browser cliente, build TypeScript dei due runtime e controllo credenziali negli asset. Test runtime Workers/SQLite superato con soli dati TEST e rete simulata: import multipagina, errore conservativo, privacy prima della rete, origine, quota server indipendente dal reset, concorrenza, contatori/catalogo dopo riavvio e limiti di apertura sessioni. Non è un test CPU del servizio remoto né un collaudo Illustrator.
 
-Theme Check locale: 277 file, nessun errore; tredici warning in file preesistenti, nessuna segnalazione sui nuovi file. L'helper Liquid della skill non parte per dipendenze mancanti; non dichiararlo superato. Il controllo CLI è stato eseguito come verifica effettiva dell'intero tema.
+Theme Check locale: 277 file, nessun errore; tredici warning in file preesistenti, nessuna segnalazione sui nuovi file. Validatore Liquid ufficiale della skill superato su tutti i dodici file, dopo aver installato le sue dipendenze in una cartella di strumenti isolata. Anche la successiva modifica della sola sezione è stata rivalidata (revisione 3). Nessuna dipendenza aggiunta al tema.
 
-Da completare: login Cloudflare, conferma del piano, creazione/configurazione del solo servizio e widget, upload segreti senza stamparli, lettura iniziale catalogo, prova online e misura delle risorse Free. Dopo esito positivo: caricare i soli file tema preparati, rileggerne hash, poi assegnare `ai-timbro` alla sola pagina autorizzata e verificare URL pubblico su desktop/mobile. Eseguire collaudo AI reale mirato entro budget già autorizzato, senza dati cliente. Registrare esiti e versioni; non dichiarare verificati passi non eseguiti.
+Completati: rinnovi di accesso eseguiti dal titolare, Worker/SQLite/widget sul Free, upload segreti senza esposizione, lettura iniziale e successivi aggiornamenti pianificati, upload limitato dei dodici file tema con checksum remoti identici, anteprima verificata dal titolare e assegnazione del template. Il collaudo AI reale del prompt v11 supera 4/4 casi sintetici: stima standard 0,0139305 USD, di cui 0,0101085 USD per una sessione di tre turni. Le tre esecuzioni diagnostiche di questa fase sommano circa 0,039969 USD, senza certificare fattura o token promozionali.
+
+Limiti ancora aperti: prova di carico/CPU e quote nel servizio remoto Free, collaudo visivo remoto su più dispositivi, raccolta amministrativa di casi nuovi con consenso e collaudo produttivo Illustrator. Nessuna di queste verifiche è sostituita dai test locali. Il pilota conserva tetti prudenziali e percorso alternativo al catalogo.
 
 ## Rollback
 
 Primo ripristino: riportare il template della pagina da `ai-timbro` a `wide`. Corpo, titolo e handle originali non vengono cancellati e tornano al percorso precedente. La nuova sezione e il caricatore non sono inclusi negli altri template: il ripristino non richiede sostituire tutto il tema. Se necessario ripristinare i soli file introdotti/modificati dalle copie verificate, senza toccare modifiche concomitanti.
 
 Per il backend, ripristinare una versione Worker verificata o disattivare l'assistente; non cancellare il registro consumi durante un rollback. Mantieni l'aggiornamento catalogo o segnala esplicitamente il servizio non disponibile. Nessuna migrazione BSS o operazione su carrello/ordini fa parte del ripristino.
+
+## Revisione della chat richiesta durante il rilascio
+
+Il titolare ha richiesto maggiore altezza della conversazione e aspetto simile a WhatsApp chiaro: sfondo `#efeae2`, messaggi ricevuti bianchi, inviati `#d9fdd3`, testo scuro e code laterali, senza spunte. Font e azioni prodotto restano quelli del tema. Titolo pagina compatto e sottotitolo ridondante rimosso. La conversazione occupa lo spazio fino al compositore, senza crescere con la cronologia; riepilogo, informazioni e reset seguono sotto. Rimosso «Mostra i modelli» pubblico perché i risultati sono già presenti.
+
+Invio con **Invio**, nuova riga con **Maiusc+Invio**; composizione IME non invia. Una freccia accessibile da 44 px nel campo sostituisce il grande pulsante. La verifica privacy continua a intervenire prima della trasmissione. La modalità laboratorio mantiene il comportamento precedente. Cache Vite pubblica separata da quella del laboratorio, per non invalidare il modulo Fabric di un server locale già aperto.

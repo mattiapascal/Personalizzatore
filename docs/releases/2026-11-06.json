@@ -1,0 +1,108 @@
+{
+  "verifiedAt": "2026-11-06T20:00:29.200Z",
+  "page": "https://www.incisoriasacchetti.it/pages/crea-timbro-online",
+  "templateSuffix": "ai-timbro",
+  "previousTemplateSuffix": "wide",
+  "pageContentPreserved": true,
+  "apiVersion": 1,
+  "applicationCommit": "aeb1f22fc424b662c45020263bb4ce1f3ec1ac6f",
+  "themeRepository": "mattiapascal/Mode-mio-5.2.0",
+  "themeBranch": "feature/ai-stamp-assistant",
+  "themeCommit": "3e0bf4d43e52dbcacb44e324e8054507723d3e60",
+  "workerUrl": "https://incisoria-assistente-timbri.laboratorio-e32.workers.dev",
+  "workerVersion": "59f55727-dbe8-49ff-ae43-4f653322831e",
+  "plan": "Free",
+  "assets": [
+    {
+      "path": "/assets/index-CH9lsW34.js",
+      "sha256": "7a8cc503207984bd93f78c8f27d9d168cb4b776a3e963edb74d307f346327ac0"
+    },
+    {
+      "path": "/assets/index-D_rE2UID.css",
+      "sha256": "39412351f4e3e874b5297ef53ae9b136726c1dce3b0f6f7f971d1d97c0ac7c1a"
+    }
+  ],
+  "themeFiles": [
+    {
+      "filename": "assets/ai-stamp-embed.js",
+      "md5": "2e15d5fb87e5ca3ed3887b8008d7d2e1",
+      "sha256": "9462b3f3a376770b1b5b56c43094e84fa72abd7ff796ec06435ab8e9534800c1"
+    },
+    {
+      "filename": "locales/da.json",
+      "md5": "dc51a66c89df3d5565f86943b0f9e1f7",
+      "sha256": "8741dad86b5c6f6a5e03d13e8da52a08a1d4375a5dc866a316e5d6a62be1bb58"
+    },
+    {
+      "filename": "locales/de.json",
+      "md5": "f4673da3398787a651003f1c5633f02d",
+      "sha256": "9a649b0d02e142d11cec2ff0d62e10f4854d7f910abf41870a0e03155bfda236"
+    },
+    {
+      "filename": "locales/en.default.json",
+      "md5": "bdd1b04f88175f821da60f978446df37",
+      "sha256": "212c66fc93b259d998f82416845b8a7086e58b6a88904fd52a497043e1fecc4d"
+    },
+    {
+      "filename": "locales/es.json",
+      "md5": "3075758eb6c1489979a27b8be4836303",
+      "sha256": "c2337fe0c487d53a6317ed1b39dc46fd56b36d39a317d847f4710f0ad9aa5bf1"
+    },
+    {
+      "filename": "locales/fr.json",
+      "md5": "15c699ec68648dc167ee4fa7b66d4f54",
+      "sha256": "9064cfeb6b062b535c53f9816ec86855d59d942a85c722bbe33e2fffa8ac01e9"
+    },
+    {
+      "filename": "locales/it.json",
+      "md5": "e175fbecfdf1014bbd60516e1adc0808",
+      "sha256": "9a3e7a7b836e52398bbb6b6db01ba7b46506630747ea6470d5f18ccb68baea83"
+    },
+    {
+      "filename": "locales/nl.json",
+      "md5": "5bb6e0e5fa7633ffe53f6bd20b6cf1a8",
+      "sha256": "53ed3644fcff9ba18aaa7f50f482beaf24da842c87a0ec2c17a055b78a3d44a5"
+    },
+    {
+      "filename": "locales/pt-BR.json",
+      "md5": "556c8b70f0f261461b90a50253563616",
+      "sha256": "c0cde0a6a6661f3848857f9dac38b0f8356c04a0510f2fd6c9e23c167e26c376"
+    },
+    {
+      "filename": "locales/pt-PT.json",
+      "md5": "909b1033cf37f052ee95d6fa897ef6e2",
+      "sha256": "b84813e40dca5ad2111032af8f14d7e7131a03aacce74307288380352a04da1b"
+    },
+    {
+      "filename": "sections/ai-stamp-assistant.liquid",
+      "md5": "6ddf975eea9a95e04145418579726a0b",
+      "sha256": "cba289c7b6724c0ffce20c745581419b84e2b4964dcef49e5825bd5620f6c508"
+    },
+    {
+      "filename": "templates/page.ai-timbro.json",
+      "md5": "c25cbfe362000cfc8c8d8c6a9e94433b",
+      "sha256": "e8b4a3775146bceda961fb109085c80f6802d2f8701e1952797647f3f5416eaf"
+    }
+  ],
+  "catalog": {
+    "version": "SHOPIFY-572f661a41f76a18ca88",
+    "checkedAt": "2026-11-06T19:55:59.968Z",
+    "profiles": 76,
+    "stale": false
+  },
+  "checks": {
+    "unit": 189,
+    "labBrowser": 38,
+    "publicBrowser": 7,
+    "workerSQLite": "passed-controlled-network",
+    "themeFilesMatching": 12,
+    "liquid": "passed",
+    "themeCheckErrors": 0,
+    "preExistingThemeCheckWarnings": 13,
+    "publicSecretScan": "passed",
+    "previewConversation": "confirmed-by-owner-before-template-activation",
+    "remoteVisualDeviceMatrix": "pending",
+    "remoteLoadCpu": "pending",
+    "illustratorProduction": "pending"
+  }
+}

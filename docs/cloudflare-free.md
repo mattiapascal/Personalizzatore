@@ -1,31 +1,25 @@
-# Destinazione iniziale: Cloudflare Workers Free
+# Cloudflare Workers Free — pilota attivo
 
-Decisione del titolare, 6 novembre 2026: preparare il primo pilota per il piano gratuito; valutare il piano Paid soltanto se le misure ne mostrano la necessità. L'assenso al percorso non è un'autorizzazione a pubblicare, attivare canoni o creare risorse remote.
+Scelta e pubblicazione autorizzate dal titolare il 6 novembre 2026. Il pannello Cloudflare conferma il piano Workers **Gratuito, 0 USD**. Non è stato attivato un piano a pagamento. Il primo pilota usa il servizio `incisoria-assistente-timbri.laboratorio-e32.workers.dev` e la sola pagina `/pages/crea-timbro-online`.
 
-## Stato verificato
+## Implementazione
 
-- Account Cloudflare già aperto dal titolare in Brave; accesso al pannello verificato in sola lettura. Nessun token richiesto o copiato, nessuna impostazione modificata. Identificativi account e sessioni browser non vengono salvati nel repository.
-- Applicazione ancora locale: nessun Worker/backend Cloudflare implementato o distribuito in questa iterazione, nessuna risorsa o rotta creata. Il tema e il suo repository non sono stati modificati.
-- Il prompt è ora compilato da `REGOLE_ASSISTENTE.md` in un modulo TypeScript senza filesystem a runtime: un primo componente riutilizzabile su Workers. Il resto del backend usa ancora file/lock e servizi del processo Node; non va presentato come già compatibile.
+- Ingresso HTTP/asset in `cloudflare/index.ts`, logica e storage SQLite in un Durable Object. Nessuna dipendenza dal processo Vite o dal laptop per il servizio pubblico.
+- Import Shopify paginato e atomico ogni cinque minuti tramite Cron. Catalogo reale: 76 profili utilizzabili nella verifica del rilascio. Dopo dieci minuti senza lettura completa il servizio sospende nuove proposte e offre il catalogo tradizionale.
+- Credenziali soltanto lato server, sessioni verificate con Turnstile e capacità casuali, quote prenotate atomicamente in SQLite. Reset della chat e UUID del client non azzerano i consumi.
+- Primo periodo limitato a 1 USD globale senza rinnovo automatico, 0,05 USD e venti richieste per conversazione; quattro chiamate contemporanee globali. Questi tetti sono applicativi e distinti dalle quote Cloudflare/OpenAI.
+- Nessun webhook o app proxy creato. Nessuna modifica a DNS, BSS, PitchPrint o acquisti.
 
-## Adattamento previsto
+I dettagli, le evidenze, i limiti e il ripristino sono in [release-cloudflare.md](release-cloudflare.md). Le istruzioni modificabili dal titolare sono in [REGOLE_ASSISTENTE.md](../REGOLE_ASSISTENTE.md).
 
-1. Separare contratto AI e trasporto HTTP da Vite e dal registro su file. Il Worker espone solo gli endpoint cliente necessari, senza i controlli amministrativi del laboratorio.
-2. Configurare segreti solo lato server. Nessuna variabile segreta `VITE_*`, niente token negli asset tema o nel documento di regole.
-3. Rendere persistenti catalogo e consumi. Candidato da provare: Durable Object con backend SQLite per prenotazioni atomiche dei costi e quote; snapshot catalogo separati/versionati, con storage da scegliere dopo misura di dimensioni e operazioni. Non usare memoria del Worker o cache eventualmente consistente come autorità del budget.
-4. Sostituire timer di processo con aggiornamento pianificato. Import paginato, ripresa del lavoro e pubblicazione atomica dell'ultima versione completa; un errore conserva la precedente. Misurare anche le pagine più pesanti e il ricostruire i profili.
-5. Provare localmente runtime Workers con trasporti finti e catalogo TEST: riavvio/persistenza, richieste concorrenti, tetti globali e per sessione, timeout, import parziale e catalogo obsoleto. Non copiare automaticamente chiavi dal laboratorio o chiamare servizi reali nei test.
-6. Aggiungere verifica antiautomazione lato server e sessioni non aggirabili con un semplice reset; valutare app proxy separatamente. Le firme del negozio non identificano il cliente. Origine consentita e CORS non sostituiscono controllo del budget o autenticazione.
-7. Preparare manifest frontend/API, configurazione Free, checklist, piano di ripristino e diff minimo tema. Sottoporre il pacchetto al titolare prima di qualunque creazione risorse, caricamento o attivazione online. Nessun collegamento Git→deploy automatico.
+## Aggiornamenti
 
-## Criteri per restare sul Free
+`npm run assistant:generate` e `npm run check` modificano/verificano solo il progetto locale. Il push Git conserva la sorgente e non pubblica. `npm run check:release` prepara e verifica anche il pacchetto Workers, senza upload né costi AI. `npm run worker:deploy` esegue invece una **pubblicazione reale**, da usare in un rilascio autorizzato. Non esiste una pipeline automatica Git→Cloudflare.
 
-La documentazione verificata il 6 novembre 2026 indica 100.000 richieste Worker/giorno e 10 ms di CPU per invocazione HTTP **e Cron**. Il tempo di attesa della rete non conta come CPU: una chiamata AI lenta non implica da sola il superamento, mentre validazione, import e trasformazione del catalogo vanno misurati. La misura su Node locale non certifica il consumo del runtime Cloudflare.
+## Limiti del piano
 
-Durable Objects SQLite sono disponibili sul Free con quote proprie; non assumere che il totale gratuito dell'app coincida con le sole richieste Worker. Se si supera una quota del piano gratuito le operazioni possono fallire; prevedere un messaggio utile e il percorso normale ai prodotti. Il piano Paid può dare più margine di risorse, ma non rende più intelligente il modello AI. Non attivare upgrade automatici.
+Le quote consultate per questo rilascio comprendono 100.000 richieste Worker al giorno e 10 ms di CPU per invocazione HTTP/Cron. La logica pesante è separata nell'oggetto SQLite; le sue quote restano distinte. Il tempo di rete non è CPU, ma il successo dei test locali non misura il carico remoto. La prova di carico/CPU rimane da eseguire e registrare. Se una quota viene raggiunta il servizio può interrompersi; il percorso ordinario ai prodotti resta disponibile.
 
-L'hosting gratuito non include automaticamente i token OpenAI. Conservare un tetto AI globale oltre a quello per chat. Il controllo account esistente e gli eventuali token promozionali richiedono verifica separata; nessuna gratuità AI garantita.
+L'hosting gratuito non include i token OpenAI. Le stime standard non certificano l'applicazione di promozioni o la fattura. Un passaggio a Paid richiederà una decisione esplicita del titolare: non è automatico e non cambia la qualità del modello AI.
 
-Prima di confermare Free come adatto al pubblico servono misure reali controllate di CPU e quote, verifica di persistenza, privacy, abusi e comportamento quando la quota termina. Il solo superamento dei test locali non è sufficiente. Il passaggio a Paid resta una decisione esplicita del titolare.
-
-Fonti ufficiali: [limiti Workers](https://developers.cloudflare.com/workers/platform/limits/), [quote Durable Objects](https://developers.cloudflare.com/durable-objects/platform/pricing/). Architettura del rilascio e regole dei due Git: [publication-plan.md](publication-plan.md).
+Fonti ufficiali consultate per il rilascio: [limiti Workers](https://developers.cloudflare.com/workers/platform/limits/), [quote Durable Objects](https://developers.cloudflare.com/durable-objects/platform/pricing/).

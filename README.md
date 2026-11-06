@@ -1,10 +1,12 @@
-# Assistente AI e personalizzatore Shopify — laboratorio locale
+# Assistente AI e personalizzatore Shopify
 
 Progetto per Incisoria Sacchetti. Repository: [mattiapascal/Personalizzatore](https://github.com/mattiapascal/Personalizzatore).
 
-**Prototipo locale, nessun deploy.** Chat con AI reale, selezione deterministica da catalogo Shopify aggiornabile, canvas Fabric.js collegato al prodotto e JSON/SVG. I profili grafici sono ancora TEST. BSS e PitchPrint continuano a funzionare nel negozio attuale.
+**Pagina pilota pubblicata:** [Crea il tuo timbro](https://www.incisoriasacchetti.it/pages/crea-timbro-online), con chat e selezione dei prodotti reali, backend Cloudflare Workers Free e catalogo aggiornato automaticamente. Il laboratorio locale comprende anche canvas Fabric.js e JSON/SVG con profili grafici TEST. Il percorso di personalizzazione e acquisto esistente continua sulle pagine prodotto. [Registro, verifiche e ripristino](docs/release-cloudflare.md).
 
-Per correggere il comportamento: **[REGOLE_ASSISTENTE.md](REGOLE_ASSISTENTE.md)** è la guida per il titolare, con istruzioni realmente compilate nel prompt, esempi e mappa delle regole applicative. Modifica il testo, esegui `npm run assistant:generate` e `npm run check`, poi riavvia il server. `npm run dev` rigenera all'avvio; test e build rifiutano un artefatto obsoleto. Le modifiche locali non pubblicano nulla. Destinazione scelta per il primo pilota: [Cloudflare Workers Free](docs/cloudflare-free.md), adattamento backend ancora da realizzare.
+Per correggere il comportamento: **[REGOLE_ASSISTENTE.md](REGOLE_ASSISTENTE.md)** è la guida per il titolare, con istruzioni realmente compilate nel prompt, esempi e mappa delle regole applicative. Modifica il testo, esegui `npm run assistant:generate` e `npm run check`, poi riavvia il server. `npm run dev` rigenera all'avvio; test e build rifiutano un artefatto obsoleto. Le modifiche locali non pubblicano nulla. Il servizio pubblico usa [Cloudflare Workers Free](docs/cloudflare-free.md). **Per aggiornare il sito serve anche un deploy Cloudflare autorizzato**: i comandi locali e il push Git non pubblicano.
+
+Interfaccia pubblica: chat con fumetti bianchi/verdi su sfondo beige e altezza adattata alla viewport, senza crescita con i messaggi. Invio invia, Maiusc+Invio va a capo; la freccia è dentro al campo di scrittura. Riepilogo e informazioni seguono sotto la conversazione.
 
 Aggiornamento interfaccia: chat più larga ad altezza fissa con scroll, requisiti compatti (quattro colonne desktop/due mobile), risultati come schede con foto Shopify e dettagli richiudibili. Il dialogo può partire dal contenuto: testo esatto → stima indicativa → scelta del formato → prima bozza nel canvas. Ex-libris e grafica vengono raccolti come brief, senza inventare un formato dal solo numero di righe. [Dettagli e verifiche](docs/iteration-chat-layout.md).
 
@@ -29,7 +31,7 @@ Le credenziali sono **soltanto** in .env.local, ignorato da Git e privato. .env.
 
 Senza credenziali il pannello Collegamenti AI e catalogo spiega cosa manca. La demo a parole chiave rimane selezionabile esplicitamente; un errore dell'AI non attiva il parser di nascosto. Senza configurazione su una nuova installazione la demo è il default.
 
-Il server è solo loopback/dev. La build genera asset frontend, non un backend produttivo: non pubblicarla come applicazione completa.
+Il server `npm run dev` è solo loopback/dev. `npm run build` genera il laboratorio frontend. Il rilascio pubblico ha un ingresso separato Workers e una build cliente: `npm run check:release` li verifica senza pubblicare; `npm run worker:deploy` esegue invece un upload reale autorizzato.
 
 ## Prova della conversazione
 
@@ -62,7 +64,7 @@ La UI controlla il backend ogni 10 secondi e applica automaticamente le nuove ve
 
 Ogni lettura ricostruisce i profili con regole versionate: **larghezza e altezza dell'impronta vengono esclusivamente dai metafield variante `custom.larghezza` e `custom.altezza`**, verificati come `number_decimal` in millimetri. Devono essere entrambi validi e positivi. Titoli/opzioni identificano la forma e descrizioni/tag il tipo di montatura; non sostituiscono dimensioni mancanti. Dati descrittivi discordanti sono segnalati nei controlli del candidato, lasciando autorevoli i metafield. Nuove varianti con dati sufficienti diventano disponibili senza aggiornare una lista manuale. ID e link identificano la variante esatta. La cache è legata anche alla versione delle regole.
 
-Lettura reale aggiornata: 228 prodotti letti, 214 attivi con URL pubblico; 76 profili su 66 prodotti (46 automatici, 10 manuali, 17 tascabili, 3 a secco), 74 con foto. Restano cinque varianti senza dimensioni: plastica tondo (4) e Pocket Stamp R40 (1). Nessun valore Shopify modificato da questo progetto. Datari/numeratori, diciture fisse, componibili e accessori richiedono percorsi dedicati. L'ambito è `title:timbr*`, non l'intero negozio. Il timer funziona solo a server aperto e riparte all'avvio; webhook e servizio persistente richiedono un ambiente autorizzato.
+Lettura reale aggiornata: 228 prodotti letti, 214 attivi con URL pubblico; 76 profili su 66 prodotti (46 automatici, 10 manuali, 17 tascabili, 3 a secco), 74 con foto. Restano cinque varianti senza dimensioni: plastica tondo (4) e Pocket Stamp R40 (1). Nessun valore Shopify modificato da questo progetto. Datari/numeratori, diciture fisse, componibili e accessori richiedono percorsi dedicati. L'ambito è `title:timbr*`, non l'intero negozio. Nel laboratorio il timer funziona solo a server aperto e riparte all’avvio. Nel servizio pubblico il Cron Cloudflare ogni cinque minuti aggiorna SQLite indipendentemente dal laptop; la UI controlla le versioni ogni minuto. Nessun webhook configurato.
 
 ## Canvas
 
