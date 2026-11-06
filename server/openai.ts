@@ -1,23 +1,17 @@
 import { z } from 'zod';
 import { AiToolSchema, RequirementFieldSchema, DialogueActSchema, type AiTool } from '../src/ai/contract.ts';
-import { RequirementsSchema, type Requirements } from '../src/selection/schema.ts';
+import type { Requirements } from '../src/selection/schema.ts';
 import type { Config } from './config.ts';
 import type { Meter } from './meter.ts';
 import { MechanismSchema, ShapeSchema, MaterialSchema } from '../src/catalog/schema.ts';
-import { ContentBriefSchema } from '../src/selection/content.ts';
-import { QuestionFieldSchema } from '../src/selection/dialogue.ts';
+import { AiRequestSchema, type AiRequest } from '../src/ai/request.ts';
+import { assertProtectedRequest } from '../src/privacy/redaction.ts';
 import { interpretationInstructions } from './interpretation-prompt.ts';
 import type { CatalogAdapter } from '../src/catalog/adapter.ts';
 import { advisoryFacts } from '../src/selection/advisor.ts';
 export { PROMPT_VERSION } from './interpretation-prompt.ts';
 
-export const AiRequestSchema = z.strictObject({
-  message: z.string().trim().min(1).max(1200), sessionId: z.string().uuid(), revision: z.number().int().nonnegative(),
-  requirements: RequirementsSchema, lastQuestion: z.string().max(300).nullable(),
-  recentMessages: z.array(z.strictObject({ role: z.enum(['user', 'assistant']), text: z.string().max(400) })).max(6).default([]),
-  contentBrief: ContentBriefSchema.optional(), lastQuestionField: QuestionFieldSchema.optional(),
-});
-export type AiRequest = z.infer<typeof AiRequestSchema>;
+export { AiRequestSchema, type AiRequest };
 export const ArgumentsSchema = z.strictObject({
   dialogueAct: DialogueActSchema.nullable(),
   changeIntent: z.enum(['update', 'withdraw']).nullable(), clearEvidence: z.string().min(1).max(1200).nullable(),
@@ -97,9 +91,10 @@ export function proposalFromArguments(raw: unknown, revision: number, context?: 
 }
 
 export function makeOpenAiBody(input: AiRequest, config: Config, catalog?: CatalogAdapter) {
+  assertProtectedRequest(input, catalog?.list().map(p => p.title));
   return {
     model: config.OPENAI_MODEL, store: false, instructions,
-    input: [{ role: 'user', content: JSON.stringify({ message: input.message, requirements: input.requirements, contentBrief: input.contentBrief ?? {}, lastQuestion: input.lastQuestion, lastQuestionField: input.lastQuestionField ?? null, recentMessages: input.recentMessages, ...(catalog && config.AI_SHARE_CATALOG_CONTEXT ? { catalogFacts: advisoryFacts(catalog, input.requirements, input.contentBrief).map(({ title, mechanism, shape, nominalAreaMm, uses }) => ({ title, mechanism, shape, nominalAreaMm, uses })) } : {}) }) }],
+    input: [{ role: 'user', content: JSON.stringify({ message: input.message, requirements: input.requirements, contentBrief: input.contentBrief ?? {}, lastQuestion: input.lastQuestion, lastQuestionField: input.lastQuestionField ?? null, recentMessages: input.recentMessages, ...(catalog && config.AI_SHARE_CATALOG_CONTEXT ? { catalogFacts: advisoryFacts(catalog, input.requirements, input.contentBrief).map(({ title, mechanism, shape, nominalAreaMm, uses }) => ({ title: title.slice(0, 160), mechanism, shape, nominalAreaMm, uses: uses?.slice(0, 2).map(u => ({ purpose: u.purpose, evidence: u.evidence.slice(0, 120) })) })) } : {}) }) }],
     tools: [{ type: 'function', name: 'collect_requirements', description: 'Raccoglie gli attributi espressi e chiede chiarimenti senza selezionare prodotti.', strict: true, parameters: z.toJSONSchema(ArgumentsSchema) }],
     tool_choice: { type: 'function', name: 'collect_requirements' }, parallel_tool_calls: false,
     reasoning: { effort: 'low' }, max_output_tokens: 1600,
@@ -112,7 +107,7 @@ export async function proposeOpenAi(input: AiRequest, config: Config, meter: Met
   const serialized = JSON.stringify(body);
   // Riserva conservativa: nessun rimborso su timeout/errori. Listino standard USD verificato 05/11/2026.
   const reserved = ((Buffer.byteLength(serialized, 'utf8') + 2048) * 0.75 + body.max_output_tokens * 4.5) / 1_000_000;
-  await meter.reserve(reserved, config.AI_BUDGET_USD, config.AI_MAX_REQUESTS, config.AI_ENFORCE_LOCAL_LIMITS);
+  await meter.reserve(reserved, config.AI_BUDGET_USD, config.AI_MAX_REQUESTS, config.AI_ENFORCE_LOCAL_LIMITS, { id: input.sessionId, budgetUsd: config.AI_SESSION_BUDGET_USD });
   const response = await fetcher('https://api.openai.com/v1/responses', {
     method: 'POST', headers: { Authorization: `Bearer ${config.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
     body: serialized, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20_000)]) : AbortSignal.timeout(20_000),
@@ -125,8 +120,8 @@ export async function proposeOpenAi(input: AiRequest, config: Config, meter: Met
     status: z.string(), output: z.array(z.object({ type: z.string(), name: z.string().optional(), arguments: z.string().optional() }).passthrough()),
     usage: z.object({ input_tokens: z.number().int().nonnegative(), output_tokens: z.number().int().nonnegative() }),
   }).parse(JSON.parse(rawText));
-  await meter.record(result.usage.input_tokens, result.usage.output_tokens);
+  await meter.record(result.usage.input_tokens, result.usage.output_tokens, { id: input.sessionId, reservedUsd: reserved });
   const calls = result.output.filter(item => item.type === 'function_call');
   if (result.status !== 'completed' || calls.length !== 1 || calls[0]!.name !== 'collect_requirements' || !calls[0]!.arguments) throw new Error('Risposta AI incompleta o non valida. Puoi riprovare: i requisiti sono conservati.');
-  return AiToolSchema.parse({ ...proposalFromArguments(JSON.parse(calls[0]!.arguments!), input.revision, input), expectedSessionId: input.sessionId });
+  return AiToolSchema.parse({ ...proposalFromArguments(JSON.parse(calls[0]!.arguments!), input.revision, input), expectedSessionId: input.sessionId, sessionUsage: meter.sessionUsage(input.sessionId, config.AI_SESSION_BUDGET_USD) });
 }

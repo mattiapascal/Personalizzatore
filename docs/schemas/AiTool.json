@@ -18,6 +18,35 @@
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         },
+        "sessionUsage": {
+          "type": "object",
+          "properties": {
+            "estimatedUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "heldUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "budgetUsd": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "requests": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "estimatedUsd",
+            "heldUsd",
+            "budgetUsd",
+            "requests"
+          ],
+          "additionalProperties": false
+        },
         "tool": {
           "type": "string",
           "const": "collectRequirements"
@@ -241,6 +270,35 @@
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         },
+        "sessionUsage": {
+          "type": "object",
+          "properties": {
+            "estimatedUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "heldUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "budgetUsd": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "requests": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "estimatedUsd",
+            "heldUsd",
+            "budgetUsd",
+            "requests"
+          ],
+          "additionalProperties": false
+        },
         "tool": {
           "type": "string",
           "const": "searchProducts"
@@ -390,6 +448,35 @@
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         },
+        "sessionUsage": {
+          "type": "object",
+          "properties": {
+            "estimatedUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "heldUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "budgetUsd": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "requests": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "estimatedUsd",
+            "heldUsd",
+            "budgetUsd",
+            "requests"
+          ],
+          "additionalProperties": false
+        },
         "tool": {
           "type": "string",
           "const": "recommendProducts"
@@ -424,6 +511,35 @@
           "type": "string",
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "sessionUsage": {
+          "type": "object",
+          "properties": {
+            "estimatedUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "heldUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "budgetUsd": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "requests": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "estimatedUsd",
+            "heldUsd",
+            "budgetUsd",
+            "requests"
+          ],
+          "additionalProperties": false
         },
         "tool": {
           "type": "string",
@@ -466,6 +582,35 @@
           "type": "string",
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "sessionUsage": {
+          "type": "object",
+          "properties": {
+            "estimatedUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "heldUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "budgetUsd": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "requests": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "estimatedUsd",
+            "heldUsd",
+            "budgetUsd",
+            "requests"
+          ],
+          "additionalProperties": false
         },
         "tool": {
           "type": "string",

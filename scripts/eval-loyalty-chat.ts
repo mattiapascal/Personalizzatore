@@ -9,6 +9,7 @@ import { initialInteraction, selectionInteraction } from '../src/selection/inter
 import { nextSelectionPrompt, modelQuestion } from '../src/selection/dialogue.ts';
 import { writeJson } from '../server/files.ts';
 import { adviseProducts } from '../src/selection/advisor.ts';
+import { PrivacyVault } from '../src/privacy/redaction.ts';
 
 // Solo la sequenza TEST indicata dall'utente; nessun catalogo inviato al modello.
 // Tetto aggiuntivo per esecuzione, indipendente dal contatore informativo della chat.
@@ -19,12 +20,14 @@ const meter = new Meter(resolve('.local/ai-meter.json')); await meter.load();
 const start = structuredClone(meter.state);
 let reservedRun = 0, state = initialInteraction(newSession(mountFixtureCatalog));
 const history: { role: 'user' | 'assistant'; text: string }[] = [];
+const vault = new PrivacyVault();
 const results: { turn: number; passed: boolean; call?: unknown; requirements?: unknown; brief?: unknown; error?: string }[] = [];
 const messages = ['Voglio fare un timbro per le tessere abbonamento del mio bar', 'un piccolo logo', 'un logo', 'un timbro automatico', 'quadrata', 'automatico', '10 mm'];
 for (const [index, message] of messages.entries()) {
   const prompt = nextSelectionPrompt(state.session, state.contentBrief, mountFixtureCatalog);
   const question = state.clarification ?? modelQuestion(prompt);
-  const input: AiRequest = { message, sessionId: state.session.sessionId, revision: state.session.revision, requirements: state.session.requirements, contentBrief: state.contentBrief, lastQuestionField: prompt.field, lastQuestion: question.slice(0, 300), recentMessages: history.slice(-6).map(m => ({ ...m, text: m.text.slice(-400) })) };
+  const prepared = vault.prepare({ message, sessionId: state.session.sessionId, revision: state.session.revision, requirements: state.session.requirements, contentBrief: state.contentBrief, lastQuestionField: prompt.field, lastQuestion: question.slice(0, 300), recentMessages: history.slice(-6).map(m => ({ ...m, text: m.text.slice(-400) })), privacyReviewed: false });
+  const input: AiRequest = { ...prepared.request, privacyReviewed: true };
   const body = JSON.stringify(makeOpenAiBody(input, config, mountFixtureCatalog));
   const payload = JSON.parse(makeOpenAiBody(input, config, mountFixtureCatalog).input[0]!.content);
   if ('catalogFacts' in payload || JSON.stringify(payload).includes('gid://shopify') || mountFixtureCatalog.list().some(p => JSON.stringify(payload).includes(p.title))) throw new Error('Il collaudo non deve inviare dati di catalogo');
@@ -32,7 +35,7 @@ for (const [index, message] of messages.entries()) {
   if (reservedRun + reserve > ceilingUsd) throw new Error('Tetto del singolo collaudo raggiunto');
   reservedRun += reserve;
   try {
-    const call = await proposeOpenAi(input, config, meter, fetch, undefined, mountFixtureCatalog);
+    const call = vault.restoreCall(await proposeOpenAi(input, config, meter, fetch, undefined, mountFixtureCatalog), prepared.localText);
     state = selectionInteraction(state, { type: 'tool', call }, mountFixtureCatalog);
     const requirements = state.session.requirements;
     const passed = (call.tool !== 'collectRequirements' || !call.clearFields?.length) && requirements.family === 'stamp' && state.contentBrief?.purpose === 'loyalty' && (index < 1 || (requirements.hasLogo === true && state.contentBrief?.kind === 'graphic')) && (index < 3 || requirements.mechanism === 'automatic') && (index < 4 || requirements.shape === 'square') && (index < 6 || (requirements.maximumAreaMm?.width === 10 && requirements.maximumAreaMm.height === 10 && !adviseProducts(mountFixtureCatalog, requirements, state.contentBrief).some(c => c.productId.endsWith('/15106215805308'))));

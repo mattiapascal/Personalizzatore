@@ -17,9 +17,60 @@ async function sendMessage(page: Page, message: string) {
   const before = await page.locator('.chat-message.assistant').count();
   await page.getByLabel('Scrivi un messaggio', { exact: true }).fill(message);
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  await expect.poll(async () => await page.locator('.chat-message.assistant').count() > before || await page.getByRole('region', { name: 'Verifica privacy prima dell’invio' }).count() > 0).toBe(true);
+  if (await page.getByRole('region', { name: 'Verifica privacy prima dell’invio' }).count()) await page.getByRole('button', { name: 'Conferma e invia testo protetto' }).click();
   await expect(page.locator('.chat-message.assistant')).toHaveCount(before + 1);
 }
 const latest = (page: Page) => page.locator('.chat-message.assistant').last();
+
+test('privacy: nessuna rete prima della verifica, annullamento, storico protetto e originali nel canvas', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null, sessionBudgetUsd: 0.05, catalogContextEnabled: true };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  const requests: Record<string, unknown>[] = [];
+  await page.route('**/api/ai/interpret', route => {
+    const body = route.request().postDataJSON(); requests.push(body);
+    const token = (body.message as string).match(/\[RISERVATO_\d+\]/)?.[0];
+    return route.fulfill({ json: { schemaVersion: 1, expectedRevision: body.revision, expectedSessionId: body.sessionId, tool: 'collectRequirements', arguments: { family: 'stamp', mechanism: 'automatic', shape: 'rectangle', sizeUnknown: true }, contentBrief: requests.length === 1 ? { text: token, kind: 'text' } : {}, sessionUsage: { estimatedUsd: 0.002, heldUsd: 0, budgetUsd: 0.05, requests: requests.length } } });
+  });
+  const original = 'Mario Rossi\nVia Aurora 18\nmario@example.test';
+  await page.goto('/'); await page.getByLabel('Scrivi un messaggio', { exact: true }).fill('Testo: ' + original);
+  await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  const preview = page.getByRole('region', { name: 'Verifica privacy prima dell’invio' });
+  await expect(preview).toBeVisible(); expect(requests).toHaveLength(0);
+  await expect(page.getByLabel('Testo protetto da inviare a OpenAI')).not.toHaveValue(/Mario|Aurora|example/);
+  await page.getByRole('button', { name: 'Torna al messaggio' }).click();
+  expect(requests).toHaveLength(0); await expect(preview).toHaveCount(0);
+  await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  await page.getByRole('button', { name: 'Conferma e invia testo protetto' }).click();
+  await expect(latest(page)).toContainText('possibilità');
+  expect(requests).toHaveLength(1); expect(requests[0]!.privacyReviewed).toBe(true);
+  await expect(page.getByRole('region', { name: 'Contenuto del timbro' })).toContainText('3 righe');
+  await sendMessage(page, 'rettangolare');
+  for (const data of ['Mario', 'Aurora', 'example.test']) expect(JSON.stringify(requests)).not.toContain(data);
+  expect(JSON.stringify(requests[1]!.contentBrief)).toContain('RISERVATO');
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain('Mario');
+  await expect(page.getByText(/Costo stimato di questa chat:/)).toContainText('0.0020 USD');
+  await page.locator('.product-card').filter({ has: page.getByRole('heading', { name: /4913/ }) }).getByRole('button', { name: 'Prova nel canvas' }).click();
+  await page.getByText('Stato e storico del documento').click();
+  const doc = JSON.parse(await page.getByTestId('graphic-state').innerText()); expect(doc.objects[1].text).toBe(original);
+  await page.getByRole('button', { name: '01 · Scegli il timbro' }).click();
+  await page.getByRole('button', { name: 'Azzera conversazione e requisiti' }).click();
+  await expect(page.getByRole('region', { name: 'Contenuto del timbro' })).toHaveCount(0);
+  await expect(page.getByRole('log')).not.toContainText('Mario');
+});
+
+test('privacy: richieste tecniche ordinarie passano direttamente; parole sconosciute sono oscurate e verificate', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  let count = 0;
+  await page.route('**/api/ai/interpret', route => { const b = route.request().postDataJSON(); count++; return route.fulfill({ json: { schemaVersion: 1, expectedRevision: b.revision, tool: 'collectRequirements', arguments: { family: 'stamp' } } }); });
+  await page.goto('/'); await sendMessage(page, 'Voglio fare un timbro per le fatture');
+  expect(count).toBe(1); await expect(page.getByRole('region', { name: 'Verifica privacy prima dell’invio' })).toHaveCount(0);
+  await page.getByLabel('Scrivi un messaggio', { exact: true }).fill('un timbro per officina aurora');
+  await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  await expect(page.getByRole('region', { name: 'Verifica privacy prima dell’invio' })).toBeVisible();
+  expect(count).toBe(1); await expect(page.getByLabel('Testo protetto da inviare a OpenAI')).not.toHaveValue(/officina|aurora/);
+});
 
 test('tessere bar: proposta reale anticipata, domanda sulle caselline e accettazione nel canvas', async ({ page }) => {
   const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };

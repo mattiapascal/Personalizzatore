@@ -34,7 +34,7 @@ export class LocalApi {
       : this.config.AI_ENFORCE_LOCAL_LIMITS && this.meter.state.reservedUsd >= this.config.AI_BUDGET_USD ? 'Riserva prudenziale locale esaurita; non è la spesa OpenAI effettiva.' : null);
     return {
       csrfToken: this.token,
-      ai: { mode: this.config.AI_PROVIDER, ready: !reason, reason, model: this.config.OPENAI_MODEL, budgetUsd: this.config.AI_BUDGET_USD, reservedUsd: this.meter.state.reservedUsd, requests: this.meter.state.requests, localLimitsEnforced: this.config.AI_ENFORCE_LOCAL_LIMITS, estimatedStandardUsd: (this.meter.state.inputTokens * 0.75 + this.meter.state.outputTokens * 4.5) / 1_000_000 },
+      ai: { mode: this.config.AI_PROVIDER, ready: !reason, reason, model: this.config.OPENAI_MODEL, budgetUsd: this.config.AI_BUDGET_USD, reservedUsd: this.meter.state.reservedUsd, requests: this.meter.state.requests, localLimitsEnforced: this.config.AI_ENFORCE_LOCAL_LIMITS, estimatedStandardUsd: (this.meter.state.inputTokens * 0.75 + this.meter.state.outputTokens * 4.5) / 1_000_000, sessionBudgetUsd: this.config.AI_SESSION_BUDGET_USD, catalogContextEnabled: this.config.AI_SHARE_CATALOG_CONTEXT },
       catalog: this.catalog.state,
       sync: { configured: this.catalog.configured, intervalSeconds: this.config.CATALOG_POLL_SECONDS, lastError: this.catalog.lastError, refreshing: this.catalog.refreshing, stale: this.catalog.configured && (!this.catalog.state.checkedAt || Date.now() - Date.parse(this.catalog.state.checkedAt) > Math.max(600, this.config.CATALOG_POLL_SECONDS * 2) * 1000) },
     };

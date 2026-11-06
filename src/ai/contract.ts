@@ -4,8 +4,9 @@ import { missingInformation, recommendProducts, questions } from '../selection/r
 import type { CatalogAdapter } from '../catalog/adapter.ts';
 import { updateRequirements } from '../selection/session.ts';
 import { ContentBriefSchema } from '../selection/content.ts';
+import { SessionUsageSchema } from './usage.ts';
 
-const envelope = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), expectedSessionId: z.string().uuid().optional() };
+const envelope = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), expectedSessionId: z.string().uuid().optional(), sessionUsage: SessionUsageSchema.optional() };
 export const RequirementFieldSchema = z.enum(['family', 'mechanism', 'material', 'shape', 'diameterMm', 'lines', 'hasLogo', 'minimumAreaMm', 'maximumAreaMm', 'sizeUnknown', 'sizeIsEstimate']);
 export const DialogueActSchema = z.enum(['answer', 'off_topic', 'unclear', 'help']);
 export const AiToolSchema = z.discriminatedUnion('tool', [

@@ -45,6 +45,13 @@
         "estimatedStandardUsd": {
           "type": "number",
           "minimum": 0
+        },
+        "sessionBudgetUsd": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "catalogContextEnabled": {
+          "type": "boolean"
         }
       },
       "required": [

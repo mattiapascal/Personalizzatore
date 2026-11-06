@@ -1,16 +1,15 @@
 import type { AiProvider } from './contract';
 import type { SelectionSession } from '../selection/schema';
-import type { ContentBrief } from '../selection/content';
-import type { z } from 'zod';
-import type { QuestionFieldSchema } from '../selection/dialogue';
+import type { AiRequest } from './request';
 
-export function httpProvider(csrfToken: string, lastQuestion: string | null, recentMessages: { role: 'user' | 'assistant'; text: string }[] = [], contentBrief?: ContentBrief, lastQuestionField?: z.infer<typeof QuestionFieldSchema>): AiProvider {
+export function httpProvider(csrfToken: string, protectedRequest: AiRequest): AiProvider {
   return {
     mode: 'server',
-    async propose(message: string, session: Readonly<SelectionSession>, signal: AbortSignal) {
+    async propose(_message: string, session: Readonly<SelectionSession>, signal: AbortSignal) {
+      if (protectedRequest.sessionId !== session.sessionId || protectedRequest.revision !== session.revision) throw new Error('Richiesta protetta obsoleta: ripeti il messaggio');
       const response = await fetch('/api/ai/interpret', {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Lab-Token': csrfToken }, signal,
-        body: JSON.stringify({ message, sessionId: session.sessionId, revision: session.revision, requirements: session.requirements, lastQuestion, recentMessages, contentBrief, lastQuestionField }),
+        body: JSON.stringify(protectedRequest),
       });
       const data: unknown = await response.json();
       if (!response.ok) {

@@ -1,5 +1,11 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Catalogo autorizzato, privacy locale e costo per conversazione — 6 novembre 2026
+
+Eval reale V9 **4/4** con catalogo sintetizzato e dati cliente TEST oscurati prima della rete: 11.316 token input/673 output, stima standard **0,0115155 USD** complessivi. Tre turni di selezione tessere/logo/caselline: **0,00875625 USD**; caso opaco separato: 0,00275925 USD. Nessuna garanzia di costo medio produttivo o anonimizzazione universale. Contesto autorizzato attivo nella configurazione privata, tetto per chat 0,05 USD confermato dal bootstrap; default condivisione false per nuove installazioni. Dettagli in [iteration-privacy-cost.md](iteration-privacy-cost.md).
+
+`npm run check`: **106 test unitari e 26 browser e2e superati**, build e controllo credenziali nel bundle superati, schemi rigenerati. Casi nuovi: dati riconosciuti/nomi minuscoli, testo opaco in messaggio/storico/brief, ripristino locale e distruzione mappa, blocco di chiamate dirette con dati noti, marche pubbliche ammesse, revisione prima della rete e annullamento senza rete, contenuto originale nel canvas senza localStorage; tetto per sessione, uso effettivo al posto della riserva, conservazione su errore e lock fra istanze. `capture:privacy` desktop/mobile riuscito e ispezionato, zero chiamate AI. I test automatici usano trasporti controllati. Nessun test umano Illustrator eseguito.
+
 ## Comprensione e proposta commerciale iniziale — 6 novembre 2026
 
 **97 unit test e 24 browser e2e superati**, build e controllo credenziali nel bundle superati; schemi rigenerati. Nuovi casi: delta senza ritiri indebiti, evidenza del ritiro nel messaggio corrente, quadrato scalare, rettangolo parziale, diametro, domanda tipizzata e brief nel provider; proposta reale anticipata, accettazione nel canvas, massimo disponibile distinto da minimo, assenza di catalogo nel payload predefinito e di titoli/GID ricopiati nello storico browser.

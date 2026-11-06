@@ -15,6 +15,8 @@ import { readConfig } from '../server/config.ts';
 import { Meter } from '../server/meter.ts';
 import { proposeOpenAi, PROMPT_VERSION } from '../server/openai.ts';
 import { writeJson } from '../server/files.ts';
+import { PrivacyVault } from '../src/privacy/redaction.ts';
+import { AiRequestSchema } from '../src/ai/request.ts';
 
 const mounts = process.argv[2] === '--mounts', dialogue = process.argv[2] === '--dialogue';
 const cases = z.object({ fixture: z.literal(true), cases: z.array(z.object({ id: z.string(), message: z.string(), requirements: RequirementsSchema, lastQuestion: z.string().nullable(), expected: RequirementsSchema, absent: z.array(RequirementFieldSchema).optional(), clarification: z.boolean().optional(), expectedBrief: ContentBriefSchema.optional(), dialogueAct: DialogueActSchema.optional() })) }).parse(dialogue ? dialogueJson : mounts ? mountsJson : casesJson).cases;
@@ -30,7 +32,9 @@ const results: { id: string; passed: boolean; mismatches: string[]; actual?: unk
 for (const c of selected) {
   try {
     const session = { ...newSession(fixtureCatalog), requirements: c.requirements };
-    const call = await proposeOpenAi({ message: c.message, sessionId: session.sessionId, revision: session.revision, requirements: session.requirements, lastQuestion: c.lastQuestion, recentMessages: [] }, config, meter);
+    const vault = new PrivacyVault();
+    const prepared = vault.prepare(AiRequestSchema.parse({ message: c.message, sessionId: session.sessionId, revision: session.revision, requirements: session.requirements, lastQuestion: c.lastQuestion, recentMessages: [] }));
+    const call = vault.restoreCall(await proposeOpenAi({ ...prepared.request, privacyReviewed: true }, config, meter), prepared.localText);
     const next = executeTool(call, session, fixtureCatalog).session.requirements;
     const mismatches = Object.entries(c.expected).filter(([key, value]) => !isDeepStrictEqual(next[key as keyof typeof next], value)).map(([key]) => key);
     for (const field of c.absent ?? []) if (next[field] !== undefined) mismatches.push(`absent:${field}`);
