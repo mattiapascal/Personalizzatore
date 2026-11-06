@@ -6,7 +6,7 @@ Scelta e pubblicazione autorizzate dal titolare il 6 novembre 2026. Il pannello 
 
 - Ingresso HTTP/asset in `cloudflare/index.ts`, logica e storage SQLite in un Durable Object. Nessuna dipendenza dal processo Vite o dal laptop per il servizio pubblico.
 - Import Shopify paginato e atomico ogni cinque minuti tramite Cron. Catalogo reale: 76 profili utilizzabili nella verifica del rilascio. Dopo dieci minuti senza lettura completa il servizio sospende nuove proposte e offre il catalogo tradizionale.
-- Credenziali soltanto lato server, sessioni verificate con Turnstile e capacità casuali, quote prenotate atomicamente in SQLite. Reset della chat e UUID del client non azzerano i consumi.
+- Credenziali soltanto lato server, sessioni verificate con Turnstile e capacità casuali, quote prenotate atomicamente in SQLite. Nessun limite di aperture per IP né vincolo al cambio Wi-Fi/mobile. Reset della chat e UUID del client non azzerano i consumi. Il widget compare solo se richiede interazione e scompare al completamento.
 - Primo periodo limitato a 1 USD globale senza rinnovo automatico, 0,05 USD e venti richieste per conversazione; quattro chiamate contemporanee globali. Questi tetti sono applicativi e distinti dalle quote Cloudflare/OpenAI.
 - Nessun webhook o app proxy creato. Nessuna modifica a DNS, BSS, PitchPrint o acquisti.
 

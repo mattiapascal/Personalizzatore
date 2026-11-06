@@ -1,0 +1,45 @@
+{
+  "verifiedAt": "2026-11-06T20:27:45.175Z",
+  "page": "https://www.incisoriasacchetti.it/pages/crea-timbro-online",
+  "workerUrl": "https://incisoria-assistente-timbri.laboratorio-e32.workers.dev",
+  "workerVersion": "6e76fd30-8146-49f9-9514-5f2fa78ef01f",
+  "previousWorkerVersion": "59f55727-dbe8-49ff-ae43-4f653322831e",
+  "applicationCommit": "7412f73e0884d5576994877814bcf31694f41000",
+  "themeChanged": false,
+  "themeCommit": "3e0bf4d43e52dbcacb44e324e8054507723d3e60",
+  "assets": [
+    {
+      "path": "/assets/index-DWc9g_yQ.js",
+      "sha256": "85413c25990aa4736c5f1bb7e41fad0a5c5b99968e5aa663bdbe500e48c39f24"
+    },
+    {
+      "path": "/assets/index-D_rE2UID.css",
+      "sha256": "39412351f4e3e874b5297ef53ae9b136726c1dce3b0f6f7f971d1d97c0ac7c1a"
+    }
+  ],
+  "policy": {
+    "ipSessionLimit": false,
+    "ipBoundCapability": false,
+    "turnstileRequired": true,
+    "globalBudgetUsd": 1
+  },
+  "catalog": {
+    "version": "SHOPIFY-572f661a41f76a18ca88",
+    "checkedAt": "2026-11-06T20:26:00.496Z",
+    "profiles": 76
+  },
+  "checks": {
+    "unit": 189,
+    "publicBrowser": 10,
+    "workerSQLite": "passed-controlled-network",
+    "sharedNetworkAdditionalStarts": 12,
+    "networkChangeRetainsCredit": true,
+    "duplicateCallbacksSingleStart": true,
+    "completedWidgetHidden": true,
+    "reloadReusesStoredCapability": true,
+    "secretScan": "passed",
+    "liveInvalidProofHttp": 403,
+    "liveHumanMobileRetest": "pending-owner",
+    "aiTestCallsReal": 0
+  }
+}
