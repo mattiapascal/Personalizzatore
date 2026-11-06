@@ -1,5 +1,13 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Metafield variante — 6 novembre 2026
+
+73/73 test unitari, 19/19 browser e2e e build TypeScript/Vite superati. Test nuovi: metafield autorevoli anche contro titoli discordanti, cambio misure→nuova versione/selezione, rifiuto campi mancanti/zero/negativi/testuali o tipo errato, assenza di fallback, tondo con larghezza≠altezza sospeso. I manuali senza campi non producono candidati; supporto dopo compilazione verificato con dati sintetici TEST esplicitamente distinti dalle letture reali. Tutti i 66 profili attuali aprono documenti validi con metriche Fabric browser. Percorso reale a secco Ø41→canvas→SVG41mm e conflitto/reset su variante Ø51 verificato. Golden storico preservato.
+
+Query aggiornata **VALID**, Admin 2026-10/read_products. Definizioni confermate: PRODUCTVARIANT, `custom.larghezza/custom.altezza`, number_decimal, mm. Lettura reale completa e bootstrap locale: 66 profili su 64 prodotti, regole v2, fonte dimensionale esplicita e catalogo fresco. Quindici varianti su quattro prodotti restano senza campi; nessun valore Shopify modificato. Nessuna chiamata AI a pagamento in questa iterazione. Gli esiti storici sotto restano riferiti ai rispettivi incrementi.
+
+Schemi e tre esempi Fabric rigenerati con `capture:mounts` (automatico Ø30, tascabile 12×12, a secco Ø41). Il vecchio esempio legno Ø35 resta storico e non prova la presenza attuale dei metafield. Collaudo umano Illustrator non eseguito. Resoconto in [iteration-variant-dimensions.md](iteration-variant-dimensions.md).
+
 ## Montature e aggiornamento automatico — ultimo incremento
 
 `npm run check`: **69/69 unit test**, **18/18 browser e2e**, build TypeScript/Vite e controllo credenziali nel bundle superati. Nuovi casi: profilazione da fonti reali, conflitti/varianti, nuovi ID coerenti senza registro statico, link alla variante, cerchio geometrico, scrittura diretta nel tondo, cambio variante sullo stesso prodotto, tascabile 12×12, a secco e reset bozza, cache incompatibile e catalogo obsoleto. Nel browser tutti i **62 profili** aprono documenti validi con metriche Fabric reali. Golden SVG storico invariato. Nessuna chiamata AI a pagamento nei test automatici.

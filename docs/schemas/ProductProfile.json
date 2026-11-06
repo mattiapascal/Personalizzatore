@@ -108,6 +108,12 @@
     "areaSource": {
       "type": "string"
     },
+    "dataWarnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "supportsLogo": {
       "type": [
         "boolean",

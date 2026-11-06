@@ -13,7 +13,7 @@ export const ProductProfileSchema = z.strictObject({
   tags: z.array(z.string()), profileVersion: z.literal(1), family: z.literal('stamp'),
   mechanism: MechanismSchema, shape: ShapeSchema, nominalAreaMm: AreaSchema,
   materials: z.array(z.enum(['wood', 'plastic', 'metal'])).optional(), mechanismSource: z.string().optional(),
-  areaSource: z.string(), supportsLogo: z.boolean().nullable(), logoSource: z.string(),
+  areaSource: z.string(), dataWarnings: z.array(z.string()).optional(), supportsLogo: z.boolean().nullable(), logoSource: z.string(),
   constraints: z.strictObject({ minFontSizePt: z.number().positive().nullable(), safeMarginMm: z.number().nonnegative().nullable(), allowedColors: z.array(z.string()).nullable() }),
   validatedForProduction: z.literal(false), price: z.null(), availability: z.null(),
 });

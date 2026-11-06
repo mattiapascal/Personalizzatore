@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "fixture": true,
-  "source": "TEST: fonti Shopify lette in sola lettura, profili nominali derivati con regole documentate; non validati per produzione",
-  "capturedOn": "2026-11-05",
+  "source": "TEST: fonti Shopify lette in sola lettura; dimensioni esclusivamente da custom.larghezza/custom.altezza della variante in mm; non validati per produzione",
+  "capturedOn": "2026-11-06",
   "shopDomain": "www.incisoriasacchetti.it",
   "products": [
     {
@@ -32,7 +32,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018911105404, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -73,7 +74,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro a secco Trodat Ideal 77156",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55827724861820, Circolare 41x41 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55827724861820, custom.larghezza=41 mm, custom.altezza=41 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -114,7 +116,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro a secco Trodat Ideal 77156",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55827724894588, Circolare 51x51 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55827724894588, custom.larghezza=51 mm, custom.altezza=51 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -155,308 +158,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro a secco Trodat Ideal 77156",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55827724927356, Rettangolare 51x25 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973495676",
-      "variantLabel": "40x15 mm",
-      "productId": "gid://shopify/Product/15105044447612",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55018973495676"
-      ],
-      "handle": "timbro-in-legno-ed-ottone",
-      "title": "Timbro in legno ed ottone",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "rectangle",
-      "nominalAreaMm": {
-        "width": 40,
-        "height": 15
-      },
-      "materials": [
-        "wood",
-        "metal"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973495676, 40x15 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973528444",
-      "variantLabel": "60x30 mm",
-      "productId": "gid://shopify/Product/15105044447612",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55018973528444"
-      ],
-      "handle": "timbro-in-legno-ed-ottone",
-      "title": "Timbro in legno ed ottone",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "rectangle",
-      "nominalAreaMm": {
-        "width": 60,
-        "height": 30
-      },
-      "materials": [
-        "wood",
-        "metal"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973528444, 60x30 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973561212",
-      "variantLabel": "60x40 mm",
-      "productId": "gid://shopify/Product/15105044447612",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55018973561212"
-      ],
-      "handle": "timbro-in-legno-ed-ottone",
-      "title": "Timbro in legno ed ottone",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "rectangle",
-      "nominalAreaMm": {
-        "width": 60,
-        "height": 40
-      },
-      "materials": [
-        "wood",
-        "metal"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973561212, 60x40 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973593980",
-      "variantLabel": "Diam. 30 mm",
-      "productId": "gid://shopify/Product/15105044447612",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55018973593980"
-      ],
-      "handle": "timbro-in-legno-ed-ottone",
-      "title": "Timbro in legno ed ottone",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "round",
-      "nominalAreaMm": {
-        "width": 30,
-        "height": 30
-      },
-      "materials": [
-        "wood",
-        "metal"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973593980, Diam. 30 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973626748",
-      "variantLabel": "Diam. 40 mm",
-      "productId": "gid://shopify/Product/15105044447612",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55018973626748"
-      ],
-      "handle": "timbro-in-legno-ed-ottone",
-      "title": "Timbro in legno ed ottone",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "round",
-      "nominalAreaMm": {
-        "width": 40,
-        "height": 40
-      },
-      "materials": [
-        "wood",
-        "metal"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973626748, Diam. 40 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973659516",
-      "variantLabel": "30x60 mm",
-      "productId": "gid://shopify/Product/15105044447612",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55018973659516"
-      ],
-      "handle": "timbro-in-legno-ed-ottone",
-      "title": "Timbro in legno ed ottone",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "rectangle",
-      "nominalAreaMm": {
-        "width": 30,
-        "height": 60
-      },
-      "materials": [
-        "wood",
-        "metal"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973659516, 30x60 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973692284",
-      "variantLabel": "40x60 mm",
-      "productId": "gid://shopify/Product/15105044447612",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55018973692284"
-      ],
-      "handle": "timbro-in-legno-ed-ottone",
-      "title": "Timbro in legno ed ottone",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "rectangle",
-      "nominalAreaMm": {
-        "width": 40,
-        "height": 60
-      },
-      "materials": [
-        "wood",
-        "metal"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973692284, 40x60 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55827724927356, custom.larghezza=51 mm, custom.altezza=25 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -496,7 +199,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4913 – 58 × 22 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4913 – 58 × 22 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021442564476, custom.larghezza=58 mm, custom.altezza=22 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -536,7 +240,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4912 – 47 × 18 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4912 – 47 × 18 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021456032124, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -576,7 +281,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4910 – 26 × 9 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4910 – 26 × 9 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021468352892, custom.larghezza=26 mm, custom.altezza=9 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -616,7 +322,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4911 – 38 × 14 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4911 – 38 × 14 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021484573052, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -656,7 +363,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4917 – 50 × 10 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4917 – 50 × 10 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021500793212, custom.larghezza=50 mm, custom.altezza=10 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -696,7 +404,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4926 – 75 × 38 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4926 – 75 × 38 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021514097020, custom.larghezza=75 mm, custom.altezza=38 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -736,7 +445,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4915 – 70 × 25 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4915 – 70 × 25 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021526548860, custom.larghezza=70 mm, custom.altezza=25 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -776,7 +486,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4929 – 49 × 29 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4929 – 49 × 29 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021536051580, custom.larghezza=49 mm, custom.altezza=29 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -816,7 +527,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4927 – 60 × 40 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4927 – 60 × 40 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021539197308, custom.larghezza=60 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -856,7 +568,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4916 – 70 × 10 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4916 – 70 × 10 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021542408572, custom.larghezza=70 mm, custom.altezza=10 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -896,7 +609,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4928 – 60 × 33 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4928 – 60 × 33 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021548568956, custom.larghezza=60 mm, custom.altezza=33 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -937,7 +651,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro quadrato tascabile autoinchiostrante Colop Printer Q12 – 12 × 12 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro quadrato tascabile autoinchiostrante Colop Printer Q12 – 12 × 12 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021677707644, custom.larghezza=12 mm, custom.altezza=12 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -976,133 +691,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 20 – 38 × 14 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 20 – 38 × 14 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15106681799036::gid://shopify/ProductVariant/55676402925948",
-      "variantLabel": "30",
-      "productId": "gid://shopify/Product/15106681799036",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55676402925948"
-      ],
-      "handle": "timbro-in-legno-diam-50-mm",
-      "title": "Timbro in legno tondo",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-diam-50-mm",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "round",
-      "nominalAreaMm": {
-        "width": 30,
-        "height": 30
-      },
-      "materials": [
-        "wood"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno tondo",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55676402925948, Diametro (mm)=30; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15106681799036::gid://shopify/ProductVariant/55676402958716",
-      "variantLabel": "35",
-      "productId": "gid://shopify/Product/15106681799036",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55676402958716"
-      ],
-      "handle": "timbro-in-legno-diam-50-mm",
-      "title": "Timbro in legno tondo",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-diam-50-mm",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "round",
-      "nominalAreaMm": {
-        "width": 35,
-        "height": 35
-      },
-      "materials": [
-        "wood"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno tondo",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55676402958716, Diametro (mm)=35; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15106681799036::gid://shopify/ProductVariant/55676402991484",
-      "variantLabel": "40",
-      "productId": "gid://shopify/Product/15106681799036",
-      "variantIds": [
-        "gid://shopify/ProductVariant/55676402991484"
-      ],
-      "handle": "timbro-in-legno-diam-50-mm",
-      "title": "Timbro in legno tondo",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-diam-50-mm",
-      "tags": [
-        "Ex-Libris",
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "round",
-      "nominalAreaMm": {
-        "width": 40,
-        "height": 40
-      },
-      "materials": [
-        "wood"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno tondo",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/55676402991484, Diametro (mm)=40; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55021684031868, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -1142,7 +732,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Colop Printer R30 – diametro 30 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Colop Printer R30 – diametro 30 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55022160871804, custom.larghezza=30 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -1181,7 +772,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Trodat Pocket Printy 9511 – 38 × 14 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro tascabile autoinchiostrante Trodat Pocket Printy 9511 – 38 × 14 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55022187676028, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1220,7 +812,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Trodat Pocket Printy 9512 – 47 × 18 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro tascabile autoinchiostrante Trodat Pocket Printy 9512 – 47 × 18 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55022192034172, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1260,130 +853,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Colop Printer R40 – diametro 40 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Colop Printer R40 – diametro 40 mm; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15999882330492::gid://shopify/ProductVariant/56812654756220",
-      "variantLabel": "30",
-      "productId": "gid://shopify/Product/15999882330492",
-      "variantIds": [
-        "gid://shopify/ProductVariant/56812654756220"
-      ],
-      "handle": "timbro-in-plastica-tondo",
-      "title": "Timbro in plastica tondo",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-plastica-tondo",
-      "tags": [
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "round",
-      "nominalAreaMm": {
-        "width": 30,
-        "height": 30
-      },
-      "materials": [
-        "plastic"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in plastica tondo",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/56812654756220, Diametro (mm)=30; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15999882330492::gid://shopify/ProductVariant/56812654788988",
-      "variantLabel": "35",
-      "productId": "gid://shopify/Product/15999882330492",
-      "variantIds": [
-        "gid://shopify/ProductVariant/56812654788988"
-      ],
-      "handle": "timbro-in-plastica-tondo",
-      "title": "Timbro in plastica tondo",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-plastica-tondo",
-      "tags": [
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "round",
-      "nominalAreaMm": {
-        "width": 35,
-        "height": 35
-      },
-      "materials": [
-        "plastic"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in plastica tondo",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/56812654788988, Diametro (mm)=35; nominale, area produttiva non validata",
-      "supportsLogo": true,
-      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
-      "constraints": {
-        "minFontSizePt": null,
-        "safeMarginMm": null,
-        "allowedColors": null
-      },
-      "validatedForProduction": false,
-      "price": null,
-      "availability": null
-    },
-    {
-      "profileId": "gid://shopify/Product/15999882330492::gid://shopify/ProductVariant/56812654821756",
-      "variantLabel": "40",
-      "productId": "gid://shopify/Product/15999882330492",
-      "variantIds": [
-        "gid://shopify/ProductVariant/56812654821756"
-      ],
-      "handle": "timbro-in-plastica-tondo",
-      "title": "Timbro in plastica tondo",
-      "status": "ACTIVE",
-      "url": "https://www.incisoriasacchetti.it/products/timbro-in-plastica-tondo",
-      "tags": [
-        "No-AI",
-        "No-reso",
-        "Timbri manuali",
-        "warning-pitchprint"
-      ],
-      "profileVersion": 1,
-      "family": "stamp",
-      "mechanism": "manual",
-      "shape": "round",
-      "nominalAreaMm": {
-        "width": 40,
-        "height": 40
-      },
-      "materials": [
-        "plastic"
-      ],
-      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in plastica tondo",
-      "areaSource": "Shopify variante gid://shopify/ProductVariant/56812654821756, Diametro (mm)=40; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/56812647416188, custom.larghezza=40 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": true,
       "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
       "constraints": {
@@ -1419,7 +890,203 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Colop Printer R30 – diametro 30 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Colop Printer R30 – diametro 30 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125692309884, custom.larghezza=30 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036618928508::gid://shopify/ProductVariant/57125693555068",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036618928508",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125693555068"
+      ],
+      "handle": "timbro-printer-20-14-x-38-mm-4-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro autoinchiostrante Colop Printer 20 – 38 × 14 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-printer-20-14-x-38-mm-4-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 38,
+        "height": 14
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Colop Printer 20 – 38 × 14 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125693555068, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036619026812::gid://shopify/ProductVariant/57125693718908",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036619026812",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125693718908"
+      ],
+      "handle": "timbro-printer-30-18-x-47-mm-5-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro autoinchiostrante Colop Printer 30 – 47 × 18 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-printer-30-18-x-47-mm-5-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 47,
+        "height": 18
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Colop Printer 30 – 47 × 18 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125693718908, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036619125116::gid://shopify/ProductVariant/57125693817212",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036619125116",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125693817212"
+      ],
+      "handle": "timbro-printer-40-23-x-59-mm-6-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro autoinchiostrante Colop Printer 40 – 59 × 23 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-printer-40-23-x-59-mm-6-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 59,
+        "height": 23
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Colop Printer 40 – 59 × 23 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125693817212, custom.larghezza=59 mm, custom.altezza=23 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036619190652::gid://shopify/ProductVariant/57125693882748",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036619190652",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125693882748"
+      ],
+      "handle": "timbro-printer-50-30-x-69-mm-7-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro autoinchiostrante Colop Printer 50 – 69 × 30 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-printer-50-30-x-69-mm-7-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 69,
+        "height": 30
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Colop Printer 50 – 69 × 30 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125693882748, custom.larghezza=69 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036619223420::gid://shopify/ProductVariant/57125693915516",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036619223420",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125693915516"
+      ],
+      "handle": "timbro-printer-60-37-x-76-mm-8-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro autoinchiostrante Colop Printer 60 – 76 × 37 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-printer-60-37-x-76-mm-8-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 76,
+        "height": 37
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Colop Printer 60 – 76 × 37 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125693915516, custom.larghezza=76 mm, custom.altezza=37 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1455,7 +1122,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile rotondo autoinchiostrante Colop Pocket Stamp R40 – diametro 40 mm, blu",
-      "areaSource": "Shopify titolo prodotto: Timbro tascabile rotondo autoinchiostrante Colop Pocket Stamp R40 – diametro 40 mm, blu; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125693948284, custom.larghezza=40 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1491,7 +1159,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro quadrato autoinchiostrante Trodat Printy 4921 – 12 × 12 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro quadrato autoinchiostrante Trodat Printy 4921 – 12 × 12 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125693981052, custom.larghezza=12 mm, custom.altezza=12 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1527,7 +1196,47 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Colop Printer R40 – diametro 40 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Colop Printer R40 – diametro 40 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125694112124, custom.larghezza=40 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036619354492::gid://shopify/ProductVariant/57125694144892",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036619354492",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125694144892"
+      ],
+      "handle": "timbro-printer-25-15x75-mm-allungato-autoinchiostrante-colop",
+      "title": "Timbro autoinchiostrante Colop Printer 25 – 75 × 15 mm, allungato",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-printer-25-15x75-mm-allungato-autoinchiostrante-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 75,
+        "height": 15
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Colop Printer 25 – 75 × 15 mm, allungato",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125694144892, custom.larghezza=75 mm, custom.altezza=15 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1563,7 +1272,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4911 – 38 × 14 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4911 – 38 × 14 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125694341500, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1599,7 +1309,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4912 – 47 × 18 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4912 – 47 × 18 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125694538108, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1635,7 +1346,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4913 – 58 × 22 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4913 – 58 × 22 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125694570876, custom.larghezza=58 mm, custom.altezza=22 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1671,7 +1383,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4915 – 70 × 25 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4915 – 70 × 25 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125694701948, custom.larghezza=70 mm, custom.altezza=25 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1707,7 +1420,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Trodat Printy 4642 – diametro 42 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Trodat Printy 4642 – diametro 42 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125695160700, custom.larghezza=42 mm, custom.altezza=42 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1743,7 +1457,320 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Colop Printer 55 – 60 × 40 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Colop Printer 55 – 60 × 40 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125695259004, custom.larghezza=60 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036620140924::gid://shopify/ProductVariant/57125695324540",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036620140924",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125695324540"
+      ],
+      "handle": "timbro-printer-10-10-x-27-mm-3-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro autoinchiostrante Colop Printer 10 – 27 × 10 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-printer-10-10-x-27-mm-3-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 27,
+        "height": 10
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Colop Printer 10 – 27 × 10 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125695324540, custom.larghezza=27 mm, custom.altezza=10 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036620468604::gid://shopify/ProductVariant/57125696536956",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036620468604",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125696536956"
+      ],
+      "handle": "timbro-pocket-stamp-plus-20-14-x-38-mm-4-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 20 – 38 × 14 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-pocket-stamp-plus-20-14-x-38-mm-4-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "pocket",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 38,
+        "height": 14
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 20 – 38 × 14 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125696536956, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036620566908::gid://shopify/ProductVariant/57125696799100",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036620566908",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125696799100"
+      ],
+      "handle": "timbro-pocket-stamp-plus-20-14-x-38-mm-4-righe-autoinchiostrante-blu-indaco-colop",
+      "title": "Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 20 – 38 × 14 mm, blu indaco",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-pocket-stamp-plus-20-14-x-38-mm-4-righe-autoinchiostrante-blu-indaco-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "pocket",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 38,
+        "height": 14
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 20 – 38 × 14 mm, blu indaco",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125696799100, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036620599676::gid://shopify/ProductVariant/57125696831868",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036620599676",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125696831868"
+      ],
+      "handle": "timbro-pocket-stamp-plus-20-14-x-38-mm-4-righe-autoinchiostrante-rosso-rubino-colop",
+      "title": "Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 20 – 38 × 14 mm, rosso rubino",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-pocket-stamp-plus-20-14-x-38-mm-4-righe-autoinchiostrante-rosso-rubino-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "pocket",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 38,
+        "height": 14
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 20 – 38 × 14 mm, rosso rubino",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125696831868, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036620665212::gid://shopify/ProductVariant/57125696930172",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036620665212",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125696930172"
+      ],
+      "handle": "timbro-pocket-stamp-plus-30-18-x-47-mm-5-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-pocket-stamp-plus-30-18-x-47-mm-5-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "pocket",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 47,
+        "height": 18
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125696930172, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036620697980::gid://shopify/ProductVariant/57125696962940",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036620697980",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125696962940"
+      ],
+      "handle": "timbro-pocket-stamp-plus-30-18-x-47-mm-5-righe-autoinchiostrante-blu-indaco-colop",
+      "title": "Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm, blu indaco",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-pocket-stamp-plus-30-18-x-47-mm-5-righe-autoinchiostrante-blu-indaco-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "pocket",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 47,
+        "height": 18
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm, blu indaco",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125696962940, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036620763516::gid://shopify/ProductVariant/57125697028476",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036620763516",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125697028476"
+      ],
+      "handle": "timbro-pocket-stamp-plus-30-18-x-47-mm-5-righe-autoinchiostrante-rosso-rubino-colop",
+      "title": "Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm, rosso rubino",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-pocket-stamp-plus-30-18-x-47-mm-5-righe-autoinchiostrante-rosso-rubino-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "pocket",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 47,
+        "height": 18
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm, rosso rubino",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125697028476, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036620894588::gid://shopify/ProductVariant/57125698470268",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036620894588",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125698470268"
+      ],
+      "handle": "timbro-pocket-stamp-plus-30-18-x-47-mm-5-righe-autoinchiostrante-verde-colop",
+      "title": "Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm, verde",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-pocket-stamp-plus-30-18-x-47-mm-5-righe-autoinchiostrante-verde-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "pocket",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 47,
+        "height": 18
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 30 – 47 × 18 mm, verde",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125698470268, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1779,7 +1806,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Colop Printer R12 – diametro 12 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Colop Printer R12 – diametro 12 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125698535804, custom.larghezza=12 mm, custom.altezza=12 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1815,7 +1843,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Colop Printer R17 – diametro 17 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Colop Printer R17 – diametro 17 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125698568572, custom.larghezza=17 mm, custom.altezza=17 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1851,7 +1880,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Colop Printer R24 – diametro 24 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Colop Printer R24 – diametro 24 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125698765180, custom.larghezza=24 mm, custom.altezza=24 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1887,7 +1917,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Colop Printer R45 – diametro 45 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Colop Printer R45 – diametro 45 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125698830716, custom.larghezza=45 mm, custom.altezza=45 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1923,7 +1954,47 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro quadrato autoinchiostrante Colop Printer Q24 – 24 × 24 mm, nero",
-      "areaSource": "Shopify titolo prodotto: Timbro quadrato autoinchiostrante Colop Printer Q24 – 24 × 24 mm, nero; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125698896252, custom.larghezza=24 mm, custom.altezza=24 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036621353340::gid://shopify/ProductVariant/57125699060092",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036621353340",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125699060092"
+      ],
+      "handle": "timbro-original-printy-4-0-4910-personalizzabile-26-x-10-mm-3-righe-autoinchiostrante-trodat",
+      "title": "Timbro autoinchiostrante Trodat Printy 4910 – 26 × 9 mm",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-original-printy-4-0-4910-personalizzabile-26-x-10-mm-3-righe-autoinchiostrante-trodat",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 26,
+        "height": 9
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4910 – 26 × 9 mm",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125699060092, custom.larghezza=26 mm, custom.altezza=9 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1959,7 +2030,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4914 – 64 × 26 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4914 – 64 × 26 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125699191164, custom.larghezza=64 mm, custom.altezza=26 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -1996,7 +2068,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4931 – 70 × 30 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Printy 4931 – 70 × 30 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125699289468, custom.larghezza=70 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2032,7 +2105,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Trodat Printy 4630 – diametro 30 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Trodat Printy 4630 – diametro 30 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125699355004, custom.larghezza=30 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2069,7 +2143,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Trodat Mobile Printy 9440 – 40 × 40 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro tascabile autoinchiostrante Trodat Mobile Printy 9440 – 40 × 40 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125699584380, custom.larghezza=40 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2108,7 +2183,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Professional 5206 – 56 × 33 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Professional 5206 – 56 × 33 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125699649916, custom.larghezza=56 mm, custom.altezza=33 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2147,7 +2223,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Professional 5208 – 68 × 47 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Professional 5208 – 68 × 47 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125699846524, custom.larghezza=68 mm, custom.altezza=47 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2183,7 +2260,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Trodat Pocket Printy 9511 – 38 × 14 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro tascabile autoinchiostrante Trodat Pocket Printy 9511 – 38 × 14 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125699977596, custom.larghezza=38 mm, custom.altezza=14 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2219,7 +2297,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro quadrato autoinchiostrante Trodat Printy 4922 – 20 × 20 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro quadrato autoinchiostrante Trodat Printy 4922 – 20 × 20 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125700206972, custom.larghezza=20 mm, custom.altezza=20 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2255,7 +2334,47 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro quadrato autoinchiostrante Trodat Printy 4923 – 30 × 30 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro quadrato autoinchiostrante Trodat Printy 4923 – 30 × 30 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125700272508, custom.larghezza=30 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036622238076::gid://shopify/ProductVariant/57125700305276",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036622238076",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125700305276"
+      ],
+      "handle": "timbro-pocket-stamp-plus-40-23-x-59-mm-6-righe-autoinchiostrante-nero-colop",
+      "title": "Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 40 – 59 × 23 mm, nero",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-pocket-stamp-plus-40-23-x-59-mm-6-righe-autoinchiostrante-nero-colop",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "pocket",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 59,
+        "height": 23
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Colop Pocket Stamp Plus 40 – 59 × 23 mm, nero",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125700305276, custom.larghezza=59 mm, custom.altezza=23 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: custom.short_description."
+      ],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2294,7 +2413,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Professional 5211 – 85 × 55 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro autoinchiostrante Trodat Professional 5211 – 85 × 55 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125702467964, custom.larghezza=85 mm, custom.altezza=55 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2334,7 +2454,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro quadrato autoinchiostrante Trodat Printy 4924 – 40 × 40 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro quadrato autoinchiostrante Trodat Printy 4924 – 40 × 40 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125702664572, custom.larghezza=40 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2370,7 +2491,45 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro rotondo autoinchiostrante Trodat Printy 4638 – diametro 38 mm, cartuccia non inclusa",
-      "areaSource": "Shopify titolo prodotto: Timbro rotondo autoinchiostrante Trodat Printy 4638 – diametro 38 mm, cartuccia non inclusa; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125702795644, custom.larghezza=38 mm, custom.altezza=38 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": null,
+      "logoSource": "Compatibilità logo da confermare",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/16036623417724::gid://shopify/ProductVariant/57125703188860",
+      "variantLabel": "",
+      "productId": "gid://shopify/Product/16036623417724",
+      "variantIds": [
+        "gid://shopify/ProductVariant/57125703188860"
+      ],
+      "handle": "timbro-quadrato-4925-personalizzabile-82-x-25-mm-8-righe-autoinchiostrante-trodat",
+      "title": "Timbro autoinchiostrante Trodat Printy 4925 – 82 × 25 mm",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-quadrato-4925-personalizzabile-82-x-25-mm-8-righe-autoinchiostrante-trodat",
+      "tags": [
+        "da-catalogare"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "automatic",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 82,
+        "height": 25
+      },
+      "materials": [],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro autoinchiostrante Trodat Printy 4925 – 82 × 25 mm",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125703188860, custom.larghezza=82 mm, custom.altezza=25 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {
@@ -2406,7 +2565,8 @@
       },
       "materials": [],
       "mechanismSource": "Shopify titolo/tag espliciti: Timbro tascabile autoinchiostrante Trodat Pocket Printy 9512 – 47 × 18 mm",
-      "areaSource": "Shopify titolo prodotto: Timbro tascabile autoinchiostrante Trodat Pocket Printy 9512 – 47 × 18 mm; nominale, area produttiva non validata",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/57125703975292, custom.larghezza=47 mm, custom.altezza=18 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
       "supportsLogo": null,
       "logoSource": "Compatibilità logo da confermare",
       "constraints": {

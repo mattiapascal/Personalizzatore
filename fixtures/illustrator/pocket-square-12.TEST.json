@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "documentId": "ebf5c824-e772-4150-a28d-89ec032c0098",
+  "documentId": "522da908-2511-4387-89f4-5f6e920f71e7",
   "revision": 0,
   "productId": "gid://shopify/Product/15106215805308",
   "variantId": "gid://shopify/ProductVariant/55021677707644",
-  "catalogVersion": "TEST-2026-11-05-mounts-v1",
+  "catalogVersion": "TEST-2026-11-06-mounts-v2-metafields",
   "catalogProductProfileVersion": 1,
   "productProfileVersion": "TEST-stamp-v1",
   "fixture": true,

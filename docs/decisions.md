@@ -1,5 +1,11 @@
 # Registro decisioni
 
+## 2026-11-06 — Metafield variante autorevoli per l'impronta
+
+Su indicazione del titolare, verificati definizioni e valori `custom.larghezza/custom.altezza` della variante: number_decimal in mm. Sostituita l'estrazione delle dimensioni da titoli/opzioni con la coppia di metafield obbligatoria. Fonte mancante/non valida sospende la variante; descrizioni dimensionali discordanti restano avvisi senza prevalere. Titoli/opzioni continuano a identificare la forma, che deve essere geometricamente coerente. Regole/cache portate a `mount-rules-v2-variant-metafields` e fixture aggiornate. La modifica di un valore cambia versione, rivaluta candidati e blocca l'SVG delle bozze precedenti fino a rivalidazione.
+
+Le tre referenze manuali hanno tutti i campi vuoti (14 varianti); anche Pocket Stamp R40 ha una variante senza campi. Non riempirli né usare fallback descrittivi di nascosto. Restano in revisione, con supporto manuali mantenuto e verificato tramite simulazione TEST di futura compilazione. Nessuna scrittura Shopify, spesa AI o deploy.
+
 ## 2026-11-05 — Montature e mantenimento del catalogo
 
 Richiesta del titolare: usare altre montature e mantenere il sistema aggiornato. Un profilo per variante, chiave composta da GID prodotto/variante, link alla variante reale. Estesi meccanismi manuale/tascabile/a secco e forme quadrata/tonda; materiale richiesto ai manuali e diametro separato dall'ingombro rettangolare. Nessuna nuova regola produttiva universale.

@@ -1,6 +1,6 @@
 {
   "fixture": true,
-  "readAt": "2026-11-05T21:49:43.021Z",
+  "readAt": "2026-11-06T06:05:27.493Z",
   "products": [
     {
       "id": "gid://shopify/Product/15104975208828",
@@ -28,7 +28,15 @@
                 "name": "Title",
                 "value": "Default Title"
               }
-            ]
+            ],
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "47.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "18.0"
+            }
           }
         ],
         "pageInfo": {
@@ -67,7 +75,15 @@
                 "name": "Forma",
                 "value": "Circolare 41x41 mm"
               }
-            ]
+            ],
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "41.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "41.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55827724894588",
@@ -77,7 +93,15 @@
                 "name": "Forma",
                 "value": "Circolare 51x51 mm"
               }
-            ]
+            ],
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "51.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "51.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55827724927356",
@@ -87,7 +111,15 @@
                 "name": "Forma",
                 "value": "Rettangolare 51x25 mm"
               }
-            ]
+            ],
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "51.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "25.0"
+            }
           }
         ],
         "pageInfo": {
@@ -125,7 +157,9 @@
                 "name": "Dimensione",
                 "value": "40x15 mm"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/55018973528444",
@@ -135,7 +169,9 @@
                 "name": "Dimensione",
                 "value": "60x30 mm"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/55018973561212",
@@ -145,7 +181,9 @@
                 "name": "Dimensione",
                 "value": "60x40 mm"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/55018973593980",
@@ -155,7 +193,9 @@
                 "name": "Dimensione",
                 "value": "Diam. 30 mm"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/55018973626748",
@@ -165,7 +205,9 @@
                 "name": "Dimensione",
                 "value": "Diam. 40 mm"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/55018973659516",
@@ -175,7 +217,9 @@
                 "name": "Dimensione",
                 "value": "30x60 mm"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/55018973692284",
@@ -185,7 +229,9 @@
                 "name": "Dimensione",
                 "value": "40x60 mm"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           }
         ],
         "pageInfo": {
@@ -223,7 +269,15 @@
                 "name": "Title",
                 "value": "Default Title"
               }
-            ]
+            ],
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "26.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "9.0"
+            }
           }
         ],
         "pageInfo": {
@@ -262,7 +316,15 @@
                 "name": "Title",
                 "value": "Default Title"
               }
-            ]
+            ],
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "12.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "12.0"
+            }
           }
         ],
         "pageInfo": {
@@ -300,7 +362,9 @@
                 "name": "Diametro (mm)",
                 "value": "30"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/55676402958716",
@@ -310,7 +374,9 @@
                 "name": "Diametro (mm)",
                 "value": "35"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/55676402991484",
@@ -320,7 +386,9 @@
                 "name": "Diametro (mm)",
                 "value": "40"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           }
         ],
         "pageInfo": {
@@ -357,7 +425,9 @@
                 "name": "Diametro (mm)",
                 "value": "30"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/56812654788988",
@@ -367,7 +437,9 @@
                 "name": "Diametro (mm)",
                 "value": "35"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/56812654821756",
@@ -377,7 +449,9 @@
                 "name": "Diametro (mm)",
                 "value": "40"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           },
           {
             "id": "gid://shopify/ProductVariant/57154386624892",
@@ -387,7 +461,9 @@
                 "name": "Diametro (mm)",
                 "value": "45"
               }
-            ]
+            ],
+            "imprintWidth": null,
+            "imprintHeight": null
           }
         ],
         "pageInfo": {
@@ -421,7 +497,15 @@
                 "name": "Title",
                 "value": "Default Title"
               }
-            ]
+            ],
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "30.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "30.0"
+            }
           }
         ],
         "pageInfo": {
@@ -455,7 +539,15 @@
                 "name": "Title",
                 "value": "Default Title"
               }
-            ]
+            ],
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "41.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "24.0"
+            }
           }
         ],
         "pageInfo": {

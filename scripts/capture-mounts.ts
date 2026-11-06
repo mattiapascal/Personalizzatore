@@ -12,7 +12,7 @@ const runtime: RuntimeState = {
   sync: { configured: false, intervalSeconds: 300, lastError: null, refreshing: false },
 };
 const examples = [
-  { file: 'wood-round-35', request: 'Timbro manuale in legno rotondo diametro 35 mm', title: /^Timbro in legno tondo$/, variant: '35' },
+  { file: 'automatic-round-30', request: 'Timbro autoinchiostrante rotondo diametro 30 mm', title: /Colop Printer R30/, variant: '' },
   { file: 'pocket-square-12', request: 'Timbro tascabile quadrato 12 x 12 mm', title: /Q12/, variant: '' },
   { file: 'emboss-round-41', request: 'Timbro a secco rotondo diametro 41 mm', title: /Trodat Ideal/, variant: 'Circolare 41' },
 ];
@@ -36,9 +36,9 @@ try {
       await (await download).saveAs(`fixtures/illustrator/${example.file}.TEST.${type.toLowerCase()}`);
     }
     await page.locator('.lab').screenshot({ path: `.local/previews/${example.file}.png` });
-    if (example.file === 'wood-round-35') {
+    if (example.file === 'automatic-round-30') {
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.locator('.lab').screenshot({ path: '.local/previews/wood-round-35-mobile.png' });
+      await page.locator('.lab').screenshot({ path: '.local/previews/automatic-round-30-mobile.png' });
     }
     await page.close(); console.log('PASS cattura ' + example.file);
   }

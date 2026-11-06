@@ -23,7 +23,7 @@ export function createCatalog(raw: CatalogSnapshot, version: string): CatalogAda
 }
 export const fixtureCatalog = createCatalog(snapshot, `TEST-${snapshot.capturedOn}-v1`);
 export const mountSnapshot = CatalogSchema.parse(mounts);
-export const mountFixtureCatalog = createCatalog(mountSnapshot, `TEST-${mountSnapshot.capturedOn}-mounts-v1`);
+export const mountFixtureCatalog = createCatalog(mountSnapshot, `TEST-${mountSnapshot.capturedOn}-mounts-v2-metafields`);
 
 // Adattatore finale attuale: solo navigazione, nessuna scrittura Shopify/BSS/PitchPrint.
 export function productPage(catalog: CatalogAdapter, productId: string): string {

@@ -43,6 +43,7 @@ export function recommendProducts(catalog: CatalogAdapter, input: Requirements):
         { ruleId: 'R5_ORDER', explanation: 'Ordinamento per superficie nominale crescente, senza usare prezzo o disponibilità.' },
       ],
       pending: [
+        ...(p.dataWarnings ?? []),
         'Area utile, margini, font minimo e impaginazione da confermare con il laboratorio.',
         ...(r.lines ? [`Compatibilità delle ${r.lines} righe non verificata graficamente.`] : []),
         'Prezzo finale, disponibilità e pubblicazione da verificare sulla pagina attuale.',

@@ -12,17 +12,25 @@ export const CATALOG_QUERY = `query StampCatalog($query: String!, $after: String
     nodes {
       id title handle status onlineStoreUrl updatedAt tags descriptionHtml vendor
       technicalSummary: metafield(namespace: "custom", key: "short_description") { jsonValue }
-      variants(first: 50) { nodes { id title selectedOptions { name value } } pageInfo { hasNextPage endCursor } }
+      variants(first: 50) {
+        nodes {
+          id title selectedOptions { name value }
+          imprintWidth: metafield(namespace: "custom", key: "larghezza") { type jsonValue }
+          imprintHeight: metafield(namespace: "custom", key: "altezza") { type jsonValue }
+        }
+        pageInfo { hasNextPage endCursor }
+      }
     }
     pageInfo { hasNextPage endCursor }
   }
 }`;
 const pageInfo = z.object({ hasNextPage: z.boolean(), endCursor: z.string().nullable() });
+const dimensionMetafield = z.object({ type: z.string(), jsonValue: z.unknown() }).nullable().optional();
 export const RawProductSchema = z.object({
   id: z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/), title: z.string(), handle: z.string(),
   status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT', 'UNLISTED']), onlineStoreUrl: z.url().nullable(), updatedAt: z.iso.datetime(), tags: z.array(z.string()),
   descriptionHtml: z.string().default(''), vendor: z.string().default(''), technicalSummary: z.object({ jsonValue: z.unknown() }).nullable().optional(),
-  variants: z.object({ nodes: z.array(z.object({ id: z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/), title: z.string().default(''), selectedOptions: z.array(z.object({ name: z.string(), value: z.string() })).default([]) })), pageInfo }),
+  variants: z.object({ nodes: z.array(z.object({ id: z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/), title: z.string().default(''), selectedOptions: z.array(z.object({ name: z.string(), value: z.string() })).default([]), imprintWidth: dimensionMetafield, imprintHeight: dimensionMetafield })), pageInfo }),
 });
 export type RawProduct = z.infer<typeof RawProductSchema>;
 

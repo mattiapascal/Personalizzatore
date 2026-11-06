@@ -269,36 +269,47 @@ test('backend offline non attiva automaticamente il parser dimostrativo', async 
   await expect(page.getByTestId('field-prodotto')).toHaveClass(/answered/);
 });
 
-test('montature manuali: domande, variante esatta, testo nel canvas tondo e SVG fisico', async ({ page }) => {
+test('montature manuali senza metafield: domande complete e nessuna misura dedotta dai titoli', async ({ page }) => {
   const runtime = demoRuntime(); runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
   await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
-  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto('/'); await sendMessage(page, 'Timbro manuale');
   await expect(latest(page)).toContainText('legno, plastica, metallo');
   await expect(page.getByTestId('field-materiale')).toHaveClass(/missing/);
   await sendMessage(page, 'In legno, rotondo, diametro 35 mm');
   await expect(page.getByTestId('field-materiale')).toHaveClass(/answered/);
-  await expect(page.getByTestId('field-dimensioni')).toContainText('35 mm');
-  const card = page.locator('.product-card').filter({ has: page.getByRole('heading', { name: 'Timbro in legno tondo', exact: true }) }).first();
-  await expect(card.getByRole('link')).toHaveAttribute('href', /\?variant=55676402958716$/);
+  await expect(latest(page)).toContainText('Nessun modello corrisponde');
+  await expect(page.locator('.product-card')).toHaveCount(0);
+});
+
+test('metafield variante: testo nel canvas tondo, SVG fisico e cambio variante a secco', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/'); await sendMessage(page, 'Timbro a secco rotondo diametro 41 mm');
+  await expect(page.getByTestId('field-dimensioni')).toContainText('41 mm');
+  const card = page.locator('.product-card').first();
+  await expect(card.getByRole('link')).toHaveAttribute('href', /\?variant=55827724861820$/);
   await card.getByRole('button', { name: 'Prova nel canvas' }).click();
-  await expect(page.getByTestId('editor-product')).toContainText('Ø 35 mm');
+  await expect(page.getByTestId('editor-product')).toContainText('Ø 41 mm');
   const canvas = page.locator('.upper-canvas'); await canvas.scrollIntoViewIfNeeded();
-  await canvas.dblclick({ position: { x: 120, y: 135 } });
+  await canvas.dblclick({ position: { x: 144, y: 158 } });
   const input = page.getByLabel('Testo nel canvas', { exact: true }); await expect(input).toBeFocused();
   await input.fill('IS'); await input.press('Escape');
   await page.getByText('Stato e storico del documento').click();
   const original = JSON.parse(await page.getByTestId('graphic-state').innerText());
-  expect(original.objects[1].text).toBe('IS'); expect(original.variantId).toBe('gid://shopify/ProductVariant/55676402958716');
+  expect(original.objects[1].text).toBe('IS'); expect(original.variantId).toBe('gid://shopify/ProductVariant/55827724861820');
   const pending = page.waitForEvent('download'); await page.getByRole('button', { name: 'Esporta SVG' }).click();
   const svg = await readFile(await (await pending).path(), 'utf8');
-  expect(svg).toContain('width="35mm"'); expect(svg).toContain('height="35mm"'); expect(svg).toContain('<clipPath'); expect(svg).toContain('<circle'); expect(svg).toContain('<text'); expect(svg).not.toContain('<image');
+  expect(svg).toContain('width="41mm"'); expect(svg).toContain('height="41mm"'); expect(svg).toContain('<clipPath'); expect(svg).toContain('<circle'); expect(svg).toContain('<text'); expect(svg).not.toContain('<image');
   await page.getByRole('button', { name: '01 · Scegli il timbro' }).click();
-  const larger = page.locator('.product-card').filter({ has: page.getByRole('heading', { name: 'Timbro in legno tondo', exact: true }) }).filter({ hasText: 'Variante: 40' });
+  const larger = page.locator('.product-card').filter({ hasText: 'Variante: Circolare 51' });
   await larger.getByRole('button', { name: 'Prova nel canvas' }).click();
-  await expect(page.getByTestId('editor-product')).toContainText('Ø 40 mm');
+  await expect(page.getByRole('alert')).toContainText('composizione non entra');
+  expect(JSON.parse(await page.getByTestId('graphic-state').innerText())).toEqual(original);
+  await page.getByRole('button', { name: 'Crea nuova bozza per questo formato' }).click();
+  await expect(page.getByTestId('editor-product')).toContainText('Ø 51 mm');
   const updated = JSON.parse(await page.getByTestId('graphic-state').innerText());
-  expect(updated.documentId).toBe(original.documentId); expect(updated.objects).toEqual(original.objects); expect(updated.variantId).toBe('gid://shopify/ProductVariant/55676402991484');
+  expect(updated.documentId).not.toBe(original.documentId); expect(updated.variantId).toBe('gid://shopify/ProductVariant/55827724894588');
   expect(errors).toEqual([]);
 });
 

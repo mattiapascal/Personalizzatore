@@ -2,7 +2,7 @@ import { ProductProfileSchema, type ProductProfile } from '../src/catalog/schema
 import type { RawProduct } from './catalog.ts';
 
 type Format = { width: number; height: number; shape: ProductProfile['shape'] };
-export const PROFILE_RULES_VERSION = 'mount-rules-v1';
+export const PROFILE_RULES_VERSION = 'mount-rules-v2-variant-metafields';
 const number = '(\\d+(?:[.,]\\d+)?)';
 const plain = (text: string) => text.replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/\s+/g, ' ').trim();
 const numeric = (value: string) => Number(value.replace(',', '.'));
@@ -30,6 +30,13 @@ function oneFormat(text: string): Format | null {
   }
   return f;
 }
+function dimension(field: RawProduct['variants']['nodes'][number]['imprintWidth']): number | null {
+  if (field?.type !== 'number_decimal') return null;
+  const raw = field.jsonValue;
+  if (typeof raw !== 'number' && (typeof raw !== 'string' || !/^\d+(?:\.\d+)?$/.test(raw))) return null;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 && value <= 1000 ? value : null;
+}
 
 export function deriveMountProfiles(p: RawProduct): { profiles: ProductProfile[]; reason: string | null } {
   const body = plain(p.descriptionHtml);
@@ -52,21 +59,31 @@ export function deriveMountProfiles(p: RawProduct): { profiles: ProductProfile[]
   if (/plastica/i.test(p.title)) materials.push('plastic');
   if (/ottone|metallo/i.test(p.title)) materials.push('metal');
   for (const variant of p.variants.nodes) {
+    const width = dimension(variant.imprintWidth), height = dimension(variant.imprintHeight);
+    if (width === null || height === null) { failures.push(variant.title + ': metafield variante custom.larghezza/custom.altezza mancanti o non validi (number_decimal, mm, > 0 e ≤ 1000)'); continue; }
     const diameterOption = variant.selectedOptions.find(o => /diametro.*mm/i.test(o.name));
-    let area: Format | null = diameterOption && /^\d+(?:[.,]\d+)?$/.test(diameterOption.value) ? { width: numeric(diameterOption.value), height: numeric(diameterOption.value), shape: 'round' } : oneFormat(variant.title);
-    const areaSource = area ? `Shopify variante ${variant.id}, ${diameterOption ? diameterOption.name + '=' + diameterOption.value : variant.title}` : 'Shopify titolo prodotto: ' + p.title;
-    area ??= titleFormat;
-    if (!area) { failures.push(variant.title + ': misure nominali o forma non documentate'); continue; }
-    if (/quadrato/i.test(p.title + ' ' + summary) && area.width !== area.height) { failures.push(variant.title + ': forma quadrata discordante con le misure'); continue; }
-    if (summaryFormats.length && !summaryFormats.some(f => sameArea(f, area!))) { failures.push(variant.title + ': misure discordanti con custom.short_description'); continue; }
+    const variantFormat = oneFormat(variant.title);
+    const shapeText = variant.title !== 'Default Title' ? variant.title : p.title;
+    const round = !!diameterOption || /tond|circolar|diam|[Øø]/i.test(shapeText) || (!variantFormat && /tond|circolar|diam|[Øø]/i.test(p.title));
+    if (round && width !== height) { failures.push(variant.title + ': forma circolare incompatibile con larghezza/altezza dei metafield'); continue; }
+    const area: Format = { width, height, shape: round ? 'round' : width === height ? 'square' : 'rectangle' };
+    const areaSource = `Shopify variante ${variant.id}, custom.larghezza=${width} mm, custom.altezza=${height} mm`;
+    if (/quadrat/i.test(shapeText) && area.width !== area.height) { failures.push(variant.title + ': forma quadrata discordante con le misure'); continue; }
+    const conflicts: string[] = [];
+    if (variantFormat && !sameArea(variantFormat, area)) conflicts.push('titolo variante');
+    if (!variantFormat && !diameterOption && titleFormat && !sameArea(titleFormat, area)) conflicts.push('titolo prodotto');
+    if (diameterOption && numeric(diameterOption.value) !== width) conflicts.push('opzione diametro');
+    if (summaryFormats.length && !summaryFormats.some(f => sameArea(f, area))) conflicts.push('custom.short_description');
     const listedDiameters = summary.match(/diametri disponibili:\s*([\d\s/.,]+)mm/i);
-    if (diameterOption && listedDiameters && !listedDiameters[1]!.split('/').map(v => numeric(v.trim())).includes(area.width)) { failures.push(variant.title + ': diametro variante non presente nella scheda tecnica'); continue; }
+    if (diameterOption && listedDiameters && !listedDiameters[1]!.split('/').map(v => numeric(v.trim())).includes(area.width)) conflicts.push('elenco diametri nella scheda tecnica');
+    if (conflicts.length) failures.push(variant.title + ': discordanza descrittiva con ' + conflicts.join(', ') + '; usati i metafield variante');
     const supportsLogo = /logo|grafic|disegn|composizion/i.test(source) ? true : null;
     profiles.push(ProductProfileSchema.parse({
       profileId: `${p.id}::${variant.id}`, productId: p.id, variantIds: [variant.id], variantLabel: variant.title === 'Default Title' ? '' : variant.title,
       handle: p.handle, title: p.title, status: p.status, url: p.onlineStoreUrl, tags: [...p.tags].sort(), profileVersion: 1,
       family: 'stamp', mechanism, mechanismSource: 'Shopify titolo/tag espliciti: ' + p.title, shape: area.shape, nominalAreaMm: { width: area.width, height: area.height }, materials,
       areaSource: areaSource + '; nominale, area produttiva non validata', supportsLogo, logoSource: supportsLogo ? 'Descrizione Shopify: logo/grafica/composizione dichiarati' : 'Compatibilità logo da confermare',
+      dataWarnings: conflicts.length ? ['Dimensioni dai metafield variante; dati descrittivi discordanti: ' + conflicts.join(', ') + '.'] : [],
       constraints: { minFontSizePt: null, safeMarginMm: null, allowedColors: null }, validatedForProduction: false, price: null, availability: null,
     }));
   }

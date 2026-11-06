@@ -19,7 +19,7 @@ const config = () => readConfig({ AI_PROVIDER: 'openai', OPENAI_API_KEY: 'test-n
 const argumentsFor = (patch: Record<string, unknown> = {}) => ({ family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 const request = () => AiRequestSchema.parse({ message: 'timbro per le fatture', sessionId: crypto.randomUUID(), revision: 3, requirements: { family: 'stamp' }, lastQuestion: 'Preferisci un autoinchiostrante?' });
 const answer = (args = argumentsFor({ family: 'stamp' }), extra = {}) => new Response(JSON.stringify({ status: 'completed', output: [{ type: 'function_call', name: 'collect_requirements', arguments: JSON.stringify(args) }], usage: { input_tokens: 100, output_tokens: 50 }, ...extra }), { status: 200 });
-const rawProducts = (): RawProduct[] => snapshot.products.map(p => ({ id: p.productId, title: p.title, handle: p.handle, status: p.status, onlineStoreUrl: p.url, updatedAt: '2026-10-26T17:46:07Z', tags: p.tags, descriptionHtml: '<p>Timbro personalizzabile con logo</p>', vendor: '', variants: { nodes: p.variantIds.map(id => ({ id, title: 'Default Title', selectedOptions: [] })), pageInfo: { hasNextPage: false, endCursor: null } } }));
+const rawProducts = (): RawProduct[] => snapshot.products.map(p => ({ id: p.productId, title: p.title, handle: p.handle, status: p.status, onlineStoreUrl: p.url, updatedAt: '2026-10-26T17:46:07Z', tags: p.tags, descriptionHtml: '<p>Timbro personalizzabile con logo</p>', vendor: '', variants: { nodes: p.variantIds.map(id => ({ id, title: 'Default Title', selectedOptions: [], imprintWidth: { type: 'number_decimal', jsonValue: String(p.nominalAreaMm.width) }, imprintHeight: { type: 'number_decimal', jsonValue: String(p.nominalAreaMm.height) } })), pageInfo: { hasNextPage: false, endCursor: null } } }));
 const catalogResponse = (nodes: RawProduct[], hasNextPage = false, endCursor: string | null = null) => new Response(JSON.stringify({ data: { products: { nodes, pageInfo: { hasNextPage, endCursor } } } }));
 
 describe('OpenAI server: output tipizzato, contesto e quote', () => {
@@ -102,7 +102,7 @@ describe('Catalogo server: import atomico e aggiornamenti in sola lettura', () =
     expect(normalizeCatalog([], new Date()).snapshot.products).toHaveLength(0);
   });
   it('dati dimensionali mancanti, descrizioni vuote e varianti incomplete restano in revisione', () => {
-    const raw = rawProducts(); raw[0]!.title = 'Timbro autoinchiostrante senza misure'; raw[1]!.descriptionHtml = ''; raw[2]!.variants.pageInfo.hasNextPage = true;
+    const raw = rawProducts(); raw[0]!.variants.nodes[0]!.imprintWidth = null; raw[1]!.descriptionHtml = ''; raw[2]!.variants.pageInfo.hasNextPage = true;
     const state = normalizeCatalog(raw, new Date());
     expect(state.snapshot.products).toHaveLength(0); expect(state.pending).toHaveLength(3);
     expect(state.pending.every(p => p.reason.startsWith('Da verificare'))).toBe(true);

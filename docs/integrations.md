@@ -1,5 +1,11 @@
 # Confini e conferme necessarie
 
+## Dimensioni variante — 6 novembre 2026
+
+Definizioni reali lette in sola lettura: `custom.larghezza` (Larghezza) e `custom.altezza` (Altezza), owner PRODUCTVARIANT, tipo `number_decimal`, descrizione «Valore espresso in millimetri.». Sono ora la fonte dimensionale esclusiva. Entrambi richiesti validi; nessun valore preso dal titolo in loro assenza. Descrizioni discordanti vengono segnalate, senza prevalere sui metafield. Il 4913 restituisce 58.0×22.0; selettore/canvas/SVG usano gli stessi 58×22 mm.
+
+Catalogo aggiornato: 66 profili su 64 prodotti, 16 con avvisi descrittivi. Quindici varianti su quattro prodotti hanno i campi vuoti: legno/ottone (7), legno tondo (3), plastica tondo (4), Pocket Stamp R40 (1). Sono sospese; nessun dato compilato o modificato su Shopify. Il conteggio 62 e le regole precedenti riportate sotto sono storici. Dettagli in [iteration-variant-dimensions.md](iteration-variant-dimensions.md).
+
 ## Aggiornamento backend/chat — 5 novembre 2026
 
 Aggiornamento successivo montature: letti anche descrizioni, `custom.short_description`, titoli/opzioni delle varianti; nessun campo creato o modificato. 228 prodotti nell'ambito, 214 attivi con URL, 62 profili su 50 prodotti. 165 prodotti esclusi o da verificare, inclusa una referenza con tre varianti utilizzabili e una discordante. Dettagli e regole in [iteration-mounts.md](iteration-mounts.md); i conteggi sotto descrivono l'incremento precedente.
@@ -39,7 +45,7 @@ Il contratto **Preventivometro V2** non è la migrazione **BSS Storefront V2**. 
 - `No-AI` chiarito dal titolare come sopra; verificare gli avvisi e il percorso PitchPrint per ogni futura integrazione pubblica.
 - Profili stampabili per modello/variante: area utile, margini, minimo font, colori, linee, regole logo e font disponibili. Le dimensioni del titolo sono nominali, non collaudo grafico.
 - Dati discordanti: plastica tondo variante 45 mm contro scheda 30/35/40; Q30 nominale 30×30 contro descrizione breve 17×17; altri modelli con misure/forme discordanti nell'elenco locale. Non correggere automaticamente Shopify né scegliere la fonte più comoda. Datari/numeratori richiedono aree riservate documentate; i timbri a secco richiedono specifiche proprie su carta, tratto e rilievo.
-- Definizioni e valori correnti dei metafield dimensionali variante (`custom.larghezza/altezza/spessore`, mm secondo handoff). Non sono stati letti in questa iterazione.
+- `custom.larghezza/altezza` verificati e collegati il 6 novembre; completare i campi sulle 15 varianti segnalate richiede un'attività Shopify autorizzata separatamente. `custom.spessore` esiste ma non viene usato per l'area dell'impronta.
 - Stato attuale tema pubblicato e app blocks; la copia locale del tema è indietro di 12 commit rispetto al proprio tracking locale, senza fetch effettuato. Gli handoff non provano lo stato live di novembre.
 - Accesso dev store/tema duplicato per il rilascio. Il backend locale legge già con accesso Admin; servono ancora profili dei nuovi modelli, servizio persistente e gestione produttiva dei casi/varianti speciali.
 - Politica retention e trattamento dati per richieste reali, loghi e progetti.
