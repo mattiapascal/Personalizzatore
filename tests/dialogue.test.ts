@@ -10,7 +10,7 @@ import { deriveMountProfiles } from '../server/mount-profiles';
 import { RawProductSchema } from '../server/catalog';
 import sourceData from '../fixtures/products/mount-sources.TEST.json';
 
-const args = (patch: Record<string, unknown>) => ({ dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const args = (patch: Record<string, unknown>) => ({ changeIntent: 'update', clearEvidence: null, dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 describe('Dialogo: recupero della conversazione e contenuti', () => {
   it.each(['off_topic', 'help', 'unclear'] as const)('%s preserva anche selezione, candidati e revisione', dialogueAct => {
     let session = updateRequirements(newSession(fixtureCatalog), { family: 'stamp', mechanism: 'automatic', shape: 'rectangle', sizeUnknown: true }, fixtureCatalog);

@@ -8,6 +8,7 @@ export const ProductImageSchema = z.strictObject({ url: z.url().refine(url => { 
 export const ProductProfileSchema = z.strictObject({
   profileId: z.string().optional(), variantLabel: z.string().optional(),
   image: ProductImageSchema.nullable().optional(),
+  useCases: z.array(z.strictObject({ purpose: z.enum(['loyalty', 'exlibris']), evidence: z.string().min(1).max(240) })).optional(),
   productId: z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/),
   variantIds: z.array(z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/)).min(1),
   handle: z.string().regex(/^[a-z0-9-]+$/), title: z.string().min(1), status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT']),

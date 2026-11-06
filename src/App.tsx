@@ -9,6 +9,7 @@ import { SelectionChat } from './selection/SelectionChat';
 import { newSession, restoreSession, SESSION_KEY } from './selection/session';
 import { initialInteraction, selectionInteraction, type SelectionAction, type SelectionInteraction } from './selection/interaction';
 import type { SelectionSession } from './selection/schema';
+import { adviseProducts } from './selection/advisor';
 const EditorLab = lazy(() => import('./editor/EditorLab').then(module => ({ default: module.EditorLab })));
 
 function load(catalog: CatalogAdapter): SelectionSession {
@@ -60,6 +61,9 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
   }, [runtime.catalog, catalogState.version, catalogState.checkedAt, busy, editorEditing]);
   const catalogStale = runtime.sync.stale === true || (!catalogState.snapshot.fixture && (!catalogState.checkedAt || now - Date.parse(catalogState.checkedAt) > Math.max(600, runtime.sync.intervalSeconds * 2) * 1000));
   const missing = missingInformation(session.requirements);
+  const advice = adviseProducts(catalog, session.requirements, contentBrief);
+  const showingAdvice = !session.candidates.length && advice.length > 0;
+  const visibleCandidates = session.candidates.length ? session.candidates : advice;
   const refreshRuntime = () => { void fetch('/api/bootstrap').then(response => response.json()).then(data => setRuntime(RuntimeSchema.parse(data))).catch(() => {}); };
   const refreshCatalog = async () => {
     setSyncBusy(true);
@@ -77,7 +81,7 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
       <div className="intro"><span className="eyebrow">Incisoria Sacchetti / Prototipo</span><h1>Troviamo il tuo <em>timbro.</em></h1><p>Raccontaci cosa vuoi imprimere. Ti aiutiamo a scegliere il formato e a preparare una prima bozza.</p></div>
       <aside className="notice"><strong>Ambiente di prova.</strong> {catalogState.snapshot.fixture ? 'Campione TEST' : 'Catalogo letto da Shopify'}, dati del {catalogState.snapshot.capturedOn}. {mode === 'mock' ? 'Demo a parole chiave selezionata: nessun modello AI usato.' : runtime.ai.ready ? `AI collegata: ${runtime.ai.model}.` : `AI non attiva: ${runtime.ai.reason}`} BSS e PitchPrint restano il percorso attuale sulla pagina prodotto.</aside>
       <details className="connection-status"><summary>Collegamenti AI e catalogo</summary>
-        <p>Il modello riceve la richiesta, i requisiti, l’ultima domanda e brevi estratti degli ultimi sei scambi; non riceve schede del catalogo. La conversazione viene inviata al provider solo in modalità AI reale.</p>
+        <p>Il modello riceve richiesta, requisiti, brief e domanda corrente. Le proposte commerciali e le immagini vengono costruite dal catalogo locale verificato; i fatti del catalogo non vengono inclusi nel contesto del modello senza autorizzazione. La conversazione viene inviata al provider solo in modalità AI reale.</p>
         <div className="button-row"><button aria-pressed={mode === 'server'} disabled={busy} onClick={() => setMode('server')}>AI reale</button><button aria-pressed={mode === 'mock'} disabled={busy} onClick={() => setMode('mock')}>Demo a parole chiave</button></div>
         <p>{runtime.ai.reason ?? 'Provider pronto.'} {runtime.ai.requests} richieste complessive{runtime.ai.estimatedStandardUsd !== undefined ? ` · consumo stimato a tariffa standard: ${runtime.ai.estimatedStandardUsd.toFixed(4)} USD` : ''}.</p>
         <p>{runtime.ai.localLimitsEnforced === false ? 'Conteggio locale informativo: i limiti di spesa sono gestiti nel tuo account OpenAI.' : `Blocco prudenziale locale attivo: riserve cumulative ${runtime.ai.reservedUsd.toFixed(4)} / ${runtime.ai.budgetUsd.toFixed(2)} USD. Le riserve non sono la spesa effettiva.`} Uso e fatturazione effettivi sono nel pannello OpenAI.</p>
@@ -96,17 +100,18 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
         <section className="panel chat-panel" aria-labelledby="assistant-title">
           <span className="eyebrow">01 / Assistente di selezione</span><h2 id="assistant-title">Di cosa hai bisogno?</h2>
           {notice && <p role="status" className="notice">{notice}</p>}
-          <SelectionChat session={session} feedback={feedback} feedbackRevision={feedbackRevision} clarification={clarification} clarificationBlocksSelection={clarificationBlocksSelection} contentBrief={contentBrief} runtime={runtime} mode={mode} busy={busy} active={tab === 'selection'} dispatch={dispatch} onBusy={setBusy} onComplete={refreshRuntime} onShowResults={() => candidatesRef.current?.focus()}/>
+          <SelectionChat session={session} feedback={feedback} feedbackRevision={feedbackRevision} clarification={clarification} clarificationBlocksSelection={clarificationBlocksSelection} contentBrief={contentBrief} catalog={catalog} runtime={runtime} mode={mode} busy={busy} active={tab === 'selection'} dispatch={dispatch} onBusy={setBusy} onComplete={refreshRuntime} onShowResults={() => candidatesRef.current?.focus()}/>
         </section>
         <section className="results-panel" aria-labelledby="candidate-title"><span className="eyebrow">Catalogo / {catalog.list().length} referenze censite</span><h2 id="candidate-title" ref={candidatesRef} tabIndex={-1}>Possibilità da verificare</h2>
-          {!session.candidates.length && <div className="empty panel"><span className="empty-mark">↗</span><h3>{missing.length ? 'Partiamo dalle tue esigenze' : 'Nessun candidato nel campione'}</h3><p>{missing.length ? 'Raccogliamo i criteri prima di proporti una referenza.' : 'La ricerca usa soltanto i profili censiti. Non significa che il prodotto manchi nel catalogo completo.'}</p></div>}
-          <div className="candidates">{(!clarificationBlocksSelection && !catalogStale ? session.candidates : []).map((candidate, index) => { const p = catalog.get(candidate.profileId ?? candidate.productId); return <article className="product-card panel" key={profileKey(p)}>
+          {showingAdvice && <p className="caption">Proposta iniziale basata sull’uso descritto. Montatura, ingombro e grafica restano da confermare.</p>}
+          {!visibleCandidates.length && <div className="empty panel"><span className="empty-mark">↗</span><h3>{missing.length ? 'Partiamo dalle tue esigenze' : 'Nessun candidato nel campione'}</h3><p>{missing.length ? 'Raccogliamo i criteri prima di proporti una referenza.' : 'La ricerca usa soltanto i profili censiti. Non significa che il prodotto manchi nel catalogo completo.'}</p></div>}
+          <div className="candidates">{(!clarificationBlocksSelection && !catalogStale ? visibleCandidates : []).map((candidate, index) => { const p = catalog.get(candidate.profileId ?? candidate.productId); return <article className="product-card panel" key={profileKey(p)}>
             <div className="product-number">{String(index + 1).padStart(2, '0')}<span>{p.shape === 'round' ? `Ø ${p.nominalAreaMm.width}` : `${p.nominalAreaMm.width} × ${p.nominalAreaMm.height}`} mm nominali</span></div><h3>{p.title}</h3>{p.variantLabel && <p className="variant-label">Variante: {p.variantLabel}</p>}<p className="caption">Referenza Shopify · profilo TEST v{p.profileVersion} · idoneità produttiva non verificata</p>
             <ProductPreview product={p}/>
             <details><summary>Perché questo modello</summary><ul className="reasons">{candidate.reasons.map(r => <li key={r.ruleId}><span className="rule">{r.ruleId}</span>{r.explanation}</li>)}</ul></details>
             <details><summary>Verifiche ancora necessarie</summary><ul>{candidate.pending.map(item => <li key={item}>{item}</li>)}</ul></details>
-            <button className="primary canvas-link" onClick={() => { dispatch({ type: 'choose', productId: profileKey(p) }); setEditorBinding({ product: p, version: catalog.version }); setTab('editor'); }}>Prova nel canvas →</button>
-            <a className="product-link" href={productPage(catalog, profileKey(p))} target="_blank" rel="noopener noreferrer" onClick={() => dispatch({ type: 'choose', productId: profileKey(p) })}>Personalizza sulla pagina prodotto ↗</a>
+            <button className="primary canvas-link" onClick={() => { dispatch({ type: showingAdvice ? 'acceptAdvice' : 'choose', productId: profileKey(p) }); setEditorBinding({ product: p, version: catalog.version }); setTab('editor'); }}>Prova nel canvas →</button>
+            <a className="product-link" href={productPage(catalog, profileKey(p))} target="_blank" rel="noopener noreferrer" onClick={() => dispatch({ type: showingAdvice ? 'acceptAdvice' : 'choose', productId: profileKey(p) })}>Personalizza sulla pagina prodotto ↗</a>
             <p className="caption">Prezzo e disponibilità sulla pagina attuale. Apertura in una nuova scheda; nessun trasferimento automatico di opzioni.</p>
           </article>; })}</div>
         </section>

@@ -105,6 +105,33 @@
                 }
               ]
             },
+            "maximumAreaMm": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "width": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000
+                    },
+                    "height": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "height"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "sizeUnknown": {
               "type": "boolean"
             },
@@ -115,7 +142,7 @@
           "additionalProperties": false
         },
         "clearFields": {
-          "maxItems": 10,
+          "maxItems": 11,
           "type": "array",
           "items": {
             "type": "string",
@@ -128,6 +155,7 @@
               "lines",
               "hasLogo",
               "minimumAreaMm",
+              "maximumAreaMm",
               "sizeUnknown",
               "sizeIsEstimate"
             ]
@@ -274,6 +302,33 @@
               "type": "boolean"
             },
             "minimumAreaMm": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "width": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000
+                    },
+                    "height": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "height"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "maximumAreaMm": {
               "anyOf": [
                 {
                   "type": "object",

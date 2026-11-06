@@ -40,6 +40,10 @@ Il sistema raccoglie i parametri senza campi numerici o selettori esterni. Sotto
 
 Puoi dare più informazioni insieme, correggerti e rispondere ai chiarimenti. Righe/logo sono annotati quando indicati; non vengono trasformati in capacità di un modello inventate. La chat resta in memoria, senza salvataggio del testo libero. Nel browser persistono solo requisiti e selezione per 24 ore; un catalogo nuovo rivaluta i requisiti senza cancellarli. Azzera conversazione e requisiti riparte da zero.
 
+Prova anche «Voglio fare un timbro per le tessere abbonamento del mio bar»: l'AI riconosce lo scopo, il motore locale propone referenze la cui scheda documenta quell'uso e chiede la misura delle caselline. Il Q12 è una proposta iniziale, senza assegnare montatura/forma come preferenze già confermate. Solo la scelta esplicita del modello le adotta. Lo spazio massimo disponibile è distinto dall'ingombro minimo richiesto. Un'area nominale 12×12 non viene certificata come interamente compatibile con una casella 10×10; stampare un logo più piccolo su una montatura più grande richiede un percorso grafico ancora da completare.
+
+Il provider riceve anche brief strutturato e tipo della domanda. «Quadrata» conserva la montatura; «10 mm» dopo una domanda sul lato completa entrambi i lati. Il normale aggiornamento non può cancellare scelte precedenti: un ritiro richiede intento distinto e una citazione nel messaggio corrente. I fatti del catalogo restano nel motore locale: `AI_SHARE_CATALOG_CONTEXT=false` per default; la condivisione facoltativa è predisposta ma non attivata, in attesa di autorizzazione esplicita. I messaggi commerciali con nomi prodotto non vengono ricopiati automaticamente nello storico mandato al modello. Dettagli e limiti in [iteration-comprehension.md](docs/iteration-comprehension.md).
+
 Il campione aggiornato comprende 76 profili di variante su 66 prodotti reali, inclusi 10 manuali con metafield ora compilati. Sono supportati autoinchiostranti, manuali, tascabili e a secco, con forme rettangolari, quadrate e tonde. Prova «Timbro a secco rotondo, diametro 41 mm» oppure «Timbro manuale in legno, rotondo, diametro 35 mm». Sono filtri minimi: una misura maggiore può comparire come alternativa. Il prezzo resta sulla pagina Shopify. Il significato di No-AI è stato chiarito dal titolare: limita le funzioni generative di PitchPrint e non questo assistente.
 
 ## Catalogo aggiornabile
@@ -80,9 +84,12 @@ npm run eval:ai -- conversione-cm
 npm run eval:ai -- --mounts
 npm run eval:ai -- --dialogue
 npm run eval:chat
+npm run eval:loyalty
 ~~~
 
 La quota persistente limita richieste e consumi stimati, anche dopo riavvio e con più processi. I report TEST sono in .local/evals, ignorati da Git. Il contatore usa una stima prudente a tariffa standard, indipendentemente da promozioni: Usage/Billing del provider è il riferimento della fatturazione effettiva.
+
+`eval:loyalty` riproduce sette turni inventati, forza la condivisione catalogo a false e applica un tetto aggiuntivo di riserva 0,15 USD per esecuzione, anche quando il contatore della chat è informativo. Non rilanciarlo come test gratuito: effettua chiamate reali.
 
 ## Documenti e struttura
 

@@ -12,6 +12,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/black147364_black.jpg?v=1741847507",
         "altText": "Nero"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15104975208828",
       "variantIds": [
         "gid://shopify/ProductVariant/55018911105404"
@@ -56,6 +57,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_seal_chrom_41_ld_open.jpg?v=1741847607",
         "altText": "Cromo (aperto)"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15104977633660",
       "variantIds": [
         "gid://shopify/ProductVariant/55827724861820"
@@ -102,6 +104,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_seal_chrom_41_ld_open.jpg?v=1741847607",
         "altText": "Cromo (aperto)"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15104977633660",
       "variantIds": [
         "gid://shopify/ProductVariant/55827724894588"
@@ -148,6 +151,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_seal_chrom_41_ld_open.jpg?v=1741847607",
         "altText": "Cromo (aperto)"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15104977633660",
       "variantIds": [
         "gid://shopify/ProductVariant/55827724927356"
@@ -194,6 +198,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno ed ottone per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15105044447612",
       "variantIds": [
         "gid://shopify/ProductVariant/55018973495676"
@@ -244,6 +254,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno ed ottone per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15105044447612",
       "variantIds": [
         "gid://shopify/ProductVariant/55018973528444"
@@ -292,6 +308,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno ed ottone per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15105044447612",
       "variantIds": [
         "gid://shopify/ProductVariant/55018973561212"
@@ -340,6 +362,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno ed ottone per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15105044447612",
       "variantIds": [
         "gid://shopify/ProductVariant/55018973593980"
@@ -388,6 +416,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno ed ottone per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15105044447612",
       "variantIds": [
         "gid://shopify/ProductVariant/55018973626748"
@@ -436,6 +470,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno ed ottone per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15105044447612",
       "variantIds": [
         "gid://shopify/ProductVariant/55018973659516"
@@ -484,6 +524,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno ed ottone per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15105044447612",
       "variantIds": [
         "gid://shopify/ProductVariant/55018973692284"
@@ -532,6 +578,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4913_p4_h_fuchsia_720x600_2.jpg?v=1741878147",
         "altText": "Viola"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106096497020",
       "variantIds": [
         "gid://shopify/ProductVariant/55021442564476"
@@ -577,6 +624,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4912_p4_hr_white577cd3c12e8b0_720x600_4.jpg?v=1741878276",
         "altText": "Bianco"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106099904892",
       "variantIds": [
         "gid://shopify/ProductVariant/55021456032124"
@@ -622,6 +670,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4910_p4_flamered_720x600_3.jpg?v=1741878403",
         "altText": "Rosso"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106103345532",
       "variantIds": [
         "gid://shopify/ProductVariant/55021468352892"
@@ -667,6 +716,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4911_1_1000x1000_720x600_3.jpg?v=1745407845",
         "altText": "Nero"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106107048316",
       "variantIds": [
         "gid://shopify/ProductVariant/55021484573052"
@@ -712,6 +762,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_4917_1_1000x1000_720x600_1.jpg?v=1741878651",
         "altText": "Nero"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106110226812",
       "variantIds": [
         "gid://shopify/ProductVariant/55021500793212"
@@ -757,6 +808,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4926_4_1000x1000577cccfe526f1_720x600_1.jpg?v=1741878777",
         "altText": "Nero"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106114158972",
       "variantIds": [
         "gid://shopify/ProductVariant/55021514097020"
@@ -802,6 +854,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4915_p4_skyblue_720x600_1.jpg?v=1741878904",
         "altText": "Blu"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106117566844",
       "variantIds": [
         "gid://shopify/ProductVariant/55021526548860"
@@ -847,6 +900,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4929_4_1000x1000577ccc8bd646a_720x600_1.jpg?v=1741879027",
         "altText": "Nero"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106121105788",
       "variantIds": [
         "gid://shopify/ProductVariant/55021536051580"
@@ -892,6 +946,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_4927_1_black_1000x1000577cccdc43abc_720x600_1.jpg?v=1741879148",
         "altText": "Nero"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106124415356",
       "variantIds": [
         "gid://shopify/ProductVariant/55021539197308"
@@ -937,6 +992,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4916_1_1000x1000_720x600_1.jpg?v=1741879272",
         "altText": "Nero"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106127430012",
       "variantIds": [
         "gid://shopify/ProductVariant/55021542408572"
@@ -982,6 +1038,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4928_4_1000x1000577cccbc000a7_720x600_1.jpg?v=1741879394",
         "altText": "Nero"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106135130492",
       "variantIds": [
         "gid://shopify/ProductVariant/55021548568956"
@@ -1027,6 +1084,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/q12.jpg?v=1741881903",
         "altText": "Timbro tascabile Colop Printer Q12"
       },
+      "useCases": [
+        {
+          "purpose": "loyalty",
+          "evidence": ". Il timbro perfetto per marchiare con il tuo logo . Ideale per drink card, tessere fedeltà, raccolte punti, ingressi per discoteca. Grazie al suo piccolo formato e la forma compatta; è facilissimo da usare pe"
+        }
+      ],
       "productId": "gid://shopify/Product/15106215805308",
       "variantIds": [
         "gid://shopify/ProductVariant/55021677707644"
@@ -1073,6 +1136,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/301341.jpg?v=1741882234",
         "altText": "Indaco"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106223833468",
       "variantIds": [
         "gid://shopify/ProductVariant/55021684031868"
@@ -1117,6 +1181,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/timbro-legno-50mm.jpg?v=1741896141",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15106681799036",
       "variantIds": [
         "gid://shopify/ProductVariant/55676402925948"
@@ -1164,6 +1234,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/timbro-legno-50mm.jpg?v=1741896141",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15106681799036",
       "variantIds": [
         "gid://shopify/ProductVariant/55676402958716"
@@ -1211,6 +1287,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/timbro-legno-50mm.jpg?v=1741896141",
         "altText": ""
       },
+      "useCases": [
+        {
+          "purpose": "exlibris",
+          "evidence": "Timbro in legno per contrassegnare con eleganza ed in modo unico i propri libri. Puoi realizzare con grande facilità una vera opera d'arte grazie al nostro nuovo ed"
+        }
+      ],
       "productId": "gid://shopify/Product/15106681799036",
       "variantIds": [
         "gid://shopify/ProductVariant/55676402991484"
@@ -1258,6 +1340,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/r30-colop-aperto.webp?v=1779863874",
         "altText": ""
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106684682620",
       "variantIds": [
         "gid://shopify/ProductVariant/55022160871804"
@@ -1303,6 +1386,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_9511_pp_front_black_blue.jpg?v=1756734141",
         "altText": "Blue-Black"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106701295996",
       "variantIds": [
         "gid://shopify/ProductVariant/55022187676028"
@@ -1347,6 +1431,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_9512_pp_front_black_red.jpg?v=1757059231",
         "altText": ""
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15106703950204",
       "variantIds": [
         "gid://shopify/ProductVariant/55022192034172"
@@ -1391,6 +1476,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/r40-colop-aperto.jpg?v=1741896238",
         "altText": "Timbro tondo Colop R30 (aperto)"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/15999878300028",
       "variantIds": [
         "gid://shopify/ProductVariant/56812647416188"
@@ -1436,6 +1522,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/38092.jpg?v=1782851619",
         "altText": "Timbro Printer R30 - diametro 30 mm - 5 righe - personalizzabile - autoinchiostrante - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036618273148",
       "variantIds": [
         "gid://shopify/ProductVariant/57125692309884"
@@ -1477,6 +1564,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48000.jpg?v=1782851987",
         "altText": "Timbro Printer 20 - 14 x 38 mm - 4 righe - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036618928508",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693555068"
@@ -1520,6 +1608,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48001.jpg?v=1782852046",
         "altText": "Timbro Printer 30 - 18 x 47 mm - 5 righe - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619026812",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693718908"
@@ -1563,6 +1652,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48002.jpg?v=1782852100",
         "altText": "Timbro Printer 40 - 23 x 59 mm - 6 righe - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619125116",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693817212"
@@ -1606,6 +1696,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48003.jpg?v=1782852241",
         "altText": "Timbro Printer 50 - 30 x 69 mm - 7 righe - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619190652",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693882748"
@@ -1649,6 +1740,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48004.jpg?v=1782852261",
         "altText": "Timbro Printer 60 - 37 x 76 mm - 8 righe - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619223420",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693915516"
@@ -1692,6 +1784,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48006.jpg?v=1782852283",
         "altText": "Timbro Pocket Stamp R40 - diametro 40 mm - 5 righe - autoinchiostrante - blu - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619256188",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693948284"
@@ -1733,6 +1826,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48524.jpg?v=1782852302",
         "altText": "Timbro quadrato 4921 - personalizzabile - 12 x 12 mm - 3 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619288956",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693981052"
@@ -1774,6 +1868,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/51187.jpg?v=1782852325",
         "altText": "Timbro Printer R40 - diametro 40 mm - 7 righe - personalizzabile - autoinchiostrante - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619321724",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694112124"
@@ -1815,6 +1910,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/61827.jpg?v=1782852358",
         "altText": "Timbro Printer 25 - 15x75 mm - allungato - autoinchiostrante - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619354492",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694144892"
@@ -1858,6 +1954,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/61839.jpg?v=1782852399",
         "altText": "Timbro Original Printy 4.0 4911 - personalizzabile - 38 x 14 mm - 4 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619518332",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694341500"
@@ -1899,6 +1996,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/61840.jpg?v=1782852418",
         "altText": "Timbro Original Printy 4.0 4912 - personalizzabile - 47 x 18 mm - 5 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619649404",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694538108"
@@ -1940,6 +2038,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/61841.jpg?v=1782852439",
         "altText": "Timbro Original Printy 4.0 4913 - personalizzabile - 58 x 22 mm - 6 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619682172",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694570876"
@@ -1981,6 +2080,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/65347.jpg?v=1782852484",
         "altText": "Timbro Original Printy 4.0 4915 - personalizzabile - 70 x 25 mm - 7 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619813244",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694701948"
@@ -2022,6 +2122,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/74929.jpg?v=1782852506",
         "altText": "Timbro Original Printy 4642 - autoinchiostrante - diametro 42 mm - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036619977084",
       "variantIds": [
         "gid://shopify/ProductVariant/57125695160700"
@@ -2060,6 +2161,7 @@
       "profileId": "gid://shopify/Product/16036620075388::gid://shopify/ProductVariant/57125695259004",
       "variantLabel": "",
       "image": null,
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620075388",
       "variantIds": [
         "gid://shopify/ProductVariant/57125695259004"
@@ -2101,6 +2203,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80445.jpg?v=1782852546",
         "altText": "Timbro Printer 10 - 10 x 27 mm - 3 righe - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620140924",
       "variantIds": [
         "gid://shopify/ProductVariant/57125695324540"
@@ -2144,6 +2247,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80450.jpg?v=1782852608",
         "altText": "Timbro Pocket Stamp Plus 20 - 14 x 38 mm - 4 righe - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620468604",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696536956"
@@ -2187,6 +2291,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80451.jpg?v=1782852636",
         "altText": "Timbro Pocket Stamp Plus 20 - 14 x 38 mm - 4 righe - autoinchiostrante - blu indaco - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620566908",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696799100"
@@ -2230,6 +2335,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80452.jpg?v=1782852661",
         "altText": "Timbro Pocket Stamp Plus 20 - 14 x 38 mm - 4 righe - autoinchiostrante - rosso rubino - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620599676",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696831868"
@@ -2273,6 +2379,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80454.jpg?v=1782852685",
         "altText": "Timbro Pocket Stamp Plus 30 - 18 x 47 mm - 5 righe - autoinchiostrante- nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620665212",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696930172"
@@ -2316,6 +2423,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80455.jpg?v=1782852709",
         "altText": "Timbro Pocket Stamp Plus 30 - 18 x 47 mm - 5 righe - autoinchiostrante - blu indaco- Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620697980",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696962940"
@@ -2359,6 +2467,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80456.jpg?v=1782852730",
         "altText": "Timbro Pocket Stamp Plus 30 - 18 x 47 mm - 5 righe - autoinchiostrante - rosso rubino - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620763516",
       "variantIds": [
         "gid://shopify/ProductVariant/57125697028476"
@@ -2402,6 +2511,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80457.jpg?v=1782852750",
         "altText": "Timbro Pocket Stamp Plus 30 - 18 x 47 mm - 5 righe - autoinchiostrante - verde - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620894588",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698470268"
@@ -2445,6 +2555,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80459.jpg?v=1782852771",
         "altText": "Timbro Printer R12 - diametro 12 mm - 2 righe - personalizzabile - autoinchiostrante - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620960124",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698535804"
@@ -2486,6 +2597,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80460.jpg?v=1782852792",
         "altText": "Timbro Printer R17 - diametro 17 mm - 3 righe - personalizzabile - autoinchiostrante - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036620992892",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698568572"
@@ -2527,6 +2639,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80461.jpg?v=1782852812",
         "altText": "Timbro Printer R24 - diametro 24 mm - 4 righe - personalizzabile - autoinchiostrante - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621091196",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698765180"
@@ -2568,6 +2681,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80462.jpg?v=1782852833",
         "altText": "Timbro Printer R45 - diametro 45 mm - 5 righe - personalizzabile - autoinchiostrante - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621156732",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698830716"
@@ -2609,6 +2723,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80466.jpg?v=1782852872",
         "altText": "Timbro Printer Q 24 - 24 x 24 mm - 6 righe - quadrato - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621222268",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698896252"
@@ -2650,6 +2765,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80469.jpg?v=1782852917",
         "altText": "Timbro Original Printy 4.0 4910 - personalizzabile - 26 x 10 mm - 3 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621353340",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699060092"
@@ -2693,6 +2809,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80470.jpg?v=1782852937",
         "altText": "Timbro Original Printy 4.0 4914 - personalizzabile - 64 x 26 mm - 7 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621484412",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699191164"
@@ -2734,6 +2851,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80471.jpg?v=1782852957",
         "altText": "Timbro Original Printy 4931 - personalizzabile - 70 x 30 mm - 7 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621582716",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699289468"
@@ -2776,6 +2894,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80472.jpg?v=1782852975",
         "altText": "Timbro Original Printy 4630 - diametro 30 mm - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621648252",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699355004"
@@ -2817,6 +2936,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80494.jpg?v=1782852994",
         "altText": "Timbro tascabile Mobile Printy 9440 - personalizzabile - 40 x 40 mm - 8 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621681020",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699584380"
@@ -2859,6 +2979,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/83126.jpg?v=1782853014",
         "altText": "Timbro Professional 5206 - personalizzabile - 56 x 33 mm - 8 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621713788",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699649916"
@@ -2903,6 +3024,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/86980.jpg?v=1782853053",
         "altText": "Timbro personalizzabile 5208 - 68 x 47 mm - 12 righe - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036621877628",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699846524"
@@ -2947,6 +3069,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/90216.jpg?v=1782853095",
         "altText": "Timbro tascabile Pocket Printy 9511 - personalizzabile - 38 x 14 mm - 4 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036622008700",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699977596"
@@ -2988,6 +3111,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/92563.jpg?v=1782853163",
         "altText": "Timbro quadrato 4922 - personalizzabile - 20 x 20 mm - 5 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036622172540",
       "variantIds": [
         "gid://shopify/ProductVariant/57125700206972"
@@ -3029,6 +3153,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/92564.jpg?v=1782853180",
         "altText": "Timbro quadrato 4923 - personalizzabile - 30 x 30 mm - 7 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036622205308",
       "variantIds": [
         "gid://shopify/ProductVariant/57125700272508"
@@ -3070,6 +3195,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/95207.jpg?v=1782853201",
         "altText": "Timbro Pocket Stamp Plus 40 - 23 x 59 mm - 6 righe - autoinchiostrante - nero - Colop - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036622238076",
       "variantIds": [
         "gid://shopify/ProductVariant/57125700305276"
@@ -3113,6 +3239,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/105373.jpg?v=1782853465",
         "altText": "Timbro personalizzabile 5211 - 85 x 55 mm - 15 righe - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036622991740",
       "variantIds": [
         "gid://shopify/ProductVariant/57125702467964"
@@ -3157,6 +3284,12 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/105419.jpg?v=1782853527",
         "altText": "Timbro quadrato 4924 - personalizzabile - 40 x 40 mm - 10 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [
+        {
+          "purpose": "loyalty",
+          "evidence": "merciale, viene impiegato per vidimazioni, controlli di qualità, tessere fedeltà, e per marcature con QR Code, oltre che per associazioni e albi. Il colore dell'inchiostro è nero e garantisce impronte nitide, i"
+        }
+      ],
       "productId": "gid://shopify/Product/16036623188348",
       "variantIds": [
         "gid://shopify/ProductVariant/57125702664572"
@@ -3202,6 +3335,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/105420.jpg?v=1782853550",
         "altText": "Timbro Original Printy 4638 - cartuccia non inclusa - diametro 38 mm - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036623221116",
       "variantIds": [
         "gid://shopify/ProductVariant/57125702795644"
@@ -3240,6 +3374,12 @@
       "profileId": "gid://shopify/Product/16036623417724::gid://shopify/ProductVariant/57125703188860",
       "variantLabel": "",
       "image": null,
+      "useCases": [
+        {
+          "purpose": "loyalty",
+          "evidence": "si quali vidimazioni in processi produttivi, controlli qualità e tessere fedeltà per bar ed esercizi commerciali. Dotato di sistema autoinchiostrante, garantisce impronte nitide e durature grazie all'inchiostro"
+        }
+      ],
       "productId": "gid://shopify/Product/16036623417724",
       "variantIds": [
         "gid://shopify/ProductVariant/57125703188860"
@@ -3281,6 +3421,7 @@
         "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/90217.jpg?v=1782853706",
         "altText": "Timbro tascabile Pocket Printy 9512 - personalizzabile - 47 x 18 mm - 5 righe - autoinchiostrante - Trodat - image 1"
       },
+      "useCases": [],
       "productId": "gid://shopify/Product/16036623712636",
       "variantIds": [
         "gid://shopify/ProductVariant/57125703975292"

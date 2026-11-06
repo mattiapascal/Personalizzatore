@@ -16,7 +16,7 @@ const directories: string[] = [];
 async function directory() { const path = await mkdtemp(join(tmpdir(), 'customizer-test-')); directories.push(path); return path; }
 afterEach(async () => { for (const path of directories.splice(0)) await rm(path, { recursive: true, force: true }); vi.restoreAllMocks(); });
 const config = () => readConfig({ AI_PROVIDER: 'openai', OPENAI_API_KEY: 'test-not-a-real-key', AI_BUDGET_USD: '1', SHOPIFY_SHOP_DOMAIN: 'zqu2eg-72.myshopify.com', SHOPIFY_ADMIN_ACCESS_TOKEN: 'test-not-a-real-token' });
-const argumentsFor = (patch: Record<string, unknown> = {}) => ({ dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const argumentsFor = (patch: Record<string, unknown> = {}) => ({ changeIntent: 'update', clearEvidence: null, dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 const request = () => AiRequestSchema.parse({ message: 'timbro per le fatture', sessionId: crypto.randomUUID(), revision: 3, requirements: { family: 'stamp' }, lastQuestion: 'Preferisci un autoinchiostrante?' });
 const answer = (args = argumentsFor({ family: 'stamp' }), extra = {}) => new Response(JSON.stringify({ status: 'completed', output: [{ type: 'function_call', name: 'collect_requirements', arguments: JSON.stringify(args) }], usage: { input_tokens: 100, output_tokens: 50 }, ...extra }), { status: 200 });
 const rawProducts = (): RawProduct[] => snapshot.products.map(p => ({ id: p.productId, title: p.title, handle: p.handle, status: p.status, onlineStoreUrl: p.url, updatedAt: '2026-10-26T17:46:07Z', tags: p.tags, descriptionHtml: '<p>Timbro personalizzabile con logo</p>', vendor: '', variants: { nodes: p.variantIds.map(id => ({ id, title: 'Default Title', selectedOptions: [], imprintWidth: { type: 'number_decimal', jsonValue: String(p.nominalAreaMm.width) }, imprintHeight: { type: 'number_decimal', jsonValue: String(p.nominalAreaMm.height) } })), pageInfo: { hasNextPage: false, endCursor: null } } }));
@@ -36,7 +36,7 @@ describe('OpenAI server: output tipizzato, contesto e quote', () => {
   });
   it('gestisce negazioni/cancellazioni strutturate senza cancellare requisiti estranei', () => {
     const session = updateRequirements(newSession(fixtureCatalog), { family: 'stamp', mechanism: 'automatic', hasLogo: true, lines: 6, sizeUnknown: true }, fixtureCatalog);
-    const call = proposalFromArguments(argumentsFor({ hasLogo: false, clearFields: ['mechanism'] }), session.revision);
+    const call = proposalFromArguments(argumentsFor({ changeIntent: 'withdraw', clearEvidence: 'togli la montatura', hasLogo: false, clearFields: ['mechanism'] }), session.revision);
     const next = selectionInteraction(initialInteraction(session), { type: 'tool', call }, fixtureCatalog);
     expect(next.session.requirements).toMatchObject({ family: 'stamp', hasLogo: false, lines: 6 });
     expect(next.session.requirements.mechanism).toBeUndefined();
@@ -44,7 +44,8 @@ describe('OpenAI server: output tipizzato, contesto e quote', () => {
   it('unknown cancella vecchie misure, coppie ambigue o contraddittorie sono rifiutate', () => {
     const call = proposalFromArguments(argumentsFor({ sizeUnknown: true }), 2);
     expect(call).toMatchObject({ expectedRevision: 2, arguments: { minimumAreaMm: null, sizeUnknown: true } });
-    for (const patch of [{ widthMm: 50 }, { widthMm: 50, heightMm: 20, sizeUnknown: true }, { clearFields: ['price'] }]) expect(() => proposalFromArguments(argumentsFor(patch), 2)).toThrow();
+    for (const patch of [{ widthMm: 50 }, { widthMm: 50, heightMm: 20, sizeUnknown: true }]) expect(proposalFromArguments(argumentsFor(patch), 2)).toMatchObject({ arguments: {}, clarification: expect.any(String) });
+    expect(() => proposalFromArguments(argumentsFor({ clearFields: ['price'] }), 2)).toThrow();
     expect(proposalFromArguments(argumentsFor({ hasLogo: false, clearFields: ['hasLogo'] }), 2)).toMatchObject({ arguments: { hasLogo: false }, clearFields: [] });
   });
   it('registra consumo prima della rete e non logga prompt nel registro', async () => {

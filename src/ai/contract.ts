@@ -6,11 +6,11 @@ import { updateRequirements } from '../selection/session.ts';
 import { ContentBriefSchema } from '../selection/content.ts';
 
 const envelope = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), expectedSessionId: z.string().uuid().optional() };
-export const RequirementFieldSchema = z.enum(['family', 'mechanism', 'material', 'shape', 'diameterMm', 'lines', 'hasLogo', 'minimumAreaMm', 'sizeUnknown', 'sizeIsEstimate']);
+export const RequirementFieldSchema = z.enum(['family', 'mechanism', 'material', 'shape', 'diameterMm', 'lines', 'hasLogo', 'minimumAreaMm', 'maximumAreaMm', 'sizeUnknown', 'sizeIsEstimate']);
 export const DialogueActSchema = z.enum(['answer', 'off_topic', 'unclear', 'help']);
 export const AiToolSchema = z.discriminatedUnion('tool', [
   z.strictObject({ ...envelope, tool: z.literal('collectRequirements'), arguments: RequirementsSchema,
-    clearFields: z.array(RequirementFieldSchema).max(10).optional(), clarification: z.string().min(1).max(300).nullable().optional(), dialogueAct: DialogueActSchema.optional(), contentBrief: ContentBriefSchema.optional() }),
+    clearFields: z.array(RequirementFieldSchema).max(11).optional(), clarification: z.string().min(1).max(300).nullable().optional(), dialogueAct: DialogueActSchema.optional(), contentBrief: ContentBriefSchema.optional() }),
   z.strictObject({ ...envelope, tool: z.literal('searchProducts'), arguments: RequirementsSchema }),
   z.strictObject({ ...envelope, tool: z.literal('recommendProducts'), arguments: z.strictObject({}) }),
   z.strictObject({ ...envelope, tool: z.literal('getProductProfile'), arguments: z.strictObject({ productId: z.string() }) }),

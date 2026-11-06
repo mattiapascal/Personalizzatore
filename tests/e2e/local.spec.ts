@@ -20,6 +20,49 @@ async function sendMessage(page: Page, message: string) {
   await expect(page.locator('.chat-message.assistant')).toHaveCount(before + 1);
 }
 const latest = (page: Page) => page.locator('.chat-message.assistant').last();
+
+test('tessere bar: proposta reale anticipata, domanda sulle caselline e accettazione nel canvas', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
+  runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  const requests: Record<string, unknown>[] = [];
+  await page.route('**/api/ai/interpret', route => {
+    const body = route.request().postDataJSON(); requests.push(body);
+    return route.fulfill({ json: { schemaVersion: 1, expectedRevision: body.revision, expectedSessionId: body.sessionId, tool: 'collectRequirements', arguments: requests.length === 1 ? { family: 'stamp' } : { hasLogo: true, maximumAreaMm: { width: 15, height: 15 }, sizeUnknown: false }, contentBrief: requests.length === 1 ? { purpose: 'loyalty' } : { kind: 'graphic', graphicSubject: 'logo' }, clarification: null } });
+  });
+  await page.goto('/'); await sendMessage(page, 'Voglio fare un timbro per le tessere abbonamento del mio bar');
+  await expect(latest(page)).toContainText('Colop Printer Q12'); await expect(latest(page)).toContainText('Quanto misurano le caselline');
+  await expect(page.getByTestId('field-montatura')).toHaveClass(/missing/);
+  const first = page.locator('.product-card').first();
+  await expect(first).toContainText('Q12'); await expect(first).toContainText('12 × 12');
+  await expect(first.getByRole('link')).toHaveAttribute('href', /incisoriasacchetti.it\/products\//);
+  await sendMessage(page, 'caselline quadrate di 15 mm, voglio un logo');
+  expect(requests[1]).toMatchObject({ lastQuestionField: 'targetArea', contentBrief: { purpose: 'loyalty' } });
+  expect(JSON.stringify(requests)).not.toContain('Colop Printer'); expect(JSON.stringify(requests)).not.toContain('gid://shopify');
+  await expect(page.getByTestId('field-dimensioni')).toContainText('Spazio max 15 × 15');
+  await first.getByRole('button', { name: 'Prova nel canvas' }).click();
+  await expect(page.getByTestId('editor-product')).toContainText('12 × 12 mm');
+  await page.getByRole('button', { name: '01 · Scegli il timbro' }).click();
+  await expect(page.getByTestId('field-montatura')).toHaveClass(/answered/);
+  await expect(page.getByTestId('field-forma')).toHaveClass(/answered/);
+});
+
+test('caselline 10×10: non presenta il Q12 intero come compatibile e spiega il limite', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
+  runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  let count = 0;
+  await page.route('**/api/ai/interpret', route => {
+    const body = route.request().postDataJSON(); count++;
+    return route.fulfill({ json: { schemaVersion: 1, expectedRevision: body.revision, tool: 'collectRequirements', arguments: count === 1 ? { family: 'stamp' } : { maximumAreaMm: { width: 10, height: 10 }, sizeUnknown: false }, contentBrief: { purpose: 'loyalty', kind: 'graphic' }, clarification: null } });
+  });
+  await page.goto('/'); await sendMessage(page, 'Un timbro per le tessere del bar con logo');
+  await expect(page.locator('.product-card').first()).toContainText('Q12');
+  await sendMessage(page, 'caselline 10 x 10 mm');
+  await expect(page.locator('.product-card')).toHaveCount(0);
+  await expect(latest(page)).toContainText('grafica ridotta, da verificare nel canvas');
+});
+
 async function openProductCanvas(page: Page, model = '4913') {
   await page.goto('/');
   await sendMessage(page, 'Timbro autoinchiostrante rettangolare, non so le misure');

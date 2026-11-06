@@ -9,6 +9,7 @@ import { AiRequestSchema, proposeOpenAi } from './openai.ts';
 import { CatalogService } from './catalog.ts';
 import { Meter } from './meter.ts';
 import type { RuntimeState } from '../src/runtime/schema.ts';
+import { createCatalog } from '../src/catalog/adapter.ts';
 
 export class LocalApi {
   readonly token = randomBytes(32).toString('hex');
@@ -53,7 +54,7 @@ export class LocalApi {
       if (this.calls.length >= 10) throw new Error('Troppe richieste AI: attendi un minuto');
       if (this.activeAi) throw new Error('Una richiesta AI è già in corso');
       this.calls.push(now); this.activeAi = true;
-      try { return await proposeOpenAi(input, this.config, this.meter, this.fetcher); }
+      try { return await proposeOpenAi(input, this.config, this.meter, this.fetcher, undefined, createCatalog(this.catalog.state.snapshot, this.catalog.state.version)); }
       finally { this.activeAi = false; }
     }
     throw new Error('Endpoint non disponibile');

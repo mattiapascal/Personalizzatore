@@ -26,7 +26,7 @@ Schemi Zod in `src/catalog/schema.ts`, `src/selection/schema.ts`, `src/ai/contra
 | Modello | Contenuto / confine |
 |---|---|
 | ProductProfile | Product/Variant GID reali, URL Admin, provenienza, versione, dimensioni nominali; vincoli ignoti null |
-| Requirements | Famiglia, montatura, materiale manuale, forma, righe/logo facoltativi, ingombro minimo o diametro o scelta non so |
+| Requirements | Famiglia, montatura, materiale manuale, forma, righe/logo facoltativi, ingombro minimo, spazio massimo disponibile, diametro o scelta non so |
 | Recommendation | Solo ID del catalogo, versione, ruleId e spiegazioni, verifiche pendenti |
 | SelectionSession | UUID pseudonimo, revisione, requisiti e candidati ricostruibili, selezione, versione catalogo, timestamp |
 | GraphicDocument | UUID, revisione, area nominale mm, oggetti con ID stabili; Product/Variant ID, versione catalogo e profilo commerciale; vincoli grafici ancora TEST |
@@ -36,6 +36,12 @@ Whitelist selezione: `collectRequirements`, `searchProducts`, `getProductProfile
 
 Whitelist grafica di questo incremento: `setText`, `moveObject`, `setObjectStyle`. Nessun JavaScript, HTML, URL logo o SVG arbitrario accettato. Non sono ancora implementati `addText`, logo, gruppi, rotazione o ridimensionamento. `DocumentStore.changeProduct` è un'azione esplicita della UI: conserva oggetti, verifica ingombri, aggiorna riferimenti e area e invalida revisioni precedenti. Fallimento atomico: documento e storico immutati. Successo: storico undo ricomincia, per non ripristinare un prodotto differente. Font/colore/margine attuali appartengono esclusivamente a `TEST-stamp-v1`, distinto da `catalogProductProfileVersion`.
 
+Prompt v8: il server trasmette anche `contentBrief` e `lastQuestionField`. Il modello restituisce delta; `clearFields` ha effetto soltanto con `changeIntent=withdraw` e `clearEvidence` presente nel messaggio corrente. Un valore unico completa il quadrato già noto; misure rettangolari parziali generano un chiarimento invece di un errore tecnico. Il contesto `targetArea` produce `maximumAreaMm`, separato dal minimo dell'impronta. L'evidenza di ritiro è un controllo del contratto, non una prova assoluta della correttezza semantica del modello.
+
+`advisor.ts` propone fino a tre profili prima del completamento del questionario per usi loyalty/ex-libris documentati nella scheda Shopify. Lo scopo del cliente è interpretato dall'AI; le espressioni nella descrizione del commerciante servono a ricavare un'evidenza verificabile del prodotto, non a interpretare il prompt cliente con parole chiave. I candidati rispettano i criteri già confermati. `acceptAdvice` rivalida e adotta montatura/forma soltanto al clic esplicito. Il catalogo può quindi aggiornare anche queste proposte attraverso le stesse letture periodiche, con regole di profilazione v3 e versionamento della cache.
+
+La condivisione facoltativa di massimo sei fatti catalogo con il modello è predisposta ma **disattivata** (`AI_SHARE_CATALOG_CONTEXT=false`): il primo test con quel payload è stato respinto dal controllo automatico, che richiede consenso esplicito. In modalità attuale lo storico assistant conserva separatamente la sola domanda semantica; titolo/ID/URL della proposta locale non vengono ricopiati nel contesto. L'attivazione futura consentirebbe solo titolo, meccanismo, forma, misure nominali ed estratti d'uso; nessun prezzo, immagine, URL o GID nei fatti trasmessi. Il modello rimarrebbe comunque privo del potere di certificare un prodotto.
+
 ## Selezione verificabile
 
 1. Se manca la famiglia, chiederla; poi la montatura (automatico, manuale, tascabile, a secco).
@@ -44,7 +50,7 @@ Whitelist grafica di questo incremento: `setText`, `moveObject`, `setObjectStyle
 4. Ordinare per area crescente, spareggio per ID. Nessun prezzo, disponibilità, punteggio AI o capacità di righe inventato.
 5. Mostrare dimensioni nominali e motivazioni; con misure ignote presentare possibilità esplorative. Layout e area utile richiedono conferma.
 
-Esempio storico nella fixture dei primi tre prodotti: 50×20 mm → 4913 (58×22) e 4915 (70×25). Il catalogo ampliato può restituire più alternative, sempre ordinate per area. Esempio corrente: a secco/tondo/diametro minimo 41 mm → varianti 41 e 51 mm. I manuali attuali attendono la compilazione dei metafield su Shopify. Ambiguità semantiche sospendono l'esposizione dei candidati fino alla risposta al chiarimento.
+Esempio storico nella fixture dei primi tre prodotti: 50×20 mm → 4913 (58×22) e 4915 (70×25). Il catalogo ampliato può restituire più alternative, sempre ordinate per area. Esempio corrente: a secco/tondo/diametro minimo 41 mm → varianti 41 e 51 mm. Dieci profili manuali hanno ora metafield compilati; restano cinque varianti senza dimensioni. Ambiguità semantiche sospendono l'esposizione dei candidati fino alla risposta al chiarimento. Per le caselline il filtro attuale è conservativo: confronta l'intera area nominale con il massimo; una grafica ridotta su una montatura maggiore non è ancora validata da questo percorso.
 
 ## Stato e persistenza
 

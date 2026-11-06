@@ -59,6 +59,31 @@
               }
             ]
           },
+          "useCases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "enum": [
+                    "loyalty",
+                    "exlibris"
+                  ]
+                },
+                "evidence": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 240
+                }
+              },
+              "required": [
+                "purpose",
+                "evidence"
+              ],
+              "additionalProperties": false
+            }
+          },
           "productId": {
             "type": "string",
             "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"

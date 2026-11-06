@@ -2,7 +2,7 @@ import { ProductProfileSchema, ProductImageSchema, type ProductProfile } from '.
 import type { RawProduct } from './catalog.ts';
 
 type Format = { width: number; height: number; shape: ProductProfile['shape'] };
-export const PROFILE_RULES_VERSION = 'mount-rules-v2-variant-metafields';
+export const PROFILE_RULES_VERSION = 'mount-rules-v3-advisory';
 const number = '(\\d+(?:[.,]\\d+)?)';
 const plain = (text: string) => text.replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/\s+/g, ' ').trim();
 const numeric = (value: string) => Number(value.replace(',', '.'));
@@ -42,6 +42,11 @@ export function deriveMountProfiles(p: RawProduct): { profiles: ProductProfile[]
   const body = plain(p.descriptionHtml);
   const summary = typeof p.technicalSummary?.jsonValue === 'string' ? plain(p.technicalSummary.jsonValue) : '';
   const source = body + ' ' + summary;
+  const useCases: NonNullable<ProductProfile['useCases']> = [];
+  for (const [purpose, pattern] of [['loyalty', /tessere\s+(?:punti|fedeltà)|raccolt[ae]\s+punti|abbonament|drink\s*card/i], ['exlibris', /ex[ -]?libris|propri\s+libri|contrassegnare.{0,60}libri/i]] as const) {
+    const match = pattern.exec(source);
+    if (match) useCases.push({ purpose, evidence: source.slice(Math.max(0, match.index - 65), match.index + 145).trim() });
+  }
   if (!/^timbro\b/i.test(p.title)) return { profiles: [], reason: 'Escluso: accessorio o articolo diverso da una montatura.' };
   if (/creativo|componibile|firma autografa|\bdatari|numerator|\bdata\b.*(?:gestione|altezza)/i.test(p.title) || /testo fisso|gestione della data|timbro datario|numeratore/i.test(source)) return { profiles: [], reason: 'Escluso: dicitura, firma o meccanismo speciale con layout dedicato non definito.' };
   const mechanism: ProductProfile['mechanism'] | null = /a secco/i.test(p.title) ? 'emboss'
@@ -80,6 +85,7 @@ export function deriveMountProfiles(p: RawProduct): { profiles: ProductProfile[]
     const supportsLogo = /logo|grafic|disegn|composizion/i.test(source) ? true : null;
     profiles.push(ProductProfileSchema.parse({
       image: ProductImageSchema.safeParse(p.featuredMedia?.preview?.image).data ?? null,
+      useCases,
       profileId: `${p.id}::${variant.id}`, productId: p.id, variantIds: [variant.id], variantLabel: variant.title === 'Default Title' ? '' : variant.title,
       handle: p.handle, title: p.title, status: p.status, url: p.onlineStoreUrl, tags: [...p.tags].sort(), profileVersion: 1,
       family: 'stamp', mechanism, mechanismSource: 'Shopify titolo/tag espliciti: ' + p.title, shape: area.shape, nominalAreaMm: { width: area.width, height: area.height }, materials,

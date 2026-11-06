@@ -3,6 +3,7 @@ import { executeTool, type AiTool } from '../ai/contract';
 import { chooseProduct, newSession, updateRequirements } from './session';
 import type { Requirements, SelectionSession } from './schema';
 import type { ContentBrief } from './content';
+import { adviseProducts } from './advisor';
 
 export interface SelectionInteraction {
   session: SelectionSession;
@@ -17,6 +18,7 @@ export type SelectionAction =
   | { type: 'tool'; call: AiTool }
   | { type: 'error'; message: string }
   | { type: 'choose'; productId: string }
+  | { type: 'acceptAdvice'; productId: string }
   | { type: 'catalog' }
   | { type: 'reset' };
 
@@ -29,6 +31,12 @@ export function initialInteraction(session: SelectionSession): SelectionInteract
 export function selectionInteraction(state: SelectionInteraction, action: SelectionAction, catalog: CatalogAdapter): SelectionInteraction {
   try {
     if (action.type === 'choose') return { ...state, session: chooseProduct(state.session, action.productId, catalog) };
+    if (action.type === 'acceptAdvice') {
+      if (!adviseProducts(catalog, state.session.requirements, state.contentBrief).some(c => c.profileId === action.productId)) throw new Error('Proposta non corrente');
+      const p = catalog.get(action.productId), r = state.session.requirements;
+      const updated = updateRequirements(state.session, { family: 'stamp', mechanism: r.mechanism ?? p.mechanism, shape: r.shape ?? p.shape, ...(p.mechanism === 'manual' && !r.material ? { material: p.materials?.[0] ?? 'any' } : {}), sizeUnknown: r.minimumAreaMm || r.maximumAreaMm || r.diameterMm ? false : true }, catalog);
+      return { ...state, session: chooseProduct(updated, action.productId, catalog) };
+    }
     const feedbackRevision = state.feedbackRevision + 1;
     switch (action.type) {
       case 'catalog': return { ...state, session: updateRequirements(state.session, {}, catalog), feedbackRevision, feedback: 'Ho aggiornato i modelli disponibili. La tua bozza resta conservata.' };

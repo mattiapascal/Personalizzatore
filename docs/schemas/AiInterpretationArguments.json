@@ -18,6 +18,32 @@
         }
       ]
     },
+    "changeIntent": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "update",
+            "withdraw"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "clearEvidence": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "contentText": {
       "anyOf": [
         {
@@ -190,6 +216,30 @@
       ],
       "description": "Altezza minima richiesta in millimetri; convertire i cm moltiplicando per 10."
     },
+    "targetWidthMm": {
+      "anyOf": [
+        {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "targetHeightMm": {
+      "anyOf": [
+        {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "sizeUnknown": {
       "type": [
         "boolean",
@@ -197,7 +247,7 @@
       ]
     },
     "clearFields": {
-      "maxItems": 10,
+      "maxItems": 11,
       "type": "array",
       "items": {
         "type": "string",
@@ -210,6 +260,7 @@
           "lines",
           "hasLogo",
           "minimumAreaMm",
+          "maximumAreaMm",
           "sizeUnknown",
           "sizeIsEstimate"
         ]
@@ -230,6 +281,8 @@
   },
   "required": [
     "dialogueAct",
+    "changeIntent",
+    "clearEvidence",
     "contentText",
     "contentKind",
     "purpose",
@@ -243,6 +296,8 @@
     "hasLogo",
     "widthMm",
     "heightMm",
+    "targetWidthMm",
+    "targetHeightMm",
     "sizeUnknown",
     "clearFields",
     "clarification"

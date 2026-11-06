@@ -8,6 +8,7 @@ export const RequirementsSchema = z.strictObject({
   lines: z.number().int().min(1).max(30).optional(),
   hasLogo: z.boolean().optional(),
   minimumAreaMm: AreaSchema.nullable().optional(),
+  maximumAreaMm: AreaSchema.nullable().optional(),
   sizeUnknown: z.boolean().optional(),
   sizeIsEstimate: z.boolean().optional(),
 });

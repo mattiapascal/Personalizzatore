@@ -23,7 +23,7 @@ function manualTestSource() {
 const manualTestCatalog = () => createCatalog({ ...mountSnapshot, products: deriveMountProfiles(manualTestSource()).profiles }, 'TEST-synthetic-metafields');
 const measure: Measure = o => o.type === 'circle' ? { widthMm: o.radiusMm * 2 + o.strokeMm, heightMm: o.radiusMm * 2 + o.strokeMm }
   : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : { widthMm: 6, heightMm: 3 };
-const args = (patch: Record<string, unknown>) => ({ dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const args = (patch: Record<string, unknown>) => ({ changeIntent: 'update', clearEvidence: null, dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 
 describe('Montature reali: fonti, aggiornamenti e varianti', () => {
   it('legno tondo senza metafield resta in revisione anche se diametri e handle contengono numeri', () => {
@@ -114,7 +114,7 @@ describe('Montature: conversazione, selezione e geometrie', () => {
   it('schema AI separa diametro e ingombro, converte anche le cancellazioni', () => {
     expect(proposalFromArguments(args({ mechanism: 'emboss', diameterMm: 41, sizeUnknown: false }), 2)).toMatchObject({ arguments: { mechanism: 'emboss', diameterMm: 41, shape: 'round', minimumAreaMm: null, sizeUnknown: false } });
     expect(proposalFromArguments(args({ sizeUnknown: true }), 2)).toMatchObject({ arguments: { diameterMm: null, minimumAreaMm: null, sizeUnknown: true } });
-    expect(() => proposalFromArguments(args({ diameterMm: 35, widthMm: 20, heightMm: 10 }), 2)).toThrow();
+    expect(proposalFromArguments(args({ diameterMm: 35, widthMm: 20, heightMm: 10 }), 2)).toMatchObject({ arguments: {}, clarification: expect.stringContaining('diametro') });
   });
   it('rifiuta un testo nel quadrato circoscritto ma fuori dal cerchio; cambio variante conserva ID e stato', () => {
     const mountFixtureCatalog = manualTestCatalog();

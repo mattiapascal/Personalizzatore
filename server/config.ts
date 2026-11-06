@@ -9,6 +9,7 @@ export function readConfig(env: Record<string, string | undefined>) {
     AI_BUDGET_USD: z.coerce.number().min(0).max(10).default(0),
     AI_MAX_REQUESTS: z.coerce.number().int().min(1).max(200).default(100),
     AI_ENFORCE_LOCAL_LIMITS: z.enum(['true', 'false']).default('true').transform(value => value === 'true'),
+    AI_SHARE_CATALOG_CONTEXT: z.enum(['true', 'false']).default('false').transform(value => value === 'true'),
     SHOPIFY_SHOP_DOMAIN: z.enum(['', 'zqu2eg-72.myshopify.com']).default(''),
     SHOPIFY_ADMIN_ACCESS_TOKEN: z.string().default(''),
     SHOPIFY_CATALOG_QUERY: z.string().min(1).max(300).default('title:timbr*'),

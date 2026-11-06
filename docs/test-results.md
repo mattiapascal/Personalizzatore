@@ -1,5 +1,11 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Comprensione e proposta commerciale iniziale — 6 novembre 2026
+
+**97 unit test e 24 browser e2e superati**, build e controllo credenziali nel bundle superati; schemi rigenerati. Nuovi casi: delta senza ritiri indebiti, evidenza del ritiro nel messaggio corrente, quadrato scalare, rettangolo parziale, diametro, domanda tipizzata e brief nel provider; proposta reale anticipata, accettazione nel canvas, massimo disponibile distinto da minimo, assenza di catalogo nel payload predefinito e di titoli/GID ricopiati nello storico browser.
+
+AI reale: baseline v6, v7 e v8 su sette turni TEST ciascuna. V6 completa i campi ma propone due ritiri superflui; v7/v8 passano gli oracoli più forti senza quei ritiri. Ultima v8 **7/7**, 16.968 input/1.083 output, stima standard 0,0175995 USD, stesso modello e reasoning low. Il primo test con fatti catalogo è stato respinto dal controllo automatico: l'esecuzione riuscita usa fatti solo nel motore locale e condivisione forzata a false. Nessuna nuova query/modifica Shopify, migrazione, deploy o test umano Illustrator. Dettagli e limiti in [iteration-comprehension.md](iteration-comprehension.md).
+
 ## Chat, contenuti, anteprime e contatore informativo — 6 novembre 2026
 
 `npm run check`: **82 unit test e 22 browser e2e superati**, build e controllo credenziali nel bundle superati. Schemi rigenerati. Verificati layout stabile con scroll, riepilogo su colonne, foto e fallback esplicito, contenuto effettivo→stima→candidato→testo nel canvas, assenza del testo nel localStorage, messaggi fuori tema senza perdita dati, guard locale disattivabile senza rinunciare a validazione/frequenza/timeout. Corretti i primi tentativi falliti su attesa dell'avvio, resize e ripresa della domanda dopo ritiro della scelta.

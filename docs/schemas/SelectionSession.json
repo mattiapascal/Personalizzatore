@@ -99,6 +99,33 @@
             }
           ]
         },
+        "maximumAreaMm": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000
+                },
+                "height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000
+                }
+              },
+              "required": [
+                "width",
+                "height"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "sizeUnknown": {
           "type": "boolean"
         },
