@@ -106,4 +106,6 @@ server/ contiene API, provider reale, registro quote e lettura catalogo. src/ co
 
 Riferimenti: [specifica originale](01_Specifica_Progetto.md), [AGENTS](AGENTS.md), [architettura](docs/architecture.md), [piano backend e conferme](docs/iteration-backend.md), [risultati](docs/test-results.md), [costi](docs/costs-and-metrics.md), [integrazioni](docs/integrations.md), [collaudo Illustrator](docs/production-files.md). Il file _Codex citato in AGENTS non era presente; la specifica originale è preservata.
 
+Per un primo rilascio della sola selezione assistita: [piano di pubblicazione, hosting e coordinamento dei due Git](docs/publication-plan.md). Le [correzioni editoriali per la prossima versione](docs/next-release.md) sono registrate separatamente. Sono proposte e attività locali: nessuna pubblicazione autorizzata.
+
 Prima di un rilascio occorrono profili produttivi confermati, censimento dei modelli, miglioramento/valutazione del dialogo su frasi reali, collaudo umano Illustrator, accessibilità su dispositivi fisici, privacy e controlli di produzione. Nessun deploy o modifica a tema/BSS/PitchPrint, prezzi, varianti, carrello o checkout è incluso.
