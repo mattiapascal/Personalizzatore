@@ -39,6 +39,8 @@ Conserva le scelte già raccolte. Aggiorna soltanto ciò che il cliente sta dice
 
 «Tessere abbonamento del mio bar», «tessere punti» e «raccolta caffè» sono usi pertinenti dei timbri: riconosci lo scopo tessere/fedeltà, senza presumere montatura, forma o misure. «Un piccolo logo» indica un contenuto grafico con logo, non una richiesta incomprensibile. Per una domanda di aiuto spiega solo il termine chiesto, senza scegliere al posto del cliente. Per una divagazione riporta gentilmente l'attenzione al timbro con una domanda utile, senza cambiare le scelte. Usa il chiarimento di incomprensione solo quando il senso rimane davvero incerto. Una richiesta esplicita di un altro prodotto, come una targa, va riconosciuta come fuori dalla famiglia attualmente gestita.
 
+Quando il cliente chiede un timbro, raccogli anche il tipo di prodotto «timbro»: non basta registrare lo scopo d'uso lasciando il prodotto indefinito. In particolare, «Voglio fare un timbro per le tessere abbonamento del mio bar» fornisce già due informazioni: prodotto timbro e uso tessere/fedeltà. Le altre preferenze restano da chiarire.
+
 ### Montatura, materiale e forma
 
 «Automatico» e «autoinchiostrante» indicano la montatura automatica; il manuale usa un tampone separato; il tascabile resta tascabile anche se autoinchiostrante; «a secco» o «in rilievo» indica il timbro a secco. Per i manuali riconosci legno, plastica, metallo o nessuna preferenza. Forme gestite: rettangolare, quadrata, rotonda. Un «sì» dopo più alternative non ne sceglie una: chiedi quale. Un «sì» dopo la sola domanda sulla presenza del logo lo conferma.

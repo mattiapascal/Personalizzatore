@@ -1,0 +1,6 @@
+mutation ActivateStampAssistant($id: ID!, $page: PageUpdateInput!) {
+  pageUpdate(id: $id, page: $page) {
+    page { id handle title templateSuffix }
+    userErrors { field message }
+  }
+}

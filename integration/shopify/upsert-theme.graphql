@@ -1,0 +1,6 @@
+mutation InstallStampAssistant($themeId: ID!, $files: [OnlineStoreThemeFilesUpsertFileInput!]!) {
+  themeFilesUpsert(themeId: $themeId, files: $files) {
+    upsertedThemeFiles { filename checksumMd5 }
+    userErrors { field message filename }
+  }
+}

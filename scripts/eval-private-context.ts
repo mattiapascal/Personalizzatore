@@ -20,7 +20,7 @@ const meter = new Meter(resolve('.local/ai-meter.json')); await meter.load();
 const start = structuredClone(meter.state), ceilingUsd = 0.12;
 let reserveRun = 0, state = initialInteraction(newSession(mountFixtureCatalog));
 const vault = new PrivacyVault(), history: { role: 'user' | 'assistant'; text: string }[] = [];
-const results: { id: string; passed: boolean; facts: number; sessionUsd: number; error?: string }[] = [];
+const results: { id: string; passed: boolean; facts: number; sessionUsd: number; diagnostic?: { requirements: unknown; purpose?: string; kind?: string; advice: string[]; clarification: boolean }; error?: string }[] = [];
 const messages = ['Voglio fare un timbro per le tessere abbonamento del mio bar', 'un piccolo logo', 'caselline quadrate 15 x 15 mm'];
 const synthetic = 'Persona Esempio\nAzienda Fittizia Srl\ncliente@example.test';
 for (const [index, message] of [...messages, 'Testo: ' + synthetic].entries()) {
@@ -42,7 +42,8 @@ for (const [index, message] of [...messages, 'Testo: ' + synthetic].entries()) {
       : index === 1 ? state.session.requirements.hasLogo === true && state.contentBrief?.purpose === 'loyalty'
         : index === 2 ? state.session.requirements.maximumAreaMm?.width === 15 && state.session.requirements.maximumAreaMm.height === 15
           : state.contentBrief?.text === synthetic && response.tool === 'collectRequirements' && !!response.contentBrief?.text?.includes('[RISERVATO_');
-    results.push({ id: index < 3 ? 'loyalty-' + (index + 1) : 'opaque-content', passed, facts: payload.catalogFacts.length, sessionUsd: response.sessionUsage?.estimatedUsd ?? 0 });
+    results.push({ id: index < 3 ? 'loyalty-' + (index + 1) : 'opaque-content', passed, facts: payload.catalogFacts.length, sessionUsd: response.sessionUsage?.estimatedUsd ?? 0,
+      ...(!passed ? { diagnostic: { requirements: state.session.requirements, purpose: state.contentBrief?.purpose, kind: state.contentBrief?.kind, advice: adviseProducts(mountFixtureCatalog, state.session.requirements, state.contentBrief).map(c => c.productId), clarification: !!state.clarification } } : {}) });
     history.push({ role: 'assistant', text: modelQuestion(prompt).slice(0, 300) }, { role: 'user', text: message });
   } catch { results.push({ id: 'turn-' + index, passed: false, facts: payload.catalogFacts.length, sessionUsd: 0, error: 'Errore provider/contratto; nessuna risposta grezza salvata' }); break; }
 }
