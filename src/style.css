@@ -9,3 +9,8 @@ main,header{max-width:1440px}.intro{padding:24px 0 16px;max-width:none}.intro h1
 @media(max-width:960px){.selection-grid{grid-template-columns:1fr}.selection-grid>section:first-child{position:static}.requirements-summary dl{grid-template-columns:repeat(4,minmax(0,1fr))}.chat-log{height:clamp(320px,50dvh,480px)}}
 @media(max-width:520px){.chat-panel{padding:16px}.requirements-summary dl{grid-template-columns:repeat(2,minmax(0,1fr))}.chat-log{height:clamp(300px,46dvh,400px);padding:8px}.chat-message{font-size:13px;padding:10px;max-width:94%}.intro h1{font-size:34px}.chat-composer button{padding:10px}.product-card{padding:16px}}
 .content-estimate{background:#f5f4eb;border:1px solid #d9dfd0;border-radius:8px;padding:12px;margin:12px 0;font-size:12px}.content-estimate p{margin:6px 0}.content-estimate button{font-size:12px}
+
+/* Il compositore deve rientrare nella prima schermata, prima dei dettagli. */
+header{padding-top:12px;padding-bottom:12px}.brand{font-size:23px}.intro{padding:12px 0 8px}.intro>.eyebrow{display:none}.intro h1{font-size:36px;margin:6px 0}.intro p{margin:6px 0}.environment-notice{padding:8px 12px}.connection-status{margin:8px 0;padding:8px 12px}nav{margin:12px 0}nav button{padding:8px 12px}.chat-panel{padding:16px}.chat-panel h2{font-size:26px;margin:6px 0 12px}.chat-log{height:var(--chat-height,220px)}.chat-composer label{margin:8px 0 6px}.chat-composer textarea{min-height:60px;padding:8px 12px}.chat-composer button{padding:8px 12px}
+@media(max-width:520px){.intro h1{font-size:28px}.intro p{display:none}.chat-log{height:var(--chat-height,180px)}}
+@media(max-height:680px){header{padding-top:6px;padding-bottom:6px}nav{margin:8px 0}}

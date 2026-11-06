@@ -23,6 +23,32 @@ async function sendMessage(page: Page, message: string) {
 }
 const latest = (page: Page) => page.locator('.chat-message.assistant').last();
 
+for (const apostrophe of ["'", '’']) test(`frase segnalata con apostrofo ${apostrophe}: invio diretto, senza falsa verifica privacy`, async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
+  runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  const messages: string[] = [];
+  await page.route('**/api/ai/interpret', route => { const body = route.request().postDataJSON(); messages.push(body.message); return route.fulfill({ json: { schemaVersion: 1, expectedRevision: body.revision, expectedSessionId: body.sessionId, tool: 'collectRequirements', arguments: { family: 'stamp' }, contentBrief: { purpose: 'loyalty' } } }); });
+  await page.goto('/');
+  const message = `Vorrei fare un timbro per le tessere dell${apostrophe}abbonamento al caffè per il mio bar`;
+  await page.getByLabel('Scrivi un messaggio', { exact: true }).fill(message);
+  await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  await expect(latest(page)).toContainText('Quanto misurano le caselline');
+  expect(messages).toEqual([message]);
+  await expect(page.getByRole('region', { name: 'Verifica privacy prima dell’invio' })).toHaveCount(0);
+  await expect(page.locator('.product-card').first()).toContainText('Q12');
+});
+
+for (const viewport of [{ width: 1366, height: 768 }, { width: 1440, height: 900 }, { width: 390, height: 844 }, { width: 390, height: 667 }, { width: 360, height: 640 }]) test(`compositore visibile all’apertura senza scroll ${viewport.width}×${viewport.height}`, async ({ page }) => {
+  await page.setViewportSize(viewport); await page.goto('/');
+  await page.getByTestId('chat-log').waitFor();
+  await expect.poll(async () => { const box = await page.getByRole('button', { name: 'Invia messaggio' }).boundingBox(); return box ? box.y + box.height : Infinity; }).toBeLessThanOrEqual(viewport.height - 8);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  const input = await page.getByLabel('Scrivi un messaggio', { exact: true }).boundingBox(); expect(input!.y).toBeGreaterThan(0);
+  const chat = await page.getByTestId('chat-log').boundingBox(); expect(chat!.height).toBeLessThanOrEqual(320);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('privacy: nessuna rete prima della verifica, annullamento, storico protetto e originali nel canvas', async ({ page }) => {
   const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null, sessionBudgetUsd: 0.05, catalogContextEnabled: true };
   await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));

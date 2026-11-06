@@ -48,6 +48,8 @@ Prima di qualsiasi invio AI, il browser sostituisce dati identificativi riconosc
 
 `AI_SESSION_BUDGET_USD=0.05` imposta un tetto prudenziale per conversazione, sempre attivo anche quando il contatore cumulativo è informativo. I token noti sostituiscono la riserva; errori senza usage la mantengono. Il tetto può fermare la chiamata prima del costo effettivo massimo. Non identifica una persona fra nuove chat, non cambia i limiti dell'account e non certifica fatturazione o token gratuiti.
 
+La chat si adatta allo spazio necessario per mostrare il compositore all'apertura, mantenendo lo scroll dei messaggi. «dell'abbonamento»/«dell’abbonamento» sono gestiti come elisioni di un termine noto, mentre nomi come D’Angelo restano protetti. Casi e schermate verificate in [iteration-elisions-layout.md](docs/iteration-elisions-layout.md); `npm run capture:chat -- --opening` acquisisce l'apertura desktop/mobile senza chiamate AI.
+
 Il campione aggiornato comprende 76 profili di variante su 66 prodotti reali, inclusi 10 manuali con metafield ora compilati. Sono supportati autoinchiostranti, manuali, tascabili e a secco, con forme rettangolari, quadrate e tonde. Prova «Timbro a secco rotondo, diametro 41 mm» oppure «Timbro manuale in legno, rotondo, diametro 35 mm». Sono filtri minimi: una misura maggiore può comparire come alternativa. Il prezzo resta sulla pagina Shopify. Il significato di No-AI è stato chiarito dal titolare: limita le funzioni generative di PitchPrint e non questo assistente.
 
 ## Catalogo aggiornabile

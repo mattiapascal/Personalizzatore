@@ -1,5 +1,9 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Apostrofi e input visibile all’apertura — 6 novembre 2026
+
+**116 unit test, 33 browser e2e, build e controllo segreti superati.** Riprodotti sei falsi positivi del filtro, corretti apostrofi diritti/tipografici, elisioni e composti tecnici senza ammettere i nomi dopo gli stessi prefissi. La frase esatta del titolare viene inviata integra senza anteprima privacy nei test browser, con risposta controllata e proposta Q12. Ridotto spazio superiore e chat dimensionata sullo spazio residuo del compositore; input e pulsante visibili senza scroll su cinque viewport, fino a 360×640. Catture iniziali desktop/mobile ispezionate. Nessuna chiamata AI a pagamento, modifica configurazione privata, Shopify o deploy; nessun test umano Illustrator. Dettagli in [iteration-elisions-layout.md](iteration-elisions-layout.md).
+
 ## Catalogo autorizzato, privacy locale e costo per conversazione — 6 novembre 2026
 
 Eval reale V9 **4/4** con catalogo sintetizzato e dati cliente TEST oscurati prima della rete: 11.316 token input/673 output, stima standard **0,0115155 USD** complessivi. Tre turni di selezione tessere/logo/caselline: **0,00875625 USD**; caso opaco separato: 0,00275925 USD. Nessuna garanzia di costo medio produttivo o anonimizzazione universale. Contesto autorizzato attivo nella configurazione privata, tetto per chat 0,05 USD confermato dal bootstrap; default condivisione false per nuove installazioni. Dettagli in [iteration-privacy-cost.md](iteration-privacy-cost.md).

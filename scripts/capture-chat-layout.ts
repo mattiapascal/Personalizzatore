@@ -7,7 +7,8 @@ const base = 'http://127.0.0.1:5173';
 const runtime: RuntimeState = { csrfToken: 'TEST-layout-capture'.repeat(3), ai: { mode: 'demo', ready: false, reason: 'Cattura TEST senza AI', model: '', budgetUsd: 0, reservedUsd: 0, requests: 0 }, catalog: { version: mountFixtureCatalog.version, snapshot: mountSnapshot, checkedAt: null, pending: [] }, sync: { configured: false, intervalSeconds: 300, lastError: null, refreshing: false } };
 const photos = new Set(mountSnapshot.products.flatMap(p => p.image ? [p.image.url] : []));
 const loyalty = process.argv.includes('--loyalty');
-if (loyalty) runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: 'Risposta TEST controllata, nessuna chiamata al provider' };
+const opening = process.argv.includes('--opening');
+if (loyalty || opening) runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: 'Risposta TEST controllata, nessuna chiamata al provider' };
 await mkdir('.local/previews', { recursive: true });
 const browser = await chromium.launch();
 try {
@@ -20,6 +21,15 @@ try {
     return route.fulfill({ json: { schemaVersion: 1, expectedRevision: body.revision, expectedSessionId: body.sessionId, tool: 'collectRequirements', arguments: { family: 'stamp' }, contentBrief: { purpose: 'loyalty' }, clarification: null } });
   });
   await page.goto(base);
+  if (opening) {
+    for (const [name, viewport] of [['desktop', { width: 1366, height: 768 }], ['mobile', { width: 360, height: 640 }]] as const) {
+      await page.setViewportSize(viewport); await page.goto(base); await page.getByTestId('chat-log').waitFor();
+      await expect.poll(async () => { const box = await page.getByRole('button', { name: 'Invia messaggio' }).boundingBox(); return box!.y + box!.height; }).toBeLessThanOrEqual(viewport.height - 8);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await page.screenshot({ path: `.local/previews/chat-opening-${name}.png` });
+    }
+    console.log(JSON.stringify({ captured: ['opening-desktop', 'opening-mobile'], aiCalls: 0 }));
+  } else {
   await page.getByLabel('Scrivi un messaggio', { exact: true }).fill(loyalty ? 'Voglio fare un timbro per le tessere abbonamento del mio bar' : 'Timbro autoinchiostrante rettangolare, 50 x 20 mm');
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   await page.locator('.product-card').first().waitFor();
@@ -31,4 +41,5 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('.chat-panel').screenshot({ path: `.local/previews/${prefix}-mobile.png` });
   console.log(JSON.stringify({ captured: ['desktop', 'mobile', 'product'], photosLoaded: await page.locator('.product-card img').evaluateAll(images => images.filter(img => (img as HTMLImageElement).naturalWidth > 0).length), aiCalls: 0 }));
+  }
 } finally { await browser.close(); }

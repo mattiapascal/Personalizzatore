@@ -35,6 +35,17 @@ describe('Privacy prima di qualsiasi rete', () => {
       expect(() => assertProtectedRequest(prepared.request)).not.toThrow();
     }
   });
+  it.each(["Vorrei fare un timbro per le tessere dell'abbonamento al caffè per il mio bar", 'Vorrei fare un timbro per le tessere dell’abbonamento al caffè per il mio bar', "Dell'abbonamento al caffè", 'Per l’impronta e un’illustrazione', "Nell'impronta con un'illustrazione", 'Ex-libris con un’illustrazione'])('non oscura elisioni tecniche: %s', message => {
+    const prepared = new PrivacyVault().prepare(input(message));
+    expect(prepared.request.message).toBe(message); expect(prepared.needsReview).toBe(false);
+    expect(() => assertProtectedRequest(prepared.request)).not.toThrow();
+  });
+  it.each(["Un timbro per D'Angelo", 'Un timbro per D’Angelo', 'Un timbro dell’Officina Aurora', "Un timbro per l'azienda Mario Rossi"])('apostrofi e articoli non rendono pubblici i nomi: %s', message => {
+    const prepared = new PrivacyVault().prepare(input(message));
+    expect(prepared.needsReview).toBe(true);
+    for (const name of ['Angelo', 'Officina', 'Aurora', 'Mario', 'Rossi']) expect(prepared.request.message).not.toContain(name);
+    expect(() => assertProtectedRequest(prepared.request)).toThrow('Verifica privacy');
+  });
   it('permette riferimenti a marchi già pubblici nel catalogo, senza aprire eccezioni ai dati cliente', () => {
     const titles = mountFixtureCatalog.list().map(p => p.title), vault = new PrivacyVault(titles);
     const prepared = vault.prepare(input('Colop Printer Q12 oppure Trodat Printy?'));

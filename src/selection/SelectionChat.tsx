@@ -46,7 +46,7 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
   const [usage, setUsage] = useState<SessionUsage | null>(null);
   const [turns, setTurns] = useState<{ id: number; role: 'user' | 'assistant'; text: string; contextText?: string }[]>(() => [{ id: 0, role: 'assistant', text: nextSelectionQuestion(session) }]);
   const counter = useRef(1), processed = useRef(feedbackRevision);
-  const logRef = useRef<HTMLDivElement>(null), inputRef = useRef<HTMLTextAreaElement>(null);
+  const logRef = useRef<HTMLDivElement>(null), inputRef = useRef<HTMLTextAreaElement>(null), composerRef = useRef<HTMLFormElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
   const scrollIntent = useRef(false);
@@ -54,6 +54,23 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
   const prompt = nextSelectionPrompt(session, contentBrief, catalog);
   const hasSuggestions = session.candidates.length > 0 || adviseProducts(catalog, session.requirements, contentBrief).length > 0;
   const question = clarification ?? prompt.text;
+  useLayoutEffect(() => {
+    const log = logRef.current, composer = composerRef.current, panel = log?.closest('.chat-panel'), grid = panel?.parentElement;
+    if (!active || !log || !composer || !panel || !grid) return;
+    const resize = () => {
+      // Posizione nel documento della griglia: resta stabile anche quando il
+      // pannello diventa sticky durante lo scroll della pagina.
+      const top = grid.getBoundingClientRect().top + window.scrollY + log.getBoundingClientRect().top - panel.getBoundingClientRect().top;
+      const composerSpace = composer.getBoundingClientRect().bottom - log.getBoundingClientRect().bottom;
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const available = Math.floor(viewportHeight - top - composerSpace - 16);
+      log.style.setProperty('--chat-height', `${Math.max(120, Math.min(320, available))}px`);
+    };
+    resize();
+    const observer = new ResizeObserver(resize); observer.observe(composer); observer.observe(grid); observer.observe(panel);
+    window.addEventListener('resize', resize); window.visualViewport?.addEventListener('resize', resize);
+    return () => { observer.disconnect(); window.removeEventListener('resize', resize); window.visualViewport?.removeEventListener('resize', resize); };
+  }, [active, readingHistory]);
   useEffect(() => {
     if (processed.current === feedbackRevision) return;
     processed.current = feedbackRevision;
@@ -117,7 +134,7 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
       </div>
     </div>
     {readingHistory && <button className="latest-message" onClick={() => { followLatest.current = true; logRef.current!.scrollTop = logRef.current!.scrollHeight; setReadingHistory(false); }}>Ultimo messaggio ↓</button>}
-    <form className="chat-composer" onSubmit={event => { event.preventDefault(); void submit(); }}>
+    <form ref={composerRef} className="chat-composer" onSubmit={event => { event.preventDefault(); void submit(); }}>
       <label htmlFor="request">Scrivi un messaggio</label><textarea ref={inputRef} id="request" rows={2} maxLength={1200} disabled={!!pending} value={message} placeholder="Raccontami cosa vuoi mettere nel timbro…" onChange={event => setMessage(event.target.value)}/>
       <button type="submit" className="primary" disabled={busy || !!pending || !message.trim() || (mode === 'server' && !runtime.ai.ready)}>{busy ? 'Attendi…' : 'Invia messaggio →'}</button>
     </form>

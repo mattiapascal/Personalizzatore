@@ -6,6 +6,7 @@ import { AiToolSchema, type AiTool } from '../ai/contract.ts';
 const ordinary = new Set(`a ad ai al alla alle allo all anche ancora alcuni altre altri altro almeno altezza alto automatico automatica automatici autoinchiostrante autoinchiostranti azienda aziendali aziendale bar basta bene bianco bisogno boh buongiorno caffè casella caselle caselline cerchio cerco che chiaro circa cm col con come composizione comprare conoscere contenuto contenuti cosa così ciao da dal dalla dalle dati dei del della delle dello devo di diametro dimensione dimensioni dire disposto dove due e è ed emboss es esempio esiste essere ex exlibris fare farlo fattura fatture fedeltà fino forma formato formati forse fra grazie grafica grafico grafiche grande grandi ha hai hanno ho i il impronta in incorporato indicare informazioni invece io la larghezza lato le legno libri libris logo loghi lo loro ma manuale manuali materiale materiali me mi mio mia miei mie misure mm montatura molto nero ne nel nella nelle nello nessuna no nome non noto note numeri numero o ok oppure ora ottone parte per perché piccolo piccola piccoli più plastica poco posso possiamo preferisco preferirei preferenza prima prodotto prodotti prova punti quadrata quadrate quadrati quadrato quale quali quanto quattro quello quella quelle quelli questo questa queste questi raccolta raccolte rettangolare rettangolo righe rilievo rispondi rotonda rotondo rotonde sapere scrivere scrivimi se secondo sei senza separato serva serve servirebbe sette si sì simbolo simboli so solo sono spazio stampare stima stimare su sul sulla targa targhe tascabile tascabili tampone testo testi tessera tessere ti timbrare timbri timbro tipo tre tu tua tuo tutti tutte un una uno uso utilizzo va vorrei voglio x abbonamento abbonamenti bancone veloci velocemente nonostante cambiare cambio togli togliere scelta preferenze nessun opzioni rettangolari uguale entrambe entrambi due diam min minimo minima minimi minime massimo massima massimi massime lunghezza larghe grandezza figura illustrazione illustrazioni soggetto gufo libro gatto cane disegno disegnare nome indirizzo partita iva codice fiscale telefono email pec fatture timpro bottega quadrato lato millimetri centimetri automatic senza dentro farebbe misurano vorresti mettere iniziale obiettivo utile utile chiarire puoi può puoi come logo prova test json svg ai api`.split(/\s+/));
 for (const word of 'preferisci preferire scegliere scegli indicato indicata indicare misurare previsto previste chiama chiamato confermare confermi'.split(' ')) ordinary.add(word);
 const tokenPattern = /\[RISERVATO_\d+\]/g;
+const words = /[\p{L}]+(?:['’\-][\p{L}]+)*/gu;
 const patterns: RegExp[] = [
   /https?:\/\/[^\s<>]+|\bwww\.[^\s<>]+/gi,
   /[\p{L}\d.!#$%&'*+/=?^_`{|}~-]+@[\p{L}\d.-]+\.[\p{L}]{2,}/giu,
@@ -32,6 +33,14 @@ export class PrivacyVault {
     const key = `[RISERVATO_${this.values.size + 1}]`; this.values.set(key, value); return key;
   }
   clear() { this.values.clear(); }
+  private knownWord(word: string): boolean {
+    const normalized = word.toLocaleLowerCase('it').replace(/’/g, "'");
+    if (this.vocabulary.has(normalized)) return true;
+    if (normalized.includes('-')) return normalized.split('-').every(part => this.knownWord(part));
+    const elision = /^(?:all|dall|dell|nell|sull|coll|l|d|un|quest|quell)'(.+)$/u.exec(normalized);
+    // Il prefisso grammaticale non autorizza il resto: d'Angelo resta privato.
+    return !!elision && this.vocabulary.has(elision[1]!);
+  }
   protect(text: string, opaque = false, maskUnknown = false): string {
     if (!text) return text;
     if (opaque) return /^\[RISERVATO_\d+\]$/.test(text) ? text : this.token(text);
@@ -42,14 +51,13 @@ export class PrivacyVault {
     const stash = (value: string) => { stored.push(value); return `\u0001${String.fromCharCode(0xe000 + stored.length - 1)}\u0002`; };
     result = result.replace(/\[(?:RISERVATO_\d+|DATO)\]/g, stash);
     for (const pattern of patterns) result = result.replace(pattern, value => stash(this.token(value)));
-    result = result.replace(/\b\p{Lu}[\p{L}'’-]+\b/gu, value => this.vocabulary.has(value.toLocaleLowerCase('it')) ? value : stash(this.token(value)));
-    if (maskUnknown) result = result.replace(/[\p{L}]+/gu, value => this.vocabulary.has(value.toLocaleLowerCase('it')) ? value : stash(this.token(value)));
+    result = result.replace(words, value => (maskUnknown || /^\p{Lu}/u.test(value)) && !this.knownWord(value) ? stash(this.token(value)) : value);
     result = result.replace(/\u0001([\ue000-\uf8ff])\u0002/g, (_, index: string) => stored[index.charCodeAt(0) - 0xe000]!);
     return result;
   }
   uncertain(text: string): boolean {
     const clean = text.replace(/\[(?:RISERVATO_\d+|DATO)\]/g, '');
-    return clean.match(/[\p{L}]+/gu)?.some(word => !this.vocabulary.has(word.toLocaleLowerCase('it'))) ?? false;
+    return clean.match(words)?.some(word => !this.knownWord(word)) ?? false;
   }
   prepare(input: AiRequest): { request: AiRequest; needsReview: boolean; localText?: string } {
     // Contenuto esplicitamente marcato o multilinea: opaco, mai fatto interpretare
