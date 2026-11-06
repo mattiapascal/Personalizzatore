@@ -19,6 +19,9 @@ test('pagina cliente: proposta reale e link prodotto, nessun laboratorio o diagn
   await page.getByLabel('Scrivi un messaggio').fill('Voglio timbrare le tessere abbonamento del mio bar');
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
   await expect(page.getByTestId('selection-feedback')).toContainText('caselline');
+  await expect(page.locator('.chat-message.user')).toHaveCSS('background-color', 'rgb(217, 253, 211)');
+  await expect(page.locator('.chat-message.assistant').first()).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.getByRole('button', { name: 'Mostra i modelli', exact: false })).toHaveCount(0);
   const card = page.locator('.product-card').filter({ hasText: 'Colop Printer Q12' });
   await expect(card).toBeVisible();
   await card.getByText('Perché questo modello').click();
@@ -44,12 +47,52 @@ test('privacy pubblica: nessuna chiamata prima delle due conferme, segnaposti ve
 });
 for (const size of [{ width: 1366, height: 768 }, { width: 390, height: 667 }]) test(`stile del tema e compositore visibile ${size.width}x${size.height}`, async ({ page }) => {
   await setup(page); await page.setViewportSize(size); await page.goto('/');
-  await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { origin: 'https://www.incisoriasacchetti.it', source: window, data: { type: 'is-assistant:theme', theme: { text: '#141414', heading: '#171717', accent: '#c71721', buttonText: '#ffffff', radius: 15, availableHeight: window.innerHeight - 160 } } })));
+  await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { origin: 'https://www.incisoriasacchetti.it', source: window, data: { type: 'is-assistant:theme', theme: { text: '#141414', heading: '#171717', accent: '#c71721', buttonText: '#ffffff', background: '#f1f1f1', radius: 15, availableHeight: window.innerHeight - 160 } } })));
   const send = page.getByRole('button', { name: 'Invia messaggio' });
-  await expect(send).toHaveCSS('background-color', 'rgb(199, 23, 33)');
-  await expect(send).toHaveCSS('border-radius', '15px');
-  expect((await send.boundingBox())!.y + (await send.boundingBox())!.height).toBeLessThan(size.height - 140);
+  await expect(send).toHaveCSS('background-color', 'rgb(0, 128, 105)');
+  await expect(send).toHaveCSS('border-radius', '50%');
+  expect(await send.evaluate(el => { const button = el.getBoundingClientRect(), input = el.parentElement!.querySelector('textarea')!.getBoundingClientRect(); return button.width === 44 && button.right < input.right && button.bottom < input.bottom; })).toBe(true);
+  await expect.poll(() => send.evaluate(el => el.getBoundingClientRect().bottom)).toBeLessThan(size.height - 160);
+  await expect.poll(() => send.evaluate(el => el.getBoundingClientRect().bottom)).toBeGreaterThan(size.height - 200);
+  await expect(page.getByTestId('chat-log')).toHaveCSS('background-color', 'rgb(239, 234, 226)');
+  expect((await page.locator('.requirements-summary').boundingBox())!.y).toBeGreaterThan(size.height - 160);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(size.width);
+  await page.screenshot({ path: `.local/previews/public-chat-${size.width}.png` });
+});
+test('Invio invia, Maiusc+Invio va a capo e la composizione IME non invia', async ({ page }) => {
+  await setup(page); let calls = 0;
+  await page.route('**/api/public/interpret', route => {
+    calls++; const input = route.request().postDataJSON();
+    return route.fulfill({ json: { schemaVersion: 1, tool: 'collectRequirements', expectedSessionId: input.sessionId, expectedRevision: input.revision, arguments: { family: 'stamp' }, clearFields: [], dialogueAct: 'answer', clarification: null } });
+  });
+  await page.goto('/'); await expect(page.locator('.security-check')).toHaveCount(0);
+  const input = page.getByLabel('Scrivi un messaggio');
+  await input.fill('Un timbro'); await input.press('Shift+Enter');
+  await expect(input).toHaveValue('Un timbro\n'); expect(calls).toBe(0);
+  await input.dispatchEvent('keydown', { key: 'Enter', isComposing: true }); expect(calls).toBe(0);
+  await input.press('Enter'); await expect.poll(() => calls).toBe(1);
+  await expect(input).toHaveValue('');
+});
+test('la cronologia scorre senza aumentare l’altezza del riquadro', async ({ page }) => {
+  await setup(page); await page.setViewportSize({ width: 1366, height: 768 });
+  await page.route('**/api/public/interpret', route => {
+    const input = route.request().postDataJSON();
+    return route.fulfill({ json: { schemaVersion: 1, tool: 'collectRequirements', expectedSessionId: input.sessionId, expectedRevision: input.revision, arguments: { family: 'stamp' }, contentBrief: { purpose: 'loyalty' }, clearFields: [], dialogueAct: 'answer', clarification: null } });
+  });
+  await page.goto('/');
+  await expect(page.locator('.security-check')).toHaveCount(0);
+  await expect.poll(() => page.getByRole('button', { name: 'Invia messaggio' }).evaluate(el => el.getBoundingClientRect().bottom)).toBeGreaterThan(740);
+  const log = page.getByTestId('chat-log');
+  const before = await log.evaluate(el => el.clientHeight);
+  for (let i = 0; i < 6; i++) {
+    await page.getByLabel('Scrivi un messaggio').fill('Un timbro per le tessere del mio bar');
+    await page.getByRole('button', { name: 'Invia messaggio' }).click();
+    await expect(page.locator('.chat-message.user')).toHaveCount(i + 1);
+    await expect(page.getByRole('button', { name: 'Attendi' })).toHaveCount(0);
+  }
+  await expect.poll(() => log.evaluate(el => el.clientHeight)).toBe(before);
+  expect(await log.evaluate(el => el.scrollHeight > el.clientHeight && el.scrollHeight - el.scrollTop - el.clientHeight < 4)).toBe(true);
+  await page.screenshot({ path: '.local/previews/public-chat-conversation.png' });
 });
 test('servizio indisponibile: percorso tradizionale disponibile senza campione o demo', async ({ page }) => {
   await setup(page, false, true); await page.goto('/');

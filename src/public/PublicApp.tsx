@@ -68,8 +68,7 @@ function Conversation({ data, offline }: { data: PublicBootstrap; offline: boole
   return <main className="public-assistant">
     {stale && <p className="notice" role="status">L’assistente sta aggiornando i modelli disponibili. Puoi continuare dal catalogo.</p>}
     <div className="selection-grid">
-      <section className="panel chat-panel" aria-labelledby="assistant-title"><h2 id="assistant-title">Troviamo il timbro adatto a te</h2>
-        <p className="intro-copy">Raccontaci come lo userai e cosa vuoi imprimere.</p>
+      <section className="panel chat-panel" aria-labelledby="assistant-title"><h2 id="assistant-title">Assistente timbri</h2>
         <p className="caption">Assistente AI: inviamo a OpenAI il testo protetto. Evita dati personali non necessari.</p>
         {!capability && data.aiReady && <div className="security-check"><div ref={security}/><p className="caption" role="status">{securityError || 'Un breve controllo di sicurezza prima di iniziare.'}</p>{securityError && <button onClick={() => { setSecurityError(''); setRetry(n => n + 1); }}>Riprova la verifica</button>}</div>}
         {!data.aiReady && !stale && <p role="status">L’assistente non è disponibile in questo momento. Puoi continuare dal catalogo.</p>}

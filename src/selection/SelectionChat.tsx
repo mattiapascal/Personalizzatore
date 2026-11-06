@@ -65,13 +65,15 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
       const composerSpace = composer.getBoundingClientRect().bottom - log.getBoundingClientRect().bottom;
       const viewportHeight = publicMode ? Number(document.documentElement.dataset.hostViewport) || window.innerHeight : window.visualViewport?.height ?? window.innerHeight;
       const available = Math.floor(viewportHeight - top - composerSpace - 16);
-      log.style.setProperty('--chat-height', `${Math.max(120, Math.min(publicMode ? 200 : 320, available))}px`);
+      log.style.setProperty('--chat-height', `${Math.max(120, Math.min(publicMode ? 1200 : 320, available))}px`);
     };
     resize();
-    const observer = new ResizeObserver(resize); observer.observe(composer); observer.observe(grid); observer.observe(panel);
+    let frame = 0;
+    const scheduleResize = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(resize); };
+    const observer = new ResizeObserver(scheduleResize); observer.observe(composer); observer.observe(grid); observer.observe(panel);
     window.addEventListener('resize', resize); window.visualViewport?.addEventListener('resize', resize);
-    return () => { observer.disconnect(); window.removeEventListener('resize', resize); window.visualViewport?.removeEventListener('resize', resize); };
-  }, [active, readingHistory]);
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('resize', resize); window.visualViewport?.removeEventListener('resize', resize); };
+  }, [active, readingHistory, publicMode]);
   useEffect(() => {
     if (processed.current === feedbackRevision) return;
     processed.current = feedbackRevision;
@@ -127,6 +129,10 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
       else await send(original, prepared.request, prepared.localText);
     } catch { dispatch({ type: 'error', message: 'Non riesco a preparare il testo protetto. Riduci il messaggio e verifica i dati da imprimere (massimo 480 caratteri).' }); }
   };
+  const composerInput = <textarea ref={inputRef} id="request" rows={2} maxLength={1200} disabled={!!pending} value={message} placeholder="Raccontami cosa vuoi mettere nel timbro…" onChange={event => setMessage(event.target.value)} onKeyDown={event => {
+    if (publicMode && event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void submit(); }
+  }}/>;
+  const sendButton = <button type="submit" className={publicMode ? 'chat-send' : 'primary'} aria-label={publicMode ? busy ? 'Attendi…' : 'Invia messaggio' : undefined} title={publicMode ? 'Invia con Invio · A capo con Maiusc+Invio' : undefined} disabled={busy || !!pending || !message.trim() || (mode === 'server' && !runtime.ai.ready)}>{publicMode ? busy ? <span aria-hidden="true">…</span> : <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2 3 23 12 2 21 2 14 17 12 2 10Z"/></svg> : busy ? 'Attendi…' : 'Invia messaggio →'}</button>;
   return <>
     <div ref={logRef} role="log" tabIndex={0} aria-label="Conversazione di selezione" aria-live="polite" aria-relevant="additions" className="chat-log" data-testid="chat-log" onWheel={() => { scrollIntent.current = true; }} onPointerDown={() => { scrollIntent.current = true; }} onKeyDown={e => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) scrollIntent.current = true; }} onScroll={() => { if (!scrollIntent.current) return; scrollIntent.current = false; const el = logRef.current!; followLatest.current = el.scrollHeight - el.clientHeight - el.scrollTop < 48; setReadingHistory(!followLatest.current); }}>
       <div ref={contentRef}>
@@ -136,15 +142,15 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
     </div>
     {readingHistory && <button className="latest-message" onClick={() => { followLatest.current = true; logRef.current!.scrollTop = logRef.current!.scrollHeight; setReadingHistory(false); }}>Ultimo messaggio ↓</button>}
     <form ref={composerRef} className="chat-composer" onSubmit={event => { event.preventDefault(); void submit(); }}>
-      <label htmlFor="request">Scrivi un messaggio</label><textarea ref={inputRef} id="request" rows={2} maxLength={1200} disabled={!!pending} value={message} placeholder="Raccontami cosa vuoi mettere nel timbro…" onChange={event => setMessage(event.target.value)}/>
-      <button type="submit" className="primary" disabled={busy || !!pending || !message.trim() || (mode === 'server' && !runtime.ai.ready)}>{busy ? 'Attendi…' : 'Invia messaggio →'}</button>
+      <label htmlFor="request" className={publicMode ? 'sr-only' : undefined}>Scrivi un messaggio</label>
+      {publicMode ? <div className="chat-input-shell">{composerInput}{sendButton}</div> : <>{composerInput}{sendButton}</>}
     </form>
     {pending && <PrivacyReview prepared={pending.prepared} onContinue={choices => {
       try { const reviewed = vault.current.review(pending.prepared, choices); void send(pending.original, reviewed.request, reviewed.localText); }
       catch { dispatch({ type: 'error', message: 'Indica la natura di ogni parte evidenziata per continuare.' }); }
     }} onCancel={() => setPending(null)}/>}
     {mode === 'server' && !publicMode && <p className="caption" aria-live="polite">Costo stimato di questa chat: {usage ? usage.estimatedUsd.toFixed(4) + ' USD' : 'non ancora disponibile'} · tetto {usage?.budgetUsd.toFixed(2) ?? runtime.ai.sessionBudgetUsd?.toFixed(2) ?? '0.05'} USD. Dati originali conservati solo in memoria nel browser.</p>}
-    <div className="chat-next">{!clarificationBlocksSelection && hasSuggestions && <button onClick={onShowResults}>Mostra i modelli →</button>}</div>
+    {!publicMode && <div className="chat-next">{!clarificationBlocksSelection && hasSuggestions && <button onClick={onShowResults}>Mostra i modelli →</button>}</div>}
     <RequirementSummary requirements={session.requirements}/>
     {!publicMode && <ContentEstimate brief={contentBrief} onUse={patch => dispatch({ type: 'patch', patch })}/>}
     <details className="chat-information"><summary>Informazioni sulla conversazione</summary>{publicMode ? <p>Usiamo OpenAI per comprendere le richieste. Prima dell’invio proteggiamo i dati riconosciuti; nei casi dubbi ti chiediamo conferma. Il controllo automatico può sbagliare: evita dati identificativi non necessari. Chat e contenuti originali restano in memoria sul dispositivo e si perdono ricaricando la pagina. Il nostro backend conserva contatori tecnici e di utilizzo, senza archiviare il testo della chat. Il trattamento da parte di OpenAI è distinto da questa conservazione locale.</p> : <><p>La chat e la mappa dei segnaposto restano in memoria e spariscono al ricaricamento. Nel browser salviamo solo requisiti strutturati e selezione per 24 ore. In modalità AI inviamo testo protetto, requisiti, brief protetto ed estratti degli ultimi sei scambi. Il filtro è prudenziale: nei casi dubbi la verifica locale è necessaria. I dati account OpenAI seguono le impostazioni del titolare; store:false non equivale a conservazione zero.</p><details><summary>Requisiti raccolti · revisione {session.revision}</summary><pre data-testid="requirements">{JSON.stringify(session.requirements, null, 2)}</pre></details></>}</details>
