@@ -1,0 +1,56 @@
+# Rilascio della selezione assistita — 6 novembre 2026
+
+## Ambito e stato
+
+Il titolare ha autorizzato il primo rilascio diretto sulla pagina `https://www.incisoriasacchetti.it/pages/crea-timbro-online`, riferendo di aver creato una copia di backup. Scelta: Cloudflare Free e aspetto coerente con il tema. Nessun piano a pagamento o modifica a BSS, PitchPrint, prodotti, prezzi, varianti, carrello o checkout.
+
+Preparazione locale completata; attivazione e verifica live ancora da completare. Il login Wrangler precedente è scaduto: richiesta ufficiale OAuth aperta per consenso del titolare. Nessuna credenziale va incollata in chat. Finché l'accesso non è ristabilito non dichiarare il servizio pubblicato o la pagina sostituita.
+
+## Due repository e base verificata
+
+- Applicazione: `mattiapascal/Personalizzatore`; Worker, UI cliente, prompt, contratti e test restano qui.
+- Tema: `mattiapascal/Mode-mio-5.2.0`; fetch eseguito, base `e465ac6`. Ramo isolato `feature/ai-stamp-assistant` nella worktree `.local/theme-ai-release`; la cartella tema originale rimane sul proprio `master`, senza aggiornamenti distruttivi.
+- Theme live riletto: `Mode mio 5.2.0`, ID `187575402876`, ruolo MAIN. Pagina `689437639036`, handle `crea-timbro-online`, template originale `wide`.
+- Rilevata una traduzione italiana già online e assente da Git: sincronizzata in un commit separato `d5a908f`. Non viene introdotto o modificato un comportamento checkout: si preserva il testo preesistente. Le nuove chiavi `ai_stamp` sono l'unico intervento nelle traduzioni durante il rilascio.
+- Backup locale ignorato da Git: `.local/release-backups/page-before.json` e `locales-before.json`, con corpi originali e checksum. Il corpo originale della pagina resta conservato su Shopify; la nuova resa usa un template dedicato.
+
+## Implementazione pubblica
+
+`cloudflare/index.ts` instrada API/asset e pianificazione; `AssistantStore` usa SQLite in un Durable Object. Nessun filesystem Node e nessun timer dipendente dal laptop. Aggiornamento catalogo ogni cinque minuti, import paginato e sostituzione solo dopo successo; oltre dieci minuti senza lettura completa nuove proposte sospese. Fonte misure invariata: metafield delle varianti.
+
+UI separata in `src/public/`: soltanto selezione, riepilogo compatto, foto, motivazioni commerciali e navigazione alla pagina prodotto. Nessun Fabric, demo, amministrazione, contatore globale o diagnostica del laboratorio. Nessun trasferimento automatico del testo a PitchPrint/BSS. L'iframe isola CSS/JS; font e colori provengono dalle impostazioni correnti del tema tramite messaggi con origine/sorgente controllati. Confermati online Nunito Sans, Raleway, rosso `#c71721`, raggio pulsanti 15 px. Niente modifiche ai CSS globali del tema.
+
+Pagina dedicata `templates/page.ai-timbro.json`, sezione `ai-stamp-assistant.liquid`, caricatore `ai-stamp-embed.js` e sole chiavi di traduzione nuove. Template condiviso `wide` intatto. Link tradizionali verificati: `/pages/timbri` e `/pages/templates-timbri`.
+
+## Sessioni, consumi e privacy
+
+- Turnstile verificato dal server con controllo hostname/azione; le sole verifiche client non sono sufficienti. Il widget è dedicato all'assistente.
+- Capacità casuale server: token nel browser e digest nello storage. L'UUID scelto dal client non controlla la quota. Un reset della chat non azzera il credito; un reload nella stessa scheda può riusare la capacità fino a scadenza. Massimo tre nuove capacità per bucket IP/giorno, quattro chiamate concorrenti globali e una per conversazione.
+- Il server non conserva l'IP originale: bucket HMAC giornaliero con segreto. Capacità/bucket e contatori per sessione scaduti vengono eliminati dall'aggiornamento pianificato; il conteggio globale aggregato rimane. Nessuna chat o mappa privata nel registro. Il limite IP può interessare clienti diversi dietro la stessa connessione condivisa: parametro prudenziale del pilota, da rivedere con dati reali aggregati.
+- Tetto iniziale globale **1 USD complessivo senza rinnovo automatico**, oltre a **0,05 USD per conversazione** e venti richieste per conversazione; massimo duecento richieste globali nel primo periodo. Il registro prenota il costo prima della rete e sostituisce le riserve note con il costo dei token. Un timeout senza uso noto conserva la riserva. Non è una fattura e non presume l'applicazione di token promozionali. Per ampliare il budget occorre una decisione esplicita del titolare; non azzerare lo storage per aggirarlo.
+- Originali e mappa privacy solo in memoria browser. Stessa protezione e conferma a due passaggi già collaudata; controllo aggiuntivo server prima del provider. Il filtro resta euristico, non una garanzia universale di anonimizzazione. Informazione visibile sul fornitore AI; trattamento OpenAI distinto dalla mancata archiviazione sul nostro backend. Le impostazioni di condivisione/retention del progetto OpenAI non vengono cambiate automaticamente.
+- Endpoint amministrativi protetti da segreto separato, nessun pulsante pubblico di refresh. Segreti caricati solo nel Worker, mai in template/JS o manifest. Logging delle richieste Worker disabilitato. Nessun inoltro automatico dei redirect verso destinatari diversi: `redirect:manual` e rifiuto delle risposte non riuscite.
+
+## Comandi e aggiornamenti delle regole
+
+`npm run assistant:generate` e `npm run check` operano soltanto in locale. Anche un push Git non pubblica.
+
+`npm run worker:package` compila UI/backend e prepara un dry-run senza upload. `npm run check:release` aggiunge al controllo locale il pacchetto Workers, test SQLite/HTTP simulati, browser cliente e ricerca delle credenziali negli asset pubblici. Non genera spesa AI.
+
+`npm run worker:deploy` è invece un comando di **pubblicazione reale**: prepara il pacchetto e lo invia all'account Cloudflare autenticato. Usarlo solo nel contesto di un rilascio autorizzato, dopo i controlli. È distinto dai comandi di modifica locale riportati nel promemoria in cima a `REGOLE_ASSISTENTE.md`.
+
+Un cambiamento delle sole istruzioni richiede rilascio del backend; il tema non va aggiornato se URL del servizio e contratto API restano compatibili. Un cambiamento del caricatore/template richiede anche il commit tematico e l'upload dei soli file coinvolti. Conservare commit sorgente, hash degli asset e ID versione Worker. Nessuna pipeline automatica Git→deploy.
+
+## Verifiche e completamento prima dell'attivazione della pagina
+
+Verifiche locali già eseguite: 189 unit test, 38 browser laboratorio, cinque browser cliente, build TypeScript dei due runtime e controllo credenziali negli asset. Test runtime Workers/SQLite superato con soli dati TEST e rete simulata: import multipagina, errore conservativo, privacy prima della rete, origine, quota server indipendente dal reset, concorrenza, contatori/catalogo dopo riavvio e limiti di apertura sessioni. Non è un test CPU del servizio remoto né un collaudo Illustrator.
+
+Theme Check locale: 277 file, nessun errore; tredici warning in file preesistenti, nessuna segnalazione sui nuovi file. L'helper Liquid della skill non parte per dipendenze mancanti; non dichiararlo superato. Il controllo CLI è stato eseguito come verifica effettiva dell'intero tema.
+
+Da completare: login Cloudflare, conferma del piano, creazione/configurazione del solo servizio e widget, upload segreti senza stamparli, lettura iniziale catalogo, prova online e misura delle risorse Free. Dopo esito positivo: caricare i soli file tema preparati, rileggerne hash, poi assegnare `ai-timbro` alla sola pagina autorizzata e verificare URL pubblico su desktop/mobile. Eseguire collaudo AI reale mirato entro budget già autorizzato, senza dati cliente. Registrare esiti e versioni; non dichiarare verificati passi non eseguiti.
+
+## Rollback
+
+Primo ripristino: riportare il template della pagina da `ai-timbro` a `wide`. Corpo, titolo e handle originali non vengono cancellati e tornano al percorso precedente. La nuova sezione e il caricatore non sono inclusi negli altri template: il ripristino non richiede sostituire tutto il tema. Se necessario ripristinare i soli file introdotti/modificati dalle copie verificate, senza toccare modifiche concomitanti.
+
+Per il backend, ripristinare una versione Worker verificata o disattivare l'assistente; non cancellare il registro consumi durante un rollback. Mantieni l'aggiornamento catalogo o segnala esplicitamente il servizio non disponibile. Nessuna migrazione BSS o operazione su carrello/ordini fa parte del ripristino.

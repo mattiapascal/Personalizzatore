@@ -574,8 +574,12 @@ test('chat stabile con scroll e riepilogo compatto su desktop e mobile', async (
   const desktop = await page.getByTestId('field-prodotto').boundingBox(), mount = await page.getByTestId('field-montatura').boundingBox();
   expect(mount!.y).toBeCloseTo(desktop!.y, 0);
   await page.setViewportSize({ width: 390, height: 844 });
-  const product = await page.getByTestId('field-prodotto').boundingBox(), mechanism = await page.getByTestId('field-montatura').boundingBox(), shape = await page.getByTestId('field-forma').boundingBox();
-  expect(product!.y).toBeCloseTo(mechanism!.y, 0); expect(shape!.y).toBeGreaterThan(product!.y);
+  await expect.poll(() => page.locator('.requirements-summary').evaluate(element => {
+    const product = element.querySelector('[data-testid="field-prodotto"]')!.getBoundingClientRect();
+    const mechanism = element.querySelector('[data-testid="field-montatura"]')!.getBoundingClientRect();
+    const shape = element.querySelector('[data-testid="field-forma"]')!.getBoundingClientRect();
+    return Math.abs(product.y - mechanism.y) < 0.5 && shape.y > product.y;
+  })).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 

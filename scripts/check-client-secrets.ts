@@ -14,5 +14,5 @@ async function check(directory: string): Promise<void> {
     }
   }
 }
-await check('dist');
+await check(process.argv[2] ?? 'dist');
 console.log('PASS bundle client: nessuna delle credenziali locali configurate presente negli asset.');

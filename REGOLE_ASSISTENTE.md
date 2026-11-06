@@ -1,5 +1,19 @@
 # Regole dell'assistente — guida modificabile
 
+## Promemoria rapido: applicare una modifica locale
+
+Apri un terminale nella cartella `PERSONALIZZATORE`. Modifica la sezione «Istruzioni attive per l'AI», salva il documento e poi esegui:
+
+```sh
+nvm use
+npm run assistant:generate
+npm run check
+```
+
+Se i controlli passano, riavvia il server locale con `npm run dev` e prova il caso modificato. Per fermare il server precedente premi Ctrl+C nel suo terminale. I test automatici non effettuano chiamate AI a pagamento; provare la chat con AI reale può consumare token.
+
+**Questi comandi NON aggiornano Cloudflare e NON modificano il negozio.** Generano e verificano soltanto i file su questo computer. Anche un commit/push Git non pubblica automaticamente le regole. Per renderle attive online occorre un rilascio separato del backend Cloudflare, dopo i controlli; il tema va aggiornato solo se cambia anche l'interfaccia o il contratto API. La procedura operativa del rilascio va seguita nella sua versione documentata, senza improvvisare comandi di deploy.
+
 Questo è il punto di partenza per il titolare e per chi lavora al progetto con Codex. Si può modificare con un editor di testo. Non inserire dati reali di clienti, chiavi o credenziali; usare esempi inventati.
 
 ## Che cosa cambia modificando questo file

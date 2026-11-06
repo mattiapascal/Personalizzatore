@@ -32,13 +32,14 @@ export function RequirementSummary({ requirements: r }: { requirements: Requirem
 }
 
 interface Props {
+  publicMode?: boolean;
   session: SelectionSession; feedback: string; feedbackRevision: number; clarification?: string | null; clarificationBlocksSelection?: boolean;
   contentBrief?: ContentBrief;
   catalog: CatalogAdapter;
   runtime: RuntimeState; mode: 'mock' | 'server'; busy: boolean; active: boolean;
   dispatch: (action: SelectionAction) => void; onBusy: (busy: boolean) => void; onComplete: () => void; onShowResults: () => void;
 }
-export function SelectionChat({ session, feedback, feedbackRevision, clarification, clarificationBlocksSelection, contentBrief, catalog, runtime, mode, busy, active, dispatch, onBusy, onComplete, onShowResults }: Props) {
+export function SelectionChat({ session, feedback, feedbackRevision, clarification, clarificationBlocksSelection, contentBrief, catalog, runtime, mode, busy, active, dispatch, onBusy, onComplete, onShowResults, publicMode = false }: Props) {
   const [message, setMessage] = useState('');
   const vault = useRef(new PrivacyVault(catalog.list().map(p => p.title)));
   useEffect(() => { vault.current.allowCatalogTitles(catalog.list().map(p => p.title)); }, [catalog]);
@@ -51,7 +52,7 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
   const followLatest = useRef(true);
   const scrollIntent = useRef(false);
   const [readingHistory, setReadingHistory] = useState(false);
-  const prompt = nextSelectionPrompt(session, contentBrief, catalog);
+  const prompt = nextSelectionPrompt(session, contentBrief, catalog, publicMode ? 'product' : 'canvas');
   const hasSuggestions = session.candidates.length > 0 || adviseProducts(catalog, session.requirements, contentBrief).length > 0;
   const question = clarification ?? prompt.text;
   useLayoutEffect(() => {
@@ -62,9 +63,9 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
       // pannello diventa sticky durante lo scroll della pagina.
       const top = grid.getBoundingClientRect().top + window.scrollY + log.getBoundingClientRect().top - panel.getBoundingClientRect().top;
       const composerSpace = composer.getBoundingClientRect().bottom - log.getBoundingClientRect().bottom;
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const viewportHeight = publicMode ? Number(document.documentElement.dataset.hostViewport) || window.innerHeight : window.visualViewport?.height ?? window.innerHeight;
       const available = Math.floor(viewportHeight - top - composerSpace - 16);
-      log.style.setProperty('--chat-height', `${Math.max(120, Math.min(320, available))}px`);
+      log.style.setProperty('--chat-height', `${Math.max(120, Math.min(publicMode ? 200 : 320, available))}px`);
     };
     resize();
     const observer = new ResizeObserver(resize); observer.observe(composer); observer.observe(grid); observer.observe(panel);
@@ -106,13 +107,13 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
     setTurns(previous => [...previous.slice(-39), { id: counter.current++, role: 'user', text: value }]);
     onBusy(true);
     try {
-      const provider = mode === 'mock' ? mockProvider : protectedRequest ? httpProvider(runtime.csrfToken, protectedRequest) : null;
+      const provider = mode === 'mock' ? mockProvider : protectedRequest ? httpProvider(runtime.csrfToken, protectedRequest, publicMode) : null;
       if (!provider) throw new Error('Prepara il testo protetto prima dell’invio');
       const response = await interpret(provider, value, session);
       const call = mode === 'mock' ? response : vault.current.restoreCall(response, localText);
       if (call.sessionUsage) setUsage(call.sessionUsage);
       dispatch({ type: 'tool', call });
-    } catch (error) { dispatch({ type: 'error', message: error instanceof Error ? `${error.message}. Riprova o seleziona esplicitamente la demo nelle impostazioni.` : 'Servizio non disponibile. Puoi riprovare.' }); }
+    } catch (error) { dispatch({ type: 'error', message: error instanceof Error ? publicMode ? error.message : `${error.message}. Riprova o seleziona esplicitamente la demo nelle impostazioni.` : 'Servizio non disponibile. Puoi riprovare.' }); }
     finally { onBusy(false); onComplete(); }
   };
   const submit = async () => {
@@ -142,11 +143,11 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
       try { const reviewed = vault.current.review(pending.prepared, choices); void send(pending.original, reviewed.request, reviewed.localText); }
       catch { dispatch({ type: 'error', message: 'Indica la natura di ogni parte evidenziata per continuare.' }); }
     }} onCancel={() => setPending(null)}/>}
-    {mode === 'server' && <p className="caption" aria-live="polite">Costo stimato di questa chat: {usage ? usage.estimatedUsd.toFixed(4) + ' USD' : 'non ancora disponibile'} · tetto {usage?.budgetUsd.toFixed(2) ?? runtime.ai.sessionBudgetUsd?.toFixed(2) ?? '0.05'} USD. Dati originali conservati solo in memoria nel browser.</p>}
+    {mode === 'server' && !publicMode && <p className="caption" aria-live="polite">Costo stimato di questa chat: {usage ? usage.estimatedUsd.toFixed(4) + ' USD' : 'non ancora disponibile'} · tetto {usage?.budgetUsd.toFixed(2) ?? runtime.ai.sessionBudgetUsd?.toFixed(2) ?? '0.05'} USD. Dati originali conservati solo in memoria nel browser.</p>}
     <div className="chat-next">{!clarificationBlocksSelection && hasSuggestions && <button onClick={onShowResults}>Mostra i modelli →</button>}</div>
     <RequirementSummary requirements={session.requirements}/>
-    <ContentEstimate brief={contentBrief} onUse={patch => dispatch({ type: 'patch', patch })}/>
-    <details className="chat-information"><summary>Informazioni sulla conversazione</summary><p>La chat e la mappa dei segnaposto restano in memoria e spariscono al ricaricamento. Nel browser salviamo solo requisiti strutturati e selezione per 24 ore. In modalità AI inviamo testo protetto, requisiti, brief protetto ed estratti degli ultimi sei scambi. Il filtro è prudenziale: nei casi dubbi la verifica locale è necessaria. I dati account OpenAI seguono le impostazioni del titolare; store:false non equivale a conservazione zero.</p><details><summary>Requisiti raccolti · revisione {session.revision}</summary><pre data-testid="requirements">{JSON.stringify(session.requirements, null, 2)}</pre></details></details>
+    {!publicMode && <ContentEstimate brief={contentBrief} onUse={patch => dispatch({ type: 'patch', patch })}/>}
+    <details className="chat-information"><summary>Informazioni sulla conversazione</summary>{publicMode ? <p>Usiamo OpenAI per comprendere le richieste. Prima dell’invio proteggiamo i dati riconosciuti; nei casi dubbi ti chiediamo conferma. Il controllo automatico può sbagliare: evita dati identificativi non necessari. Chat e contenuti originali restano in memoria sul dispositivo e si perdono ricaricando la pagina. Il nostro backend conserva contatori tecnici e di utilizzo, senza archiviare il testo della chat. Il trattamento da parte di OpenAI è distinto da questa conservazione locale.</p> : <><p>La chat e la mappa dei segnaposto restano in memoria e spariscono al ricaricamento. Nel browser salviamo solo requisiti strutturati e selezione per 24 ore. In modalità AI inviamo testo protetto, requisiti, brief protetto ed estratti degli ultimi sei scambi. Il filtro è prudenziale: nei casi dubbi la verifica locale è necessaria. I dati account OpenAI seguono le impostazioni del titolare; store:false non equivale a conservazione zero.</p><details><summary>Requisiti raccolti · revisione {session.revision}</summary><pre data-testid="requirements">{JSON.stringify(session.requirements, null, 2)}</pre></details></>}</details>
     <button disabled={busy} className="text-button" onClick={() => { vault.current.clear(); setPending(null); setUsage(null); setTurns([]); dispatch({ type: 'reset' }); setMessage(''); }}>Azzera conversazione e requisiti</button>
   </>;
 }

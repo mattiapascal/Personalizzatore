@@ -4,6 +4,8 @@ Stato: piano verificabile, non autorizzazione a pubblicare, installare app, atti
 
 **Aggiornamento del titolare:** scelta iniziale **Cloudflare Workers Free**, con eventuale passaggio a Paid solo se necessario e approvato. La precedente preferenza tecnica Node è superata da questa scelta. Preparazione, limiti e verifiche necessarie sono in [cloudflare-free.md](cloudflare-free.md). Il backend Workers non è ancora implementato né pubblicato.
 
+**Autorizzazione successiva:** il titolare ha richiesto il primo rilascio diretto sulla pagina `/pages/crea-timbro-online`, dichiarando una copia di backup, e ha richiesto uno stile uniforme al tema. Backend Workers e UI pubblica sono ora implementati e collaudati localmente; l'attivazione online e le evidenze vanno registrate nel [registro del rilascio](release-cloudflare.md). I paragrafi iniziali conservano lo stato della proposta prima del consenso.
+
 ## Ambito consigliato
 
 Primo rilascio: una pagina pilota con assistente, riepilogo essenziale, anteprime e link ai prodotti attuali. Il cliente prosegue nei percorsi BSS/PitchPrint già esistenti. L'editor Fabric rimane nel laboratorio fino al collaudo produttivo di file, font, area utile e compatibilità Illustrator. Nessun trasferimento grafico/opzioni al carrello incluso. Se il titolare vuole rendere pubblico anche il canvas, serve un ambito e collaudo separato; non si presenta l'export TEST come file di produzione.

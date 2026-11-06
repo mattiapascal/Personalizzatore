@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { AiToolSchema, RequirementFieldSchema, DialogueActSchema, type AiTool } from '../src/ai/contract.ts';
 import type { Requirements } from '../src/selection/schema.ts';
 import type { Config } from './config.ts';
-import type { Meter } from './meter.ts';
+import type { UsageMeter } from './usage-meter.ts';
 import { MechanismSchema, ShapeSchema, MaterialSchema } from '../src/catalog/schema.ts';
 import { AiRequestSchema, type AiRequest } from '../src/ai/request.ts';
 import { assertProtectedRequest } from '../src/privacy/redaction.ts';
@@ -101,17 +101,17 @@ export function makeOpenAiBody(input: AiRequest, config: Config, catalog?: Catal
   };
 }
 
-export async function proposeOpenAi(input: AiRequest, config: Config, meter: Meter, fetcher: typeof fetch = fetch, signal?: AbortSignal, catalog?: CatalogAdapter): Promise<AiTool> {
+export async function proposeOpenAi(input: AiRequest, config: Config, meter: UsageMeter, fetcher: typeof fetch = fetch, signal?: AbortSignal, catalog?: CatalogAdapter): Promise<AiTool> {
   if (config.AI_PROVIDER !== 'openai' || !config.OPENAI_API_KEY || (config.AI_ENFORCE_LOCAL_LIMITS && config.AI_BUDGET_USD <= 0)) throw new Error('Configura AI_PROVIDER, OPENAI_API_KEY e AI_BUDGET_USD nel file .env.local');
   const body = makeOpenAiBody(input, config, catalog);
   const serialized = JSON.stringify(body);
   // Riserva conservativa: nessun rimborso su timeout/errori. Listino standard USD verificato 05/11/2026.
-  const reserved = ((Buffer.byteLength(serialized, 'utf8') + 2048) * 0.75 + body.max_output_tokens * 4.5) / 1_000_000;
+  const reserved = ((new TextEncoder().encode(serialized).length + 2048) * 0.75 + body.max_output_tokens * 4.5) / 1_000_000;
   await meter.reserve(reserved, config.AI_BUDGET_USD, config.AI_MAX_REQUESTS, config.AI_ENFORCE_LOCAL_LIMITS, { id: input.sessionId, budgetUsd: config.AI_SESSION_BUDGET_USD });
   const response = await fetcher('https://api.openai.com/v1/responses', {
     method: 'POST', headers: { Authorization: `Bearer ${config.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
     body: serialized, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20_000)]) : AbortSignal.timeout(20_000),
-    redirect: 'error',
+    redirect: 'manual',
   });
   if (!response.ok) throw new Error(response.status === 429 ? 'Limite del provider AI raggiunto. Riprova più tardi.' : 'Il provider AI ha rifiutato la richiesta. Controlla configurazione e accesso al modello.');
   const rawText = await response.text();

@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24.17.0 <25" },
+  "engines": {
+    "node": ">=24.17.0 <25"
+  },
   "scripts": {
     "assistant:generate": "node --import tsx scripts/compile-assistant-policy.ts",
     "assistant:check": "node --import tsx scripts/compile-assistant-policy.ts --check",
@@ -12,8 +14,14 @@
     "pretest": "npm run assistant:check",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
+    "build:storefront": "npm run assistant:check && tsc --noEmit && tsc --noEmit -p tsconfig.worker.json && vite build --config vite.storefront.config.ts",
+    "worker:dev": "WRANGLER_LOG_PATH=.local/wrangler-logs WRANGLER_SEND_METRICS=false wrangler dev --local --persist-to .local/worker-state",
+    "worker:package": "npm run build:storefront && WRANGLER_LOG_PATH=.local/wrangler-logs WRANGLER_SEND_METRICS=false wrangler deploy --dry-run --outdir .local/worker-package",
+    "worker:deploy": "npm run worker:package && WRANGLER_LOG_PATH=.local/wrangler-logs WRANGLER_SEND_METRICS=false wrangler deploy",
+    "test:worker": "node --import tsx scripts/test-worker.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:storefront": "playwright test --config playwright.storefront.config.ts",
     "schemas": "node --import tsx scripts/export-schemas.ts",
     "fixtures:editor": "node --import tsx scripts/export-editor-fixture.ts",
     "capture:lab": "node --import tsx scripts/capture-lab.ts",
@@ -27,8 +35,28 @@
     "eval:loyalty": "node --import tsx scripts/eval-loyalty-chat.ts",
     "eval:privacy": "node --import tsx scripts/eval-private-context.ts",
     "check:secrets": "node --import tsx scripts/check-client-secrets.ts",
+    "check:public-secrets": "node --import tsx scripts/check-client-secrets.ts .local/storefront-dist",
+    "check:release": "npm run check && npm run worker:package && npm run test:worker && npm run test:storefront && npm run check:public-secrets",
     "check": "npm test && npm run build && npm run check:secrets && npm run test:e2e"
   },
-  "dependencies": { "fabric": "7.4.0", "react": "19.3.1", "react-dom": "19.3.1", "zod": "4.6.7" },
-  "devDependencies": { "@playwright/test": "1.64.1", "@types/node": "22.20.5", "@types/react": "19.3.0", "@types/react-dom": "19.3.0", "@vitejs/plugin-react": "6.2.1", "tsx": "4.23.15", "typescript": "7.0.2", "vite": "8.3.6", "vitest": "5.1.0" }
+  "dependencies": {
+    "fabric": "7.4.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261106.1",
+    "@playwright/test": "1.64.1",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "miniflare": "5.20261104.0-beta",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.6",
+    "vitest": "5.1.0",
+    "wrangler": "4.158.0"
+  }
 }
