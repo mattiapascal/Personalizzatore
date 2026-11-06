@@ -2,6 +2,77 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "dialogueAct": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "answer",
+            "off_topic",
+            "unclear",
+            "help"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "contentText": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 480
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "contentKind": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "text",
+            "graphic",
+            "mixed"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "purpose": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "business",
+            "exlibris",
+            "loyalty",
+            "general"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "graphicSubject": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "family": {
       "anyOf": [
         {
@@ -126,7 +197,7 @@
       ]
     },
     "clearFields": {
-      "maxItems": 9,
+      "maxItems": 10,
       "type": "array",
       "items": {
         "type": "string",
@@ -139,7 +210,8 @@
           "lines",
           "hasLogo",
           "minimumAreaMm",
-          "sizeUnknown"
+          "sizeUnknown",
+          "sizeIsEstimate"
         ]
       }
     },
@@ -157,6 +229,11 @@
     }
   },
   "required": [
+    "dialogueAct",
+    "contentText",
+    "contentKind",
+    "purpose",
+    "graphicSubject",
     "family",
     "mechanism",
     "material",

@@ -11,6 +11,7 @@ export const CATALOG_QUERY = `query StampCatalog($query: String!, $after: String
   products(first: 50, after: $after, query: $query) {
     nodes {
       id title handle status onlineStoreUrl updatedAt tags descriptionHtml vendor
+      featuredMedia { preview { image { url altText } } }
       technicalSummary: metafield(namespace: "custom", key: "short_description") { jsonValue }
       variants(first: 50) {
         nodes {
@@ -30,6 +31,7 @@ export const RawProductSchema = z.object({
   id: z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/), title: z.string(), handle: z.string(),
   status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT', 'UNLISTED']), onlineStoreUrl: z.url().nullable(), updatedAt: z.iso.datetime(), tags: z.array(z.string()),
   descriptionHtml: z.string().default(''), vendor: z.string().default(''), technicalSummary: z.object({ jsonValue: z.unknown() }).nullable().optional(),
+  featuredMedia: z.object({ preview: z.object({ image: z.object({ url: z.string(), altText: z.string().nullable() }).nullable() }).nullable() }).nullable().optional(),
   variants: z.object({ nodes: z.array(z.object({ id: z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/), title: z.string().default(''), selectedOptions: z.array(z.object({ name: z.string(), value: z.string() })).default([]), imprintWidth: dimensionMetafield, imprintHeight: dimensionMetafield })), pageInfo }),
 });
 export type RawProduct = z.infer<typeof RawProductSchema>;

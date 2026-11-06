@@ -4,6 +4,8 @@ Progetto per Incisoria Sacchetti. Repository: [mattiapascal/Personalizzatore](ht
 
 **Prototipo locale, nessun deploy.** Chat con AI reale, selezione deterministica da catalogo Shopify aggiornabile, canvas Fabric.js collegato al prodotto e JSON/SVG. I profili grafici sono ancora TEST. BSS e PitchPrint continuano a funzionare nel negozio attuale.
 
+Aggiornamento interfaccia: chat più larga ad altezza fissa con scroll, requisiti compatti (quattro colonne desktop/due mobile), risultati come schede con foto Shopify e dettagli richiudibili. Il dialogo può partire dal contenuto: testo esatto → stima indicativa → scelta del formato → prima bozza nel canvas. Ex-libris e grafica vengono raccolti come brief, senza inventare un formato dal solo numero di righe. [Dettagli e verifiche](docs/iteration-chat-layout.md).
+
 ## Avvio
 
 Node 24.17.0 (fissato in .nvmrc), npm e Git:
@@ -21,6 +23,7 @@ Le credenziali sono **soltanto** in .env.local, ignorato da Git e privato. .env.
 - AI_PROVIDER=openai, OPENAI_API_KEY, modello fissato e AI_BUDGET_USD positivo per AI reale.
 - SHOPIFY_SHOP_DOMAIN e SHOPIFY_ADMIN_ACCESS_TOKEN con read_products per aggiornare il catalogo.
 - SHOPIFY_CATALOG_QUERY definisce l'ambito della lettura; CATALOG_POLL_SECONDS vale 300 per default.
+- AI_ENFORCE_LOCAL_LIMITS=false rende informativo il contatore cumulativo locale e affida il limite di spesa alle impostazioni dell'account; default true per nuove installazioni. Gli avvisi di budget OpenAI sono distinti dall'opzione Enforce a hard limit. Il registro non è una fattura. La copia privata del titolare usa false su sua indicazione; nessuna impostazione OpenAI viene modificata dall'app.
 
 Senza credenziali il pannello Collegamenti AI e catalogo spiega cosa manca. La demo a parole chiave rimane selezionabile esplicitamente; un errore dell'AI non attiva il parser di nascosto. Senza configurazione su una nuova installazione la demo è il default.
 
@@ -37,7 +40,7 @@ Il sistema raccoglie i parametri senza campi numerici o selettori esterni. Sotto
 
 Puoi dare più informazioni insieme, correggerti e rispondere ai chiarimenti. Righe/logo sono annotati quando indicati; non vengono trasformati in capacità di un modello inventate. La chat resta in memoria, senza salvataggio del testo libero. Nel browser persistono solo requisiti e selezione per 24 ore; un catalogo nuovo rivaluta i requisiti senza cancellarli. Azzera conversazione e requisiti riparte da zero.
 
-Il campione aggiornato comprende 66 profili di variante su 64 prodotti reali: autoinchiostranti, tascabili e a secco, con forme rettangolari, quadrate e tonde. Le montature manuali restano supportate dal dialogo e dall'editor, ma quelle attuali hanno i metafield dimensionali vuoti e sono sospese finché compilati. Prova «Timbro a secco rotondo, diametro 41 mm». Sono filtri minimi: una misura maggiore può comparire come alternativa. Il prezzo resta sulla pagina Shopify. Il significato di No-AI è stato chiarito dal titolare: limita le funzioni generative di PitchPrint e non questo assistente.
+Il campione aggiornato comprende 76 profili di variante su 66 prodotti reali, inclusi 10 manuali con metafield ora compilati. Sono supportati autoinchiostranti, manuali, tascabili e a secco, con forme rettangolari, quadrate e tonde. Prova «Timbro a secco rotondo, diametro 41 mm» oppure «Timbro manuale in legno, rotondo, diametro 35 mm». Sono filtri minimi: una misura maggiore può comparire come alternativa. Il prezzo resta sulla pagina Shopify. Il significato di No-AI è stato chiarito dal titolare: limita le funzioni generative di PitchPrint e non questo assistente.
 
 ## Catalogo aggiornabile
 
@@ -47,7 +50,7 @@ La UI controlla il backend ogni 10 secondi e applica automaticamente le nuove ve
 
 Ogni lettura ricostruisce i profili con regole versionate: **larghezza e altezza dell'impronta vengono esclusivamente dai metafield variante `custom.larghezza` e `custom.altezza`**, verificati come `number_decimal` in millimetri. Devono essere entrambi validi e positivi. Titoli/opzioni identificano la forma e descrizioni/tag il tipo di montatura; non sostituiscono dimensioni mancanti. Dati descrittivi discordanti sono segnalati nei controlli del candidato, lasciando autorevoli i metafield. Nuove varianti con dati sufficienti diventano disponibili senza aggiornare una lista manuale. ID e link identificano la variante esatta. La cache è legata anche alla versione delle regole.
 
-Lettura reale verificata: 228 prodotti letti, 214 attivi con URL pubblico; 66 profili su 64 prodotti (46 automatici, 17 tascabili, 3 a secco). 166 prodotti hanno esclusioni o segnalazioni, inclusi 16 prodotti utilizzabili con descrizioni discordanti. Su quattro prodotti mancano i metafield per 15 varianti: legno/ottone (7), legno tondo (3), plastica tondo (4), Pocket Stamp R40 (1). Nessun valore Shopify modificato. Datari/numeratori, diciture fisse, componibili e accessori richiedono percorsi dedicati. L'ambito è `title:timbr*`, non l'intero negozio. Il timer funziona solo a server aperto e riparte all'avvio; webhook e servizio persistente richiedono un ambiente autorizzato.
+Lettura reale aggiornata: 228 prodotti letti, 214 attivi con URL pubblico; 76 profili su 66 prodotti (46 automatici, 10 manuali, 17 tascabili, 3 a secco), 74 con foto. Restano cinque varianti senza dimensioni: plastica tondo (4) e Pocket Stamp R40 (1). Nessun valore Shopify modificato da questo progetto. Datari/numeratori, diciture fisse, componibili e accessori richiedono percorsi dedicati. L'ambito è `title:timbr*`, non l'intero negozio. Il timer funziona solo a server aperto e riparte all'avvio; webhook e servizio persistente richiedono un ambiente autorizzato.
 
 ## Canvas
 
@@ -75,6 +78,7 @@ I collaudi **reali**, separati dai test automatici, richiedono chiave e budget e
 npm run eval:ai
 npm run eval:ai -- conversione-cm
 npm run eval:ai -- --mounts
+npm run eval:ai -- --dialogue
 npm run eval:chat
 ~~~
 

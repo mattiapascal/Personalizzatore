@@ -10,7 +10,7 @@ import { createDocument, DocumentStore, type Measure } from '../src/editor/model
 import { proposalFromArguments } from '../server/openai';
 
 const source = (id: string) => RawProductSchema.parse(sources.products.find(p => p.id.endsWith('/' + id)));
-// Simulazione TEST di futura compilazione: i metafield manuali sono realmente vuoti su Shopify.
+// Valori controllati TEST, indipendenti dai successivi aggiornamenti del catalogo.
 function manualTestSource() {
   const p = source('15106681799036');
   for (const v of p.variants.nodes) {
@@ -23,11 +23,12 @@ function manualTestSource() {
 const manualTestCatalog = () => createCatalog({ ...mountSnapshot, products: deriveMountProfiles(manualTestSource()).profiles }, 'TEST-synthetic-metafields');
 const measure: Measure = o => o.type === 'circle' ? { widthMm: o.radiusMm * 2 + o.strokeMm, heightMm: o.radiusMm * 2 + o.strokeMm }
   : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : { widthMm: 6, heightMm: 3 };
-const args = (patch: Record<string, unknown>) => ({ family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const args = (patch: Record<string, unknown>) => ({ dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 
 describe('Montature reali: fonti, aggiornamenti e varianti', () => {
   it('legno tondo senza metafield resta in revisione anche se diametri e handle contengono numeri', () => {
     const p = source('15106681799036');
+    for (const v of p.variants.nodes) { v.imprintWidth = null; v.imprintHeight = null; }
     expect(p.handle).toContain('50');
     expect(deriveMountProfiles(p).profiles).toHaveLength(0);
     expect(deriveMountProfiles(p).reason).toContain('custom.larghezza/custom.altezza');

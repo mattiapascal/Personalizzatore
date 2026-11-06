@@ -22,7 +22,7 @@ try {
     await page.getByRole('button', { name: 'Invia messaggio' }).click();
     await expect(page.locator('.chat-message.assistant')).toHaveCount(before + 1, { timeout: 30_000 });
     const reply = await page.locator('.chat-message.assistant').last().innerText();
-    if (/non disponibile|non valida|Quota|non raggiungibile|occupato|rifiutato/i.test(reply)) throw new Error('Colloquio interrotto: servizio o quota non disponibile');
+    if (/non disponibile|non valida|Quota|Riserva prudenziale|Limite locale|non raggiungibile|occupato|rifiutato/i.test(reply)) throw new Error('Colloquio interrotto: servizio o quota non disponibile');
   }
   for (const field of ['prodotto', 'montatura', 'forma', 'dimensioni']) await expect(page.getByTestId('field-' + field)).toHaveClass(/answered/);
   await expect(page.locator('.product-card')).toHaveCount(candidates.length);

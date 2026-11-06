@@ -8,6 +8,10 @@
     {
       "profileId": "gid://shopify/Product/15104975208828::gid://shopify/ProductVariant/55018911105404",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/black147364_black.jpg?v=1741847507",
+        "altText": "Nero"
+      },
       "productId": "gid://shopify/Product/15104975208828",
       "variantIds": [
         "gid://shopify/ProductVariant/55018911105404"
@@ -48,6 +52,10 @@
     {
       "profileId": "gid://shopify/Product/15104977633660::gid://shopify/ProductVariant/55827724861820",
       "variantLabel": "Circolare 41x41 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_seal_chrom_41_ld_open.jpg?v=1741847607",
+        "altText": "Cromo (aperto)"
+      },
       "productId": "gid://shopify/Product/15104977633660",
       "variantIds": [
         "gid://shopify/ProductVariant/55827724861820"
@@ -90,6 +98,10 @@
     {
       "profileId": "gid://shopify/Product/15104977633660::gid://shopify/ProductVariant/55827724894588",
       "variantLabel": "Circolare 51x51 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_seal_chrom_41_ld_open.jpg?v=1741847607",
+        "altText": "Cromo (aperto)"
+      },
       "productId": "gid://shopify/Product/15104977633660",
       "variantIds": [
         "gid://shopify/ProductVariant/55827724894588"
@@ -132,6 +144,10 @@
     {
       "profileId": "gid://shopify/Product/15104977633660::gid://shopify/ProductVariant/55827724927356",
       "variantLabel": "Rettangolare 51x25 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_seal_chrom_41_ld_open.jpg?v=1741847607",
+        "altText": "Cromo (aperto)"
+      },
       "productId": "gid://shopify/Product/15104977633660",
       "variantIds": [
         "gid://shopify/ProductVariant/55827724927356"
@@ -172,8 +188,350 @@
       "availability": null
     },
     {
+      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973495676",
+      "variantLabel": "40x15 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15105044447612",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55018973495676"
+      ],
+      "handle": "timbro-in-legno-ed-ottone",
+      "title": "Timbro in legno ed ottone",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 40,
+        "height": 25
+      },
+      "materials": [
+        "wood",
+        "metal"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973495676, custom.larghezza=40 mm, custom.altezza=25 mm; nominale, area produttiva non validata",
+      "dataWarnings": [
+        "Dimensioni dai metafield variante; dati descrittivi discordanti: titolo variante."
+      ],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973528444",
+      "variantLabel": "60x30 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15105044447612",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55018973528444"
+      ],
+      "handle": "timbro-in-legno-ed-ottone",
+      "title": "Timbro in legno ed ottone",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 60,
+        "height": 30
+      },
+      "materials": [
+        "wood",
+        "metal"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973528444, custom.larghezza=60 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973561212",
+      "variantLabel": "60x40 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15105044447612",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55018973561212"
+      ],
+      "handle": "timbro-in-legno-ed-ottone",
+      "title": "Timbro in legno ed ottone",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 60,
+        "height": 40
+      },
+      "materials": [
+        "wood",
+        "metal"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973561212, custom.larghezza=60 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973593980",
+      "variantLabel": "Diam. 30 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15105044447612",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55018973593980"
+      ],
+      "handle": "timbro-in-legno-ed-ottone",
+      "title": "Timbro in legno ed ottone",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "round",
+      "nominalAreaMm": {
+        "width": 30,
+        "height": 30
+      },
+      "materials": [
+        "wood",
+        "metal"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973593980, custom.larghezza=30 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973626748",
+      "variantLabel": "Diam. 40 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15105044447612",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55018973626748"
+      ],
+      "handle": "timbro-in-legno-ed-ottone",
+      "title": "Timbro in legno ed ottone",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "round",
+      "nominalAreaMm": {
+        "width": 40,
+        "height": 40
+      },
+      "materials": [
+        "wood",
+        "metal"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973626748, custom.larghezza=40 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973659516",
+      "variantLabel": "30x60 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15105044447612",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55018973659516"
+      ],
+      "handle": "timbro-in-legno-ed-ottone",
+      "title": "Timbro in legno ed ottone",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 30,
+        "height": 60
+      },
+      "materials": [
+        "wood",
+        "metal"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973659516, custom.larghezza=30 mm, custom.altezza=60 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/15105044447612::gid://shopify/ProductVariant/55018973692284",
+      "variantLabel": "40x60 mm",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15105044447612",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55018973692284"
+      ],
+      "handle": "timbro-in-legno-ed-ottone",
+      "title": "Timbro in legno ed ottone",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "rectangle",
+      "nominalAreaMm": {
+        "width": 40,
+        "height": 60
+      },
+      "materials": [
+        "wood",
+        "metal"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno ed ottone",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55018973692284, custom.larghezza=40 mm, custom.altezza=60 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
       "profileId": "gid://shopify/Product/15106096497020::gid://shopify/ProductVariant/55021442564476",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4913_p4_h_fuchsia_720x600_2.jpg?v=1741878147",
+        "altText": "Viola"
+      },
       "productId": "gid://shopify/Product/15106096497020",
       "variantIds": [
         "gid://shopify/ProductVariant/55021442564476"
@@ -215,6 +573,10 @@
     {
       "profileId": "gid://shopify/Product/15106099904892::gid://shopify/ProductVariant/55021456032124",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4912_p4_hr_white577cd3c12e8b0_720x600_4.jpg?v=1741878276",
+        "altText": "Bianco"
+      },
       "productId": "gid://shopify/Product/15106099904892",
       "variantIds": [
         "gid://shopify/ProductVariant/55021456032124"
@@ -256,6 +618,10 @@
     {
       "profileId": "gid://shopify/Product/15106103345532::gid://shopify/ProductVariant/55021468352892",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4910_p4_flamered_720x600_3.jpg?v=1741878403",
+        "altText": "Rosso"
+      },
       "productId": "gid://shopify/Product/15106103345532",
       "variantIds": [
         "gid://shopify/ProductVariant/55021468352892"
@@ -297,6 +663,10 @@
     {
       "profileId": "gid://shopify/Product/15106107048316::gid://shopify/ProductVariant/55021484573052",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4911_1_1000x1000_720x600_3.jpg?v=1745407845",
+        "altText": "Nero"
+      },
       "productId": "gid://shopify/Product/15106107048316",
       "variantIds": [
         "gid://shopify/ProductVariant/55021484573052"
@@ -338,6 +708,10 @@
     {
       "profileId": "gid://shopify/Product/15106110226812::gid://shopify/ProductVariant/55021500793212",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_4917_1_1000x1000_720x600_1.jpg?v=1741878651",
+        "altText": "Nero"
+      },
       "productId": "gid://shopify/Product/15106110226812",
       "variantIds": [
         "gid://shopify/ProductVariant/55021500793212"
@@ -379,6 +753,10 @@
     {
       "profileId": "gid://shopify/Product/15106114158972::gid://shopify/ProductVariant/55021514097020",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4926_4_1000x1000577cccfe526f1_720x600_1.jpg?v=1741878777",
+        "altText": "Nero"
+      },
       "productId": "gid://shopify/Product/15106114158972",
       "variantIds": [
         "gid://shopify/ProductVariant/55021514097020"
@@ -420,6 +798,10 @@
     {
       "profileId": "gid://shopify/Product/15106117566844::gid://shopify/ProductVariant/55021526548860",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4915_p4_skyblue_720x600_1.jpg?v=1741878904",
+        "altText": "Blu"
+      },
       "productId": "gid://shopify/Product/15106117566844",
       "variantIds": [
         "gid://shopify/ProductVariant/55021526548860"
@@ -461,6 +843,10 @@
     {
       "profileId": "gid://shopify/Product/15106121105788::gid://shopify/ProductVariant/55021536051580",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4929_4_1000x1000577ccc8bd646a_720x600_1.jpg?v=1741879027",
+        "altText": "Nero"
+      },
       "productId": "gid://shopify/Product/15106121105788",
       "variantIds": [
         "gid://shopify/ProductVariant/55021536051580"
@@ -502,6 +888,10 @@
     {
       "profileId": "gid://shopify/Product/15106124415356::gid://shopify/ProductVariant/55021539197308",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_4927_1_black_1000x1000577cccdc43abc_720x600_1.jpg?v=1741879148",
+        "altText": "Nero"
+      },
       "productId": "gid://shopify/Product/15106124415356",
       "variantIds": [
         "gid://shopify/ProductVariant/55021539197308"
@@ -543,6 +933,10 @@
     {
       "profileId": "gid://shopify/Product/15106127430012::gid://shopify/ProductVariant/55021542408572",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4916_1_1000x1000_720x600_1.jpg?v=1741879272",
+        "altText": "Nero"
+      },
       "productId": "gid://shopify/Product/15106127430012",
       "variantIds": [
         "gid://shopify/ProductVariant/55021542408572"
@@ -584,6 +978,10 @@
     {
       "profileId": "gid://shopify/Product/15106135130492::gid://shopify/ProductVariant/55021548568956",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/trodat_printy_4928_4_1000x1000577cccbc000a7_720x600_1.jpg?v=1741879394",
+        "altText": "Nero"
+      },
       "productId": "gid://shopify/Product/15106135130492",
       "variantIds": [
         "gid://shopify/ProductVariant/55021548568956"
@@ -625,6 +1023,10 @@
     {
       "profileId": "gid://shopify/Product/15106215805308::gid://shopify/ProductVariant/55021677707644",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/q12.jpg?v=1741881903",
+        "altText": "Timbro tascabile Colop Printer Q12"
+      },
       "productId": "gid://shopify/Product/15106215805308",
       "variantIds": [
         "gid://shopify/ProductVariant/55021677707644"
@@ -667,6 +1069,10 @@
     {
       "profileId": "gid://shopify/Product/15106223833468::gid://shopify/ProductVariant/55021684031868",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/301341.jpg?v=1741882234",
+        "altText": "Indaco"
+      },
       "productId": "gid://shopify/Product/15106223833468",
       "variantIds": [
         "gid://shopify/ProductVariant/55021684031868"
@@ -705,8 +1111,153 @@
       "availability": null
     },
     {
+      "profileId": "gid://shopify/Product/15106681799036::gid://shopify/ProductVariant/55676402925948",
+      "variantLabel": "30",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/timbro-legno-50mm.jpg?v=1741896141",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15106681799036",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55676402925948"
+      ],
+      "handle": "timbro-in-legno-diam-50-mm",
+      "title": "Timbro in legno tondo",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-diam-50-mm",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "round",
+      "nominalAreaMm": {
+        "width": 30,
+        "height": 30
+      },
+      "materials": [
+        "wood"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno tondo",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55676402925948, custom.larghezza=30 mm, custom.altezza=30 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/15106681799036::gid://shopify/ProductVariant/55676402958716",
+      "variantLabel": "35",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/timbro-legno-50mm.jpg?v=1741896141",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15106681799036",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55676402958716"
+      ],
+      "handle": "timbro-in-legno-diam-50-mm",
+      "title": "Timbro in legno tondo",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-diam-50-mm",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "round",
+      "nominalAreaMm": {
+        "width": 35,
+        "height": 35
+      },
+      "materials": [
+        "wood"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno tondo",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55676402958716, custom.larghezza=35 mm, custom.altezza=35 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
+      "profileId": "gid://shopify/Product/15106681799036::gid://shopify/ProductVariant/55676402991484",
+      "variantLabel": "40",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/timbro-legno-50mm.jpg?v=1741896141",
+        "altText": ""
+      },
+      "productId": "gid://shopify/Product/15106681799036",
+      "variantIds": [
+        "gid://shopify/ProductVariant/55676402991484"
+      ],
+      "handle": "timbro-in-legno-diam-50-mm",
+      "title": "Timbro in legno tondo",
+      "status": "ACTIVE",
+      "url": "https://www.incisoriasacchetti.it/products/timbro-in-legno-diam-50-mm",
+      "tags": [
+        "Ex-Libris",
+        "No-AI",
+        "No-reso",
+        "Timbri manuali",
+        "warning-pitchprint"
+      ],
+      "profileVersion": 1,
+      "family": "stamp",
+      "mechanism": "manual",
+      "shape": "round",
+      "nominalAreaMm": {
+        "width": 40,
+        "height": 40
+      },
+      "materials": [
+        "wood"
+      ],
+      "mechanismSource": "Shopify titolo/tag espliciti: Timbro in legno tondo",
+      "areaSource": "Shopify variante gid://shopify/ProductVariant/55676402991484, custom.larghezza=40 mm, custom.altezza=40 mm; nominale, area produttiva non validata",
+      "dataWarnings": [],
+      "supportsLogo": true,
+      "logoSource": "Descrizione Shopify: logo/grafica/composizione dichiarati",
+      "constraints": {
+        "minFontSizePt": null,
+        "safeMarginMm": null,
+        "allowedColors": null
+      },
+      "validatedForProduction": false,
+      "price": null,
+      "availability": null
+    },
+    {
       "profileId": "gid://shopify/Product/15106684682620::gid://shopify/ProductVariant/55022160871804",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/r30-colop-aperto.webp?v=1779863874",
+        "altText": ""
+      },
       "productId": "gid://shopify/Product/15106684682620",
       "variantIds": [
         "gid://shopify/ProductVariant/55022160871804"
@@ -748,6 +1299,10 @@
     {
       "profileId": "gid://shopify/Product/15106701295996::gid://shopify/ProductVariant/55022187676028",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_9511_pp_front_black_blue.jpg?v=1756734141",
+        "altText": "Blue-Black"
+      },
       "productId": "gid://shopify/Product/15106701295996",
       "variantIds": [
         "gid://shopify/ProductVariant/55022187676028"
@@ -788,6 +1343,10 @@
     {
       "profileId": "gid://shopify/Product/15106703950204::gid://shopify/ProductVariant/55022192034172",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_9512_pp_front_black_red.jpg?v=1757059231",
+        "altText": ""
+      },
       "productId": "gid://shopify/Product/15106703950204",
       "variantIds": [
         "gid://shopify/ProductVariant/55022192034172"
@@ -828,6 +1387,10 @@
     {
       "profileId": "gid://shopify/Product/15999878300028::gid://shopify/ProductVariant/56812647416188",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/r40-colop-aperto.jpg?v=1741896238",
+        "altText": "Timbro tondo Colop R30 (aperto)"
+      },
       "productId": "gid://shopify/Product/15999878300028",
       "variantIds": [
         "gid://shopify/ProductVariant/56812647416188"
@@ -869,6 +1432,10 @@
     {
       "profileId": "gid://shopify/Product/16036618273148::gid://shopify/ProductVariant/57125692309884",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/38092.jpg?v=1782851619",
+        "altText": "Timbro Printer R30 - diametro 30 mm - 5 righe - personalizzabile - autoinchiostrante - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036618273148",
       "variantIds": [
         "gid://shopify/ProductVariant/57125692309884"
@@ -906,6 +1473,10 @@
     {
       "profileId": "gid://shopify/Product/16036618928508::gid://shopify/ProductVariant/57125693555068",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48000.jpg?v=1782851987",
+        "altText": "Timbro Printer 20 - 14 x 38 mm - 4 righe - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036618928508",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693555068"
@@ -945,6 +1516,10 @@
     {
       "profileId": "gid://shopify/Product/16036619026812::gid://shopify/ProductVariant/57125693718908",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48001.jpg?v=1782852046",
+        "altText": "Timbro Printer 30 - 18 x 47 mm - 5 righe - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036619026812",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693718908"
@@ -984,6 +1559,10 @@
     {
       "profileId": "gid://shopify/Product/16036619125116::gid://shopify/ProductVariant/57125693817212",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48002.jpg?v=1782852100",
+        "altText": "Timbro Printer 40 - 23 x 59 mm - 6 righe - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036619125116",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693817212"
@@ -1023,6 +1602,10 @@
     {
       "profileId": "gid://shopify/Product/16036619190652::gid://shopify/ProductVariant/57125693882748",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48003.jpg?v=1782852241",
+        "altText": "Timbro Printer 50 - 30 x 69 mm - 7 righe - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036619190652",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693882748"
@@ -1062,6 +1645,10 @@
     {
       "profileId": "gid://shopify/Product/16036619223420::gid://shopify/ProductVariant/57125693915516",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48004.jpg?v=1782852261",
+        "altText": "Timbro Printer 60 - 37 x 76 mm - 8 righe - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036619223420",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693915516"
@@ -1101,6 +1688,10 @@
     {
       "profileId": "gid://shopify/Product/16036619256188::gid://shopify/ProductVariant/57125693948284",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48006.jpg?v=1782852283",
+        "altText": "Timbro Pocket Stamp R40 - diametro 40 mm - 5 righe - autoinchiostrante - blu - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036619256188",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693948284"
@@ -1138,6 +1729,10 @@
     {
       "profileId": "gid://shopify/Product/16036619288956::gid://shopify/ProductVariant/57125693981052",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/48524.jpg?v=1782852302",
+        "altText": "Timbro quadrato 4921 - personalizzabile - 12 x 12 mm - 3 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036619288956",
       "variantIds": [
         "gid://shopify/ProductVariant/57125693981052"
@@ -1175,6 +1770,10 @@
     {
       "profileId": "gid://shopify/Product/16036619321724::gid://shopify/ProductVariant/57125694112124",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/51187.jpg?v=1782852325",
+        "altText": "Timbro Printer R40 - diametro 40 mm - 7 righe - personalizzabile - autoinchiostrante - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036619321724",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694112124"
@@ -1212,6 +1811,10 @@
     {
       "profileId": "gid://shopify/Product/16036619354492::gid://shopify/ProductVariant/57125694144892",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/61827.jpg?v=1782852358",
+        "altText": "Timbro Printer 25 - 15x75 mm - allungato - autoinchiostrante - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036619354492",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694144892"
@@ -1251,6 +1854,10 @@
     {
       "profileId": "gid://shopify/Product/16036619518332::gid://shopify/ProductVariant/57125694341500",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/61839.jpg?v=1782852399",
+        "altText": "Timbro Original Printy 4.0 4911 - personalizzabile - 38 x 14 mm - 4 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036619518332",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694341500"
@@ -1288,6 +1895,10 @@
     {
       "profileId": "gid://shopify/Product/16036619649404::gid://shopify/ProductVariant/57125694538108",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/61840.jpg?v=1782852418",
+        "altText": "Timbro Original Printy 4.0 4912 - personalizzabile - 47 x 18 mm - 5 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036619649404",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694538108"
@@ -1325,6 +1936,10 @@
     {
       "profileId": "gid://shopify/Product/16036619682172::gid://shopify/ProductVariant/57125694570876",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/61841.jpg?v=1782852439",
+        "altText": "Timbro Original Printy 4.0 4913 - personalizzabile - 58 x 22 mm - 6 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036619682172",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694570876"
@@ -1362,6 +1977,10 @@
     {
       "profileId": "gid://shopify/Product/16036619813244::gid://shopify/ProductVariant/57125694701948",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/65347.jpg?v=1782852484",
+        "altText": "Timbro Original Printy 4.0 4915 - personalizzabile - 70 x 25 mm - 7 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036619813244",
       "variantIds": [
         "gid://shopify/ProductVariant/57125694701948"
@@ -1399,6 +2018,10 @@
     {
       "profileId": "gid://shopify/Product/16036619977084::gid://shopify/ProductVariant/57125695160700",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/74929.jpg?v=1782852506",
+        "altText": "Timbro Original Printy 4642 - autoinchiostrante - diametro 42 mm - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036619977084",
       "variantIds": [
         "gid://shopify/ProductVariant/57125695160700"
@@ -1436,6 +2059,7 @@
     {
       "profileId": "gid://shopify/Product/16036620075388::gid://shopify/ProductVariant/57125695259004",
       "variantLabel": "",
+      "image": null,
       "productId": "gid://shopify/Product/16036620075388",
       "variantIds": [
         "gid://shopify/ProductVariant/57125695259004"
@@ -1473,6 +2097,10 @@
     {
       "profileId": "gid://shopify/Product/16036620140924::gid://shopify/ProductVariant/57125695324540",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80445.jpg?v=1782852546",
+        "altText": "Timbro Printer 10 - 10 x 27 mm - 3 righe - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620140924",
       "variantIds": [
         "gid://shopify/ProductVariant/57125695324540"
@@ -1512,6 +2140,10 @@
     {
       "profileId": "gid://shopify/Product/16036620468604::gid://shopify/ProductVariant/57125696536956",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80450.jpg?v=1782852608",
+        "altText": "Timbro Pocket Stamp Plus 20 - 14 x 38 mm - 4 righe - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620468604",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696536956"
@@ -1551,6 +2183,10 @@
     {
       "profileId": "gid://shopify/Product/16036620566908::gid://shopify/ProductVariant/57125696799100",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80451.jpg?v=1782852636",
+        "altText": "Timbro Pocket Stamp Plus 20 - 14 x 38 mm - 4 righe - autoinchiostrante - blu indaco - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620566908",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696799100"
@@ -1590,6 +2226,10 @@
     {
       "profileId": "gid://shopify/Product/16036620599676::gid://shopify/ProductVariant/57125696831868",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80452.jpg?v=1782852661",
+        "altText": "Timbro Pocket Stamp Plus 20 - 14 x 38 mm - 4 righe - autoinchiostrante - rosso rubino - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620599676",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696831868"
@@ -1629,6 +2269,10 @@
     {
       "profileId": "gid://shopify/Product/16036620665212::gid://shopify/ProductVariant/57125696930172",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80454.jpg?v=1782852685",
+        "altText": "Timbro Pocket Stamp Plus 30 - 18 x 47 mm - 5 righe - autoinchiostrante- nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620665212",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696930172"
@@ -1668,6 +2312,10 @@
     {
       "profileId": "gid://shopify/Product/16036620697980::gid://shopify/ProductVariant/57125696962940",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80455.jpg?v=1782852709",
+        "altText": "Timbro Pocket Stamp Plus 30 - 18 x 47 mm - 5 righe - autoinchiostrante - blu indaco- Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620697980",
       "variantIds": [
         "gid://shopify/ProductVariant/57125696962940"
@@ -1707,6 +2355,10 @@
     {
       "profileId": "gid://shopify/Product/16036620763516::gid://shopify/ProductVariant/57125697028476",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80456.jpg?v=1782852730",
+        "altText": "Timbro Pocket Stamp Plus 30 - 18 x 47 mm - 5 righe - autoinchiostrante - rosso rubino - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620763516",
       "variantIds": [
         "gid://shopify/ProductVariant/57125697028476"
@@ -1746,6 +2398,10 @@
     {
       "profileId": "gid://shopify/Product/16036620894588::gid://shopify/ProductVariant/57125698470268",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80457.jpg?v=1782852750",
+        "altText": "Timbro Pocket Stamp Plus 30 - 18 x 47 mm - 5 righe - autoinchiostrante - verde - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620894588",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698470268"
@@ -1785,6 +2441,10 @@
     {
       "profileId": "gid://shopify/Product/16036620960124::gid://shopify/ProductVariant/57125698535804",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80459.jpg?v=1782852771",
+        "altText": "Timbro Printer R12 - diametro 12 mm - 2 righe - personalizzabile - autoinchiostrante - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620960124",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698535804"
@@ -1822,6 +2482,10 @@
     {
       "profileId": "gid://shopify/Product/16036620992892::gid://shopify/ProductVariant/57125698568572",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80460.jpg?v=1782852792",
+        "altText": "Timbro Printer R17 - diametro 17 mm - 3 righe - personalizzabile - autoinchiostrante - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036620992892",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698568572"
@@ -1859,6 +2523,10 @@
     {
       "profileId": "gid://shopify/Product/16036621091196::gid://shopify/ProductVariant/57125698765180",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80461.jpg?v=1782852812",
+        "altText": "Timbro Printer R24 - diametro 24 mm - 4 righe - personalizzabile - autoinchiostrante - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036621091196",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698765180"
@@ -1896,6 +2564,10 @@
     {
       "profileId": "gid://shopify/Product/16036621156732::gid://shopify/ProductVariant/57125698830716",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80462.jpg?v=1782852833",
+        "altText": "Timbro Printer R45 - diametro 45 mm - 5 righe - personalizzabile - autoinchiostrante - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036621156732",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698830716"
@@ -1933,6 +2605,10 @@
     {
       "profileId": "gid://shopify/Product/16036621222268::gid://shopify/ProductVariant/57125698896252",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80466.jpg?v=1782852872",
+        "altText": "Timbro Printer Q 24 - 24 x 24 mm - 6 righe - quadrato - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036621222268",
       "variantIds": [
         "gid://shopify/ProductVariant/57125698896252"
@@ -1970,6 +2646,10 @@
     {
       "profileId": "gid://shopify/Product/16036621353340::gid://shopify/ProductVariant/57125699060092",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80469.jpg?v=1782852917",
+        "altText": "Timbro Original Printy 4.0 4910 - personalizzabile - 26 x 10 mm - 3 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036621353340",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699060092"
@@ -2009,6 +2689,10 @@
     {
       "profileId": "gid://shopify/Product/16036621484412::gid://shopify/ProductVariant/57125699191164",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80470.jpg?v=1782852937",
+        "altText": "Timbro Original Printy 4.0 4914 - personalizzabile - 64 x 26 mm - 7 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036621484412",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699191164"
@@ -2046,6 +2730,10 @@
     {
       "profileId": "gid://shopify/Product/16036621582716::gid://shopify/ProductVariant/57125699289468",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80471.jpg?v=1782852957",
+        "altText": "Timbro Original Printy 4931 - personalizzabile - 70 x 30 mm - 7 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036621582716",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699289468"
@@ -2084,6 +2772,10 @@
     {
       "profileId": "gid://shopify/Product/16036621648252::gid://shopify/ProductVariant/57125699355004",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80472.jpg?v=1782852975",
+        "altText": "Timbro Original Printy 4630 - diametro 30 mm - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036621648252",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699355004"
@@ -2121,6 +2813,10 @@
     {
       "profileId": "gid://shopify/Product/16036621681020::gid://shopify/ProductVariant/57125699584380",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80494.jpg?v=1782852994",
+        "altText": "Timbro tascabile Mobile Printy 9440 - personalizzabile - 40 x 40 mm - 8 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036621681020",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699584380"
@@ -2159,6 +2855,10 @@
     {
       "profileId": "gid://shopify/Product/16036621713788::gid://shopify/ProductVariant/57125699649916",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/83126.jpg?v=1782853014",
+        "altText": "Timbro Professional 5206 - personalizzabile - 56 x 33 mm - 8 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036621713788",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699649916"
@@ -2199,6 +2899,10 @@
     {
       "profileId": "gid://shopify/Product/16036621877628::gid://shopify/ProductVariant/57125699846524",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/86980.jpg?v=1782853053",
+        "altText": "Timbro personalizzabile 5208 - 68 x 47 mm - 12 righe - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036621877628",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699846524"
@@ -2239,6 +2943,10 @@
     {
       "profileId": "gid://shopify/Product/16036622008700::gid://shopify/ProductVariant/57125699977596",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/90216.jpg?v=1782853095",
+        "altText": "Timbro tascabile Pocket Printy 9511 - personalizzabile - 38 x 14 mm - 4 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036622008700",
       "variantIds": [
         "gid://shopify/ProductVariant/57125699977596"
@@ -2276,6 +2984,10 @@
     {
       "profileId": "gid://shopify/Product/16036622172540::gid://shopify/ProductVariant/57125700206972",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/92563.jpg?v=1782853163",
+        "altText": "Timbro quadrato 4922 - personalizzabile - 20 x 20 mm - 5 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036622172540",
       "variantIds": [
         "gid://shopify/ProductVariant/57125700206972"
@@ -2313,6 +3025,10 @@
     {
       "profileId": "gid://shopify/Product/16036622205308::gid://shopify/ProductVariant/57125700272508",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/92564.jpg?v=1782853180",
+        "altText": "Timbro quadrato 4923 - personalizzabile - 30 x 30 mm - 7 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036622205308",
       "variantIds": [
         "gid://shopify/ProductVariant/57125700272508"
@@ -2350,6 +3066,10 @@
     {
       "profileId": "gid://shopify/Product/16036622238076::gid://shopify/ProductVariant/57125700305276",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/95207.jpg?v=1782853201",
+        "altText": "Timbro Pocket Stamp Plus 40 - 23 x 59 mm - 6 righe - autoinchiostrante - nero - Colop - image 1"
+      },
       "productId": "gid://shopify/Product/16036622238076",
       "variantIds": [
         "gid://shopify/ProductVariant/57125700305276"
@@ -2389,6 +3109,10 @@
     {
       "profileId": "gid://shopify/Product/16036622991740::gid://shopify/ProductVariant/57125702467964",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/105373.jpg?v=1782853465",
+        "altText": "Timbro personalizzabile 5211 - 85 x 55 mm - 15 righe - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036622991740",
       "variantIds": [
         "gid://shopify/ProductVariant/57125702467964"
@@ -2429,6 +3153,10 @@
     {
       "profileId": "gid://shopify/Product/16036623188348::gid://shopify/ProductVariant/57125702664572",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/105419.jpg?v=1782853527",
+        "altText": "Timbro quadrato 4924 - personalizzabile - 40 x 40 mm - 10 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036623188348",
       "variantIds": [
         "gid://shopify/ProductVariant/57125702664572"
@@ -2470,6 +3198,10 @@
     {
       "profileId": "gid://shopify/Product/16036623221116::gid://shopify/ProductVariant/57125702795644",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/105420.jpg?v=1782853550",
+        "altText": "Timbro Original Printy 4638 - cartuccia non inclusa - diametro 38 mm - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036623221116",
       "variantIds": [
         "gid://shopify/ProductVariant/57125702795644"
@@ -2507,6 +3239,7 @@
     {
       "profileId": "gid://shopify/Product/16036623417724::gid://shopify/ProductVariant/57125703188860",
       "variantLabel": "",
+      "image": null,
       "productId": "gid://shopify/Product/16036623417724",
       "variantIds": [
         "gid://shopify/ProductVariant/57125703188860"
@@ -2544,6 +3277,10 @@
     {
       "profileId": "gid://shopify/Product/16036623712636::gid://shopify/ProductVariant/57125703975292",
       "variantLabel": "",
+      "image": {
+        "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/90217.jpg?v=1782853706",
+        "altText": "Timbro tascabile Pocket Printy 9512 - personalizzabile - 47 x 18 mm - 5 righe - autoinchiostrante - Trodat - image 1"
+      },
       "productId": "gid://shopify/Product/16036623712636",
       "variantIds": [
         "gid://shopify/ProductVariant/57125703975292"

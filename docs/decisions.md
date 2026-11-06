@@ -1,5 +1,11 @@
 # Registro decisioni
 
+## 2026-11-06 — Layout, dialogo e contenuto come punto di partenza
+
+Chat con dimensione stabile, scroll interno e storico leggibile, riepilogo compatto e foto reali di catalogo. Intento conversazionale tipizzato: divagazioni, aiuto e incomprensione non sono correzioni dei requisiti. Brief del contenuto solo in memoria; stima browser dal testo con assunzioni TEST esplicite e applicazione volontaria, nessuna equivalenza universale righe→formato. Ex-libris richiede soggetto/nome, non regole aziendali presunte. Testo iniziale nel canvas mediante gli stessi comandi revisionati, conservando gli stati già modificati.
+
+Il titolare preferisce i limiti già configurati nell'account: disattivato il blocco cumulativo locale nella copia privata, contatore a titolo informativo. Nessuna modifica o verifica delle impostazioni account; nessuna cancellazione del registro. Il budget dei collaudi dell'agente rimane prudenziale. Chiarita la differenza fra riserva e consumo noto (circa 0,101 USD). L'eventuale pannello amministrativo di revisione/apprendimento resta una proposta da progettare, senza archiviazione automatica delle chat.
+
 ## 2026-11-06 — Metafield variante autorevoli per l'impronta
 
 Su indicazione del titolare, verificati definizioni e valori `custom.larghezza/custom.altezza` della variante: number_decimal in mm. Sostituita l'estrazione delle dimensioni da titoli/opzioni con la coppia di metafield obbligatoria. Fonte mancante/non valida sospende la variante; descrizioni dimensionali discordanti restano avvisi senza prevalere. Titoli/opzioni continuano a identificare la forma, che deve essere geometricamente coerente. Regole/cache portate a `mount-rules-v2-variant-metafields` e fixture aggiornate. La modifica di un valore cambia versione, rivaluta candidati e blocca l'SVG delle bozze precedenti fino a rivalidazione.

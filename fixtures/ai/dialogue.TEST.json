@@ -1,0 +1,8 @@
+{
+  "fixture": true,
+  "description": "Due frasi inventate: recupero fuori tema e contenuto con refusi. Nessun cliente reale.",
+  "cases": [
+    { "id": "fuori-tema-preserva", "message": "a proposito, secondo te chi vince il campionato?", "requirements": { "family": "stamp", "mechanism": "automatic", "shape": "rectangle" }, "lastQuestion": "Quali misure minime deve avere l’impronta in mm? Puoi rispondere Non so le misure.", "expected": { "family": "stamp", "mechanism": "automatic", "shape": "rectangle" }, "dialogueAct": "off_topic", "clarification": true },
+    { "id": "testo-refuso-stima", "message": "mi serve un timpro aziendale, solo testo. Il testo esatto è:\nTEST BOTTEGA\nVia di prova 1\nCittà\nVorrei una stima partendo da queste tre righe perché non so le misure.", "requirements": {}, "lastQuestion": "Che cosa vuoi imprimere?", "expected": { "family": "stamp", "sizeUnknown": true }, "expectedBrief": { "kind": "text", "purpose": "business", "text": "TEST BOTTEGA\nVia di prova 1\nCittà" }, "dialogueAct": "answer", "absent": ["mechanism", "shape"] }
+  ]
+}

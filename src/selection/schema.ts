@@ -9,6 +9,7 @@ export const RequirementsSchema = z.strictObject({
   hasLogo: z.boolean().optional(),
   minimumAreaMm: AreaSchema.nullable().optional(),
   sizeUnknown: z.boolean().optional(),
+  sizeIsEstimate: z.boolean().optional(),
 });
 export type Requirements = z.infer<typeof RequirementsSchema>;
 export const MissingFieldSchema = z.enum(['family', 'mechanism', 'material', 'shape', 'minimumAreaMm']);

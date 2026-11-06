@@ -4,8 +4,10 @@ export const AreaSchema = z.strictObject({ width: z.number().positive().max(1000
 export const MechanismSchema = z.enum(['automatic', 'manual', 'pocket', 'emboss']);
 export const ShapeSchema = z.enum(['rectangle', 'square', 'round']);
 export const MaterialSchema = z.enum(['wood', 'plastic', 'metal', 'any']);
+export const ProductImageSchema = z.strictObject({ url: z.url().refine(url => { const u = new URL(url); return u.protocol === 'https:' && u.hostname === 'cdn.shopify.com' && u.pathname.startsWith('/s/files/') && !u.username && !u.password; }), altText: z.string().nullable() });
 export const ProductProfileSchema = z.strictObject({
   profileId: z.string().optional(), variantLabel: z.string().optional(),
+  image: ProductImageSchema.nullable().optional(),
   productId: z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/),
   variantIds: z.array(z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/)).min(1),
   handle: z.string().regex(/^[a-z0-9-]+$/), title: z.string().min(1), status: z.enum(['ACTIVE', 'ARCHIVED', 'DRAFT']),

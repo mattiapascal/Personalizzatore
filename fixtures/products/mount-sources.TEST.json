@@ -1,6 +1,6 @@
 {
   "fixture": true,
-  "readAt": "2026-11-06T06:05:27.493Z",
+  "readAt": "2026-11-06T06:45:41.026Z",
   "products": [
     {
       "id": "gid://shopify/Product/15104975208828",
@@ -18,6 +18,14 @@
       "descriptionHtml": "<p><img style=\"float: left; margin-right: 25px;\" title=\"Come si utilizza Colop Pocket Stamp Plus\" alt=\"Come si utilizza Colop Pocket Stamp Plus\" src=\"https://cdn.shopify.com/s/files/1/0905/4470/1820/files/CPSP139.png?v=1739742558\"></p>\r\n<p><span style=\"font-size: medium;\">Versatile, <strong>sempre con voi</strong>.</span></p>\r\n<p style=\"text-align: justify;\"><span style=\"font-size: medium;\">Sulla scrivania, in ufficio od in viaggio nella borsa, al collo o come portachiavi, il nuovo Colop Pocket Stamp Plus è il timbro <span style=\"text-decoration: underline;\">ideale</span> da portare con voi durante i vostri viaggi d'affari.</span></p>\r\n<p style=\"text-align: justify;\"><span style=\"font-size: medium;\">Con questo timbro potete personalizzare i vostri documenti e la posta marcandoli con il <strong>vostro logo</strong>, coi vostri dati o con una <strong>firma</strong>.</span></p>\r\n<p style=\"text-align: justify;\"><span style=\"font-size: medium;\">Ideale per i viaggi grazie al suo piccolo formato e la forma compatta; è facilissimo da usare perchè <strong>si apre, si utilizza e lo si chiude con una sola mano</strong> facendo scorrere il pratico cappuccio. Lo puoi mettere nella tasca della giacca senza paura di macchiarti, oppure puoi appenderlo, grazie alla comoda clip.</span></p>\r\n<p><span style=\"font-size: medium;\"> </span></p>\r\n<ul style=\"font-size: medium;\">\r\n<li>Pocket Stamp Plus: si apre, si timbra, si richiude <strong>con una sola mano</strong>\n</li>\r\n<li>Di semplice utilizzo, si rivela un oggetto utile ed un timbro versatile e <strong>pulito</strong>\n</li>\r\n<li>E' piccolo, intelligente e perfettamente <strong>tascabile</strong>, grazie alla sua clip ed alla forma molto compatta</li>\r\n<li>Design moderno - il <strong>regalo perfetto</strong> per tutti</li>\r\n</ul>",
       "vendor": "Colop",
       "technicalSummary": null,
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/black147364_black.jpg?v=1741847507",
+            "altText": "Nero"
+          }
+        }
+      },
       "variants": {
         "nodes": [
           {
@@ -64,6 +72,14 @@
       "vendor": "Trodat",
       "technicalSummary": {
         "jsonValue": "UTILIZZI TIPICI: imprimere loghi, testi o disegni a rilievo su carta e cartoncino\nFORMA: Tonda Ø 41 mm, tonda Ø 51 mm, rettangolare 51×25 mm\nMARCA: montatura robusta Trodat Ideal con inserto intercambiabile\nTIPO DI IMPRONTA: sostituibile con altri cliché anche di forme e dimensioni diverse\nTEMPO DI PRODUZIONE: tipicamente 2-3 giorni"
+      },
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_seal_chrom_41_ld_open.jpg?v=1741847607",
+            "altText": "Cromo (aperto)"
+          }
+        }
       },
       "variants": {
         "nodes": [
@@ -134,7 +150,7 @@
       "handle": "timbro-in-legno-ed-ottone",
       "status": "ACTIVE",
       "onlineStoreUrl": "https://www.incisoriasacchetti.it/products/timbro-in-legno-ed-ottone",
-      "updatedAt": "2026-06-26T03:41:25Z",
+      "updatedAt": "2026-11-06T06:19:35Z",
       "tags": [
         "Ex-Libris",
         "No-AI",
@@ -147,6 +163,14 @@
       "technicalSummary": {
         "jsonValue": "Materiale montatura: legno e ottone\nMateriale gommino: resina polimerica\nMisure: a scelta"
       },
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/20131217_181042_2.jpg?v=1741849913",
+            "altText": ""
+          }
+        }
+      },
       "variants": {
         "nodes": [
           {
@@ -158,8 +182,14 @@
                 "value": "40x15 mm"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "40.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "25.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55018973528444",
@@ -170,8 +200,14 @@
                 "value": "60x30 mm"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "60.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "30.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55018973561212",
@@ -182,8 +218,14 @@
                 "value": "60x40 mm"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "60.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "40.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55018973593980",
@@ -194,8 +236,14 @@
                 "value": "Diam. 30 mm"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "30.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "30.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55018973626748",
@@ -206,8 +254,14 @@
                 "value": "Diam. 40 mm"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "40.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "40.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55018973659516",
@@ -218,8 +272,14 @@
                 "value": "30x60 mm"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "30.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "60.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55018973692284",
@@ -230,8 +290,14 @@
                 "value": "40x60 mm"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "40.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "60.0"
+            }
           }
         ],
         "pageInfo": {
@@ -258,6 +324,14 @@
       "vendor": "Trodat",
       "technicalSummary": {
         "jsonValue": "Timbro autoinchiostrante da tavolo e da borsa.\nMisura piccola, timbratura ideale fino a 1/2 righe.\nPerfetto per assegni.\nDimensione piastra: 26x9 mm"
+      },
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/pr_4910_p4_flamered_720x600_3.jpg?v=1741878403",
+            "altText": "Rosso"
+          }
+        }
       },
       "variants": {
         "nodes": [
@@ -306,6 +380,14 @@
       "technicalSummary": {
         "jsonValue": "Timbro tascabile e da borsa.\nMisura piccola, timbratura ideale per loghi quadrati e tondi.\nPerfetto per drink card, omaggi, tessere punti, abbonamenti, tessere fedeltà.\nDimensione piastra: 12x12 mm"
       },
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/q12.jpg?v=1741881903",
+            "altText": "Timbro tascabile Colop Printer Q12"
+          }
+        }
+      },
       "variants": {
         "nodes": [
           {
@@ -339,7 +421,7 @@
       "handle": "timbro-in-legno-diam-50-mm",
       "status": "ACTIVE",
       "onlineStoreUrl": "https://www.incisoriasacchetti.it/products/timbro-in-legno-diam-50-mm",
-      "updatedAt": "2026-10-18T20:42:21Z",
+      "updatedAt": "2026-11-06T06:15:11Z",
       "tags": [
         "Ex-Libris",
         "No-AI",
@@ -352,6 +434,14 @@
       "technicalSummary": {
         "jsonValue": "Materiale montatura: Legno\nMateriale gommino: Gomma vulcanizzata\nDiametri disponibili: 30 / 35 / 40 mm"
       },
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/timbro-legno-50mm.jpg?v=1741896141",
+            "altText": ""
+          }
+        }
+      },
       "variants": {
         "nodes": [
           {
@@ -363,8 +453,14 @@
                 "value": "30"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "30.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "30.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55676402958716",
@@ -375,8 +471,14 @@
                 "value": "35"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "35.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "35.0"
+            }
           },
           {
             "id": "gid://shopify/ProductVariant/55676402991484",
@@ -387,8 +489,14 @@
                 "value": "40"
               }
             ],
-            "imprintWidth": null,
-            "imprintHeight": null
+            "imprintWidth": {
+              "type": "number_decimal",
+              "jsonValue": "40.0"
+            },
+            "imprintHeight": {
+              "type": "number_decimal",
+              "jsonValue": "40.0"
+            }
           }
         ],
         "pageInfo": {
@@ -414,6 +522,14 @@
       "vendor": "Incisoria Meccanica Sacchetti",
       "technicalSummary": {
         "jsonValue": "Materiale montatura: Plastica\nMateriale gommino: Gomma vulcanizzata\nDiametri disponibili: 30 / 35 / 40 mm"
+      },
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/Timbro_manuale.webp?v=1779863875",
+            "altText": ""
+          }
+        }
       },
       "variants": {
         "nodes": [
@@ -487,6 +603,14 @@
       "technicalSummary": {
         "jsonValue": "Colore: Nero\nDimensione: 17x17mm\nTipo timbro: Autoinchiostrante\nRigatura: 7 righe"
       },
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/80467.jpg?v=1782852895",
+            "altText": "Timbro Printer Q 30 - 30x30 mm - quadrato - 7 righe - autoinchiostrante - Colop - image 1"
+          }
+        }
+      },
       "variants": {
         "nodes": [
           {
@@ -528,6 +652,14 @@
       "vendor": "Trodat",
       "technicalSummary": {
         "jsonValue": "Materiale: Plastica riciclata\nTipologia: Timbri personalizzabili\nFormato: 4,1 x 2,4cm\nTipo timbro: Autoinchiostrante\nTesto: Personalizzabile\nRigatura: 4 righe\nColore inchiostro: Nero\nModello: 4750"
+      },
+      "featuredMedia": {
+        "preview": {
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0905/4470/1820/files/86978.jpg?v=1782853035",
+            "altText": "Timbro personalizzzabile Printy 4.0 - 41 x 24 mm - Trodat - image 1"
+          }
+        }
       },
       "variants": {
         "nodes": [

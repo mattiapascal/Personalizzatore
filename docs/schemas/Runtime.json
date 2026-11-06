@@ -38,6 +38,13 @@
           "type": "integer",
           "minimum": -9007199254740991,
           "maximum": 9007199254740991
+        },
+        "localLimitsEnforced": {
+          "type": "boolean"
+        },
+        "estimatedStandardUsd": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "required": [
@@ -90,6 +97,33 @@
                   },
                   "variantLabel": {
                     "type": "string"
+                  },
+                  "image": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "altText": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "url",
+                          "altText"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "productId": {
                     "type": "string",

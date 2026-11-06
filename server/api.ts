@@ -28,11 +28,12 @@ export class LocalApi {
   status(): RuntimeState {
     const reason = this.meterError ?? (this.config.AI_PROVIDER !== 'openai' ? 'Modalità demo: interpretazione a parole chiave.'
       : !this.config.OPENAI_API_KEY ? 'Manca OPENAI_API_KEY in .env.local.'
-      : this.config.AI_BUDGET_USD <= 0 ? 'Manca un budget AI_BUDGET_USD positivo in .env.local.'
-      : this.meter.state.requests >= this.config.AI_MAX_REQUESTS || this.meter.state.reservedUsd >= this.config.AI_BUDGET_USD ? 'Quota AI esaurita.' : null);
+      : this.config.AI_ENFORCE_LOCAL_LIMITS && this.config.AI_BUDGET_USD <= 0 ? 'Manca un budget AI_BUDGET_USD positivo in .env.local.'
+      : this.config.AI_ENFORCE_LOCAL_LIMITS && this.meter.state.requests >= this.config.AI_MAX_REQUESTS ? 'Limite locale di richieste raggiunto.'
+      : this.config.AI_ENFORCE_LOCAL_LIMITS && this.meter.state.reservedUsd >= this.config.AI_BUDGET_USD ? 'Riserva prudenziale locale esaurita; non è la spesa OpenAI effettiva.' : null);
     return {
       csrfToken: this.token,
-      ai: { mode: this.config.AI_PROVIDER, ready: !reason, reason, model: this.config.OPENAI_MODEL, budgetUsd: this.config.AI_BUDGET_USD, reservedUsd: this.meter.state.reservedUsd, requests: this.meter.state.requests },
+      ai: { mode: this.config.AI_PROVIDER, ready: !reason, reason, model: this.config.OPENAI_MODEL, budgetUsd: this.config.AI_BUDGET_USD, reservedUsd: this.meter.state.reservedUsd, requests: this.meter.state.requests, localLimitsEnforced: this.config.AI_ENFORCE_LOCAL_LIMITS, estimatedStandardUsd: (this.meter.state.inputTokens * 0.75 + this.meter.state.outputTokens * 4.5) / 1_000_000 },
       catalog: this.catalog.state,
       sync: { configured: this.catalog.configured, intervalSeconds: this.config.CATALOG_POLL_SECONDS, lastError: this.catalog.lastError, refreshing: this.catalog.refreshing, stale: this.catalog.configured && (!this.catalog.state.checkedAt || Date.now() - Date.parse(this.catalog.state.checkedAt) > Math.max(600, this.config.CATALOG_POLL_SECONDS * 2) * 1000) },
     };

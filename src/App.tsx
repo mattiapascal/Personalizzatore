@@ -3,6 +3,7 @@ import { createCatalog, mountFixtureCatalog as fixtureCatalog, productPage, moun
 import type { ProductProfile } from './catalog/schema';
 import { profileKey } from './catalog/schema';
 import { RuntimeSchema, type RuntimeState } from './runtime/schema';
+import { ProductPreview } from './catalog/ProductPreview';
 import { missingInformation } from './selection/rules';
 import { SelectionChat } from './selection/SelectionChat';
 import { newSession, restoreSession, SESSION_KEY } from './selection/session';
@@ -31,7 +32,7 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
   const [now, setNow] = useState(Date.now);
   const [catalogState, setCatalogState] = useState(initial.catalog);
   const catalog = useMemo(() => createCatalog(catalogState.snapshot, catalogState.version), [catalogState]);
-  const [{ session, feedback, feedbackRevision, clarification }, dispatch] = useReducer(
+  const [{ session, feedback, feedbackRevision, clarification, clarificationBlocksSelection, contentBrief }, dispatch] = useReducer(
     (state: SelectionInteraction, action: SelectionAction) => selectionInteraction(state, action, catalog),
     undefined,
     () => initialInteraction(load(catalog)),
@@ -73,12 +74,13 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
   return <>
     <header><div className="brand">IS<span> / laboratorio digitale</span></div><span className="badge">Solo locale · 0.1</span></header>
     <main>
-      <div className="intro"><span className="eyebrow">Incisoria Sacchetti / Prototipo</span><h1>Dal bisogno al<br/><em>prodotto giusto.</em></h1><p>Selezione guidata dei timbri e prova di personalizzazione grafica. Un passo verificabile alla volta.</p></div>
+      <div className="intro"><span className="eyebrow">Incisoria Sacchetti / Prototipo</span><h1>Troviamo il tuo <em>timbro.</em></h1><p>Raccontaci cosa vuoi imprimere. Ti aiutiamo a scegliere il formato e a preparare una prima bozza.</p></div>
       <aside className="notice"><strong>Ambiente di prova.</strong> {catalogState.snapshot.fixture ? 'Campione TEST' : 'Catalogo letto da Shopify'}, dati del {catalogState.snapshot.capturedOn}. {mode === 'mock' ? 'Demo a parole chiave selezionata: nessun modello AI usato.' : runtime.ai.ready ? `AI collegata: ${runtime.ai.model}.` : `AI non attiva: ${runtime.ai.reason}`} BSS e PitchPrint restano il percorso attuale sulla pagina prodotto.</aside>
       <details className="connection-status"><summary>Collegamenti AI e catalogo</summary>
         <p>Il modello riceve la richiesta, i requisiti, l’ultima domanda e brevi estratti degli ultimi sei scambi; non riceve schede del catalogo. La conversazione viene inviata al provider solo in modalità AI reale.</p>
         <div className="button-row"><button aria-pressed={mode === 'server'} disabled={busy} onClick={() => setMode('server')}>AI reale</button><button aria-pressed={mode === 'mock'} disabled={busy} onClick={() => setMode('mock')}>Demo a parole chiave</button></div>
-        <p>{runtime.ai.reason ?? 'Provider pronto.'} Quota locale riservata: {runtime.ai.reservedUsd.toFixed(4)} / {runtime.ai.budgetUsd.toFixed(2)} USD · {runtime.ai.requests} richieste.</p>
+        <p>{runtime.ai.reason ?? 'Provider pronto.'} {runtime.ai.requests} richieste complessive{runtime.ai.estimatedStandardUsd !== undefined ? ` · consumo stimato a tariffa standard: ${runtime.ai.estimatedStandardUsd.toFixed(4)} USD` : ''}.</p>
+        <p>{runtime.ai.localLimitsEnforced === false ? 'Conteggio locale informativo: i limiti di spesa sono gestiti nel tuo account OpenAI.' : `Blocco prudenziale locale attivo: riserve cumulative ${runtime.ai.reservedUsd.toFixed(4)} / ${runtime.ai.budgetUsd.toFixed(2)} USD. Le riserve non sono la spesa effettiva.`} Uso e fatturazione effettivi sono nel pannello OpenAI.</p>
         <p>{runtime.sync.configured ? `Lettura Shopify automatica ogni ${runtime.sync.intervalSeconds} secondi a server aperto.` : 'Lettura Shopify non configurata: il catalogo non si aggiorna automaticamente.'} Ultima lettura completa: {runtime.catalog.checkedAt ?? 'mai (campione iniziale)'}.</p>
         {runtime.sync.lastError && <p role="status">{runtime.sync.lastError}</p>}
         <button disabled={!runtime.sync.configured || syncBusy || runtime.sync.refreshing} onClick={() => void refreshCatalog()}>{syncBusy ? 'Lettura Shopify…' : 'Aggiorna da Shopify'}</button>
@@ -89,18 +91,19 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
       {editorBinding && editorBinding.version !== catalogState.version && <p className="notice">La bozza usa una versione precedente del catalogo. Per esportare lo SVG, torna alla scelta e riapri un candidato aggiornato; la composizione verrà rivalidata. Puoi salvare subito il JSON della bozza.</p>}
       <nav aria-label="Sezioni del laboratorio"><button disabled={editorEditing} aria-pressed={tab === 'selection'} onClick={() => setTab('selection')}>01 · Scegli il timbro</button><button disabled={!editorProduct} aria-pressed={tab === 'editor'} onClick={() => setTab('editor')}>02 · Editor Fabric.js</button></nav>
       {!editorProduct && <p className="caption">Per aprire il canvas, scegli un modello dai risultati e premi «Prova nel canvas».</p>}
-      {editorBinding && <div hidden={tab !== 'editor'}><Suspense fallback={<p role="status">Caricamento laboratorio…</p>}><EditorLab product={editorBinding.product} catalogVersion={editorBinding.version} catalogOutdated={catalogStale || editorBinding.version !== catalogState.version} onEditingChange={setEditorEditing} onKeepProduct={(id, variantId) => { const product = catalog.list().find(p => p.productId === id && p.variantIds.includes(variantId)); if (product) setEditorBinding({ product, version: catalog.version }); }}/></Suspense></div>}
+      {editorBinding && <div hidden={tab !== 'editor'}><Suspense fallback={<p role="status">Caricamento laboratorio…</p>}><EditorLab product={editorBinding.product} draftText={contentBrief?.text} catalogVersion={editorBinding.version} catalogOutdated={catalogStale || editorBinding.version !== catalogState.version} onEditingChange={setEditorEditing} onKeepProduct={(id, variantId) => { const product = catalog.list().find(p => p.productId === id && p.variantIds.includes(variantId)); if (product) setEditorBinding({ product, version: catalog.version }); }}/></Suspense></div>}
       <div hidden={tab !== 'selection'}><div className="selection-grid">
-        <section className="panel" aria-labelledby="assistant-title">
+        <section className="panel chat-panel" aria-labelledby="assistant-title">
           <span className="eyebrow">01 / Assistente di selezione</span><h2 id="assistant-title">Di cosa hai bisogno?</h2>
           {notice && <p role="status" className="notice">{notice}</p>}
-          <SelectionChat session={session} feedback={feedback} feedbackRevision={feedbackRevision} clarification={clarification} runtime={runtime} mode={mode} busy={busy} active={tab === 'selection'} dispatch={dispatch} onBusy={setBusy} onComplete={refreshRuntime} onShowResults={() => candidatesRef.current?.focus()}/>
+          <SelectionChat session={session} feedback={feedback} feedbackRevision={feedbackRevision} clarification={clarification} clarificationBlocksSelection={clarificationBlocksSelection} contentBrief={contentBrief} runtime={runtime} mode={mode} busy={busy} active={tab === 'selection'} dispatch={dispatch} onBusy={setBusy} onComplete={refreshRuntime} onShowResults={() => candidatesRef.current?.focus()}/>
         </section>
-        <section aria-labelledby="candidate-title"><span className="eyebrow">Catalogo / {catalog.list().length} referenze censite</span><h2 id="candidate-title" ref={candidatesRef} tabIndex={-1}>Possibilità da verificare</h2>
+        <section className="results-panel" aria-labelledby="candidate-title"><span className="eyebrow">Catalogo / {catalog.list().length} referenze censite</span><h2 id="candidate-title" ref={candidatesRef} tabIndex={-1}>Possibilità da verificare</h2>
           {!session.candidates.length && <div className="empty panel"><span className="empty-mark">↗</span><h3>{missing.length ? 'Partiamo dalle tue esigenze' : 'Nessun candidato nel campione'}</h3><p>{missing.length ? 'Raccogliamo i criteri prima di proporti una referenza.' : 'La ricerca usa soltanto i profili censiti. Non significa che il prodotto manchi nel catalogo completo.'}</p></div>}
-          <div className="candidates">{(!clarification && !catalogStale ? session.candidates : []).map((candidate, index) => { const p = catalog.get(candidate.profileId ?? candidate.productId); return <article className="product-card panel" key={profileKey(p)}>
+          <div className="candidates">{(!clarificationBlocksSelection && !catalogStale ? session.candidates : []).map((candidate, index) => { const p = catalog.get(candidate.profileId ?? candidate.productId); return <article className="product-card panel" key={profileKey(p)}>
             <div className="product-number">{String(index + 1).padStart(2, '0')}<span>{p.shape === 'round' ? `Ø ${p.nominalAreaMm.width}` : `${p.nominalAreaMm.width} × ${p.nominalAreaMm.height}`} mm nominali</span></div><h3>{p.title}</h3>{p.variantLabel && <p className="variant-label">Variante: {p.variantLabel}</p>}<p className="caption">Referenza Shopify · profilo TEST v{p.profileVersion} · idoneità produttiva non verificata</p>
-            <ul className="reasons">{candidate.reasons.map(r => <li key={r.ruleId}><span className="rule">{r.ruleId}</span>{r.explanation}</li>)}</ul>
+            <ProductPreview product={p}/>
+            <details><summary>Perché questo modello</summary><ul className="reasons">{candidate.reasons.map(r => <li key={r.ruleId}><span className="rule">{r.ruleId}</span>{r.explanation}</li>)}</ul></details>
             <details><summary>Verifiche ancora necessarie</summary><ul>{candidate.pending.map(item => <li key={item}>{item}</li>)}</ul></details>
             <button className="primary canvas-link" onClick={() => { dispatch({ type: 'choose', productId: profileKey(p) }); setEditorBinding({ product: p, version: catalog.version }); setTab('editor'); }}>Prova nel canvas →</button>
             <a className="product-link" href={productPage(catalog, profileKey(p))} target="_blank" rel="noopener noreferrer" onClick={() => dispatch({ type: 'choose', productId: profileKey(p) })}>Personalizza sulla pagina prodotto ↗</a>

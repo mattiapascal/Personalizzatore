@@ -16,7 +16,7 @@ const directories: string[] = [];
 async function directory() { const path = await mkdtemp(join(tmpdir(), 'customizer-test-')); directories.push(path); return path; }
 afterEach(async () => { for (const path of directories.splice(0)) await rm(path, { recursive: true, force: true }); vi.restoreAllMocks(); });
 const config = () => readConfig({ AI_PROVIDER: 'openai', OPENAI_API_KEY: 'test-not-a-real-key', AI_BUDGET_USD: '1', SHOPIFY_SHOP_DOMAIN: 'zqu2eg-72.myshopify.com', SHOPIFY_ADMIN_ACCESS_TOKEN: 'test-not-a-real-token' });
-const argumentsFor = (patch: Record<string, unknown> = {}) => ({ family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const argumentsFor = (patch: Record<string, unknown> = {}) => ({ dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 const request = () => AiRequestSchema.parse({ message: 'timbro per le fatture', sessionId: crypto.randomUUID(), revision: 3, requirements: { family: 'stamp' }, lastQuestion: 'Preferisci un autoinchiostrante?' });
 const answer = (args = argumentsFor({ family: 'stamp' }), extra = {}) => new Response(JSON.stringify({ status: 'completed', output: [{ type: 'function_call', name: 'collect_requirements', arguments: JSON.stringify(args) }], usage: { input_tokens: 100, output_tokens: 50 }, ...extra }), { status: 200 });
 const rawProducts = (): RawProduct[] => snapshot.products.map(p => ({ id: p.productId, title: p.title, handle: p.handle, status: p.status, onlineStoreUrl: p.url, updatedAt: '2026-10-26T17:46:07Z', tags: p.tags, descriptionHtml: '<p>Timbro personalizzabile con logo</p>', vendor: '', variants: { nodes: p.variantIds.map(id => ({ id, title: 'Default Title', selectedOptions: [], imprintWidth: { type: 'number_decimal', jsonValue: String(p.nominalAreaMm.width) }, imprintHeight: { type: 'number_decimal', jsonValue: String(p.nominalAreaMm.height) } })), pageInfo: { hasNextPage: false, endCursor: null } } }));
@@ -62,8 +62,15 @@ describe('OpenAI server: output tipizzato, contesto e quote', () => {
     expect(results.filter(r => r.status === 'fulfilled')).toHaveLength(1);
     expect(meter.state.requests).toBe(1); expect(meter.state.reservedUsd).toBe(0.6);
     const transport = vi.fn();
-    await expect(proposeOpenAi(request(), { ...config(), AI_BUDGET_USD: 0.001 }, meter, transport)).rejects.toThrow('Quota');
+    await expect(proposeOpenAi(request(), { ...config(), AI_BUDGET_USD: 0.001 }, meter, transport)).rejects.toThrow('Riserva prudenziale');
     expect(transport).not.toHaveBeenCalled();
+  });
+  it('limiti cumulativi locali disattivati: il registro informa senza bloccare la chat', async () => {
+    const meter = new Meter(join(await directory(), 'meter.json')); await meter.load();
+    await meter.reserve(1, 1, 1);
+    const transport = vi.fn(async () => answer());
+    await expect(proposeOpenAi(request(), { ...config(), AI_ENFORCE_LOCAL_LIMITS: false, AI_BUDGET_USD: 0, AI_MAX_REQUESTS: 1 }, meter, transport)).resolves.toMatchObject({ tool: 'collectRequirements' });
+    expect(transport).toHaveBeenCalledOnce(); expect(meter.state.requests).toBe(2);
   });
   it('niente chiave/demo/budget: nessuna richiesta di rete; registro corrotto blocca', async () => {
     const path = join(await directory(), 'meter.json'), meter = new Meter(path); await meter.load();
@@ -78,7 +85,7 @@ describe('OpenAI server: output tipizzato, contesto e quote', () => {
     const first = new Meter(path), second = new Meter(path); await first.load(); await second.load();
     const results = await Promise.allSettled([first.reserve(0.6, 1, 10), second.reserve(0.6, 1, 10)]);
     expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1);
-    await expect(second.reserve(0.6, 1, 10)).rejects.toThrow('Quota');
+    await expect(second.reserve(0.6, 1, 10)).rejects.toThrow('Riserva prudenziale');
     await second.load(); expect(second.state.reservedUsd).toBe(0.6); expect(second.state.requests).toBe(1);
   });
   it('errore, rifiuto e tool amministrativo non diventano comandi; riserva non rimborsata', async () => {

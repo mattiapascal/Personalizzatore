@@ -101,6 +101,9 @@
         },
         "sizeUnknown": {
           "type": "boolean"
+        },
+        "sizeIsEstimate": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false

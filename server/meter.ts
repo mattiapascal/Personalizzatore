@@ -22,9 +22,10 @@ export class Meter {
     });
     this.queue = task.catch(() => {}); return task;
   }
-  reserve(usd: number, budget: number, maxRequests: number) {
+  reserve(usd: number, budget: number, maxRequests: number, enforce = true) {
     return this.serialize(async () => {
-      if (this.state.reservedUsd + usd > budget || this.state.requests >= maxRequests) throw new Error('Quota AI esaurita: controlla il registro consumi');
+      if (enforce && this.state.requests >= maxRequests) throw new Error('Limite locale di richieste raggiunto: non è un limite di fatturazione OpenAI');
+      if (enforce && this.state.reservedUsd + usd > budget) throw new Error('Riserva prudenziale locale insufficiente: non equivale alla spesa OpenAI effettiva');
       const next = { ...this.state, reservedUsd: this.state.reservedUsd + usd, requests: this.state.requests + 1 };
       await writeJson(this.path, next); this.state = next;
     });

@@ -1,5 +1,9 @@
 # Costi e misure — aggiornamento 5 novembre 2026
 
+**Aggiornamento 6 novembre:** la segnalazione di quota dipendeva dalle riserve cumulative (0,98840325 USD su 1 USD), non da una fattura di 2 EUR. I token noti dopo 84 chiamate, incluse eval dell'agente, valevano circa 0,1011135 USD a listino standard. Su indicazione del titolare il laboratorio privato usa ora `AI_ENFORCE_LOCAL_LIMITS=false`: contatore informativo, limiti di spesa gestiti nell'account, nessun blocco per budget/richieste cumulativi locali. Nuove installazioni: guard attivo per default. Non è stato azzerato il registro né modificato il budget del provider. `eval:ai` conserva il guard prudenziale per i collaudi. Il comportamento storico descritto sotto resta disponibile quando il guard è attivo.
+
+Due prove linguistiche v6 aggiuntive superate: 4.705 input/240 output, stima standard 0,00460875 USD. Consumo/fatturazione effettivi e promozione restano da verificare sul provider. Avvisi e **Enforce a hard limit** hanno effetti diversi, e l'enforcement può avere ritardo: [OpenAI Spend limits](https://developers.openai.com/api/docs/guides/spend-limits).
+
 Il titolare ha autorizzato un massimo di **2 EUR per il collaudo**. La configurazione privata usa un limite locale prudente di **1 USD** e 100 richieste. Nessun hosting o servizio aggiuntivo acquistato.
 
 Modello configurato: gpt-5.4-mini-2026-03-17, Responses API con function calling strict e prompt versionato. Listino standard verificato il 5 novembre 2026: 0,75 USD/milione token input e 4,50 USD/milione token output. Per prudenza non scontiamo il caching nel contatore. [Fonte OpenAI](https://developers.openai.com/api/docs/models/gpt-5.4-mini).

@@ -11,7 +11,7 @@ export function download(name: string, content: string, type: string): void {
 function example(revision: number): string {
   return JSON.stringify({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId: 'text-1', arguments: { xMm: 10, yMm: 8 } }, null, 2);
 }
-export function EditorLab({ product, catalogVersion, catalogOutdated = false, onEditingChange, onKeepProduct }: { product: ProductProfile; catalogVersion: string; catalogOutdated?: boolean; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
+export function EditorLab({ product, draftText, catalogVersion, catalogOutdated = false, onEditingChange, onKeepProduct }: { product: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const adapter = useRef<FabricAdapter | null>(null);
   const storeRef = useRef<DocumentStore | null>(null);
@@ -31,12 +31,25 @@ export function EditorLab({ product, catalogVersion, catalogOutdated = false, on
   };
   useEffect(() => {
     if (!canvasRef.current) return;
-    const store = new DocumentStore(createDocument(product, catalogVersion), measureFabric); storeRef.current = store;
+    const initial = createDocument(product, catalogVersion);
+    let store = new DocumentStore(initial, measureFabric);
+    if (draftText) {
+      try {
+        const text = initial.objects.find(o => o.type === 'text')!;
+        const box = measureFabric({ ...text, text: draftText });
+        const xMm = initial.shape === 'round' ? (initial.areaMm.width - box.widthMm) / 2 : 1;
+        const yMm = initial.shape === 'round' ? (initial.areaMm.height - box.heightMm) / 2 : 1;
+        store.dispatch({ schemaVersion: 1, tool: 'moveObject', expectedRevision: 0, objectId: 'text-1', arguments: { xMm, yMm } }, 'manual');
+        store.dispatch({ schemaVersion: 1, tool: 'setText', expectedRevision: 1, objectId: 'text-1', arguments: { text: draftText } }, 'manual');
+      } catch { store = new DocumentStore(initial, measureFabric); setError('Il testo raccolto non entra nella bozza iniziale con i vincoli di prova. È conservato nella chat: scegli un formato più ampio o verifica l’impaginazione.'); }
+    }
+    storeRef.current = store;
     const view = new FabricAdapter(canvasRef.current, () => storeRef.current!.document.revision,
       (objectId, xMm, yMm, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'moveObject', expectedRevision, objectId, arguments: { xMm, yMm } }, 'manual')),
       (objectId, text, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'setText', expectedRevision, objectId, arguments: { text } }, 'manual')),
       value => { setEditing(value); onEditingChange(value); });
     adapter.current = view; view.render(store.document); setDoc(structuredClone(store.document));
+    setEventLog(store.events.map(e => `r${e.revision}: ${e.source} ${e.objectId ?? ''}`).join('\n'));
     document.getElementById('lab-title')?.focus();
     return () => { view.dispose(); adapter.current = null; storeRef.current = null; };
   }, []);

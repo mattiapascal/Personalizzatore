@@ -9,7 +9,7 @@ export const CatalogStateSchema = z.strictObject({
 export type CatalogState = z.infer<typeof CatalogStateSchema>;
 export const RuntimeSchema = z.strictObject({
   csrfToken: z.string().min(32),
-  ai: z.strictObject({ mode: z.enum(['demo', 'openai']), ready: z.boolean(), reason: z.string().nullable(), model: z.string(), budgetUsd: z.number(), reservedUsd: z.number(), requests: z.number().int() }),
+  ai: z.strictObject({ mode: z.enum(['demo', 'openai']), ready: z.boolean(), reason: z.string().nullable(), model: z.string(), budgetUsd: z.number(), reservedUsd: z.number(), requests: z.number().int(), localLimitsEnforced: z.boolean().optional(), estimatedStandardUsd: z.number().nonnegative().optional() }),
   catalog: CatalogStateSchema,
   sync: z.strictObject({ configured: z.boolean(), intervalSeconds: z.number(), lastError: z.string().nullable(), refreshing: z.boolean(), stale: z.boolean().optional() }),
 });

@@ -2,12 +2,15 @@ import type { CatalogAdapter } from '../catalog/adapter';
 import { executeTool, type AiTool } from '../ai/contract';
 import { chooseProduct, newSession, updateRequirements } from './session';
 import type { Requirements, SelectionSession } from './schema';
+import type { ContentBrief } from './content';
 
 export interface SelectionInteraction {
   session: SelectionSession;
   feedback: string;
   feedbackRevision: number;
   clarification?: string | null;
+  clarificationBlocksSelection?: boolean;
+  contentBrief?: ContentBrief;
 }
 export type SelectionAction =
   | { type: 'patch'; patch: Requirements }
@@ -21,22 +24,6 @@ export function initialInteraction(session: SelectionSession): SelectionInteract
   return { session, feedback: 'Descrivi il prodotto che cerchi: ti farò una domanda alla volta.', feedbackRevision: 0 };
 }
 
-function recognizedInformation(requirements: Requirements): string {
-  const parts: string[] = [];
-  if (requirements.family) parts.push(requirements.family === 'stamp' ? 'un timbro' : 'un prodotto diverso dai timbri');
-  if (requirements.mechanism) parts.push({ automatic: 'autoinchiostrante', manual: 'manuale', pocket: 'tascabile', emboss: 'a secco' }[requirements.mechanism]);
-  if (requirements.shape) parts.push({ rectangle: 'forma rettangolare', square: 'forma quadrata', round: 'forma rotonda' }[requirements.shape]);
-  if (requirements.diameterMm) parts.push(`diametro minimo ${requirements.diameterMm} mm`);
-  if (requirements.material) parts.push({ wood: 'legno', plastic: 'plastica', metal: 'metallo', any: 'materiale indifferente' }[requirements.material]);
-  if (requirements.lines) parts.push(`${requirements.lines} righe`);
-  if (requirements.hasLogo !== undefined) parts.push(requirements.hasLogo ? 'con logo' : 'senza logo');
-  if (requirements.minimumAreaMm) parts.push(`ingombro minimo ${requirements.minimumAreaMm.width} × ${requirements.minimumAreaMm.height} mm`);
-  if (requirements.sizeUnknown) parts.push('misure non note');
-  return parts.length
-    ? `Richiesta ricevuta. Ho riconosciuto: ${parts.join(', ')}.`
-    : 'Non ho riconosciuto nuove informazioni nella richiesta. Puoi rispondere alla domanda o riformulare il messaggio.';
-}
-
 // Stato e riscontro vengono aggiornati insieme: nessun setState dentro un updater.
 // Ogni azione controlla la revisione sullo stato corrente, anche per risposte tardive.
 export function selectionInteraction(state: SelectionInteraction, action: SelectionAction, catalog: CatalogAdapter): SelectionInteraction {
@@ -44,15 +31,20 @@ export function selectionInteraction(state: SelectionInteraction, action: Select
     if (action.type === 'choose') return { ...state, session: chooseProduct(state.session, action.productId, catalog) };
     const feedbackRevision = state.feedbackRevision + 1;
     switch (action.type) {
-      case 'catalog': return { session: updateRequirements(state.session, {}, catalog), feedbackRevision, feedback: 'Catalogo aggiornato. Ho rivalutato i requisiti; la bozza grafica aperta conserva la propria versione.' };
+      case 'catalog': return { ...state, session: updateRequirements(state.session, {}, catalog), feedbackRevision, feedback: 'Ho aggiornato i modelli disponibili. La tua bozza resta conservata.' };
       case 'patch': return {
+        ...state,
         session: updateRequirements(state.session, action.patch, catalog), feedbackRevision,
-        feedback: action.patch.sizeUnknown ? 'Va bene, proseguiamo senza misure.' : 'Scelta registrata. Ho aggiornato i requisiti.',
+        feedback: action.patch.sizeIsEstimate ? 'Usiamo questa stima per orientarci. La verificheremo nel canvas.' : action.patch.sizeUnknown ? 'Va bene, proseguiamo senza misure.' : 'Va bene, ho aggiornato la scelta.',
+        clarification: null,
+        clarificationBlocksSelection: false,
       };
       case 'tool': return {
         session: executeTool(action.call, state.session, catalog).session, feedbackRevision,
-        feedback: action.call.tool === 'collectRequirements' ? action.call.clearFields?.length ? 'Ho aggiornato i dati e ritirato le risposte che non vuoi più mantenere.' : action.call.clarification && !Object.keys(action.call.arguments).length ? 'Richiesta ricevuta. Mi serve un chiarimento.' : recognizedInformation(action.call.arguments) : 'Richiesta elaborata.',
+        contentBrief: action.call.tool === 'collectRequirements' && (!action.call.dialogueAct || action.call.dialogueAct === 'answer') ? { ...state.contentBrief, ...action.call.contentBrief } : state.contentBrief,
+        feedback: action.call.tool === 'collectRequirements' ? action.call.clarification ? '' : action.call.clearFields?.length ? 'Va bene, rivediamo la scelta.' : action.call.arguments.sizeUnknown ? 'Va bene, possiamo orientarci anche senza misure precise.' : Object.keys(action.call.arguments).length ? '' : action.call.dialogueAct === 'off_topic' ? 'Torniamo al tuo timbro.' : 'Non mi è chiaro cosa vorresti. Ti aiuto con una domanda più precisa.' : '',
         clarification: action.call.tool === 'collectRequirements' ? action.call.clarification : null,
+        clarificationBlocksSelection: action.call.tool === 'collectRequirements' && !!action.call.clarification && (!action.call.dialogueAct || action.call.dialogueAct === 'answer'),
       };
       case 'reset': return { session: newSession(catalog), feedback: 'Sessione azzerata. Ripartiamo dalle tue esigenze.', feedbackRevision };
       case 'error': return { ...state, feedback: action.message, feedbackRevision };

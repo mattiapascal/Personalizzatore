@@ -32,6 +32,33 @@
           "variantLabel": {
             "type": "string"
           },
+          "image": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "altText": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "url",
+                  "altText"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "productId": {
             "type": "string",
             "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"

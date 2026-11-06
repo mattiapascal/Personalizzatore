@@ -1,5 +1,13 @@
 # Risultati — primo incremento locale, 5 novembre 2026
 
+## Chat, contenuti, anteprime e contatore informativo — 6 novembre 2026
+
+`npm run check`: **82 unit test e 22 browser e2e superati**, build e controllo credenziali nel bundle superati. Schemi rigenerati. Verificati layout stabile con scroll, riepilogo su colonne, foto e fallback esplicito, contenuto effettivo→stima→candidato→testo nel canvas, assenza del testo nel localStorage, messaggi fuori tema senza perdita dati, guard locale disattivabile senza rinunciare a validazione/frequenza/timeout. Corretti i primi tentativi falliti su attesa dell'avvio, resize e ripresa della domanda dopo ritiro della scelta.
+
+AI reale prompt v6: due frasi inventate **2/2 passate**, 4.705 input/240 output, stima standard 0,00460875 USD. Registro osservato: 84 chiamate complessive, 91.546 input/7.212 output noti, circa 0,1011135 USD a tariffa standard; riserve cumulative 0,98840325 USD, che avevano causato il blocco locale da 1 USD. Su indicazione del titolare il contatore ora è informativo (`AI_ENFORCE_LOCAL_LIMITS=false` nella copia privata), registro conservato e nessuna modifica ai limiti OpenAI. I collaudi dell'agente mantengono il guard prudenziale.
+
+Lettura reale: 76 profili, 66 prodotti, 74 con foto; 10 manuali rientrati grazie ai metafield ora compilati. Cinque varianti ancora senza dimensioni. Query immagini validata e lettura riuscita. `capture:chat` superato senza chiamate AI: desktop/mobile e foto prodotto ispezionati. Nessun test umano Illustrator. Apprendimento amministrativo discusso come proposta, nessun archivio clienti o addestramento attivato. [Resoconto completo](iteration-chat-layout.md).
+
 ## Metafield variante — 6 novembre 2026
 
 73/73 test unitari, 19/19 browser e2e e build TypeScript/Vite superati. Test nuovi: metafield autorevoli anche contro titoli discordanti, cambio misure→nuova versione/selezione, rifiuto campi mancanti/zero/negativi/testuali o tipo errato, assenza di fallback, tondo con larghezza≠altezza sospeso. I manuali senza campi non producono candidati; supporto dopo compilazione verificato con dati sintetici TEST esplicitamente distinti dalle letture reali. Tutti i 66 profili attuali aprono documenti validi con metriche Fabric browser. Percorso reale a secco Ø41→canvas→SVG41mm e conflitto/reset su variante Ø51 verificato. Golden storico preservato.

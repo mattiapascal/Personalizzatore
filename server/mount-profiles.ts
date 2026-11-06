@@ -1,4 +1,4 @@
-import { ProductProfileSchema, type ProductProfile } from '../src/catalog/schema.ts';
+import { ProductProfileSchema, ProductImageSchema, type ProductProfile } from '../src/catalog/schema.ts';
 import type { RawProduct } from './catalog.ts';
 
 type Format = { width: number; height: number; shape: ProductProfile['shape'] };
@@ -79,6 +79,7 @@ export function deriveMountProfiles(p: RawProduct): { profiles: ProductProfile[]
     if (conflicts.length) failures.push(variant.title + ': discordanza descrittiva con ' + conflicts.join(', ') + '; usati i metafield variante');
     const supportsLogo = /logo|grafic|disegn|composizion/i.test(source) ? true : null;
     profiles.push(ProductProfileSchema.parse({
+      image: ProductImageSchema.safeParse(p.featuredMedia?.preview?.image).data ?? null,
       profileId: `${p.id}::${variant.id}`, productId: p.id, variantIds: [variant.id], variantLabel: variant.title === 'Default Title' ? '' : variant.title,
       handle: p.handle, title: p.title, status: p.status, url: p.onlineStoreUrl, tags: [...p.tags].sort(), profileVersion: 1,
       family: 'stamp', mechanism, mechanismSource: 'Shopify titolo/tag espliciti: ' + p.title, shape: area.shape, nominalAreaMm: { width: area.width, height: area.height }, materials,

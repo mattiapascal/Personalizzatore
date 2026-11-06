@@ -3,12 +3,14 @@ import { RequirementsSchema, MissingFieldSchema, type SelectionSession } from '.
 import { missingInformation, recommendProducts, questions } from '../selection/rules.ts';
 import type { CatalogAdapter } from '../catalog/adapter.ts';
 import { updateRequirements } from '../selection/session.ts';
+import { ContentBriefSchema } from '../selection/content.ts';
 
 const envelope = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), expectedSessionId: z.string().uuid().optional() };
-export const RequirementFieldSchema = z.enum(['family', 'mechanism', 'material', 'shape', 'diameterMm', 'lines', 'hasLogo', 'minimumAreaMm', 'sizeUnknown']);
+export const RequirementFieldSchema = z.enum(['family', 'mechanism', 'material', 'shape', 'diameterMm', 'lines', 'hasLogo', 'minimumAreaMm', 'sizeUnknown', 'sizeIsEstimate']);
+export const DialogueActSchema = z.enum(['answer', 'off_topic', 'unclear', 'help']);
 export const AiToolSchema = z.discriminatedUnion('tool', [
   z.strictObject({ ...envelope, tool: z.literal('collectRequirements'), arguments: RequirementsSchema,
-    clearFields: z.array(RequirementFieldSchema).max(9).optional(), clarification: z.string().min(1).max(300).nullable().optional() }),
+    clearFields: z.array(RequirementFieldSchema).max(10).optional(), clarification: z.string().min(1).max(300).nullable().optional(), dialogueAct: DialogueActSchema.optional(), contentBrief: ContentBriefSchema.optional() }),
   z.strictObject({ ...envelope, tool: z.literal('searchProducts'), arguments: RequirementsSchema }),
   z.strictObject({ ...envelope, tool: z.literal('recommendProducts'), arguments: z.strictObject({}) }),
   z.strictObject({ ...envelope, tool: z.literal('getProductProfile'), arguments: z.strictObject({ productId: z.string() }) }),
@@ -24,7 +26,11 @@ export function executeTool(raw: unknown, session: SelectionSession, catalog: Ca
   if (call.expectedRevision !== session.revision) throw new Error('Revisione sessione obsoleta');
   if (call.expectedSessionId && call.expectedSessionId !== session.sessionId) throw new Error('Risposta appartenente a un’altra sessione');
   switch (call.tool) {
-    case 'collectRequirements': return { session: updateRequirements(session, call.arguments, catalog, call.clearFields), result: null };
+    case 'collectRequirements': {
+      if ((call.dialogueAct && call.dialogueAct !== 'answer') || (!Object.keys(call.arguments).length && !call.clearFields?.length && !call.contentBrief)) return { session, result: null };
+      const patch = call.contentBrief?.text && session.requirements.sizeIsEstimate ? { ...call.arguments, minimumAreaMm: null, sizeUnknown: false, sizeIsEstimate: false } : call.arguments;
+      return { session: updateRequirements(session, patch, catalog, call.clearFields), result: null };
+    }
     case 'searchProducts': return { session, result: recommendProducts(catalog, call.arguments) };
     case 'recommendProducts': return { session, result: recommendProducts(catalog, session.requirements) };
     case 'getProductProfile': return { session, result: catalog.get(call.arguments.productId) };

@@ -13,6 +13,7 @@
     "fixtures:editor": "node --import tsx scripts/export-editor-fixture.ts",
     "capture:lab": "node --import tsx scripts/capture-lab.ts",
     "capture:mounts": "node --import tsx scripts/capture-mounts.ts",
+    "capture:chat": "node --import tsx scripts/capture-chat-layout.ts",
     "catalog:audit": "node --import tsx scripts/audit-mounts.ts",
     "fixtures:mounts": "node --import tsx scripts/export-mount-fixtures.ts",
     "eval:ai": "node --import tsx scripts/eval-ai.ts",

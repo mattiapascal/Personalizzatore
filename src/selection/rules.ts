@@ -43,6 +43,7 @@ export function recommendProducts(catalog: CatalogAdapter, input: Requirements):
         { ruleId: 'R5_ORDER', explanation: 'Ordinamento per superficie nominale crescente, senza usare prezzo o disponibilità.' },
       ],
       pending: [
+        ...(r.sizeIsEstimate ? ['Ingombro stimato dal testo con font e margini di prova: verificare la composizione effettiva nel canvas.'] : []),
         ...(p.dataWarnings ?? []),
         'Area utile, margini, font minimo e impaginazione da confermare con il laboratorio.',
         ...(r.lines ? [`Compatibilità delle ${r.lines} righe non verificata graficamente.`] : []),

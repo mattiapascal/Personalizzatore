@@ -10,8 +10,10 @@ test.beforeEach(async ({ page }) => {
   // Mai chiamate AI a pagamento nella suite automatica browser.
   await page.route('**/api/bootstrap', route => route.fulfill({ json: demoRuntime() }));
   await page.route('**/api/ai/interpret', route => route.fulfill({ status: 503, json: { error: 'Trasporto AI non predisposto da questo test' } }));
+  await page.route('https://cdn.shopify.com/**', route => route.abort());
 });
 async function sendMessage(page: Page, message: string) {
+  await page.locator('.chat-message.assistant').first().waitFor({ state: 'attached' });
   const before = await page.locator('.chat-message.assistant').count();
   await page.getByLabel('Scrivi un messaggio', { exact: true }).fill(message);
   await page.getByRole('button', { name: 'Invia messaggio' }).click();
@@ -37,11 +39,11 @@ test('conversazione senza campi esterni: domande successive e riepilogo rosso/ve
   await page.setViewportSize({ width: 390, height: 844 }); await page.goto('/');
   for (const field of ['prodotto', 'montatura', 'forma', 'dimensioni']) await expect(page.getByTestId('field-' + field)).toHaveClass(/missing/);
   await sendMessage(page, 'Voglio fare un timbro per le fatture');
-  await expect(latest(page)).toContainText('autoinchiostrante, manuale, tascabile oppure a secco');
+  await expect(latest(page)).toContainText('Che cosa vuoi imprimere');
   await expect(page.getByTestId('field-prodotto')).toHaveClass(/answered/);
   await expect(page.getByTestId('field-montatura')).toHaveClass(/missing/);
   await sendMessage(page, 'Non so le misure');
-  await expect(latest(page)).toContainText('autoinchiostrante');
+  await expect(latest(page)).toContainText('testo');
   await expect(page.getByTestId('field-dimensioni')).toHaveClass(/answered/);
   await expect(page.getByTestId('field-dimensioni')).toContainText('Non note');
   await sendMessage(page, 'Autoinchiostrante');
@@ -82,7 +84,7 @@ test('chat conserva requisiti dopo reload, corregge misure e apre URL veri senza
 test('richieste ignote e nessun candidato hanno riscontro; reset azzera anche il riepilogo', async ({ page }) => {
   await page.goto('/');
   await sendMessage(page, 'abracadabra');
-  await expect(latest(page)).toContainText('Non ho riconosciuto');
+  await expect(latest(page)).toContainText('Non mi è chiaro');
   await sendMessage(page, 'Timbro manuale in legno rettangolare, non so le misure');
   await expect(latest(page)).toContainText('Nessun modello corrisponde');
   await expect(page.locator('.product-card')).toHaveCount(0);
@@ -193,7 +195,7 @@ test('AI server pone domande, aggiorna riepilogo e rifiuta fallback silenzioso',
   });
   await page.goto('/');
   await sendMessage(page, 'vorrei un timpro per le fattture');
-  await expect(latest(page)).toContainText('autoinchiostrante');
+  await expect(latest(page)).toContainText('testo');
   await sendMessage(page, 'quello che si inchiostra da solo');
   await expect(latest(page)).toContainText('rettangolare');
   await sendMessage(page, 'rettangolo');
@@ -271,6 +273,8 @@ test('backend offline non attiva automaticamente il parser dimostrativo', async 
 
 test('montature manuali senza metafield: domande complete e nessuna misura dedotta dai titoli', async ({ page }) => {
   const runtime = demoRuntime(); runtime.catalog = { ...runtime.catalog, snapshot: structuredClone(mountSnapshot), version: mountFixtureCatalog.version };
+  // Simula l'assenza di profili tecnici manuali; il catalogo reale può essere completato nel frattempo.
+  runtime.catalog.snapshot.products = runtime.catalog.snapshot.products.filter(p => p.mechanism !== 'manual');
   await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
   await page.goto('/'); await sendMessage(page, 'Timbro manuale');
   await expect(latest(page)).toContainText('legno, plastica, metallo');
@@ -360,4 +364,69 @@ test('catalogo obsoleto sospende candidati e SVG mantenendo chat e progetto JSON
   await page.getByRole('button', { name: '01 · Scegli il timbro' }).click();
   await expect(page.locator('.product-card')).toHaveCount(0);
   await expect(page.getByTestId('field-montatura')).toContainText('Autoinchiostrante');
+});
+
+test('chat stabile con scroll e riepilogo compatto su desktop e mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 1360, height: 1000 }); await page.goto('/');
+  const log = page.getByTestId('chat-log'), before = await log.boundingBox();
+  const panel = await page.locator('.chat-panel').boundingBox(), results = await page.locator('.results-panel').boundingBox();
+  expect(panel!.width).toBeGreaterThan(results!.width);
+  for (const value of ['Voglio un timbro', 'Autoinchiostrante', 'Rettangolare', 'Non so le misure', 'Un timbro con logo e sei righe', 'Con logo e sei righe, non so le misure']) await sendMessage(page, value);
+  const after = await log.boundingBox(); expect(after!.height).toBeCloseTo(before!.height, 0);
+  expect(await log.evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true);
+  await log.hover(); await page.mouse.wheel(0, -10000);
+  await expect(page.getByRole('button', { name: 'Ultimo messaggio' })).toBeVisible();
+  const originalTop = await log.evaluate(el => el.scrollTop);
+  await page.getByLabel('Scrivi un messaggio').fill('Sto leggendo');
+  expect(await log.evaluate(el => el.scrollTop)).toBe(originalTop);
+  await page.getByRole('button', { name: 'Ultimo messaggio' }).click();
+  await expect.poll(() => log.evaluate(el => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(3);
+  const desktop = await page.getByTestId('field-prodotto').boundingBox(), mount = await page.getByTestId('field-montatura').boundingBox();
+  expect(mount!.y).toBeCloseTo(desktop!.y, 0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const product = await page.getByTestId('field-prodotto').boundingBox(), mechanism = await page.getByTestId('field-montatura').boundingBox(), shape = await page.getByTestId('field-forma').boundingBox();
+  expect(product!.y).toBeCloseTo(mechanism!.y, 0); expect(shape!.y).toBeGreaterThan(product!.y);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('contenuto → stima → recupero fuori tema → testo nel canvas, senza salvare contenuti nello storage', async ({ page }) => {
+  const runtime = demoRuntime(); runtime.ai = { ...runtime.ai, mode: 'openai', ready: true, reason: null };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  const text = 'TEST BOTTEGA\nVia di prova 1\nCittà'; let count = 0;
+  await page.route('**/api/ai/interpret', route => {
+    const body = route.request().postDataJSON(); count++;
+    const reply = count === 1 ? { arguments: { family: 'stamp' }, contentBrief: { kind: 'text', purpose: 'business' } }
+      : count === 2 ? { arguments: { mechanism: 'automatic', shape: 'rectangle', sizeUnknown: true }, contentBrief: { kind: 'text', text } }
+        : { arguments: { family: 'other' }, dialogueAct: 'off_topic', clarification: 'Restiamo sul tuo timbro: vuoi provare uno dei modelli trovati?' };
+    return route.fulfill({ json: { schemaVersion: 1, tool: 'collectRequirements', expectedRevision: body.revision, expectedSessionId: body.sessionId, ...reply } });
+  });
+  await page.goto('/'); await sendMessage(page, 'vorrei un timpro per la botega');
+  await expect(latest(page)).toContainText('Scrivimi il testo');
+  await sendMessage(page, text);
+  await expect(page.getByRole('region', { name: 'Contenuto del timbro' })).toContainText('3 righe');
+  await page.getByRole('button', { name: 'Cerca usando questa stima' }).click();
+  await expect(page.getByTestId('field-dimensioni')).toContainText('stima');
+  const requirements = await page.getByTestId('requirements').textContent();
+  await sendMessage(page, 'ma secondo te domani piove?');
+  await expect(latest(page)).toContainText('Restiamo sul tuo timbro');
+  expect(await page.getByTestId('requirements').textContent()).toBe(requirements);
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain('TEST BOTTEGA');
+  await page.locator('.product-card').filter({ has: page.getByRole('heading', { name: /4913/ }) }).getByRole('button', { name: 'Prova nel canvas' }).click();
+  await page.getByText('Stato e storico del documento').click();
+  const doc = JSON.parse(await page.getByTestId('graphic-state').innerText());
+  expect(doc.objects[1].text).toBe(text);
+  await expect(page.getByRole('button', { name: 'Esporta SVG' })).toBeEnabled();
+});
+
+test('anteprima reale dichiarata e sagoma dell’impronta quando manca la foto', async ({ page }) => {
+  const runtime = demoRuntime();
+  runtime.catalog.snapshot.products[0]!.image = { url: 'https://cdn.shopify.com/s/files/1/test/photo.jpg', altText: 'Foto TEST' };
+  await page.route('**/api/bootstrap', route => route.fulfill({ json: runtime }));
+  await page.route('https://cdn.shopify.com/s/files/1/test/photo.jpg', route => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="#ddd"/><text x="5" y="50">TEST</text></svg>' }));
+  await page.goto('/'); await sendMessage(page, 'Timbro autoinchiostrante rettangolare non so le misure');
+  await expect(page.getByRole('img', { name: 'Foto TEST' })).toBeVisible();
+  await expect(page.getByRole('img', { name: /Area impronta/ })).toHaveCount(2);
+  await expect(page.locator('.product-card').first().locator('.reasons')).not.toBeVisible();
+  await page.locator('.product-card').first().getByText('Perché questo modello', { exact: true }).click();
+  await expect(page.locator('.product-card').first().locator('.reasons')).toBeVisible();
 });
