@@ -33,13 +33,14 @@ export function RequirementSummary({ requirements: r }: { requirements: Requirem
 
 interface Props {
   publicMode?: boolean;
+  feedbackIsError?: boolean;
   session: SelectionSession; feedback: string; feedbackRevision: number; clarification?: string | null; clarificationBlocksSelection?: boolean;
   contentBrief?: ContentBrief;
   catalog: CatalogAdapter;
   runtime: RuntimeState; mode: 'mock' | 'server'; busy: boolean; active: boolean;
   dispatch: (action: SelectionAction) => void; onBusy: (busy: boolean) => void; onComplete: () => void; onShowResults: () => void;
 }
-export function SelectionChat({ session, feedback, feedbackRevision, clarification, clarificationBlocksSelection, contentBrief, catalog, runtime, mode, busy, active, dispatch, onBusy, onComplete, onShowResults, publicMode = false }: Props) {
+export function SelectionChat({ session, feedback, feedbackRevision, feedbackIsError, clarification, clarificationBlocksSelection, contentBrief, catalog, runtime, mode, busy, active, dispatch, onBusy, onComplete, onShowResults, publicMode = false }: Props) {
   const [message, setMessage] = useState('');
   const vault = useRef(new PrivacyVault(catalog.list().map(p => p.title)));
   useEffect(() => { vault.current.allowCatalogTitles(catalog.list().map(p => p.title)); }, [catalog]);
@@ -77,9 +78,9 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
   useEffect(() => {
     if (processed.current === feedbackRevision) return;
     processed.current = feedbackRevision;
-    setTurns(previous => [...previous.slice(-39), { id: counter.current++, role: 'assistant', text: [feedback, question].filter(Boolean).join('\n\n'), contextText: clarification ?? modelQuestion(prompt) }]);
+    setTurns(previous => [...previous.slice(-39), { id: counter.current++, role: 'assistant', text: feedbackIsError ? feedback : [feedback, question].filter(Boolean).join('\n\n'), contextText: feedbackIsError ? 'Invio non riuscito: nessun nuovo requisito raccolto.' : clarification ?? modelQuestion(prompt) }]);
     inputRef.current?.focus({ preventScroll: true });
-  }, [feedbackRevision, feedback, question]);
+  }, [feedbackRevision, feedback, question, feedbackIsError]);
   useLayoutEffect(() => { const log = logRef.current; if (log && active && followLatest.current) { scrollIntent.current = false; log.scrollTop = log.scrollHeight; } }, [turns, busy, active]);
   useLayoutEffect(() => {
     const log = logRef.current, content = contentRef.current;
@@ -115,7 +116,7 @@ export function SelectionChat({ session, feedback, feedbackRevision, clarificati
       const call = mode === 'mock' ? response : vault.current.restoreCall(response, localText);
       if (call.sessionUsage) setUsage(call.sessionUsage);
       dispatch({ type: 'tool', call });
-    } catch (error) { dispatch({ type: 'error', message: error instanceof Error ? publicMode ? error.message : `${error.message}. Riprova o seleziona esplicitamente la demo nelle impostazioni.` : 'Servizio non disponibile. Puoi riprovare.' }); }
+    } catch (error) { setMessage(value); dispatch({ type: 'error', message: error instanceof Error ? publicMode ? error.message : `${error.message}. Riprova o seleziona esplicitamente la demo nelle impostazioni.` : 'Servizio non disponibile. Puoi riprovare.' }); }
     finally { onBusy(false); onComplete(); }
   };
   const submit = async () => {

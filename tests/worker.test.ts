@@ -24,14 +24,26 @@ describe('Budget persistente pubblico: riserve prima della rete', () => {
   });
   it('un timeout mantiene la riserva dopo la scadenza del lease; il reset browser non azzera il credito server', () => {
     let stored = emptyLedger();
-    const meter = new WorkerMeter('credit', () => stored, value => { stored = value; }, 1);
+    const meter = new WorkerMeter('credit', () => stored, value => { stored = value; }, 0.05);
     return meter.reserve(0.03, 10, 200, false, { id: 'credit', budgetUsd: 0.05 }).then(async () => {
       stored.sessions.credit!.activeUntil = 0;
-      const restored = new WorkerMeter('credit', () => structuredClone(stored), value => { stored = value; }, 1);
-      await expect(restored.reserve(0.03, 10, 200, false, { id: 'credit', budgetUsd: 0.05 })).rejects.toThrow('questa conversazione');
+      const restored = new WorkerMeter('credit', () => structuredClone(stored), value => { stored = value; }, 0.05);
+      await expect(restored.reserve(0.03, 10, 200, false, { id: 'credit', budgetUsd: 0.05 })).rejects.toThrow('limite del periodo');
       expect(restored.sessionUsage('browser-id', 0.05).heldUsd).toBe(0.03);
       await expect(restored.reserve(0.01, 10, 200, false, { id: 'nuovo-browser-id', budgetUsd: 0.05 })).rejects.toThrow('non valida');
     });
+  });
+  it('la consulenza pubblica prosegue oltre venti messaggi e 0,05 USD, mantenendo il tetto del servizio', async () => {
+    let stored = emptyLedger();
+    const meter = new WorkerMeter('customer', () => stored, value => { stored = value; }, 1);
+    for (let i = 0; i < 25; i++) {
+      await meter.reserve(0.02, 1, 200, true, { id: 'customer', budgetUsd: 0.05 });
+      await meter.record(1000, 800, { id: 'customer', reservedUsd: 0.02 });
+    }
+    expect(meter.sessionUsage('customer', 0.05)).toMatchObject({ requests: 25, heldUsd: 0, limitScope: 'service', budgetUsd: 1 });
+    expect(stored.spent).toBeGreaterThan(50_000);
+    await expect(meter.reserve(0.95, 1, 200, true, { id: 'customer', budgetUsd: 0.05 })).rejects.toThrow('limite del periodo');
+    expect(reserveLedger({ ...emptyLedger(), requests: 200 }, 'new', 0.02, 1, null, Date.now()).requests).toBe(201);
   });
   it('la pulizia delle sessioni scadute non libera riserve globali senza esito', () => {
     const state = reserveLedger(emptyLedger(), 'expired', 0.04, 0.05, 0.05, 0);

@@ -14,6 +14,7 @@ export { PROMPT_VERSION } from './interpretation-prompt.ts';
 export { AiRequestSchema, type AiRequest };
 export const ArgumentsSchema = z.strictObject({
   dialogueAct: DialogueActSchema.nullable(),
+  helpTopic: z.enum(['mechanism', 'shape', 'dimensions', 'content', 'material', 'catalog']).nullable().describe('Solo per spiegazioni sui timbri; nessuna risposta generale.'),
   changeIntent: z.enum(['update', 'withdraw']).nullable(), clearEvidence: z.string().min(1).max(1200).nullable(),
   contentText: z.string().trim().min(1).max(480).nullable(),
   contentKind: z.enum(['text', 'graphic', 'mixed']).nullable(),
@@ -30,14 +31,26 @@ const instructions = interpretationInstructions;
 
 export function proposalFromArguments(raw: unknown, revision: number, context?: Pick<AiRequest, 'message' | 'requirements' | 'lastQuestion' | 'lastQuestionField' | 'contentBrief'>): AiTool {
   const args = ArgumentsSchema.parse(raw);
-  if (args.dialogueAct && args.dialogueAct !== 'answer') return AiToolSchema.parse({ schemaVersion: 1, tool: 'collectRequirements', expectedRevision: revision, arguments: {}, clearFields: [], dialogueAct: args.dialogueAct, clarification: args.clarification });
+  if (args.dialogueAct && args.dialogueAct !== 'answer') {
+    const help = {
+      mechanism: 'L’autoinchiostrante ha il tampone incorporato; il manuale usa un tampone separato; il tascabile è pensato per il trasporto; il timbro a secco crea un rilievo.',
+      shape: 'Possiamo confrontare impronte rettangolari, quadrate o rotonde. La forma va scelta in base al contenuto e allo spazio da timbrare.',
+      dimensions: 'Per un rettangolo servono larghezza e altezza; per un quadrato il lato; per un tondo il diametro. Puoi usare mm o cm, oppure dirci che non conosci le misure.',
+      content: 'Puoi scrivere il testo da imprimere, mantenendo gli a capo, oppure descrivere il logo o l’illustrazione. Le misure della composizione andranno verificate.',
+      material: 'Il materiale riguarda la montatura del timbro manuale. Confrontiamo le opzioni effettivamente presenti nei modelli del catalogo.',
+      catalog: 'Posso aiutarti a confrontare i timbri del nostro catalogo in base all’uso, al contenuto e alle misure. Prezzo e disponibilità si verificano sulla scheda prodotto.',
+    };
+    // Per aiuto e divagazioni nessun testo libero del modello raggiunge la chat.
+    return AiToolSchema.parse({ schemaVersion: 1, tool: 'collectRequirements', expectedRevision: revision, arguments: {}, clearFields: [], dialogueAct: args.dialogueAct, clarification: args.dialogueAct === 'help' ? help[args.helpTopic ?? 'catalog'] : null });
+  }
   const patch: Requirements = {};
   const contentBrief = { ...(args.contentText ? { text: args.contentText } : {}), ...(args.contentKind ? { kind: args.contentKind } : {}), ...(args.purpose ? { purpose: args.purpose } : {}), ...(args.graphicSubject ? { graphicSubject: args.graphicSubject } : {}) };
   for (const field of ['family', 'mechanism', 'material', 'shape', 'lines', 'hasLogo'] as const) {
     if (args[field] !== null) Object.assign(patch, { [field]: args[field] });
   }
   const shape = args.shape ?? context?.requirements.shape;
-  let width = args.widthMm, height = args.heightMm, diameter = args.diameterMm, clarification = args.clarification;
+  let width = args.widthMm, height = args.heightMm, diameter = args.diameterMm;
+  let clarification: string | null = null;
   const hasMeasurement = width !== null || height !== null || diameter !== null;
   if (args.sizeUnknown === true && hasMeasurement) {
     width = height = diameter = null;

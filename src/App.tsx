@@ -33,7 +33,7 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
   const [now, setNow] = useState(Date.now);
   const [catalogState, setCatalogState] = useState(initial.catalog);
   const catalog = useMemo(() => createCatalog(catalogState.snapshot, catalogState.version), [catalogState]);
-  const [{ session, feedback, feedbackRevision, clarification, clarificationBlocksSelection, contentBrief }, dispatch] = useReducer(
+  const [{ session, feedback, feedbackRevision, feedbackIsError, clarification, clarificationBlocksSelection, contentBrief }, dispatch] = useReducer(
     (state: SelectionInteraction, action: SelectionAction) => selectionInteraction(state, action, catalog),
     undefined,
     () => initialInteraction(load(catalog)),
@@ -101,7 +101,7 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
         <section className="panel chat-panel" aria-labelledby="assistant-title">
           <span className="eyebrow">01 / Assistente di selezione</span><h2 id="assistant-title">Di cosa hai bisogno?</h2>
           {notice && <p role="status" className="notice">{notice}</p>}
-          <SelectionChat session={session} feedback={feedback} feedbackRevision={feedbackRevision} clarification={clarification} clarificationBlocksSelection={clarificationBlocksSelection} contentBrief={contentBrief} catalog={catalog} runtime={runtime} mode={mode} busy={busy} active={tab === 'selection'} dispatch={dispatch} onBusy={setBusy} onComplete={refreshRuntime} onShowResults={() => candidatesRef.current?.focus()}/>
+          <SelectionChat feedbackIsError={feedbackIsError} session={session} feedback={feedback} feedbackRevision={feedbackRevision} clarification={clarification} clarificationBlocksSelection={clarificationBlocksSelection} contentBrief={contentBrief} catalog={catalog} runtime={runtime} mode={mode} busy={busy} active={tab === 'selection'} dispatch={dispatch} onBusy={setBusy} onComplete={refreshRuntime} onShowResults={() => candidatesRef.current?.focus()}/>
         </section>
         <section className="results-panel" aria-labelledby="candidate-title"><span className="eyebrow">Catalogo / {catalog.list().length} referenze censite</span><h2 id="candidate-title" ref={candidatesRef} tabIndex={-1}>Possibilità da verificare</h2>
           {showingAdvice && <p className="caption">Proposta iniziale basata sull’uso descritto. Montatura, ingombro e grafica restano da confermare.</p>}

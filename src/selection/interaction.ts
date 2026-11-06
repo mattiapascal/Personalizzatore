@@ -9,6 +9,7 @@ export interface SelectionInteraction {
   session: SelectionSession;
   feedback: string;
   feedbackRevision: number;
+  feedbackIsError?: boolean;
   clarification?: string | null;
   clarificationBlocksSelection?: boolean;
   contentBrief?: ContentBrief;
@@ -38,6 +39,7 @@ export function selectionInteraction(state: SelectionInteraction, action: Select
       return { ...state, session: chooseProduct(updated, action.productId, catalog) };
     }
     const feedbackRevision = state.feedbackRevision + 1;
+    state = { ...state, feedbackIsError: false };
     switch (action.type) {
       case 'catalog': return { ...state, session: updateRequirements(state.session, {}, catalog), feedbackRevision, feedback: 'Ho aggiornato i modelli disponibili. La tua bozza resta conservata.' };
       case 'patch': return {
@@ -55,9 +57,9 @@ export function selectionInteraction(state: SelectionInteraction, action: Select
         clarificationBlocksSelection: action.call.tool === 'collectRequirements' && !!action.call.clarification && (!action.call.dialogueAct || action.call.dialogueAct === 'answer'),
       };
       case 'reset': return { session: newSession(catalog), feedback: 'Sessione azzerata. Ripartiamo dalle tue esigenze.', feedbackRevision };
-      case 'error': return { ...state, feedback: action.message, feedbackRevision };
+      case 'error': return { ...state, feedback: action.message, feedbackRevision, feedbackIsError: true };
     }
   } catch {
-    return { ...state, feedback: 'Risposta obsoleta o dati non validi. I requisiti sono conservati: ripeti il messaggio per continuare.', feedbackRevision: state.feedbackRevision + 1 };
+    return { ...state, feedback: 'Risposta obsoleta o dati non validi. I requisiti sono conservati: ripeti il messaggio per continuare.', feedbackRevision: state.feedbackRevision + 1, feedbackIsError: true };
   }
 }

@@ -23,7 +23,7 @@ function manualTestSource() {
 const manualTestCatalog = () => createCatalog({ ...mountSnapshot, products: deriveMountProfiles(manualTestSource()).profiles }, 'TEST-synthetic-metafields');
 const measure: Measure = o => o.type === 'circle' ? { widthMm: o.radiusMm * 2 + o.strokeMm, heightMm: o.radiusMm * 2 + o.strokeMm }
   : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : { widthMm: 6, heightMm: 3 };
-const args = (patch: Record<string, unknown>) => ({ changeIntent: 'update', clearEvidence: null, dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const args = (patch: Record<string, unknown>) => ({ helpTopic: null, changeIntent: 'update', clearEvidence: null, dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 
 describe('Montature reali: fonti, aggiornamenti e varianti', () => {
   it('legno tondo senza metafield resta in revisione anche se diametri e handle contengono numeri', () => {

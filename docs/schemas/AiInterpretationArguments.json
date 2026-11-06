@@ -18,6 +18,25 @@
         }
       ]
     },
+    "helpTopic": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "mechanism",
+            "shape",
+            "dimensions",
+            "content",
+            "material",
+            "catalog"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Solo per spiegazioni sui timbri; nessuna risposta generale."
+    },
     "changeIntent": {
       "anyOf": [
         {
@@ -281,6 +300,7 @@
   },
   "required": [
     "dialogueAct",
+    "helpTopic",
     "changeIntent",
     "clearEvidence",
     "contentText",

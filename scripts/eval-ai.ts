@@ -5,6 +5,7 @@ import { z } from 'zod';
 import casesJson from '../fixtures/ai/requirements.TEST.json' with { type: 'json' };
 import mountsJson from '../fixtures/ai/mounts.TEST.json' with { type: 'json' };
 import dialogueJson from '../fixtures/ai/dialogue.TEST.json' with { type: 'json' };
+import domainJson from '../fixtures/ai/domain.TEST.json' with { type: 'json' };
 import { ContentBriefSchema } from '../src/selection/content.ts';
 import { DialogueActSchema } from '../src/ai/contract.ts';
 import { RequirementsSchema } from '../src/selection/schema.ts';
@@ -13,19 +14,20 @@ import { executeTool, RequirementFieldSchema } from '../src/ai/contract.ts';
 import { newSession } from '../src/selection/session.ts';
 import { readConfig } from '../server/config.ts';
 import { Meter } from '../server/meter.ts';
-import { proposeOpenAi, PROMPT_VERSION } from '../server/openai.ts';
+import { makeOpenAiBody, proposeOpenAi, PROMPT_VERSION } from '../server/openai.ts';
 import { writeJson } from '../server/files.ts';
 import { PrivacyVault } from '../src/privacy/redaction.ts';
 import { AiRequestSchema } from '../src/ai/request.ts';
 
-const mounts = process.argv[2] === '--mounts', dialogue = process.argv[2] === '--dialogue';
-const cases = z.object({ fixture: z.literal(true), cases: z.array(z.object({ id: z.string(), message: z.string(), requirements: RequirementsSchema, lastQuestion: z.string().nullable(), expected: RequirementsSchema, absent: z.array(RequirementFieldSchema).optional(), clarification: z.boolean().optional(), expectedBrief: ContentBriefSchema.optional(), dialogueAct: DialogueActSchema.optional() })) }).parse(dialogue ? dialogueJson : mounts ? mountsJson : casesJson).cases;
+const mounts = process.argv[2] === '--mounts', dialogue = process.argv[2] === '--dialogue', domain = process.argv[2] === '--domain';
+const cases = z.object({ fixture: z.literal(true), cases: z.array(z.object({ id: z.string(), message: z.string(), requirements: RequirementsSchema, lastQuestion: z.string().nullable(), expected: RequirementsSchema, absent: z.array(RequirementFieldSchema).optional(), clarification: z.boolean().optional(), expectedBrief: ContentBriefSchema.optional(), dialogueAct: DialogueActSchema.optional() })) }).parse(domain ? domainJson : dialogue ? dialogueJson : mounts ? mountsJson : casesJson).cases;
 // I collaudi dell'agente mantengono il tetto autorizzato anche se la chat usa i limiti dell'account.
-const config = { ...readConfig({ ...loadEnv('development', process.cwd(), ''), ...process.env }), AI_ENFORCE_LOCAL_LIMITS: true };
+const config = { ...readConfig({ ...loadEnv('development', process.cwd(), ''), ...process.env }), AI_ENFORCE_LOCAL_LIMITS: !domain };
 if (config.AI_PROVIDER !== 'openai' || !config.OPENAI_API_KEY || config.AI_BUDGET_USD <= 0) throw new Error('Configurare chiave e budget in .env.local prima del collaudo reale');
 const meter = new Meter(resolve('.local/ai-meter.json')); await meter.load();
 const start = structuredClone(meter.state);
-const id = process.argv[mounts || dialogue ? 3 : 2];
+let domainReserve = 0;
+const id = process.argv[mounts || dialogue || domain ? 3 : 2];
 const selected = id ? cases.filter(c => c.id === id) : cases;
 if (!selected.length) throw new Error('Caso di collaudo sconosciuto');
 const results: { id: string; passed: boolean; mismatches: string[]; actual?: unknown }[] = [];
@@ -34,6 +36,14 @@ for (const c of selected) {
     const session = { ...newSession(fixtureCatalog), requirements: c.requirements };
     const vault = new PrivacyVault();
     const prepared = vault.prepare(AiRequestSchema.parse({ message: c.message, sessionId: session.sessionId, revision: session.revision, requirements: session.requirements, lastQuestion: c.lastQuestion, recentMessages: [] }));
+    if (domain) {
+      // Registro storico conservato; tetti aggiuntivi di 0,12 USD per esecuzione e 1 USD aggregato.
+      const body = makeOpenAiBody({ ...prepared.request, privacyReviewed: true }, config);
+      const bound = ((Buffer.byteLength(JSON.stringify(body), 'utf8') + 2048) * 0.75 + body.max_output_tokens * 4.5) / 1_000_000;
+      const held = Object.values(meter.state.sessions).reduce((sum, counter) => sum + counter.heldUsd, 0);
+      if (domainReserve + bound > 0.12 || (start.inputTokens * 0.75 + start.outputTokens * 4.5) / 1_000_000 + held + domainReserve + bound > 1) throw new Error('Limite locale del collaudo raggiunto');
+      domainReserve += bound;
+    }
     const call = vault.restoreCall(await proposeOpenAi({ ...prepared.request, privacyReviewed: true }, config, meter), prepared.localText);
     const next = executeTool(call, session, fixtureCatalog).session.requirements;
     const mismatches = Object.entries(c.expected).filter(([key, value]) => !isDeepStrictEqual(next[key as keyof typeof next], value)).map(([key]) => key);

@@ -23,8 +23,9 @@ const outbound: V4FetchHandler = async request => {
   if (url.hostname === 'api.openai.com') {
     calls++;
     const body = await request.text(); assert(!body.includes('cliente@example.test'));
+    const offTopic = JSON.parse(JSON.parse(body).input[0].content).message === 'TEST domanda estranea';
     await new Promise(resolve => setTimeout(resolve, 40));
-    return MFResponse.json({ status: 'completed', output: [{ type: 'function_call', name: 'collect_requirements', arguments: JSON.stringify({ ...args, family: 'stamp', dialogueAct: 'answer', changeIntent: 'update', mechanism: 'automatic', shape: 'square', widthMm: 10, heightMm: 10 }) }], usage: { input_tokens: 100, output_tokens: 20 } });
+    return MFResponse.json({ status: 'completed', output: [{ type: 'function_call', name: 'collect_requirements', arguments: JSON.stringify({ ...args, family: 'stamp', dialogueAct: offTopic ? 'off_topic' : 'answer', clarification: offTopic ? 'RISPOSTA_GENERALE_TEST' : null, changeIntent: 'update', mechanism: 'automatic', shape: 'square', widthMm: 10, heightMm: 10 }) }], usage: { input_tokens: 100, output_tokens: 20 } });
   }
   throw new Error('Rete esterna non prevista dal collaudo: ' + url.hostname);
 };
@@ -72,8 +73,13 @@ try {
   assert.equal(roaming.status, 200); assert.equal(calls, 3);
   const roamingData = await roaming.json() as { sessionUsage: { requests: number } };
   assert.equal(roamingData.sessionUsage.requests, 3); // Stesso credito, anche con altro IP/UUID.
+  for (let i = 0; i < 22; i++) assert.equal((await request('/api/public/interpret', 'POST', changedUuid, authorization)).status, 200);
+  const scoped = await request('/api/public/interpret', 'POST', { ...input, message: 'TEST domanda estranea' }, authorization);
+  assert.equal(scoped.status, 200); const scopedBody = await scoped.text();
+  assert(!scopedBody.includes('RISPOSTA_GENERALE_TEST')); assert(scopedBody.includes('off_topic'));
+  const callsBeforeDenied = calls;
   assert.equal((await request('/api/public/interpret', 'POST', input, { Authorization: 'Bearer ' + '0'.repeat(64) })).status, 401);
   await mf.dispose(); mf = make('0.0004');
-  assert.equal((await request('/api/public/interpret', 'POST', changedUuid, authorization)).status, 429); assert.equal(calls, 3);
+  assert.equal((await request('/api/public/interpret', 'POST', changedUuid, authorization)).status, 429); assert.equal(calls, callsBeforeDenied);
   console.log('PASS runtime Workers/SQLite: catalogo atomico, privacy, origine, Turnstile obbligatorio, reti condivise e cambio rete, concorrenza, contatori persistenti e budget non azzerati. Nessuna rete reale.');
 } finally { await mf.dispose(); }

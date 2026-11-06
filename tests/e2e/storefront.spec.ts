@@ -124,8 +124,26 @@ for (const failure of [false, true]) test(`Turnstile completato scompare anche s
 test('ricaricare riusa la capacità salvata senza aprire altre sessioni', async ({ page }) => {
   await setup(page); let starts = 0;
   await page.route('**/api/public/session', route => { starts++; return route.fulfill({ json: { token: 'a'.repeat(64), expiresAt: Date.now() + 60_000 } }); });
-  await page.goto('/'); await expect(page.locator('.security-check')).toHaveCount(0);
-  expect(starts).toBe(1); await page.reload();
+  await page.goto('/'); await expect.poll(() => starts).toBe(1);
+  await expect(page.locator('.security-check')).toHaveCount(0);
+  await page.reload();
   await expect(page.getByLabel('Scrivi un messaggio')).toBeVisible();
+  await page.getByLabel('Scrivi un messaggio').fill('Un timbro');
+  await expect(page.getByRole('button', { name: 'Invia messaggio' })).toBeEnabled();
   await expect(page.locator('.security-check')).toHaveCount(0); expect(starts).toBe(1);
+});
+test('errore invio: non ripete la domanda e conserva il testo per riprovare', async ({ page }) => {
+  await setup(page); let calls = 0;
+  await page.route('**/api/public/interpret', route => {
+    calls++; const input = route.request().postDataJSON();
+    return route.fulfill(calls === 1 ? { status: 503, json: { error: 'Il servizio è temporaneamente occupato. Riprova.' } } : { json: { schemaVersion: 1, tool: 'collectRequirements', expectedSessionId: input.sessionId, expectedRevision: input.revision, arguments: { family: 'stamp' }, clearFields: [], dialogueAct: 'answer', clarification: null } });
+  });
+  await page.goto('/'); await expect(page.locator('.security-check')).toHaveCount(0);
+  const message = 'Un timbro per le fatture', input = page.getByLabel('Scrivi un messaggio');
+  await input.fill(message); await input.press('Enter');
+  await expect(page.getByTestId('selection-feedback')).toHaveText('AssistenteIl servizio è temporaneamente occupato. Riprova.');
+  await expect(input).toHaveValue(message);
+  await expect(page.getByTestId('field-prodotto')).toHaveClass(/missing/);
+  await input.press('Enter'); await expect(page.getByTestId('field-prodotto')).toHaveClass(/answered/);
+  await expect(input).toHaveValue('');
 });

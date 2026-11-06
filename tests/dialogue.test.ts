@@ -10,16 +10,33 @@ import { deriveMountProfiles } from '../server/mount-profiles';
 import { RawProductSchema } from '../server/catalog';
 import sourceData from '../fixtures/products/mount-sources.TEST.json';
 
-const args = (patch: Record<string, unknown>) => ({ changeIntent: 'update', clearEvidence: null, dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const args = (patch: Record<string, unknown>) => ({ helpTopic: null, changeIntent: 'update', clearEvidence: null, dialogueAct: null, contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 describe('Dialogo: recupero della conversazione e contenuti', () => {
   it.each(['off_topic', 'help', 'unclear'] as const)('%s preserva anche selezione, candidati e revisione', dialogueAct => {
     let session = updateRequirements(newSession(fixtureCatalog), { family: 'stamp', mechanism: 'automatic', shape: 'rectangle', sizeUnknown: true }, fixtureCatalog);
     session = chooseProduct(session, session.candidates[0]!.productId, fixtureCatalog);
     const call = proposalFromArguments(args({ dialogueAct, family: 'other', clearFields: ['mechanism'], clarification: 'Restiamo sul tuo timbro: quale forma preferisci?' }), session.revision);
     const next = selectionInteraction(initialInteraction(session), { type: 'tool', call }, fixtureCatalog);
-    expect(next.session).toEqual(session); expect(next.clarification).toContain('quale forma'); expect(next.feedback).toBe('');
+    expect(next.session).toEqual(session);
+    expect(next.clarification).not.toBe('Restiamo sul tuo timbro: quale forma preferisci?');
+    if (dialogueAct === 'help') expect(next.clarification).toContain('catalogo');
+    else expect(next.clarification).toBeNull();
     expect(next.clarificationBlocksSelection).toBe(false);
     expect(() => executeTool({ ...call, expectedRevision: session.revision - 1 }, session, fixtureCatalog)).toThrow('obsoleta');
+  });
+  it('non mostra risposte libere fuori contesto nemmeno se il modello le inserisce in un aiuto', () => {
+    for (const dialogueAct of ['help', 'off_topic', 'unclear']) {
+      const call = proposalFromArguments(args({ dialogueAct, helpTopic: dialogueAct === 'help' ? 'mechanism' : null, clarification: 'RISPOSTA_GENERALE_NON_PERTINENTE', contentText: 'DATI_ESTRANEI', shape: 'round' }), 0);
+      expect(JSON.stringify(call)).not.toContain('RISPOSTA_GENERALE_NON_PERTINENTE');
+      expect(JSON.stringify(call)).not.toContain('DATI_ESTRANEI');
+      expect(call).toMatchObject({ arguments: {} });
+      if (dialogueAct === 'help') expect(call).toMatchObject({ clarification: expect.stringContaining('tampone') });
+    }
+  });
+  it('anche un turno classificato come risposta non può mostrare testo libero del modello', () => {
+    const call = proposalFromArguments(args({ dialogueAct: 'answer', family: 'stamp', clarification: 'RISPOSTA_GENERALE_NON_PERTINENTE' }), 0);
+    expect(call).toMatchObject({ arguments: { family: 'stamp' }, clarification: null });
+    expect(JSON.stringify(call)).not.toContain('RISPOSTA_GENERALE_NON_PERTINENTE');
   });
   it('testo ed ex-libris hanno un brief distinto dai requisiti persistenti', () => {
     const state = initialInteraction(newSession(fixtureCatalog));
