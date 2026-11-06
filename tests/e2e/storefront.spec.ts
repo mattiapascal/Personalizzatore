@@ -100,3 +100,32 @@ test('servizio indisponibile: percorso tradizionale disponibile senza campione o
   await expect(page.getByRole('button', { name: 'Invia messaggio' })).toBeDisabled();
   await expect(page.locator('.product-card')).toHaveCount(0);
 });
+for (const failure of [false, true]) test(`Turnstile completato scompare anche se l’avvio chat ${failure ? 'fallisce' : 'è lento'}`, async ({ page }) => {
+  await setup(page); let starts = 0;
+  let release!: () => void; const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('https://challenges.cloudflare.com/**', route => route.fulfill({ contentType: 'text/javascript', body: 'window.turnstile={render:(node,opts)=>{if(opts.appearance!=="interaction-only")throw new Error("Widget troppo invasivo");node.textContent="Operazione completata";setTimeout(()=>{opts.callback("TEST-token");opts.callback("TEST-duplicate")},0);return "TEST"},remove:()=>{}}' }));
+  await page.route('**/api/public/session', async route => {
+    starts++; await gate;
+    await route.fulfill(failure && starts === 1 ? { status: 503, json: { error: 'Il servizio è occupato. Riprova.' } } : { json: { token: 'a'.repeat(64), expiresAt: Date.now() + 60_000 } });
+  });
+  await page.setViewportSize({ width: 390, height: 667 }); await page.goto('/');
+  await expect.poll(() => starts).toBe(1);
+  await expect(page.getByText('Operazione completata', { exact: true })).not.toBeVisible();
+  await expect(page.getByText('Avvio della chat…', { exact: true })).toBeVisible();
+  release();
+  if (failure) {
+    await expect(page.getByText('Il servizio è occupato. Riprova.', { exact: true })).toBeVisible();
+    await expect(page.getByText('Operazione completata', { exact: true })).not.toBeVisible();
+    await page.getByRole('button', { name: 'Riprova la verifica' }).click();
+    await expect.poll(() => starts).toBe(2);
+  }
+  await expect(page.locator('.security-check')).toHaveCount(0);
+});
+test('ricaricare riusa la capacità salvata senza aprire altre sessioni', async ({ page }) => {
+  await setup(page); let starts = 0;
+  await page.route('**/api/public/session', route => { starts++; return route.fulfill({ json: { token: 'a'.repeat(64), expiresAt: Date.now() + 60_000 } }); });
+  await page.goto('/'); await expect(page.locator('.security-check')).toHaveCount(0);
+  expect(starts).toBe(1); await page.reload();
+  await expect(page.getByLabel('Scrivi un messaggio')).toBeVisible();
+  await expect(page.locator('.security-check')).toHaveCount(0); expect(starts).toBe(1);
+});

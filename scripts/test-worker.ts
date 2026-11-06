@@ -19,7 +19,7 @@ const outbound: V4FetchHandler = async request => {
     const first = !input.variables.after;
     return MFResponse.json({ data: { products: { nodes: first ? sources.products.slice(0, 5) : sources.products.slice(5), pageInfo: { hasNextPage: first, endCursor: first ? 'TEST-next' : null } } } });
   }
-  if (url.hostname === 'challenges.cloudflare.com') return MFResponse.json({ success: true, hostname: 'assistant.test', action: 'assistant-start' });
+  if (url.hostname === 'challenges.cloudflare.com') return MFResponse.json({ success: (await request.formData()).get('response') !== 'TEST-invalid', hostname: 'assistant.test', action: 'assistant-start' });
   if (url.hostname === 'api.openai.com') {
     calls++;
     const body = await request.text(); assert(!body.includes('cliente@example.test'));
@@ -65,7 +65,15 @@ try {
   const after = await (await request('/internal/status', 'GET', undefined, { Authorization: 'Bearer TEST-owner-only' })).json(); assert.deepEqual(after, { ...after as object, ...before });
   const changedUuid = { ...input, sessionId: crypto.randomUUID() };
   assert.equal((await request('/api/public/interpret', 'POST', changedUuid, authorization)).status, 200); assert.equal(calls, 2);
-  await request('/api/public/session', 'POST', { token: 'TEST-proof-2' }); await request('/api/public/session', 'POST', { token: 'TEST-proof-3' });
-  assert.equal((await request('/api/public/session', 'POST', { token: 'TEST-proof-4' })).status, 429);
-  console.log('PASS runtime Workers/SQLite: import paginato, catalogo atomico, privacy, origine, sessioni, concorrenza, contatori dopo riavvio e limiti ai reset. Nessuna rete reale.');
+  // Rete condivisa: altri telefoni/aperture con prova valida non sono trattati come bot.
+  for (let i = 0; i < 12; i++) assert.equal((await request('/api/public/session', 'POST', { token: 'TEST-proof-' + i })).status, 200);
+  assert.equal((await request('/api/public/session', 'POST', { token: 'TEST-invalid' })).status, 403);
+  const roaming = await request('/api/public/interpret', 'POST', changedUuid, { ...authorization, 'CF-Connecting-IP': '198.51.100.2' });
+  assert.equal(roaming.status, 200); assert.equal(calls, 3);
+  const roamingData = await roaming.json() as { sessionUsage: { requests: number } };
+  assert.equal(roamingData.sessionUsage.requests, 3); // Stesso credito, anche con altro IP/UUID.
+  assert.equal((await request('/api/public/interpret', 'POST', input, { Authorization: 'Bearer ' + '0'.repeat(64) })).status, 401);
+  await mf.dispose(); mf = make('0.0004');
+  assert.equal((await request('/api/public/interpret', 'POST', changedUuid, authorization)).status, 429); assert.equal(calls, 3);
+  console.log('PASS runtime Workers/SQLite: catalogo atomico, privacy, origine, Turnstile obbligatorio, reti condivise e cambio rete, concorrenza, contatori persistenti e budget non azzerati. Nessuna rete reale.');
 } finally { await mf.dispose(); }

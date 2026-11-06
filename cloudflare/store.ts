@@ -9,7 +9,7 @@ import { refreshWorkerCatalog } from './catalog.ts';
 import { json, readBody, sha256, verifyTurnstile } from './security.ts';
 import type { Env } from './env.ts';
 
-type Capability = { id: string; visitor: string; expiresAt: number };
+type Capability = { id: string; expiresAt: number };
 export class AssistantStore extends DurableObject<Env> {
   private refreshRunning: Promise<Response> | null = null;
   constructor(ctx: DurableObjectState, env: Env) {
@@ -58,37 +58,30 @@ export class AssistantStore extends DurableObject<Env> {
     })().finally(() => { this.refreshRunning = null; });
     return this.refreshRunning;
   }
-  private visitorCount(visitor: string): number {
-    return this.ctx.storage.sql.exec<{ count: number }>('SELECT count FROM visitors WHERE key = ? AND expires > ?', visitor, Date.now()).toArray()[0]?.count ?? 0;
-  }
   private async session(request: Request): Promise<Response> {
     if (!this.ready || this.stale(this.current)) return json({ error: 'Assistente non disponibile. Puoi scegliere dal catalogo prodotti.' }, 503);
     const body = await readBody(request, 4096) as { token?: unknown };
-    const visitor = request.headers.get('X-Visitor-Key') ?? '';
-    if (!visitor || this.visitorCount(visitor) >= 3) return json({ error: 'Hai già avviato più conversazioni. Riprova domani o continua dal catalogo.' }, 429);
     if (typeof body.token !== 'string' || !await verifyTurnstile(body.token, this.env.TURNSTILE_SECRET, new URL(request.url).hostname)) return json({ error: 'Verifica di sicurezza non riuscita. Riprova.' }, 403);
     const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), n => n.toString(16).padStart(2, '0')).join('');
     const digest = await sha256(token), expiresAt = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000;
-    let limited = false;
+    let full = false;
     this.ctx.storage.transactionSync(() => {
-      const count = this.visitorCount(visitor);
-      if (count >= 3) { limited = true; return; }
       this.ctx.storage.sql.exec('DELETE FROM capabilities WHERE expires <= ?', Date.now());
       this.ctx.storage.sql.exec('DELETE FROM visitors WHERE expires <= ?', Date.now());
       const active = this.ctx.storage.sql.exec<{ count: number }>('SELECT COUNT(*) AS count FROM capabilities').one().count;
-      if (active >= 500) { limited = true; return; }
-      this.ctx.storage.sql.exec('INSERT INTO visitors (key, count, expires) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET count = excluded.count, expires = excluded.expires', visitor, count + 1, expiresAt);
-      const capability: Capability = { id: crypto.randomUUID(), visitor, expiresAt };
+      if (active >= 500) { full = true; return; }
+      const capability: Capability = { id: crypto.randomUUID(), expiresAt };
       this.ctx.storage.sql.exec('INSERT INTO capabilities (digest, value, expires) VALUES (?, ?, ?)', digest, JSON.stringify(capability), expiresAt);
     });
-    return limited ? json({ error: 'Troppe conversazioni attive. Riprova più tardi.' }, 429) : json({ token, expiresAt });
+    return full ? json({ error: 'L’assistente è occupato. Riprova tra poco o continua dal catalogo.' }, 503) : json({ token, expiresAt });
   }
   private async interpret(request: Request): Promise<Response> {
     const bearer = request.headers.get('Authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];
     if (!bearer) return json({ error: 'Avvia la conversazione prima di inviare.' }, 401);
     const capability = this.ctx.storage.sql.exec<{ value: string }>('SELECT value FROM capabilities WHERE digest = ? AND expires > ?', await sha256(bearer), Date.now()).toArray()[0];
     const session = capability ? JSON.parse(capability.value) as Capability : null;
-    if (!session || session.visitor !== request.headers.get('X-Visitor-Key')) return json({ error: 'Conversazione scaduta. Ricarica la pagina per continuare.' }, 401);
+    // La capacità opaca identifica la sessione: un cambio Wi-Fi/rete mobile non azzera il credito.
+    if (!session) return json({ error: 'Conversazione scaduta. Ricarica la pagina per continuare.' }, 401);
     const current = this.current;
     if (this.stale(current) || !current || !this.ready) return json({ error: 'Sto aggiornando i modelli. Riprova tra poco o continua dal catalogo.' }, 503);
     const input = AiRequestSchema.parse(await readBody(request));

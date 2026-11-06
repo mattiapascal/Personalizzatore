@@ -1,5 +1,5 @@
 import type { Env } from './env.ts';
-import { hmac, json, STORE_ORIGINS } from './security.ts';
+import { json, STORE_ORIGINS } from './security.ts';
 export { AssistantStore } from './store.ts';
 
 function stub(env: Env) { return env.ASSISTANT.get(env.ASSISTANT.idFromName('incisoria-stamp-assistant-v1')); }
@@ -9,10 +9,7 @@ export default {
     if (url.pathname.startsWith('/api/public/')) {
       if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 32) return json({ error: 'Assistente temporaneamente non disponibile.' }, 503);
       if (request.method !== 'GET' && request.headers.get('Origin') !== url.origin) return json({ error: 'Origine richiesta non valida.' }, 403);
-      const headers = new Headers(request.headers);
-      // IP originale mai conservato: bucket giornaliero protetto da segreto server.
-      headers.set('X-Visitor-Key', await hmac(new Date().toISOString().slice(0, 10) + ':' + (request.headers.get('CF-Connecting-IP') ?? 'local'), env.SESSION_SECRET));
-      return stub(env).fetch(new Request(request, { headers }));
+      return stub(env).fetch(request);
     }
     if (url.pathname === '/internal/catalog/refresh' && request.method === 'POST') {
       if (!env.RELEASE_ADMIN_SECRET || request.headers.get('Authorization') !== 'Bearer ' + env.RELEASE_ADMIN_SECRET) return json({ error: 'Non autorizzato.' }, 403);

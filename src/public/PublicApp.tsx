@@ -31,15 +31,18 @@ function Conversation({ data, offline }: { data: PublicBootstrap; offline: boole
   const [state, dispatch] = useReducer((s: SelectionInteraction, a: SelectionAction) => selectionInteraction(s, a, catalog), undefined, () => initialInteraction(newSession(catalog)));
   const [busy, setBusy] = useState(false), [capability, setCapability] = useState(readCapability), [securityError, setSecurityError] = useState('');
   const [showCount, setShowCount] = useState(3), [retry, setRetry] = useState(0);
+  const [verified, setVerified] = useState(false);
   const security = useRef<HTMLDivElement>(null), results = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (!busy && data.catalogVersion !== current.catalogVersion) { setCurrent(data); dispatch({ type: 'catalog' }); } else if (data.catalogVersion === current.catalogVersion && data.checkedAt !== current.checkedAt) setCurrent(data); }, [data, current, busy]);
   useEffect(() => {
     if (capability || !data.aiReady || !data.siteKey || !security.current) return;
-    let stopped = false, widget = '';
+    let stopped = false, completing = false, widget = '';
     const start = () => {
       if (stopped || !security.current || !window.turnstile) return;
-      widget = window.turnstile.render(security.current, { sitekey: data.siteKey, action: 'assistant-start', theme: 'light', language: 'it',
+      widget = window.turnstile.render(security.current, { sitekey: data.siteKey, action: 'assistant-start', theme: 'light', language: 'it', appearance: 'interaction-only',
         callback: async (token: string) => {
+          if (stopped || completing) return;
+          completing = true; setVerified(true);
           try {
             const response = await fetch('/api/public/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }), signal: AbortSignal.timeout(10_000) });
             const result = await response.json();
@@ -70,7 +73,7 @@ function Conversation({ data, offline }: { data: PublicBootstrap; offline: boole
     <div className="selection-grid">
       <section className="panel chat-panel" aria-labelledby="assistant-title"><h2 id="assistant-title">Assistente timbri</h2>
         <p className="caption">Assistente AI: inviamo a OpenAI il testo protetto. Evita dati personali non necessari.</p>
-        {!capability && data.aiReady && <div className="security-check"><div ref={security}/><p className="caption" role="status">{securityError || 'Un breve controllo di sicurezza prima di iniziare.'}</p>{securityError && <button onClick={() => { setSecurityError(''); setRetry(n => n + 1); }}>Riprova la verifica</button>}</div>}
+        {!capability && data.aiReady && <div className="security-check"><div ref={security} hidden={verified}/><p className="caption" role="status">{securityError || (verified ? 'Avvio della chat…' : 'Un breve controllo di sicurezza prima di iniziare.')}</p>{securityError && <button onClick={() => { setSecurityError(''); setVerified(false); setRetry(n => n + 1); }}>Riprova la verifica</button>}</div>}
         {!data.aiReady && !stale && <p role="status">L’assistente non è disponibile in questo momento. Puoi continuare dal catalogo.</p>}
         <SelectionChat publicMode session={state.session} feedback={state.feedbackRevision && state.feedback.includes('canvas') ? 'Ho aggiornato la scelta.' : state.feedback} feedbackRevision={state.feedbackRevision} clarification={state.clarification} clarificationBlocksSelection={state.clarificationBlocksSelection}
           contentBrief={state.contentBrief} catalog={catalog} runtime={runtime} mode="server" busy={busy} active dispatch={dispatch} onBusy={setBusy} onComplete={() => {}} onShowResults={() => results.current?.focus()}/>
