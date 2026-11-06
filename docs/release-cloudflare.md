@@ -8,7 +8,9 @@ Il titolare ha autorizzato il primo rilascio diretto sulla pagina `https://www.i
 
 ## Versione distribuita
 
-Correzione sessioni attuale: sorgente `7412f73`, Worker `6e76fd30-8146-49f9-9514-5f2fa78ef01f`. Nessun upload o modifica al tema per questa correzione. [Manifest verificato](releases/2026-11-06-session-fix.json).
+Correzione della consulenza: sorgente `2f4176e`, Worker `1fe2ed27-5635-4f76-b112-0d86352136e6`, prompt `stamp-requirements-v12-policy-ff701d32eeea`. Nessun limite individuale nel pubblico e risposte visibili costruite dal programma per il solo contesto timbri. [Manifest](releases/2026-11-06-guided-budget.json) e [diagnosi, limiti e collaudi](iteration-guided-budget.md). Nessuna modifica al tema.
+
+Correzione sessioni precedente: sorgente `7412f73`, Worker `6e76fd30-8146-49f9-9514-5f2fa78ef01f`. Nessun upload o modifica al tema per questa correzione. [Manifest verificato](releases/2026-11-06-session-fix.json).
 
 Revisione grafica precedente, pubblicata sullo stesso servizio, piano Free, senza nuove migrazioni o modifiche ai segreti. Sorgente applicazione `aeb1f22`, versione Worker `59f55727-dbe8-49ff-ae43-4f653322831e`. La sola sezione tema è stata ricaricata per ridurre l’intestazione; i dodici file del rilascio sono stati riletti e confrontati con la worktree. [Manifest con commit, hash ed esiti](releases/2026-11-06.json).
 
