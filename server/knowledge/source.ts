@@ -54,10 +54,10 @@ export function productDocuments(products: readonly KnowledgeProduct[], catalog:
 export async function fetchKnowledgePage(raw: string, fetcher: typeof fetch = fetch, signal?: AbortSignal): Promise<CachedKnowledgePage> {
   let url = storeUrl(raw);
   for (let redirect = 0; redirect < 4; redirect++) {
-    const response = await fetcher(url, { redirect: 'manual', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(6000)]) : AbortSignal.timeout(6000) });
+    const response = await fetcher(url, { headers: { Accept: 'text/html', 'User-Agent': 'IncisoriaAssistant/1.0 (+https://www.incisoriasacchetti.it/)' }, redirect: 'manual', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(6000)]) : AbortSignal.timeout(6000) });
     if ([301, 302, 303, 307, 308].includes(response.status)) { const next = new URL(response.headers.get('Location') ?? '', url); storeUrl(next.href); url = next.href; continue; }
     if ([404, 410].includes(response.status)) return { checkedAt: new Date().toISOString(), documents: [], missing: true };
-    if (!response.ok || !response.headers.get('content-type')?.includes('text/html')) throw new Error('Pagina informativa non disponibile');
+    if (!response.ok || !response.headers.get('content-type')?.includes('text/html')) throw new Error('Pagina informativa non disponibile: HTTP ' + response.status + ' (' + (response.headers.get('content-type') ?? 'senza Content-Type') + ')');
     return { documents: extractPage(await readLimited(response), storeUrl(raw)), checkedAt: new Date().toISOString() };
   }
   throw new Error('Redirect della fonte incoerente');

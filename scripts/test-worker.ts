@@ -48,6 +48,8 @@ try {
   const refresh = await request('/internal/catalog/refresh', 'POST', {}, { Authorization: 'Bearer TEST-owner-only' }); assert.equal(refresh.status, 200, (await refresh.text()) + ' TEST calls=' + catalogCalls);
   const initial = await (await request('/api/public/bootstrap')).json() as { products: unknown[]; stale: boolean; catalogVersion: string };
   assert(initial.products.length > 0); assert.equal(initial.stale, false);
+  const sourceHealth = await (await request('/internal/status', 'GET', undefined, { Authorization: 'Bearer TEST-owner-only' })).json() as { knowledge: { pagesCached: number; faqEntries: number } };
+  assert.equal(sourceHealth.knowledge.pagesCached, 3); assert.equal(sourceHealth.knowledge.faqEntries, 3);
   assert(!JSON.stringify(initial).includes('pending')); assert(!JSON.stringify(initial).includes('TEST-read-only'));
   const denied = await mf.dispatchFetch('https://assistant.test/api/public/session', { method: 'POST', headers: { ...headers, Origin: 'https://wrong.test' }, body: '{}' }); assert.equal(denied.status, 403);
   const session = await (await request('/api/public/session', 'POST', { token: 'TEST-proof' })).json() as { token: string };

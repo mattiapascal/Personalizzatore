@@ -6,6 +6,7 @@ import { KNOWLEDGE_TTL_MS, KNOWLEDGE_STALE_MS, type KnowledgeDocument, type Cach
 import { storeKnowledge } from '../server/store-knowledge.generated.ts';
 import { sha256 } from './security.ts';
 export class WorkerKnowledge {
+  private pageFailures = new Map<string, string>();
   constructor(private sql: SqlStorage) {
     sql.exec('CREATE TABLE IF NOT EXISTS knowledge (id TEXT PRIMARY KEY, value TEXT NOT NULL)');
     sql.exec('CREATE TABLE IF NOT EXISTS knowledge_pages (url TEXT PRIMARY KEY, value TEXT NOT NULL)');
@@ -13,8 +14,8 @@ export class WorkerKnowledge {
   private pageRead(url: string): CachedKnowledgePage | undefined { const row = this.sql.exec<{ value: string }>('SELECT value FROM knowledge_pages WHERE url = ?', url).toArray()[0]; return row ? JSON.parse(row.value) as CachedKnowledgePage : undefined; }
   async page(url: string, signal?: AbortSignal): Promise<CachedKnowledgePage> {
     const old = this.pageRead(url); if (old && Date.now() - Date.parse(old.checkedAt) < KNOWLEDGE_TTL_MS) return old;
-    try { const next = await fetchKnowledgePage(url, fetch, signal); this.sql.exec('INSERT INTO knowledge_pages (url,value) VALUES (?,?) ON CONFLICT(url) DO UPDATE SET value=excluded.value', url, JSON.stringify(next)); return next; }
-    catch (error) { if (old && Date.now() - Date.parse(old.checkedAt) < KNOWLEDGE_STALE_MS) return old; throw error; }
+    try { const next = await fetchKnowledgePage(url, fetch, signal); this.sql.exec('INSERT INTO knowledge_pages (url,value) VALUES (?,?) ON CONFLICT(url) DO UPDATE SET value=excluded.value', url, JSON.stringify(next)); this.pageFailures.delete(url); return next; }
+    catch (error) { if (this.pageFailures.size >= 32) this.pageFailures.clear(); this.pageFailures.set(url, error instanceof Error ? error.message.slice(0, 250) : 'Errore di lettura'); if (old && Date.now() - Date.parse(old.checkedAt) < KNOWLEDGE_STALE_MS) return old; throw error; }
   }
   documents(): KnowledgeDocument[] { return this.sql.exec<{ value: string }>('SELECT value FROM knowledge').toArray().map(row => JSON.parse(row.value) as KnowledgeDocument); }
   provider(checkedAt: string | null) { let snapshot: KnowledgeDocument[] | null = null; return knowledgeProvider(() => checkedAt && Date.now() - Date.parse(checkedAt) < KNOWLEDGE_STALE_MS ? snapshot ??= this.documents() : [], (url, signal) => this.page(url, signal)); }
@@ -29,7 +30,7 @@ export class WorkerKnowledge {
     for (const id of previous.keys()) this.sql.exec('DELETE FROM knowledge WHERE id=?', id);
     return changed + previous.size;
   }
-  health() { const pages = this.sql.exec<{ value: string }>('SELECT value FROM knowledge_pages').toArray().map(row => JSON.parse(row.value) as CachedKnowledgePage); return { configuredVersion: storeKnowledge.version, manualEntries: storeKnowledge.documents.length, pagesCached: pages.length, faqEntries: pages.filter(p => !p.missing && Date.now() - Date.parse(p.checkedAt) < KNOWLEDGE_STALE_MS).reduce((sum, page) => sum + page.documents.filter(d => d.kind === 'faq').length, 0) }; }
+  health() { const pages = this.sql.exec<{ value: string }>('SELECT value FROM knowledge_pages').toArray().map(row => JSON.parse(row.value) as CachedKnowledgePage); return { configuredVersion: storeKnowledge.version, manualEntries: storeKnowledge.documents.length, pageFailures: Object.fromEntries(this.pageFailures), pagesCached: pages.length, faqEntries: pages.filter(p => !p.missing && Date.now() - Date.parse(p.checkedAt) < KNOWLEDGE_STALE_MS).reduce((sum, page) => sum + page.documents.filter(d => d.kind === 'faq').length, 0) }; }
   async refreshPages() {
     this.sql.exec('DELETE FROM knowledge_pages WHERE json_extract(value,\'$.checkedAt\') < ?', new Date(Date.now() - 86_400_000).toISOString());
     await Promise.allSettled(storeKnowledge.urls.map(url => this.page(url)));
