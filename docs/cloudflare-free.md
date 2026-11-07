@@ -10,6 +10,8 @@ Scelta e pubblicazione autorizzate dal titolare il 6 novembre 2026. Il pannello 
 - Primo periodo limitato a 1 USD globale senza rinnovo automatico; quattro chiamate contemporanee globali. Nessun limite di costo o numero di messaggi per singola chat pubblica. Il limite complessivo è applicativo e distinto dalle quote Cloudflare/OpenAI.
 - Nessun webhook o app proxy creato. Nessuna modifica a DNS, BSS, PitchPrint o acquisti.
 
+Dal 7 novembre la consultazione informativa usa anche i prodotti pubblicati del negozio (1.412 nell’audit), le FAQ effettivamente presenti nelle pagine e `CONOSCENZE_ASSISTENTE.md`. L’indice informativo è separato dai profili tecnici dei timbri; aggiornamento ogni cinque minuti, scritture SQLite limitate ai documenti cambiati. Le risposte riportano estratti e fonti, senza accesso a ordini o modifiche allo store. Dettagli in [knowledge-assistant.md](knowledge-assistant.md).
+
 I dettagli, le evidenze, i limiti e il ripristino sono in [release-cloudflare.md](release-cloudflare.md). Le istruzioni modificabili dal titolare sono in [REGOLE_ASSISTENTE.md](../REGOLE_ASSISTENTE.md).
 
 ## Aggiornamenti

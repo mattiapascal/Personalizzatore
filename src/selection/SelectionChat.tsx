@@ -15,6 +15,7 @@ import { PrivacyVault, type PreparedPrivacy } from '../privacy/redaction';
 import { PrivacyReview } from '../privacy/PrivacyReview';
 import { AiRequestSchema, type AiRequest } from '../ai/request';
 import type { SessionUsage } from '../ai/usage';
+import type { SelectionInteraction } from './interaction';
 
 export function RequirementSummary({ requirements: r }: { requirements: Requirements }) {
   const rows = [
@@ -34,26 +35,28 @@ export function RequirementSummary({ requirements: r }: { requirements: Requirem
 interface Props {
   publicMode?: boolean;
   feedbackIsError?: boolean;
+  informationAnswer?: SelectionInteraction['informationAnswer'];
   session: SelectionSession; feedback: string; feedbackRevision: number; clarification?: string | null; clarificationBlocksSelection?: boolean;
   contentBrief?: ContentBrief;
   catalog: CatalogAdapter;
   runtime: RuntimeState; mode: 'mock' | 'server'; busy: boolean; active: boolean;
   dispatch: (action: SelectionAction) => void; onBusy: (busy: boolean) => void; onComplete: () => void; onShowResults: () => void;
 }
-export function SelectionChat({ session, feedback, feedbackRevision, feedbackIsError, clarification, clarificationBlocksSelection, contentBrief, catalog, runtime, mode, busy, active, dispatch, onBusy, onComplete, onShowResults, publicMode = false }: Props) {
+export function SelectionChat({ session, feedback, feedbackRevision, feedbackIsError, informationAnswer, clarification, clarificationBlocksSelection, contentBrief, catalog, runtime, mode, busy, active, dispatch, onBusy, onComplete, onShowResults, publicMode = false }: Props) {
   const [message, setMessage] = useState('');
   const vault = useRef(new PrivacyVault(catalog.list().map(p => p.title)));
   useEffect(() => { vault.current.allowCatalogTitles(catalog.list().map(p => p.title)); }, [catalog]);
   const [pending, setPending] = useState<{ original: string; prepared: PreparedPrivacy } | null>(null);
   const [usage, setUsage] = useState<SessionUsage | null>(null);
-  const [turns, setTurns] = useState<{ id: number; role: 'user' | 'assistant'; text: string; contextText?: string }[]>(() => [{ id: 0, role: 'assistant', text: nextSelectionQuestion(session) }]);
+  const welcome = 'Ti aiuto a scegliere un timbro e rispondo alle domande sui prodotti e sulle FAQ del negozio. Di cosa hai bisogno?';
+  const [turns, setTurns] = useState<{ id: number; role: 'user' | 'assistant'; text: string; contextText?: string; info?: SelectionInteraction['informationAnswer'] }[]>(() => [{ id: 0, role: 'assistant', text: publicMode ? welcome : nextSelectionQuestion(session) }]);
   const counter = useRef(1), processed = useRef(feedbackRevision);
   const logRef = useRef<HTMLDivElement>(null), inputRef = useRef<HTMLTextAreaElement>(null), composerRef = useRef<HTMLFormElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
   const scrollIntent = useRef(false);
   const [readingHistory, setReadingHistory] = useState(false);
-  const prompt = nextSelectionPrompt(session, contentBrief, catalog, publicMode ? 'product' : 'canvas');
+  const prompt: ReturnType<typeof nextSelectionPrompt> = informationAnswer ? { field: 'clarification', text: 'Vuoi altre informazioni sul negozio o continuare a scegliere il timbro?' } : publicMode && !session.requirements.family ? { field: 'family', text: welcome } : nextSelectionPrompt(session, contentBrief, catalog, publicMode ? 'product' : 'canvas');
   const hasSuggestions = session.candidates.length > 0 || adviseProducts(catalog, session.requirements, contentBrief).length > 0;
   const question = clarification ?? prompt.text;
   useLayoutEffect(() => {
@@ -78,9 +81,9 @@ export function SelectionChat({ session, feedback, feedbackRevision, feedbackIsE
   useEffect(() => {
     if (processed.current === feedbackRevision) return;
     processed.current = feedbackRevision;
-    setTurns(previous => [...previous.slice(-39), { id: counter.current++, role: 'assistant', text: feedbackIsError ? feedback : [feedback, question].filter(Boolean).join('\n\n'), contextText: feedbackIsError ? 'Invio non riuscito: nessun nuovo requisito raccolto.' : clarification ?? modelQuestion(prompt) }]);
+    setTurns(previous => [...previous.slice(-39), { id: counter.current++, role: 'assistant', text: feedbackIsError || informationAnswer ? feedback : [feedback, question].filter(Boolean).join('\n\n'), ...(informationAnswer ? { info: informationAnswer } : {}), contextText: feedbackIsError ? 'Invio non riuscito: nessun nuovo requisito raccolto.' : informationAnswer ? informationAnswer.blocks.map(b => b.title + ': ' + b.text).join('\n').slice(0, 400) || feedback : clarification ?? modelQuestion(prompt) }]);
     inputRef.current?.focus({ preventScroll: true });
-  }, [feedbackRevision, feedback, question, feedbackIsError]);
+  }, [feedbackRevision, feedback, question, feedbackIsError, informationAnswer]);
   useLayoutEffect(() => { const log = logRef.current; if (log && active && followLatest.current) { scrollIntent.current = false; log.scrollTop = log.scrollHeight; } }, [turns, busy, active]);
   useLayoutEffect(() => {
     const log = logRef.current, content = contentRef.current;
@@ -124,7 +127,7 @@ export function SelectionChat({ session, feedback, feedbackRevision, feedbackIsE
     const original = message.trim();
     if (mode === 'mock') { await send(original); return; }
     try {
-      const input = AiRequestSchema.parse({ message: original, sessionId: session.sessionId, revision: session.revision, requirements: session.requirements, lastQuestion: (clarification ?? modelQuestion(prompt)).slice(0, 300), recentMessages: vault.current.protectHistory(turns.slice(-6).map(turn => ({ role: turn.role, text: turn.role === 'user' ? turn.text : turn.contextText ?? 'Proseguiamo con i dati mancanti del timbro.' }))), contentBrief, lastQuestionField: prompt.field });
+      const input = AiRequestSchema.parse({ supportsStoreAnswers: true, message: original, sessionId: session.sessionId, revision: session.revision, requirements: session.requirements, ...(informationAnswer ? { sourceUrls: [...new Set(informationAnswer.blocks.flatMap(b => b.url ? [b.url] : []))] } : {}), lastQuestion: (clarification ?? modelQuestion(prompt)).slice(0, 300), recentMessages: vault.current.protectHistory(turns.slice(-6).map(turn => ({ role: turn.role, text: turn.role === 'user' ? turn.text : turn.contextText ?? 'Proseguiamo con i dati mancanti del timbro.' }))), contentBrief, lastQuestionField: prompt.field });
       const prepared = vault.current.prepare(input);
       if (prepared.needsReview) setPending({ original, prepared });
       else await send(original, prepared.request, prepared.localText);
@@ -137,7 +140,7 @@ export function SelectionChat({ session, feedback, feedbackRevision, feedbackIsE
   return <>
     <div ref={logRef} role="log" tabIndex={0} aria-label="Conversazione di selezione" aria-live="polite" aria-relevant="additions" className="chat-log" data-testid="chat-log" onWheel={() => { scrollIntent.current = true; }} onPointerDown={() => { scrollIntent.current = true; }} onKeyDown={e => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) scrollIntent.current = true; }} onScroll={() => { if (!scrollIntent.current) return; scrollIntent.current = false; const el = logRef.current!; followLatest.current = el.scrollHeight - el.clientHeight - el.scrollTop < 48; setReadingHistory(!followLatest.current); }}>
       <div ref={contentRef}>
-      {turns.map((turn, index) => <div key={turn.id} className={`chat-message ${turn.role}`} data-testid={turn.role === 'assistant' && index === turns.length - 1 ? 'selection-feedback' : undefined}><span className="chat-speaker">{turn.role === 'user' ? 'Tu' : 'Assistente'}</span><p>{turn.text}</p></div>)}
+      {turns.map((turn, index) => <div key={turn.id} className={`chat-message ${turn.role}`} data-testid={turn.role === 'assistant' && index === turns.length - 1 ? 'selection-feedback' : undefined}><span className="chat-speaker">{turn.role === 'user' ? 'Tu' : 'Assistente'}</span><p>{turn.text}</p>{turn.info?.blocks.map((block, i) => <div className="chat-evidence" key={i}><p>{block.text}</p><p className="chat-source">{block.url ? <a href={block.url} target={publicMode ? '_top' : '_blank'} rel="noopener noreferrer">Fonte: {block.title}</a> : 'Informazioni del negozio · ' + block.title}</p></div>)}</div>)}
       {busy && <p role="status">Sto leggendo la tua risposta…</p>}
       </div>
     </div>

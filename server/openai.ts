@@ -8,12 +8,17 @@ import { AiRequestSchema, type AiRequest } from '../src/ai/request.ts';
 import { assertProtectedRequest } from '../src/privacy/redaction.ts';
 import { interpretationInstructions } from './interpretation-prompt.ts';
 import type { CatalogAdapter } from '../src/catalog/adapter.ts';
+import type { KnowledgeProvider } from './knowledge/model.ts';
+import { evidenceBody, evidenceAnswer } from './knowledge/answer.ts';
 import { advisoryFacts } from '../src/selection/advisor.ts';
 export { PROMPT_VERSION } from './interpretation-prompt.ts';
 
 export { AiRequestSchema, type AiRequest };
 export const ArgumentsSchema = z.strictObject({
   dialogueAct: DialogueActSchema.nullable(),
+  storeQuery: z.string().min(1).max(180).nullable().describe('Ricerca semantica espansa per domande informative su prodotti, FAQ o negozio; include prodotto, sinonimi e contesto pertinente.'),
+  storeScope: z.enum(['store', 'product']).nullable().describe('store per spedizioni, pagamenti, ordini, procedure file e servizi generali; product per informazioni su un articolo o famiglia di prodotti.'),
+  useStoreReferences: z.boolean().nullable().describe('true per domande di seguito sul prodotto già citato; false se viene nominato un nuovo prodotto o si cambia argomento.'),
   helpTopic: z.enum(['mechanism', 'shape', 'dimensions', 'content', 'material', 'catalog']).nullable().describe('Solo per spiegazioni sui timbri; nessuna risposta generale.'),
   changeIntent: z.enum(['update', 'withdraw']).nullable(), clearEvidence: z.string().min(1).max(1200).nullable(),
   contentText: z.string().trim().min(1).max(480).nullable(),
@@ -103,38 +108,44 @@ export function proposalFromArguments(raw: unknown, revision: number, context?: 
   return AiToolSchema.parse({ schemaVersion: 1, tool: 'collectRequirements', expectedRevision: revision, arguments: patch, clearFields, dialogueAct: args.dialogueAct ?? 'answer', ...(Object.keys(contentBrief).length ? { contentBrief } : {}), clarification });
 }
 
-export function makeOpenAiBody(input: AiRequest, config: Config, catalog?: CatalogAdapter) {
+export function makeOpenAiBody(input: AiRequest, config: Config, catalog?: CatalogAdapter, referenceTitles: readonly string[] = []) {
   assertProtectedRequest(input, catalog?.list().map(p => p.title));
   return {
     model: config.OPENAI_MODEL, store: false, instructions,
-    input: [{ role: 'user', content: JSON.stringify({ message: input.message, requirements: input.requirements, contentBrief: input.contentBrief ?? {}, lastQuestion: input.lastQuestion, lastQuestionField: input.lastQuestionField ?? null, recentMessages: input.recentMessages, ...(catalog && config.AI_SHARE_CATALOG_CONTEXT ? { catalogFacts: advisoryFacts(catalog, input.requirements, input.contentBrief).map(({ title, mechanism, shape, nominalAreaMm, uses }) => ({ title: title.slice(0, 160), mechanism, shape, nominalAreaMm, uses: uses?.slice(0, 2).map(u => ({ purpose: u.purpose, evidence: u.evidence.slice(0, 120) })) })) } : {}) }) }],
+    input: [{ role: 'user', content: JSON.stringify({ message: input.message, ...(referenceTitles.length ? { storeReferences: referenceTitles } : {}), requirements: input.requirements, contentBrief: input.contentBrief ?? {}, lastQuestion: input.lastQuestion, lastQuestionField: input.lastQuestionField ?? null, recentMessages: input.recentMessages, ...(catalog && config.AI_SHARE_CATALOG_CONTEXT ? { catalogFacts: advisoryFacts(catalog, input.requirements, input.contentBrief).map(({ title, mechanism, shape, nominalAreaMm, uses }) => ({ title: title.slice(0, 160), mechanism, shape, nominalAreaMm, uses: uses?.slice(0, 2).map(u => ({ purpose: u.purpose, evidence: u.evidence.slice(0, 120) })) })) } : {}) }) }],
     tools: [{ type: 'function', name: 'collect_requirements', description: 'Raccoglie gli attributi espressi e chiede chiarimenti senza selezionare prodotti.', strict: true, parameters: z.toJSONSchema(ArgumentsSchema) }],
     tool_choice: { type: 'function', name: 'collect_requirements' }, parallel_tool_calls: false,
     reasoning: { effort: 'low' }, max_output_tokens: 1600,
   };
 }
 
-export async function proposeOpenAi(input: AiRequest, config: Config, meter: UsageMeter, fetcher: typeof fetch = fetch, signal?: AbortSignal, catalog?: CatalogAdapter): Promise<AiTool> {
-  if (config.AI_PROVIDER !== 'openai' || !config.OPENAI_API_KEY || (config.AI_ENFORCE_LOCAL_LIMITS && config.AI_BUDGET_USD <= 0)) throw new Error('Configura AI_PROVIDER, OPENAI_API_KEY e AI_BUDGET_USD nel file .env.local');
-  const body = makeOpenAiBody(input, config, catalog);
+async function structuredResponse(body: ReturnType<typeof makeOpenAiBody> | ReturnType<typeof evidenceBody>, input: AiRequest, config: Config, meter: UsageMeter, fetcher: typeof fetch, signal: AbortSignal): Promise<unknown> {
   const serialized = JSON.stringify(body);
-  // Riserva conservativa: nessun rimborso su timeout/errori. Listino standard USD verificato 05/11/2026.
   const reserved = ((new TextEncoder().encode(serialized).length + 2048) * 0.75 + body.max_output_tokens * 4.5) / 1_000_000;
   await meter.reserve(reserved, config.AI_BUDGET_USD, config.AI_MAX_REQUESTS, config.AI_ENFORCE_LOCAL_LIMITS, { id: input.sessionId, budgetUsd: config.AI_SESSION_BUDGET_USD });
-  const response = await fetcher('https://api.openai.com/v1/responses', {
-    method: 'POST', headers: { Authorization: `Bearer ${config.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
-    body: serialized, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20_000)]) : AbortSignal.timeout(20_000),
-    redirect: 'manual',
-  });
+  const response = await fetcher('https://api.openai.com/v1/responses', { method: 'POST', headers: { Authorization: `Bearer ${config.OPENAI_API_KEY}`, 'Content-Type': 'application/json' }, body: serialized, signal, redirect: 'manual' });
   if (!response.ok) throw new Error(response.status === 429 ? 'Limite del provider AI raggiunto. Riprova più tardi.' : 'Il provider AI ha rifiutato la richiesta. Controlla configurazione e accesso al modello.');
   const rawText = await response.text();
   if (rawText.length > 100_000) throw new Error('Risposta AI troppo grande');
-  const result = z.object({
-    status: z.string(), output: z.array(z.object({ type: z.string(), name: z.string().optional(), arguments: z.string().optional() }).passthrough()),
-    usage: z.object({ input_tokens: z.number().int().nonnegative(), output_tokens: z.number().int().nonnegative() }),
-  }).parse(JSON.parse(rawText));
+  const result = z.object({ status: z.string(), output: z.array(z.object({ type: z.string(), name: z.string().optional(), arguments: z.string().optional() }).passthrough()), usage: z.object({ input_tokens: z.number().int().nonnegative(), output_tokens: z.number().int().nonnegative() }) }).parse(JSON.parse(rawText));
   await meter.record(result.usage.input_tokens, result.usage.output_tokens, { id: input.sessionId, reservedUsd: reserved });
   const calls = result.output.filter(item => item.type === 'function_call');
-  if (result.status !== 'completed' || calls.length !== 1 || calls[0]!.name !== 'collect_requirements' || !calls[0]!.arguments) throw new Error('Risposta AI incompleta o non valida. Puoi riprovare: i requisiti sono conservati.');
-  return AiToolSchema.parse({ ...proposalFromArguments(JSON.parse(calls[0]!.arguments!), input.revision, input), expectedSessionId: input.sessionId, sessionUsage: meter.sessionUsage(input.sessionId, config.AI_SESSION_BUDGET_USD) });
+  if (result.status !== 'completed' || calls.length !== 1 || calls[0]!.name !== body.tool_choice.name || !calls[0]!.arguments) throw new Error('Risposta AI incompleta o non valida. Puoi riprovare: i requisiti sono conservati.');
+  return JSON.parse(calls[0]!.arguments!);
+}
+export async function proposeOpenAi(input: AiRequest, config: Config, meter: UsageMeter, fetcher: typeof fetch = fetch, signal?: AbortSignal, catalog?: CatalogAdapter, knowledge?: KnowledgeProvider): Promise<AiTool> {
+  if (config.AI_PROVIDER !== 'openai' || !config.OPENAI_API_KEY || (config.AI_ENFORCE_LOCAL_LIMITS && config.AI_BUDGET_USD <= 0)) throw new Error('Configura AI_PROVIDER, OPENAI_API_KEY e AI_BUDGET_USD nel file .env.local');
+  const turnSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(20_000)]) : AbortSignal.timeout(20_000);
+  const body = makeOpenAiBody(input, config, catalog, knowledge?.referenceTitles?.(input.sourceUrls ?? []) ?? []);
+  const raw = await structuredResponse(body, input, config, meter, fetcher, turnSignal);
+  const args = ArgumentsSchema.parse(raw);
+  if (args.dialogueAct === 'information') {
+    // Negoziazione del formato, non autorizzazione: le schede già aperte possono ancora selezionare timbri.
+    if (!input.supportsStoreAnswers) return AiToolSchema.parse({ schemaVersion: 1, tool: 'collectRequirements', expectedRevision: input.revision, expectedSessionId: input.sessionId, arguments: {}, clearFields: [], dialogueAct: 'help', clarification: 'Per consultare anche le FAQ e le informazioni del negozio, ricarica questa pagina.', sessionUsage: meter.sessionUsage(input.sessionId, config.AI_SESSION_BUDGET_USD) });
+    const sources = knowledge ? await knowledge.search(args.storeQuery ?? input.message, input, turnSignal, args.storeScope ?? 'product', args.storeScope !== 'store' && (args.useStoreReferences ?? !!input.sourceUrls?.length)) : [];
+    const choice = sources.length ? await structuredResponse(evidenceBody(input, args.storeQuery ?? input.message, sources, config), input, config, meter, fetcher, turnSignal) : { status: knowledge ? 'not_found' : 'unavailable', passageIds: [] };
+    const call = knowledge ? evidenceAnswer(choice, sources, input) : AiToolSchema.parse({ schemaVersion: 1, tool: 'answerStoreQuestion', expectedRevision: input.revision, expectedSessionId: input.sessionId, arguments: { status: 'unavailable', blocks: [] } });
+    return AiToolSchema.parse({ ...call, sessionUsage: meter.sessionUsage(input.sessionId, config.AI_SESSION_BUDGET_USD) });
+  }
+  return AiToolSchema.parse({ ...proposalFromArguments(raw, input.revision, input), expectedSessionId: input.sessionId, sessionUsage: meter.sessionUsage(input.sessionId, config.AI_SESSION_BUDGET_USD) });
 }

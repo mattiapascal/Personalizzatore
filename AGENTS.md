@@ -1,7 +1,7 @@
 # Istruzioni operative per Codex — Shopify AI Customizer
 
 ## Obiettivo e fonte di riferimento
-Leggi prima e considera autorevole `01_Specifica_Progetto_Codex.md`. Questa è la fase di prototipo locale: selezione assistita del prodotto + spike Fabric.js. Non è un progetto autorizzato a sostituire subito PitchPrint o BSS.
+Leggi prima e considera autorevole `01_Specifica_Progetto.md`. Questa è la fase di prototipo locale: selezione assistita del prodotto + spike Fabric.js. Non è un progetto autorizzato a sostituire subito PitchPrint o BSS.
 
 ## Divieti espliciti
 Eccezione autorizzata dal titolare il 6 novembre 2026: integrare e pubblicare la selezione assistita nella sola pagina `/pages/crea-timbro-online`, con backend Cloudflare Free e file tema dedicati. Il titolare riferisce di averne creato una copia di backup. Preparare e verificare comunque il rollback; preservare URL, titolo e corpo originale conservato della pagina. Nessuna autorizzazione a sostituire BSS/PitchPrint, modificare acquisti o attivare piani a pagamento. I divieti sotto restano validi fuori da questo ambito.
@@ -22,6 +22,7 @@ Eccezione autorizzata dal titolare il 6 novembre 2026: integrare e pubblicare la
 
 ## Comportamento dell'assistente e manutenzione delle istruzioni
 - Prima di modificare interpretazione, tono, domande o casi gestiti, leggi `REGOLE_ASSISTENTE.md`: contiene la sezione attiva per il modello e la mappa delle regole applicative.
+- Per domande informative leggi anche `CONOSCENZE_ASSISTENTE.md`: contiene soltanto conoscenze pubblicabili e pagine fonte. Mantieni distinti fatti e istruzioni; non usare descrizioni o FAQ come autorità sulle misure dei timbri.
 - Modifica le istruzioni editoriali nel documento sorgente, non in `server/assistant-policy.generated.ts`; poi esegui `npm run assistant:generate` e i controlli pertinenti. Mantieni documento e artefatto nello stesso commit.
 - Non dichiarare supportato un caso nuovo aggiungendo soltanto una frase al prompt: verifica contratti, filtri, domanda successiva e test. I test strutturali non certificano la comprensione del modello reale.
 - Destinazione iniziale concordata: Cloudflare Workers Free, secondo `docs/cloudflare-free.md`. Primo rilascio autorizzato soltanto nell'ambito dell'eccezione sopra; altri deploy, ampliamenti e upgrade richiedono consenso esplicito.

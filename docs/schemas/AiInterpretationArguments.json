@@ -10,12 +10,48 @@
             "answer",
             "off_topic",
             "unclear",
-            "help"
+            "help",
+            "information"
           ]
         },
         {
           "type": "null"
         }
+      ]
+    },
+    "storeQuery": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Ricerca semantica espansa per domande informative su prodotti, FAQ o negozio; include prodotto, sinonimi e contesto pertinente."
+    },
+    "storeScope": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "store",
+            "product"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "store per spedizioni, pagamenti, ordini, procedure file e servizi generali; product per informazioni su un articolo o famiglia di prodotti."
+    },
+    "useStoreReferences": {
+      "description": "true per domande di seguito sul prodotto già citato; false se viene nominato un nuovo prodotto o si cambia argomento.",
+      "type": [
+        "boolean",
+        "null"
       ]
     },
     "helpTopic": {
@@ -300,6 +336,9 @@
   },
   "required": [
     "dialogueAct",
+    "storeQuery",
+    "storeScope",
+    "useStoreReferences",
     "helpTopic",
     "changeIntent",
     "clearEvidence",

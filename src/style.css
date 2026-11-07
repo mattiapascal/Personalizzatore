@@ -17,3 +17,5 @@ header{padding-top:12px;padding-bottom:12px}.brand{font-size:23px}.intro{padding
 .privacy-preview{scroll-margin-top:16px}.privacy-original{white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto;margin:4px 0 10px}.privacy-original mark{padding:2px 4px}
 .privacy-compact{padding:10px 12px}.privacy-compact>p{margin:0 0 8px}.privacy-compact .button-row{margin:8px 0}.privacy-compact .privacy-original{max-height:100px}.privacy-compact .text-button{font-size:11px}
 .privacy-compact .privacy-original mark{color:#92241e;background:#fff0ed;border-bottom:1px solid #d99b95}
+
+.chat-evidence{border-top:1px solid #20353118;margin-top:10px;padding-top:10px}.chat-source{font-size:12px;line-height:1.4;padding-top:6px}.chat-source a{color:inherit;text-decoration:underline}

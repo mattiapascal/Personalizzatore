@@ -10,6 +10,7 @@ export interface SelectionInteraction {
   feedback: string;
   feedbackRevision: number;
   feedbackIsError?: boolean;
+  informationAnswer?: Extract<AiTool, { tool: 'answerStoreQuestion' }>['arguments'];
   clarification?: string | null;
   clarificationBlocksSelection?: boolean;
   contentBrief?: ContentBrief;
@@ -31,15 +32,21 @@ export function initialInteraction(session: SelectionSession): SelectionInteract
 // Ogni azione controlla la revisione sullo stato corrente, anche per risposte tardive.
 export function selectionInteraction(state: SelectionInteraction, action: SelectionAction, catalog: CatalogAdapter): SelectionInteraction {
   try {
-    if (action.type === 'choose') return { ...state, session: chooseProduct(state.session, action.productId, catalog) };
+    if (action.type === 'choose') return { ...state, informationAnswer: undefined, session: chooseProduct(state.session, action.productId, catalog) };
     if (action.type === 'acceptAdvice') {
       if (!adviseProducts(catalog, state.session.requirements, state.contentBrief).some(c => c.profileId === action.productId)) throw new Error('Proposta non corrente');
       const p = catalog.get(action.productId), r = state.session.requirements;
       const updated = updateRequirements(state.session, { family: 'stamp', mechanism: r.mechanism ?? p.mechanism, shape: r.shape ?? p.shape, ...(p.mechanism === 'manual' && !r.material ? { material: p.materials?.[0] ?? 'any' } : {}), sizeUnknown: r.minimumAreaMm || r.maximumAreaMm || r.diameterMm ? false : true }, catalog);
-      return { ...state, session: chooseProduct(updated, action.productId, catalog) };
+      return { ...state, informationAnswer: undefined, session: chooseProduct(updated, action.productId, catalog) };
     }
+    if (action.type === 'tool' && action.call.tool === 'answerStoreQuestion') {
+      executeTool(action.call, state.session, catalog);
+      return { ...state, feedbackRevision: state.feedbackRevision + 1, feedbackIsError: false, informationAnswer: action.call.arguments,
+        feedback: action.call.arguments.status === 'answered' ? 'Ho trovato queste informazioni:' : action.call.arguments.status === 'conflict' ? 'Le fonti riportano informazioni diverse. Ti mostro i riferimenti da verificare:' : action.call.arguments.status === 'unavailable' ? 'Non riesco a consultare le informazioni del negozio in questo momento. Puoi riprovare tra poco.' : 'Non ho trovato una fonte verificata che risponda alla domanda. Non posso confermare questa informazione: puoi chiedere al negozio o consultare la scheda prodotto.' };
+    }
+    if (action.type === 'catalog' && state.informationAnswer) return { ...state, session: updateRequirements(state.session, {}, catalog) };
     const feedbackRevision = state.feedbackRevision + 1;
-    state = { ...state, feedbackIsError: false };
+    state = { ...state, feedbackIsError: false, informationAnswer: undefined };
     switch (action.type) {
       case 'catalog': return { ...state, session: updateRequirements(state.session, {}, catalog), feedbackRevision, feedback: 'Ho aggiornato i modelli disponibili. La tua bozza resta conservata.' };
       case 'patch': return {

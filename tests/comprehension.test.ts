@@ -9,7 +9,7 @@ import { adviseProducts, advisoryFacts } from '../src/selection/advisor';
 import { initialInteraction, selectionInteraction } from '../src/selection/interaction';
 import { recommendProducts } from '../src/selection/rules';
 
-const args = (patch: Record<string, unknown>) => ({ helpTopic: null, changeIntent: 'update', clearEvidence: null, dialogueAct: 'answer', contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
+const args = (patch: Record<string, unknown>) => ({ storeQuery: null, storeScope: null, useStoreReferences: null, helpTopic: null, changeIntent: 'update', clearEvidence: null, dialogueAct: 'answer', contentText: null, contentKind: null, purpose: null, graphicSubject: null, family: null, mechanism: null, material: null, diameterMm: null, shape: null, lines: null, hasLogo: null, widthMm: null, heightMm: null, targetWidthMm: null, targetHeightMm: null, sizeUnknown: null, clearFields: [], clarification: null, ...patch });
 const session = () => updateRequirements(newSession(fixtureCatalog), { family: 'stamp', mechanism: 'automatic', shape: 'square', hasLogo: true }, fixtureCatalog);
 const context = (message = '10 mm') => AiRequestSchema.parse({ sessionId: crypto.randomUUID(), revision: 1, message, requirements: session().requirements, lastQuestion: 'Quanto deve misurare il lato del quadrato, in mm?', lastQuestionField: 'dimensions', contentBrief: { kind: 'graphic', purpose: 'loyalty', graphicSubject: 'piccolo logo' } });
 

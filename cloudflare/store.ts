@@ -8,15 +8,19 @@ import { WorkerMeter, emptyLedger, type Ledger } from './ledger.ts';
 import { refreshWorkerCatalog } from './catalog.ts';
 import { json, readBody, sha256, verifyTurnstile } from './security.ts';
 import type { Env } from './env.ts';
+import { WorkerKnowledge } from './knowledge.ts';
 
 type Capability = { id: string; expiresAt: number };
 export class AssistantStore extends DurableObject<Env> {
   private refreshRunning: Promise<Response> | null = null;
+  private knowledge: WorkerKnowledge;
+  private activeTurns = new Set<string>();
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
     ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS capabilities (digest TEXT PRIMARY KEY, value TEXT NOT NULL, expires INTEGER NOT NULL)');
     ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS visitors (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL)');
+    this.knowledge = new WorkerKnowledge(ctx.storage.sql);
   }
   private read<T>(key: string): T | undefined {
     const rows = this.ctx.storage.sql.exec<{ value: string }>('SELECT value FROM state WHERE key = ?', key).toArray();
@@ -49,6 +53,11 @@ export class AssistantStore extends DurableObject<Env> {
         this.cleanExpired();
         const next = await refreshWorkerCatalog(this.config);
         this.write('catalog', next); this.write('catalog-health', { success: true, checkedAt: next.checkedAt });
+        try {
+          const info = await this.knowledge.prepare(this.config, createCatalog(next.snapshot, next.version));
+          this.ctx.storage.transactionSync(() => { const changedDocuments = this.knowledge.commit(info.documents); this.write('knowledge-health', { checkedAt: info.checkedAt, version: info.version, products: info.products, changedDocuments }); });
+          await this.knowledge.refreshPages();
+        } catch { /* Copia informativa precedente conservata e soggetta a scadenza. */ }
         return json({ success: true, version: next.version, checkedAt: next.checkedAt, profiles: next.snapshot.products.length });
       } catch (error) {
         const category = error instanceof Error ? error.name : 'Unknown';
@@ -87,7 +96,11 @@ export class AssistantStore extends DurableObject<Env> {
     const input = AiRequestSchema.parse(await readBody(request));
     const config = this.config, clientId = input.sessionId;
     const meter = new WorkerMeter(session.id, () => this.read<Ledger>('meter') ?? emptyLedger(), value => this.write('meter', value), config.AI_BUDGET_USD);
-    const result = await proposeOpenAi({ ...input, sessionId: session.id }, config, meter, fetch, request.signal, createCatalog(current.snapshot, current.version));
+    if (this.activeTurns.has(session.id)) return json({ error: 'Sto già elaborando un tuo messaggio. Attendi la risposta.' }, 429);
+    this.activeTurns.add(session.id);
+    let result;
+    try { result = await proposeOpenAi({ ...input, sessionId: session.id }, config, meter, fetch, request.signal, createCatalog(current.snapshot, current.version), this.knowledge.provider(this.read<{ checkedAt: string }>('knowledge-health')?.checkedAt ?? null)); }
+    finally { this.activeTurns.delete(session.id); }
     // L'UUID del browser non controlla il credito: un reset non azzera la quota server.
     return json({ ...result, expectedSessionId: clientId });
   }
@@ -98,7 +111,7 @@ export class AssistantStore extends DurableObject<Env> {
       if (url.hostname === 'internal' && url.pathname === '/status' && request.method === 'GET') {
         const current = this.current, ledger = this.read<Ledger>('meter') ?? emptyLedger();
         return json({ catalogVersion: current?.version, checkedAt: current?.checkedAt, profiles: current?.snapshot.products.length ?? 0, stale: this.stale(current),
-          aiReady: this.ready, globalBudgetUsd: this.config.AI_BUDGET_USD, estimatedUsd: ledger.spent / 1_000_000, heldUsd: ledger.held / 1_000_000, requests: ledger.requests });
+          aiReady: this.ready, globalBudgetUsd: this.config.AI_BUDGET_USD, estimatedUsd: ledger.spent / 1_000_000, heldUsd: ledger.held / 1_000_000, requests: ledger.requests, knowledge: { ...this.read<object>('knowledge-health'), ...this.knowledge.health() } });
       }
       if (url.pathname === '/api/public/bootstrap' && request.method === 'GET') {
         const current = this.current;

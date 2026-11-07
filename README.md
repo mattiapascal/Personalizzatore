@@ -10,6 +10,14 @@ Interfaccia pubblica: chat con fumetti bianchi/verdi su sfondo beige e altezza a
 
 Aggiornamento interfaccia: chat più larga ad altezza fissa con scroll, requisiti compatti (quattro colonne desktop/due mobile), risultati come schede con foto Shopify e dettagli richiudibili. Il dialogo può partire dal contenuto: testo esatto → stima indicativa → scelta del formato → prima bozza nel canvas. Ex-libris e grafica vengono raccolti come brief, senza inventare un formato dal solo numero di righe. [Dettagli e verifiche](docs/iteration-chat-layout.md).
 
+## Domande su prodotti, FAQ e informazioni del negozio
+
+La chat può cercare informazioni in tutti i prodotti pubblicati, nelle FAQ effettivamente mostrate sulle schede/collezioni e nel documento **[CONOSCENZE_ASSISTENTE.md](CONOSCENZE_ASSISTENTE.md)**, nella stessa cartella delle regole. Il selettore di montature resta dedicato ai timbri. Risposte informative con estratti e fonti, senza cambiare le scelte già raccolte; informazioni mancanti dichiarate senza inventarle.
+
+`npm run assistant:generate` compila sia regole sia conoscenze. Per il laboratorio attivare `AI_SHARE_CATALOG_CONTEXT=true`; `read_products` serve all’indice dell’intero catalogo. Il documento entra nel rilascio Workers; non viene letto dal filesystem remoto. I comandi locali e il push Git non pubblicano le modifiche. Il sito viene riletto automaticamente ogni cinque minuti, mentre le FAQ delle schede pertinenti vengono consultate con cache breve.
+
+[Architettura, limiti e verifiche](docs/knowledge-assistant.md). `npm run eval:knowledge` è il collaudo AI reale separato, a pagamento e con tetto esplicito; i normali test non consumano token.
+
 ## Avvio
 
 Node 24.17.0 (fissato in .nvmrc), npm e Git:

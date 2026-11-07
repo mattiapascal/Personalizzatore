@@ -173,6 +173,17 @@
         "additionalProperties": false
       }
     },
+    "sourceUrls": {
+      "maxItems": 3,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "supportsStoreAnswers": {
+      "type": "boolean"
+    },
     "contentBrief": {
       "type": "object",
       "properties": {

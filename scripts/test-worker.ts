@@ -19,13 +19,17 @@ const outbound: V4FetchHandler = async request => {
     const first = !input.variables.after;
     return MFResponse.json({ data: { products: { nodes: first ? sources.products.slice(0, 5) : sources.products.slice(5), pageInfo: { hasNextPage: first, endCursor: first ? 'TEST-next' : null } } } });
   }
+  if (['www.incisoriasacchetti.it', 'incisoriasacchetti.it'].includes(url.hostname)) return new MFResponse('<main><h1>Pagina TEST</h1><details class="cc-accordion-item"><summary>File TEST</summary><div class="cc-accordion-item__content">Informazione TEST sul timbro e sul file.</div></details></main>', { headers: { 'Content-Type': 'text/html' } });
   if (url.hostname === 'challenges.cloudflare.com') return MFResponse.json({ success: (await request.formData()).get('response') !== 'TEST-invalid', hostname: 'assistant.test', action: 'assistant-start' });
   if (url.hostname === 'api.openai.com') {
     calls++;
     const body = await request.text(); assert(!body.includes('cliente@example.test'));
-    const offTopic = JSON.parse(JSON.parse(body).input[0].content).message === 'TEST domanda estranea';
+    const payload = JSON.parse(body), user = JSON.parse(payload.input[0].content);
+    const offTopic = user.message === 'TEST domanda estranea';
+    if (payload.tool_choice.name === 'select_store_evidence') return MFResponse.json({ status: 'completed', output: [{ type: 'function_call', name: 'select_store_evidence', arguments: JSON.stringify({ status: 'answered', passageIds: [user.sources[0].passageId] }) }], usage: { input_tokens: 100, output_tokens: 20 } });
+    const info = user.message === 'TEST informazioni prodotti';
     await new Promise(resolve => setTimeout(resolve, 40));
-    return MFResponse.json({ status: 'completed', output: [{ type: 'function_call', name: 'collect_requirements', arguments: JSON.stringify({ ...args, family: 'stamp', dialogueAct: offTopic ? 'off_topic' : 'answer', clarification: offTopic ? 'RISPOSTA_GENERALE_TEST' : null, changeIntent: 'update', mechanism: 'automatic', shape: 'square', widthMm: 10, heightMm: 10 }) }], usage: { input_tokens: 100, output_tokens: 20 } });
+    return MFResponse.json({ status: 'completed', output: [{ type: 'function_call', name: 'collect_requirements', arguments: JSON.stringify({ ...args, family: 'stamp', dialogueAct: info ? 'information' : offTopic ? 'off_topic' : 'answer', storeQuery: info ? 'timbro file' : null, clarification: offTopic ? 'RISPOSTA_GENERALE_TEST' : null, changeIntent: 'update', mechanism: 'automatic', shape: 'square', widthMm: 10, heightMm: 10 }) }], usage: { input_tokens: 100, output_tokens: 20 } });
   }
   throw new Error('Rete esterna non prevista dal collaudo: ' + url.hostname);
 };
@@ -77,6 +81,8 @@ try {
   const scoped = await request('/api/public/interpret', 'POST', { ...input, message: 'TEST domanda estranea' }, authorization);
   assert.equal(scoped.status, 200); const scopedBody = await scoped.text();
   assert(!scopedBody.includes('RISPOSTA_GENERALE_TEST')); assert(scopedBody.includes('off_topic'));
+  const infoReply = await request('/api/public/interpret', 'POST', { ...input, supportsStoreAnswers: true, message: 'TEST informazioni prodotti' }, authorization);
+  assert.equal(infoReply.status, 200); const infoBody = await infoReply.json() as { tool: string; arguments: { blocks: unknown[] } }; assert.equal(infoBody.tool, 'answerStoreQuestion'); assert(infoBody.arguments.blocks.length > 0);
   const callsBeforeDenied = calls;
   assert.equal((await request('/api/public/interpret', 'POST', input, { Authorization: 'Bearer ' + '0'.repeat(64) })).status, 401);
   await mf.dispose(); mf = make('0.0004');

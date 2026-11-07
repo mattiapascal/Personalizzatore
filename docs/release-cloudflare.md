@@ -8,6 +8,8 @@ Il titolare ha autorizzato il primo rilascio diretto sulla pagina `https://www.i
 
 ## Versione distribuita
 
+Estensione informativa del 7 novembre: catalogo prodotti pubblicato, FAQ del sito e documento umano `CONOSCENZE_ASSISTENTE.md`, con fonti citate e selezione timbri preservata. Il [report](knowledge-assistant.md) descrive import, privacy, costi e limiti; il manifest `releases/2026-11-07-knowledge.json` registra la verifica del rilascio. Nessuna modifica al repository del tema.
+
 Correzione della consulenza: sorgente `2f4176e`, Worker `1fe2ed27-5635-4f76-b112-0d86352136e6`, prompt `stamp-requirements-v12-policy-ff701d32eeea`. Nessun limite individuale nel pubblico e risposte visibili costruite dal programma per il solo contesto timbri. [Manifest](releases/2026-11-06-guided-budget.json) e [diagnosi, limiti e collaudi](iteration-guided-budget.md). Nessuna modifica al tema.
 
 Correzione sessioni precedente: sorgente `7412f73`, Worker `6e76fd30-8146-49f9-9514-5f2fa78ef01f`. Nessun upload o modifica al tema per questa correzione. [Manifest verificato](releases/2026-11-06-session-fix.json).

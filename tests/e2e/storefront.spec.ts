@@ -147,3 +147,27 @@ test('errore invio: non ripete la domanda e conserva il testo per riprovare', as
   await input.press('Enter'); await expect(page.getByTestId('field-prodotto')).toHaveClass(/answered/);
   await expect(input).toHaveValue('');
 });
+test('informazioni del negozio: risposta con fonte e requisiti della selezione conservati', async ({ page }) => {
+  await setup(page); let turns = 0;
+  await page.route('**/api/public/interpret', route => {
+    const input = route.request().postDataJSON(); turns++;
+    return route.fulfill({ json: turns === 1 ? { schemaVersion: 1, tool: 'collectRequirements', expectedSessionId: input.sessionId, expectedRevision: input.revision, arguments: { family: 'stamp', mechanism: 'automatic' }, clearFields: [], dialogueAct: 'answer', clarification: null } : { schemaVersion: 1, tool: 'answerStoreQuestion', expectedSessionId: input.sessionId, expectedRevision: input.revision, arguments: { status: 'answered', blocks: [{ text: 'Informazione TEST dalla FAQ: controlliamo il file prima della stampa.', title: 'FAQ del prodotto TEST', url: 'https://www.incisoriasacchetti.it/products/prodotto-test' }] } } });
+  });
+  await page.goto('/'); await page.getByLabel('Scrivi un messaggio').fill('Un timbro automatico'); await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  await expect(page.getByTestId('field-montatura')).toHaveClass(/answered/);
+  await page.getByLabel('Scrivi un messaggio').fill('Controllate il file prima della stampa?'); await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  const reply = page.getByTestId('selection-feedback');
+  await expect(reply).toContainText('Informazione TEST dalla FAQ');
+  await expect(reply.getByRole('link', { name: /Fonte/ })).toHaveAttribute('href', 'https://www.incisoriasacchetti.it/products/prodotto-test');
+  await expect(reply).not.toContainText('Preferisci un timbro');
+  await expect(page.getByTestId('field-montatura')).toContainText('Autoinchiostrante');
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain('FAQ del prodotto');
+});
+test('informazione mancante: non inventa condizioni e non cancella le scelte', async ({ page }) => {
+  await setup(page);
+  await page.route('**/api/public/interpret', route => { const input = route.request().postDataJSON(); return route.fulfill({ json: { schemaVersion: 1, tool: 'answerStoreQuestion', expectedSessionId: input.sessionId, expectedRevision: input.revision, arguments: { status: 'not_found', blocks: [] } } }); });
+  await page.goto('/'); await page.getByLabel('Scrivi un messaggio').fill('Quali informazioni sono disponibili?'); await page.getByRole('button', { name: 'Invia messaggio' }).click();
+  await expect(page.getByTestId('selection-feedback')).toContainText('Non ho trovato una fonte verificata');
+  await expect(page.getByTestId('selection-feedback').getByRole('link')).toHaveCount(0);
+  await expect(page.getByTestId('field-prodotto')).toHaveClass(/missing/);
+});

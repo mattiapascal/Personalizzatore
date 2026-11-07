@@ -10,20 +10,24 @@ import { CatalogService } from './catalog.ts';
 import { Meter } from './meter.ts';
 import type { RuntimeState } from '../src/runtime/schema.ts';
 import { createCatalog } from '../src/catalog/adapter.ts';
+import { LocalKnowledge } from './knowledge/local.ts';
 
 export class LocalApi {
   readonly token = randomBytes(32).toString('hex');
   readonly catalog: CatalogService;
   readonly meter: Meter;
+  readonly knowledge: LocalKnowledge;
   private calls: number[] = [];
   private activeAi = false;
   private meterError: string | null = null;
   constructor(readonly config: Config, root: string, private fetcher: typeof fetch = fetch) {
     this.catalog = new CatalogService(config, resolve(root, '.local/catalog.json'), fetcher);
     this.meter = new Meter(resolve(root, '.local/ai-meter.json'));
+    this.knowledge = new LocalKnowledge(config, root, () => createCatalog(this.catalog.state.snapshot, this.catalog.state.version), fetcher);
   }
   async init() {
     await this.catalog.load();
+    await this.knowledge.load();
     try { await this.meter.load(); } catch (error) { this.meterError = (error as Error).message; }
   }
   status(): RuntimeState {
@@ -45,7 +49,7 @@ export class LocalApi {
       return this.status();
     }
     if (method === 'POST' && path === '/api/catalog/refresh') {
-      await this.catalog.refresh(); return this.status();
+      await this.catalog.refresh(); await this.knowledge.refresh().catch(() => {}); return this.status();
     }
     if (method === 'POST' && path === '/api/ai/interpret') {
       const input = AiRequestSchema.parse(body);
@@ -54,7 +58,7 @@ export class LocalApi {
       if (this.calls.length >= 10) throw new Error('Troppe richieste AI: attendi un minuto');
       if (this.activeAi) throw new Error('Una richiesta AI è già in corso');
       this.calls.push(now); this.activeAi = true;
-      try { return await proposeOpenAi(input, this.config, this.meter, this.fetcher, undefined, createCatalog(this.catalog.state.snapshot, this.catalog.state.version)); }
+      try { return await proposeOpenAi(input, this.config, this.meter, this.fetcher, undefined, createCatalog(this.catalog.state.snapshot, this.catalog.state.version), this.knowledge.provider); }
       finally { this.activeAi = false; }
     }
     throw new Error('Endpoint non disponibile');
@@ -111,8 +115,9 @@ export function localApiPlugin(): Plugin {
       });
       let timer: ReturnType<typeof setInterval> | undefined;
       if (api.catalog.configured) {
-        void api.catalog.refresh().catch(() => {});
-        timer = setInterval(() => { void api.catalog.refresh().catch(() => {}); }, config.CATALOG_POLL_SECONDS * 1000);
+        const refresh = () => api.catalog.refresh().then(() => api.knowledge.refresh()).catch(() => {});
+        void refresh();
+        timer = setInterval(() => { void refresh(); }, config.CATALOG_POLL_SECONDS * 1000);
         timer.unref();
       }
       server.httpServer?.once('close', () => { if (timer) clearInterval(timer); });

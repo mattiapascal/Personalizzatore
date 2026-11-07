@@ -71,11 +71,11 @@ function Conversation({ data, offline }: { data: PublicBootstrap; offline: boole
   return <main className="public-assistant">
     {stale && <p className="notice" role="status">L’assistente sta aggiornando i modelli disponibili. Puoi continuare dal catalogo.</p>}
     <div className="selection-grid">
-      <section className="panel chat-panel" aria-labelledby="assistant-title"><h2 id="assistant-title">Assistente timbri</h2>
+      <section className="panel chat-panel" aria-labelledby="assistant-title"><h2 id="assistant-title">Assistente del negozio</h2>
         <p className="caption">Assistente AI: inviamo a OpenAI il testo protetto. Evita dati personali non necessari.</p>
         {!capability && data.aiReady && <div className="security-check"><div ref={security} hidden={verified}/><p className="caption" role="status">{securityError || (verified ? 'Avvio della chat…' : 'Un breve controllo di sicurezza prima di iniziare.')}</p>{securityError && <button onClick={() => { setSecurityError(''); setVerified(false); setRetry(n => n + 1); }}>Riprova la verifica</button>}</div>}
         {!data.aiReady && !stale && <p role="status">L’assistente non è disponibile in questo momento. Puoi continuare dal catalogo.</p>}
-        <SelectionChat publicMode feedbackIsError={state.feedbackIsError} session={state.session} feedback={state.feedbackRevision && state.feedback.includes('canvas') ? 'Ho aggiornato la scelta.' : state.feedback} feedbackRevision={state.feedbackRevision} clarification={state.clarification} clarificationBlocksSelection={state.clarificationBlocksSelection}
+        <SelectionChat publicMode informationAnswer={state.informationAnswer} feedbackIsError={state.feedbackIsError} session={state.session} feedback={state.feedbackRevision && state.feedback.includes('canvas') ? 'Ho aggiornato la scelta.' : state.feedback} feedbackRevision={state.feedbackRevision} clarification={state.clarification} clarificationBlocksSelection={state.clarificationBlocksSelection}
           contentBrief={state.contentBrief} catalog={catalog} runtime={runtime} mode="server" busy={busy} active dispatch={dispatch} onBusy={setBusy} onComplete={() => {}} onShowResults={() => results.current?.focus()}/>
       </section>
       <section className="results-panel" aria-labelledby="candidate-title"><h2 id="candidate-title" ref={results} tabIndex={-1}>I modelli per te</h2>

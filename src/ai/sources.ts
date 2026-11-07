@@ -1,0 +1,2 @@
+import { z } from 'zod';
+export const StoreSourceUrlSchema = z.string().url().refine(value => { const u = new URL(value); return u.protocol === 'https:' && ['www.incisoriasacchetti.it', 'incisoriasacchetti.it'].includes(u.hostname) && !u.username && !u.password && !u.port && !u.search && !u.hash && /^\/(?:$|(?:products|collections|pages)\/[a-z0-9-]+\/?$)/.test(u.pathname); }, 'Fonte non consentita');
