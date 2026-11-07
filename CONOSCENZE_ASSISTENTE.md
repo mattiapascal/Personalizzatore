@@ -14,7 +14,7 @@ npm run check
 
 Riavvia il laboratorio con `npm run dev`. Questi comandi e il push Git **non aggiornano Cloudflare**: per il sito serve il rilascio autorizzato del backend. Prodotti e pagine pubbliche vengono riletti automaticamente; questo documento viene invece incluso nella build.
 
-Ogni risposta inizia con `###` seguito dalla domanda. Scrivi solo fatti confermati. Una riga `Fonte: https://www.incisoriasacchetti.it/...` è facoltativa; deve puntare al nostro sito. Se manca, la chat indica «Informazioni del negozio» senza esporre il nome del file. Le fonti manuali possono integrare le schede, ma non certificano prezzi, disponibilità o misure delle varianti. In caso di contrasto il sistema deve segnalare le fonti, non inventare una riconciliazione.
+Ogni risposta inizia con `###` seguito dalla domanda. Scrivi solo fatti confermati. Separa con righe vuote i paragrafi, ciascuno entro 1.800 caratteri. Una riga `Fonte: https://www.incisoriasacchetti.it/...` è facoltativa; deve puntare al nostro sito. Se manca, la chat indica «Informazioni del negozio» senza esporre il nome del file. Le fonti manuali possono integrare le schede, ma non certificano prezzi, disponibilità o misure delle varianti. In caso di contrasto il sistema deve segnalare le fonti, non inventare una riconciliazione.
 
 Le pagine della prima lista servono come fonti FAQ e informazioni generali. Sono ammesse soltanto pagine HTTPS del negozio, senza parametri; niente siti esterni. Il sistema consulta inoltre le FAQ delle schede prodotto pertinenti alla domanda.
 

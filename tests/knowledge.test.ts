@@ -35,6 +35,16 @@ describe('Conoscenze modificabili e confini delle fonti', () => {
     const footer = extractPage('<main><h1>Negozio TEST</h1></main><div class="shopify-section-group-footer-group"><p>Telefono TEST 555</p></div>', 'https://www.incisoriasacchetti.it/');
     expect(footer.some(d => d.text === 'Telefono TEST 555')).toBe(true);
   });
+  it('si identifica nelle richieste HTML e rende diagnosticabile un rifiuto HTTP', async () => {
+    const fetcher = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      const headers = new Headers(init?.headers);
+      return headers.get('accept') === 'text/html' && headers.get('user-agent')?.startsWith('IncisoriaAssistant/')
+        ? new Response('<main><h1>FAQ TEST</h1></main>', { headers: { 'Content-Type': 'text/html' } })
+        : new Response('', { status: 403 });
+    });
+    expect(await fetchKnowledgePage(url, fetcher)).toMatchObject({ documents: [] });
+    await expect(fetchKnowledgePage(url, async () => new Response('', { status: 403 }))).rejects.toThrow('HTTP 403');
+  });
   it('non segue un redirect dal sito verso un host esterno', async () => {
     const fetcher = vi.fn().mockResolvedValue(new Response(null, { status: 302, headers: { Location: 'https://evil.test/' } }));
     await expect(fetchKnowledgePage(url, fetcher)).rejects.toThrow('Fonte'); expect(fetcher).toHaveBeenCalledTimes(1);

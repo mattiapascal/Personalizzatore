@@ -51,3 +51,11 @@ Test automatici di compilazione/esclusione note, fonti esterne e redirect, parse
 Collaudo reale finale su sei domande sintetiche: file grafico pronto, materiali Crystal Sign, seguito sull’uso esterno della stessa targa, spedizione gratuita, risposta dal documento locale e richiesta estranea. **6/6**, stima standard **0,0294 USD**. Due esecuzioni diagnostiche precedenti hanno individuato problemi di instradamento/fonti e sono state corrette; consumo stimato delle tre esecuzioni **0,08577225 USD**. Nessun dato cliente usato nel collaudo. I costi sono stime a listino, non fatture o garanzia di applicazione di token promozionali.
 
 `npm run eval:knowledge` esegue il test reale separato, entro 0,25 USD per esecuzione e 1 USD aggregato noto+riserve nel registro di test; non parte con i normali controlli. L’invio di fonti al modello è motivato dal tool calling della [documentazione OpenAI](https://developers.openai.com/api/docs/guides/function-calling). La query usa i [campi prodotto Shopify](https://shopify.dev/docs/api/admin-graphql/2026-10/queries/product).
+
+## Verifica online del rilascio
+
+Il primo import remoto aveva completato il catalogo ma nessuna pagina FAQ. Dopo aver reso espliciti `Accept: text/html` e l’identificazione del servizio nelle richieste, la verifica remota ha letto tre pagine e otto FAQ iniziali. Non è stato ricostruito il codice di rifiuto delle richieste iniziali: non attribuire senza prova il problema a una regola WAF specifica. È stata aggiunta diagnostica riservata degli errori pagina, senza testi cliente; il bootstrap pubblico non la espone.
+
+Verifica finale: 1.412 prodotti, 76 profili timbro, due voci manuali, tre pagine e otto FAQ in cache; nessun errore pagina. Due aggiornamenti completati in circa 10,6 e 8,4 secondi di tempo totale, con zero documenti cambiati. Non è una misura CPU o prova di carico. Contatori aggregati conservati: 24 chiamate, 0,088604 USD stimati, nessuna riserva pendente e budget 1 USD invariato. Pagina HTTP 200 e hash degli asset remoti identici al pacchetto locale. Nessuna chiamata OpenAI durante questa verifica amministrativa.
+
+Il [manifest](releases/2026-11-07-knowledge.json) registra la versione distribuita. Il collaudo AI reale resta quello su richieste sintetiche; non si dichiara un nuovo collaudo umano remoto con Turnstile su telefono.

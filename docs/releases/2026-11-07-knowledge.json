@@ -1,0 +1,79 @@
+{
+  "verifiedAt": "2026-11-07T07:44:23.008Z",
+  "page": "https://www.incisoriasacchetti.it/pages/crea-timbro-online",
+  "workerUrl": "https://incisoria-assistente-timbri.laboratorio-e32.workers.dev",
+  "workerVersion": "702b248d-db4f-4cda-ad7b-e3884f197180",
+  "previousWorkerVersion": "1fe2ed27-5635-4f76-b112-0d86352136e6",
+  "applicationCommit": "0496836a802e781a8dc069e1f80bf239dd0f75ea",
+  "themeChanged": false,
+  "themeCommit": "3e0bf4d43e52dbcacb44e324e8054507723d3e60",
+  "apiVersion": 1,
+  "compatibility": "supportsStoreAnswers capability; existing clients receive reload invitation for information",
+  "model": "gpt-5.4-mini-2026-03-17",
+  "promptVersion": "stamp-requirements-v15-policy-0b42098d66ba",
+  "assets": [
+    {
+      "path": "/assets/index-BG2r_x-8.js",
+      "sha256": "49d52a41258358b5c77ea13ce72c038f2d1fd3c72059e9970e6998c741e94f05"
+    },
+    {
+      "path": "/assets/index-L8Ls1asZ.css",
+      "sha256": "45cb5edd54ce94ba85140cd5d810ec54a0cc843df2f3186dd510555490ea6b70"
+    }
+  ],
+  "knowledge": {
+    "checkedAt": "2026-11-07T07:44:20.376Z",
+    "version": "80b729337f5a7f8ba1921398ff5ef20223ac854757a8a929c0ff0bf63488e8bf",
+    "products": 1412,
+    "changedDocuments": 0,
+    "configuredVersion": "b0725f6abb4ac38e1dbe978bb2fe1a635a7067b02e83a9b3d23503fc100a046c",
+    "manualEntries": 2,
+    "pageFailures": {},
+    "pagesCached": 3,
+    "faqEntries": 8,
+    "refreshIntervalMinutes": 5,
+    "pageTtlMinutes": 5,
+    "maximumStaleMinutes": 10,
+    "document": "CONOSCENZE_ASSISTENTE.md",
+    "maxAnswerBlocks": 3,
+    "maxSourcePassages": 14,
+    "sourceSelection": "typed evidence IDs; exact source excerpts"
+  },
+  "catalog": {
+    "version": "SHOPIFY-572f661a41f76a18ca88",
+    "checkedAt": "2026-11-07T07:44:14.444Z",
+    "profiles": 76
+  },
+  "ledger": {
+    "preserved": true,
+    "globalBudgetUsd": 1,
+    "estimatedUsd": 0.088604,
+    "heldUsd": 0,
+    "requests": 24,
+    "newIndividualLimits": false
+  },
+  "checks": {
+    "unit": 211,
+    "labBrowser": 38,
+    "publicBrowser": 13,
+    "workerSQLite": "passed-controlled-network-including-page-cache",
+    "secretScan": "passed",
+    "livePageHttp": 200,
+    "liveAssetsEqual": true,
+    "secondRefreshChangedDocuments": 0,
+    "refreshWallMs": [
+      10561,
+      8358
+    ],
+    "liveAiCallsDuringAdministrativeVerification": 0,
+    "realAiSynthetic": {
+      "passed": 6,
+      "total": 6,
+      "estimatedStandardUsd": 0.0294,
+      "totalIncludingTwoDiagnosticsUsd": 0.08577225
+    },
+    "humanRemoteMobileRetest": "not-performed",
+    "loadAndCpuBenchmark": "not-performed"
+  },
+  "rollback": "Restore a verified prior Worker version without deleting SQLite or usage ledger; Shopify page and theme unchanged."
+}
