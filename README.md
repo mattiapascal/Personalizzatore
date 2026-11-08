@@ -78,6 +78,8 @@ Lettura reale aggiornata: 228 prodotti letti, 214 attivi con URL pubblico; 76 pr
 
 ## Canvas
 
+Per iniziare una nuova chat sul futuro sostituto locale di PitchPrint: [handoff aggiornato del configuratore grafico](docs/HANDOFF_EDITOR_GRAFICO.md).
+
 Da un candidato premi Prova nel canvas. Il progetto usa modello, ID/versioni Shopify e dimensioni nominali. Doppio clic sul testo per scrivere, Invio per una nuova riga, Esc o Termina modifica per validare. Testo e bordo si possono trascinare.
 
 Modifiche manuali e comandi strutturati passano dallo stesso store revisionato. Il passaggio a un altro modello o variante conserva gli oggetti solo se entrano; altrimenti mantiene il progetto precedente, con possibilità di salvarlo in JSON e creare una nuova bozza per il formato scelto. Non riduce font o deforma automaticamente. Il cambio modello riuscito ricomincia lo storico undo. Nei formati tondi la validazione usa il cerchio reale e il renderer esporta un ritaglio circolare.
