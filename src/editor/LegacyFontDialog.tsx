@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { legacyFontRequests, replaceLegacyFonts } from './legacy-fonts';
 import { loadFontAssets, registeredFontAsset } from './fonts';
-import {refreshLibraryFonts} from '../editor-admin/library-fonts';
+import {refreshLibraryFonts,includeIncomingFontChoices} from '../editor-admin/library-fonts';
 import { FontPicker } from './FontPicker';
 import type { GraphicDocument } from './model';
 interface Pending { document:GraphicDocument; resolve:(doc:GraphicDocument)=>void; reject:(cause:Error)=>void; }
@@ -23,9 +23,12 @@ export function useProjectFontPreparation(){
  const [pending,setPending]=useState<Pending|null>(null),active=useRef<Pending|null>(null);
  useEffect(()=>()=>{active.current?.reject(new Error('Editor chiuso durante la scelta dei font'));active.current=null;},[]);
  const prepare=async(document:GraphicDocument):Promise<GraphicDocument>=>{
-  await loadFontAssets(document.fontAssets);if(!legacyFontRequests(document).length)return document;
-  if(active.current)throw new Error('Completa la scelta dei font già aperta.');
-  return new Promise((resolve,reject)=>{const next={document,resolve,reject};active.current=next;setPending(next);});
+  const release=includeIncomingFontChoices(document.fontAssets);
+  try{
+   await loadFontAssets(document.fontAssets);if(!legacyFontRequests(document).length)return document;
+   if(active.current)throw new Error('Completa la scelta dei font già aperta.');
+   return await new Promise<GraphicDocument>((resolve,reject)=>{const next={document,resolve,reject};active.current=next;setPending(next);});
+  }finally{release();}
  };
  return {prepare,dialog:pending?<LegacyFontDialog key={pending.document.documentId} pending={pending} onClose={()=>{active.current=null;setPending(null);}}/>:null};
 }

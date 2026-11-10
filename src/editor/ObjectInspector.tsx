@@ -1,7 +1,8 @@
+import {textFontToggle,textFontFamily,commonTextFontFamily} from './text-font-toggle';
 import {ObjectPropertiesPanel} from './ObjectPropertiesPanel';
 import type {ObjectProperties} from './object-properties';
 import { EDITOR_LIMITS,TEST_MIN_FONT_SIZE_PT } from './limits';
-import { fontVariantChoices, fontVariantLabel, renderFontFamily, chooseFontStyle, toggleFontFace, fontIsBold, fontIsItalic, fontCatalogVersion, subscribeFonts } from './fonts';
+import { fontVariantChoices, fontVariantLabel, renderFontFamily, chooseFontStyle, fontChoices, registeredFontAsset, fontCatalogVersion, subscribeFonts } from './fonts';
 import { transformSelection } from './selection';
 import { resizeTextHeight, textHeightLimits } from './text-sizing';
 import { DEFAULT_JUSTIFICATION } from './justification';
@@ -46,8 +47,14 @@ export function ObjectInspector({ onProperties, object, revision, arrangement, o
     else patch(applyCharacterStyle(current, style), immediate);
   };
   useSyncExternalStore(subscribeFonts,fontCatalogVersion);
-  const activeFont=current.type==='text'?(character?.fontFamily??current.fontFamily):'',variants=fontVariantChoices(activeFont),boldPatch=toggleFontFace(activeFont,'bold',character?.fontWeight,character?.fontStyle),italicPatch=toggleFontFace(activeFont,'italic',character?.fontWeight,character?.fontStyle);
-  const mixedCustomFaces=!!characterScope?.mixed.includes('fontFamily')&&current.type==='text'&&[current.fontFamily,...current.characterStyles?.map(r=>r.style.fontFamily)??[]].some(id=>id?.startsWith('font-'));
+  const activeFont=current.type==='text'?(character?.fontFamily??current.fontFamily):'',variants=fontVariantChoices(activeFont);
+  const styleIds=new Set([...fontChoices(),...(current.type==='text'?[current.fontFamily,...current.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]]:[])]),styleAssets=[...styleIds].flatMap(id=>{const asset=registeredFontAsset(id);return asset?[asset]:[];});
+  const boldToggle=current.type==='text'?textFontToggle(current,'bold',styleAssets,characterSelection??undefined):null,italicToggle=current.type==='text'?textFontToggle(current,'italic',styleAssets,characterSelection??undefined):null;
+  const commonFamily=current.type==='text'?commonTextFontFamily(current,styleAssets,characterSelection??undefined):undefined;
+  const [fontNotice,setFontNotice]=useState<{objectId:string;revision:number;message:string}|null>(null);
+  const fontError=fontNotice?.objectId===object.id&&fontNotice.revision===revision?fontNotice.message:'';
+  const setFontError=(message:string,nextRevision=revision)=>setFontNotice(message?{objectId:object.id,revision:nextRevision,message}:null);
+  const toggleFace=(next:Extract<SceneObject,{type:'text'}>|null|undefined)=>{if(next){setFontError('');patch(next,true);}};
   const fontSizeField = current.type === 'text' ? <NumberField {...{ revision: revision + (characterSelection?.start ?? 0) + (characterSelection?.end ?? 0) }} label="Corpo testo (pt)" value={character?.fontSizePt ?? current.fontSizePt} mixed={characterScope?.mixed.includes('fontSizePt')} disabled={noCharacters} min={TEST_MIN_FONT_SIZE_PT} max={EDITOR_LIMITS.maxFontSizePt} onChange={fontSizePt => { if (fontSizePt >= TEST_MIN_FONT_SIZE_PT && fontSizePt <= EDITOR_LIMITS.maxFontSizePt) characterPatch({ fontSizePt }); }}/> : null;
   const textScaleField = current.type === 'text' ? <NumberField revision={draft.revision} label="Dilataz. Orizz. (%)" value={(current.textScaleX ?? 1) * 100} min={10} max={1000} step={1} onChange={value => { if (value >= 10 && value <= 1000) { if (characterSelection) onTextStretch(value / 100); else patch({ textScaleX: value / 100 }); } }}/> : null;
   let frame: ReturnType<typeof measureTextFrame> | null = null;
@@ -133,16 +140,17 @@ export function ObjectInspector({ onProperties, object, revision, arrangement, o
         <p className="caption inspector-anchor"><span aria-hidden="true">⊙</span> Ancoraggio al centro · X/Y del centro. Dimensioni delle forme senza contorno.</p>
       </>}
       {section === 'text' && current.type === 'text' && <>
-        <FontPicker onOpen={onFontMenuOpen} disabled={noCharacters} value={characterScope?.mixed.includes('fontFamily') ? '' : character?.fontFamily ?? current.fontFamily} onChange={fontFamily => characterPatch(chooseFontStyle(fontFamily), true)}/>
+        <FontPicker onOpen={onFontMenuOpen} disabled={noCharacters} value={commonFamily??''} onChange={fontFamily => {const exact=textFontFamily(current,fontFamily,styleAssets,characterSelection??undefined),next=exact??textFontFamily(current,fontFamily,styleAssets,characterSelection??undefined,true);if(next){toggleFace(next);if(!exact)setFontError('Alcune varianti non sono disponibili: applicato lo stile originale del font scelto.',revision+1);}else setFontError('Il file font scelto non è disponibile. Aggiorna la libreria e riprova.');}}/>
         <div role="group" aria-label="Stile del testo" className="button-row"><fieldset className="inspector-arrangement" disabled={noCharacters}>
-          <EditorButton icon="bold" label="Grassetto" disabled={!boldPatch||mixedCustomFaces} aria-pressed={characterScope?.mixed.includes('fontWeight') ? 'mixed' : fontIsBold(activeFont,character?.fontWeight)} onClick={() => {if(boldPatch)characterPatch(boldPatch,true);}}/>
-          <EditorButton icon="italic" label="Corsivo" disabled={!italicPatch||mixedCustomFaces} aria-pressed={characterScope?.mixed.includes('fontStyle') ? 'mixed' : fontIsItalic(activeFont,character?.fontStyle)} onClick={() => {if(italicPatch)characterPatch(italicPatch,true);}}/>
+          <EditorButton icon="bold" label="Grassetto" disabled={!boldToggle?.object} aria-pressed={boldToggle?.pressed??false} onClick={()=>toggleFace(boldToggle?.object)}/>
+          <EditorButton icon="italic" label="Corsivo" disabled={!italicToggle?.object} aria-pressed={italicToggle?.pressed??false} onClick={()=>toggleFace(italicToggle?.object)}/>
           <EditorButton icon="underline" label="Sottolineato" aria-pressed={characterScope?.mixed.includes('underline') ? 'mixed' : character?.underline ?? false} onClick={() => characterPatch({ underline: !character?.underline }, true)}/>
           <EditorButton icon="strikethrough" label="Barrato" aria-pressed={characterScope?.mixed.includes('linethrough') ? 'mixed' : character?.linethrough ?? false} onClick={() => characterPatch({ linethrough: !character?.linethrough }, true)}/>
           <EditorButton icon="overline" label="Sopralineato" aria-pressed={characterScope?.mixed.includes('overline') ? 'mixed' : character?.overline ?? false} onClick={() => characterPatch({ overline: !character?.overline }, true)}/>
         </fieldset>
         </div>
-        {variants.length>1&&<details className="font-other-styles"><summary>Altri stili</summary><label>Variante font<select aria-label="Variante font" disabled={noCharacters||characterScope?.mixed.includes('fontFamily')} value={activeFont} onChange={event=>characterPatch(chooseFontStyle(event.target.value),true)}>{variants.map(face=><option key={face.id} value={face.id} style={{fontFamily:renderFontFamily(face.id)}}>{fontVariantLabel(face.id)}</option>)}</select></label></details>}
+        {fontError&&<p role="status">{fontError}</p>}
+        {variants.length>1&&<details className="font-other-styles"><summary>Altri stili</summary><label>Variante font<select aria-label="Variante font" disabled={noCharacters||!commonFamily} value={activeFont} onChange={event=>characterPatch(chooseFontStyle(event.target.value),true)}>{variants.map(face=><option key={face.id} value={face.id} style={{fontFamily:renderFontFamily(face.id)}}>{fontVariantLabel(face.id)}</option>)}</select></label></details>}
         <div className="property-grid">{fontSizeField}{textScaleField}</div>
         <div className="property-grid">{!current.textPath && <NumberField {...fields} label="Interlinea" value={current.lineHeight ?? 1} min={1} max={3} step={0.1} onChange={lineHeight => patch({ lineHeight })}/> }
         <NumberField {...fields} label={characterSelection ? 'Crenatura (pt)' : 'Spaziatura (pt)'} value={characterSelection?.spacing?.value ?? current.letterSpacingPt ?? 0} min={EDITOR_LIMITS.minTrackingPt} max={EDITOR_LIMITS.maxTrackingPt} step={0.1} mixed={characterSelection?.spacing?.mixed} disabled={!!characterSelection && !characterSelection.spacing?.indices.length} onChange={value => { if (value >= EDITOR_LIMITS.minTrackingPt && value <= EDITOR_LIMITS.maxTrackingPt) { if (characterSelection) onKerning(value); else patch({ letterSpacingPt: value }); } }}/>

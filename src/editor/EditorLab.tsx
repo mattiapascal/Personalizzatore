@@ -14,7 +14,7 @@ import { fitTemplate, templateCommand } from '../editor-workflow/template-fit';
 import { profileKey } from '../catalog/schema';
 import { FontCheckPanel } from './FontCheckPanel';
 import { InkPreviewFilter } from './InkPreviewFilter';
-import { refreshLibraryFonts,initializeLibraryFonts } from '../editor-admin/library-fonts';
+import { refreshLibraryFonts,initializeLibraryFonts,showProjectFontChoices } from '../editor-admin/library-fonts';
 import { loadFontAssets, fontAssetArguments, defaultLibraryFont, registeredFontAsset } from './fonts';
 import { readAdminSnapshot, readArchiveRecord, localAdminRequest } from '../editor-admin/api';
 import { prepareSvg, svgInsertion } from './svg-import';
@@ -113,7 +113,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   };
   const refresh = () => {
     const store = storeRef.current; if (!store) return;
-    select(selectedRef.current);
+    showProjectFontChoices(store.document.fontAssets);select(selectedRef.current);
     setDoc(cloneGraphicDocument(store.document)); adapter.current?.render(store.document, selectedRef.current);
     setEventLog(store.events.map(e => `r${e.revision}: ${e.source} ${e.objectId ?? ''}`).join('\n'));
   };
@@ -287,7 +287,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     view.setTextPathHandler((object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'setTextPath', objectId: object.id, expectedRevision, arguments: { offsetMm: object.textPath!.offsetMm } }, 'manual')));
     view.setRasterCropHandler((object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', objectId: object.id, expectedRevision, arguments: objectArguments(object) }, 'manual')));
     view.setBezierDragHandler((object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', objectId: object.id, expectedRevision, arguments: objectArguments(object) }, 'manual')));
-    view.render(store.document); setDoc(structuredClone(store.document));
+    showProjectFontChoices(store.document.fontAssets);view.render(store.document); setDoc(structuredClone(store.document));
     setEventLog(store.events.map(e => `r${e.revision}: ${e.source} ${e.objectId ?? ''}`).join('\n'));
     document.getElementById('lab-title')?.focus();
     return () => { view.dispose(); adapter.current = null; storeRef.current = null; };

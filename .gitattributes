@@ -2,3 +2,5 @@
 # Preserve PDF byte offsets and the original font license line endings.
 *.pdf binary
 fixtures/fonts/ABeeZee-OFL.txt whitespace=-blank-at-eol,cr-at-eol
+fixtures/fonts/*-LICENSE.txt whitespace=-blank-at-eol,cr-at-eol
+*.ttf binary

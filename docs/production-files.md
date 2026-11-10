@@ -115,3 +115,9 @@ Registrare versione Illustrator/OS, font installati, dimensioni rilevate, screen
 ### Alias PitchPrint e facce font
 
 Nuovo campione [JSON](../fixtures/illustrator/pitchprint-font-alias.TEST.json) / [SVG](../fixtures/illustrator/pitchprint-font-alias.TEST.svg), 100 × 40 mm e ABeeZee incorporato con licenza OFL. Generazione tramite `scripts/capture-editor-pitchprint-font-alias.ts`; fonte sintetica, comandi manuali/AI e Undo/Redo. Controllate riapertura, identità del file e glifi. Negli SVG attributi e stili inline mantengono il nome della faccia esatta, distinto dalla famiglia amministrativa. Resta da verificare in Illustrator il riconoscimento della faccia e l’editing dei testi; nessun nuovo esito umano dichiarato. [Dettagli](iteration-editor-pitchprint-font-aliases.md).
+
+## Campioni con font incorporati — aggiornamento del 10 novembre
+
+La [politica corrente](iteration-editor-library-font-policy.md) esclude i font del computer. I campioni storici e i loro vecchi comandi di generazione riportati sopra conservano le dipendenze originarie e non costituiscono oggi una prova portabile. Per il collaudo attuale usare `stamp-embedded.TEST.json/svg`, `node --import tsx scripts/verify-editor-artifacts.ts` (19 copie TEST in `.local/verified-fixtures`) e `node --import tsx scripts/capture-editor-font-styles.ts` (testo misto con quattro file reali). I generatori storici restanti vanno migrati prima di riutilizzarli con la politica corrente.
+
+[Varianti, copie di prova e verifiche](iteration-editor-font-regressions.md). Originali conservati; nessuna sostituzione automatica sui progetti reali. Misure fisiche, struttura, risorse e glifi controllati in browser; Illustrator rimane da verificare sul nuovo corpus.

@@ -2,11 +2,21 @@
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.
 
+## Varianti reali, stili misti e scelte per progetto — ultimo incremento
+
+[Comportamenti e prove](iteration-editor-font-regressions.md). B/I ora operano anche su stili misti: corsivo sul box conserva le porzioni in grassetto, selezioni parziali e Unicode restano indipendenti. Cambiare famiglia mantiene gli stili disponibili; una famiglia con un solo file si può scegliere direttamente, con avviso quando applica il proprio stile originale. Nessuna variante simulata o font del computer.
+
+Il menu usa la libreria attiva e i file del documento corrente; cambiare progetto, annullare un’importazione e fare undo/redo aggiornano le scelte. I file archiviati restano disponibili nei documenti che li incorporano. Se non ci sono font utilizzabili, un foglio vuoto continua a consentire le geometrie e richiede un file per aggiungere testi.
+
+**Controllo completo: 616 unitari / 91 file, build/segreti e 363 browser superati.** Anche **13 regressioni pubbliche** e **19 campioni riaperti/riesportati** passati. Corpus TEST con dodici font aperti originali, nuovo golden `stamp-embedded.TEST`, campione visuale di testo misto e copie portabili in `.local/verified-fixtures`; nessuna installazione nella libreria personale. I generatori storici restanti richiedono ancora migrazione. Illustrator non collaudato; nessun deploy o modifica al negozio.
+
+La prova separata degli alias CSS ha dato pixel/metriche identici su tre casi statici controllati. Il catalogo originale contiene 19 differenze fra dichiarazioni e metadati; l’importatore resta rigoroso finché non sarà implementata una prova specifica della dichiarazione originale. Nessuna associazione basata solo sul nome.
+
 ## Font del progetto: solo file incorporati — ultimo aggiornamento
 
 [Politica e prove](iteration-editor-library-font-policy.md). Per richiesta esplicita, nessun font del computer utilizzabile nell’editor: solo libreria/file del progetto, nessun suffisso «Libreria» nel menu. Bozza e nuovi testi incorporano il file; vecchi documenti richiedono una sostituzione esplicita prima dell’apertura. Controlli anche su intervalli, comandi, SVG e PDF. B/I restano visibili; varianti aggiuntive sotto «Altri stili».
 
-Corretta l’attesa dell’intera libreria e la rilettura completa dell’archivio a ogni download: font necessari subito, altri in sottofondo, file già caricati riutilizzati. Canvas con libreria personale misurato in **1,35–1,71 s**, zero scritture. **606 unitari / 88 file, inclusi i due casi PDF reali, 12 browser pertinenti, build e segreti superati**; suite browser storica con font del computer da aggiornare prima del prossimo controllo completo. Nessun collaudo Illustrator nuovo o deploy.
+Corretta l’attesa dell’intera libreria e la rilettura completa dell’archivio a ogni download: font necessari subito, altri in sottofondo, file già caricati riutilizzati. Canvas con libreria personale misurato in **1,35–1,71 s**, zero scritture. **606 unitari / 88 file, inclusi i due casi PDF reali, 12 browser pertinenti, build e segreti superati**; Suite storica aggiornata e controllo completo concluso nell’incremento sopra. Nessun collaudo Illustrator nuovo o deploy.
 
 Ultimo censimento in sola lettura dei 370 sorgenti a pagina singola: 83 requisiti font, 69 esatti, 10 da collegare/verificare, 4 mancanti/non equivalenti (Alida, ITC Eras Std Medium 700, Tekton, URW DIN SemiCond Black). «Eras Medium/Bold ITC» caricati sono file diversi da ITC Eras Std; URW DIN Regular/Cond non è SemiCond Black. Nessuna sostituzione con font simili. Elenco privato scaricabile aggiornato nel convertitore.
 

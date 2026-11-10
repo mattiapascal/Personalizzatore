@@ -22,5 +22,5 @@ export async function replaceSelectedText(page: Page, value: string): Promise<vo
 }
 
 export async function chooseEditorFont(page: Page, family: string): Promise<void> {
-  await page.getByRole('combobox', { name: 'Font', exact: true }).click(); await page.getByRole('option', { name: family, exact: true }).click();
+  const label=family==='font-aaaaaaaa-0000-4000-8000-000000000001'?'Arimo':family==='font-aaaaaaaa-0000-4000-8000-000000000005'?'Tinos':family==='font-aaaaaaaa-0000-4000-8000-000000000007'?'Cousine':family;await page.getByRole('combobox', { name: 'Font', exact: true }).click(); await page.getByRole('option', { name: label, exact: true }).click();
 }

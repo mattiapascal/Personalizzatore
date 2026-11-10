@@ -1,5 +1,7 @@
 # Assistente AI e personalizzatore Shopify
 
+**Font dell’editor: solo file incorporati.** [Stili misti, scelta delle famiglie e collaudi portabili](docs/iteration-editor-font-regressions.md): B/I preservano le porzioni del testo, il menu segue libreria e documento corrente, i vecchi progetti richiedono una scelta esplicita dei file. Controllo completo: **616 unitari e 363 browser**, più 13 regressioni pubbliche e 19 campioni. [Editor locale](http://127.0.0.1:5173/editor?workspace=1).
+
 **Nuovo incremento locale:** [importazione PitchPrint](docs/iteration-editor-pitchprint-import.md) da copie native, 473 sorgenti acquisiti in sola lettura; 39 varianti Google installate esatte e [font manuali](.local/pitchprint-migration/font-audit/font-da-installare.md), senza fallback. [Proprietà degli oggetti](docs/iteration-editor-object-properties.md) e modulo cliente con ordine crescente. [Apri importatore](http://127.0.0.1:5173/editor/import-pitchprint?workspace=1&mode=admin).
 
 **Correzioni del collaudo del 10 novembre:** [targa a misura cliente](http://127.0.0.1:5173/editor/plaque?workspace=1&mode=customer), [editor amministrativo](http://127.0.0.1:5173/editor?workspace=1&mode=admin), [ricollaudo aggiornato](docs/editor-retest-2026-11-10.md). Salvataggio esplicito, recupero JSON, PDF locale, fissaggi e template riutilizzabili su misure diverse. L’export PDF usa Chromium di Playwright e `qpdf`; il relativo test strumentale usa anche `pdftotext` (Poppler), già disponibili su questo computer. [Stato e limiti](docs/editor-local-status.md); nessun deploy o modifica al negozio.
@@ -138,21 +140,23 @@ Nel pannello Strumenti sono disponibili [griglia e agganci](docs/iteration-edito
 
 **[PNG](docs/iteration-editor-raster.md) e [JPEG locali](docs/iteration-editor-jpeg.md):** originale incorporato nel progetto e conversione bianco/nero modificabile nell’ispettore (soglia, inversione e bianco trasparente). [Luminosità, contrasto e mezzitoni](docs/iteration-editor-raster-filters.md) locali e non distruttivi. JPEG baseline/progressivi a 8 bit, grigi o tre componenti; EXIF 1–8 normalizzato prima di filtri/crop, originale preservato. CMYK escluso. Nessuna rete o generazione AI; SVG con raster derivato. Limiti TEST iniziali: 256 KB, 1 MP, quattro immagini. [Ritaglio e riflessione](docs/iteration-editor-raster-crop.md) non distruttivi nell’ispettore: coordinate in pixel, centro e scala conservati, ripristino dell’intera sorgente.
 
-**[Font locali](docs/iteration-editor-fonts.md):** Arial, Helvetica, Times New Roman, Georgia, Courier New, Verdana e Trebuchet MS, con selettore sul box o sui soli caratteri selezionati. Controllo disponibilità, nessun download o embedding; le famiglie vanno installate anche sulla macchina Illustrator.
+**Font incorporati:** famiglia sul box o sui soli caratteri selezionati, pulsanti B/I e stili aggiuntivi, file conservati nel JSON/SVG. I font del computer non sono utilizzabili. La [prima implementazione dei font locali](docs/iteration-editor-fonts.md) è storica e superata dalla politica corrente; Illustrator resta da collaudare.
 
-Esporta JSON per riaprire il progetto dopo reload; la bozza rimane in memoria cambiando sezione. Esporta SVG per il collaudo Illustrator. Testo Arial fino a 8 righe, rettangolo e cerchio sono il perimetro attuale; loghi, gruppi e scene complesse restano da sviluppare. Il golden storico senza prodotto è importabile sul 4913, con la stessa area nominale 58×22 mm.
+Esporta JSON per riaprire il progetto dopo reload; la bozza rimane in memoria cambiando sezione. Esporta SVG per il collaudo Illustrator. Le capacità correnti e i limiti sono nello [stato locale](docs/editor-local-status.md). Il nuovo golden `stamp-embedded.TEST.json/svg` contiene il proprio font; i campioni storici con nomi di font del computer richiedono una scelta esplicita dei file prima dell’apertura.
 
 ## Verifiche
 
 ~~~sh
 npm run check
 npm run schemas
-npm run fixtures:editor
+# Con il server locale già avviato:
+node --import tsx scripts/verify-editor-artifacts.ts
+node --import tsx scripts/capture-editor-font-styles.ts
 ~~~
 
 check esegue unit test, build, controllo delle credenziali nel bundle e browser e2e. Per Chromium, se necessario: npx playwright install chromium. La suite automatica usa trasporti controllati e non genera costi AI.
 
-Con server aperto, npm run capture:lab produce screenshot e un SVG campione, usando la demo e bloccando chiamate AI.
+I generatori storici, compreso `capture:lab`, vanno adattati alla nuova politica dei font prima del riuso. I due comandi sopra producono copie TEST portabili e una cattura verificata, senza chiamate AI o modifiche all’archivio personale.
 
 I collaudi **reali**, separati dai test automatici, richiedono chiave e budget e possono consumare credito:
 
