@@ -3037,6 +3037,30 @@ async function libraryOnlyFixture(page:Page){
  await page.route('**/__editor-local/admin/',route=>route.fulfill({json:{schemaVersion:1,revision:0,settings:{editorName:'TEST',gridMm:1,gridVisible:false,snapEnabled:false},fonts:[font],records:[]}}));
  await page.route(`**/__editor-local/admin/font/${id}`,route=>route.fulfill({body:bytes,contentType:'font/woff2'}));return{id:`font-${id}`,bytes};
 }
+for(const stalled of ['elenco','file'] as const)test(`apertura font: ${stalled} bloccato termina con Riprova e si recupera senza ricaricare`,async({page})=>{
+ await libraryOnlyFixture(page);let blocked=true,release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve),path=stalled==='elenco'?'**/__editor-local/admin/':'**/__editor-local/admin/font/*';let attempts=0;
+ await page.route(path,async route=>{attempts++;if(blocked){await gate;await route.abort().catch(()=>{});}else await route.fallback();});
+ try{
+  await page.goto('/editor?workspace=1');await expect(page.getByRole('region',{name:'Caricamento editor'})).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('La libreria font non risponde',{timeout:12000});
+  await expect(page.getByTestId('revision')).toHaveCount(0);blocked=false;release();
+  await page.getByRole('button',{name:'Riprova',exact:true}).click();await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 0 ·');
+  expect(attempts).toBeGreaterThanOrEqual(2);const doc=await refinementState(page);expect(doc.objects.some((object:any)=>object.type==='text')).toBe(true);expect(doc.fontAssets).toHaveLength(1);await expect(page.getByRole('alert')).toHaveCount(0);
+ }finally{release();}
+});
+test('apertura font: errore HTTP non crea una bozza senza testo e consente Riprova',async({page})=>{
+ await libraryOnlyFixture(page);let broken=true;await page.route('**/__editor-local/admin/',route=>broken?route.fulfill({status:503,json:{error:'Archivio temporaneamente non disponibile TEST'}}):route.fallback());
+ await page.goto('/editor');await expect(page.getByRole('alert')).toContainText('Archivio temporaneamente non disponibile TEST');await expect(page.getByTestId('revision')).toHaveCount(0);broken=false;await page.getByRole('button',{name:'Riprova',exact:true}).click();await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 0 ·');expect((await refinementState(page)).objects.filter((object:any)=>object.type==='text')).toHaveLength(1);
+});
+test('apertura font: progetto incorporato utilizzabile anche con elenco libreria bloccato',async({page})=>{
+ let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);await page.route('**/__editor-local/admin/',async route=>{await gate;await route.abort().catch(()=>{});});
+ const doc=createTestDocument();
+ try{
+  await page.goto('/');await page.evaluate(async doc=>{const path='/tests/helpers/editor-startup.browser.tsx';(await import(path)).mountEditorStartup(doc);},doc);
+  await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 0 ·',{timeout:5000});const before=await refinementState(page);expect(before.objects).toEqual(doc.objects);expect(before.fontAssets).toEqual(doc.fontAssets);
+  await page.getByRole('button',{name:'Aggiungi rettangolo',exact:true}).click();await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 1 ·');expect((await refinementState(page)).objects.filter((object:any)=>object.type==='text')).toEqual(doc.objects.filter(object=>object.type==='text'));await expect(page.getByRole('region',{name:'Caricamento editor'})).toHaveCount(0);
+ }finally{release();}
+});
 test('solo font della libreria: bozza, nuovi testi, selettore e SVG incorporano il file',async({page})=>{
  const {id,bytes}=await libraryOnlyFixture(page);await page.goto('/editor?workspace=1');await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 0 ·');let doc=await refinementState(page);expect(doc.fontAssets[0].dataBase64).toBe(bytes.toString('base64'));expect(doc.objects[1].fontFamily).toBe(id);
  await clickEditorButton(page,{name:'Testo · text-1',exact:true});await page.getByRole('tab',{name:'Testo',exact:true}).click();await page.getByRole('combobox',{name:'Font',exact:true}).click();await expect(page.getByRole('listbox',{name:'Caratteri disponibili'}).getByRole('option')).toHaveCount(1);await expect(page.getByRole('option',{name:'ABeeZee',exact:true})).toBeVisible();await expect(page.getByRole('option',{name:/Libreria/})).toHaveCount(0);await page.keyboard.press('Escape');

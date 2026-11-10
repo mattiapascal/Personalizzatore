@@ -1,4 +1,5 @@
 import {useProjectFontPreparation} from './LegacyFontDialog';
+import {legacyFontRequests} from './legacy-fonts';
 import {CustomerFieldsPanel} from './CustomerFieldsPanel';
 import {formObjects,selectableObjectIds,validateObjectInputs} from './object-properties';
 import {PlaqueConfigurationPanel} from './PlaqueConfigurationPanel';
@@ -541,14 +542,19 @@ export function EditorLab(props:Parameters<typeof EditorLabSession>[0]){
  const projectFonts=useProjectFontPreparation(),[prepared,setPrepared]=useState<GraphicDocument|undefined>(undefined);
  const [ready,setReady]=useState(false),[message,setMessage]=useState(''),[failed,setFailed]=useState(false);
  const [attempt,setAttempt]=useState(0);
- useEffect(()=>{let active=true;setReady(false);setFailed(false);setMessage('');
+ useEffect(()=>{let active=true;const controller=new AbortController();setReady(false);setFailed(false);setMessage('');
   void(async()=>{
    const assets=props.initialDocument?.fontAssets??[];await loadFontAssets(assets);
-   let libraryMessage='';try{await initializeLibraryFonts(assets);}catch(cause){libraryMessage=cause instanceof Error?cause.message:'Libreria font non disponibile';}
+   // A portable project already has every file needed for rendering. The library
+   // is refreshed by the session, without delaying or changing its composition.
+   if(!props.initialDocument||legacyFontRequests(props.initialDocument).length){
+    try{await initializeLibraryFonts(assets,AbortSignal.any([controller.signal,AbortSignal.timeout(8000)]));}
+    catch(cause){if(controller.signal.aborted)throw cause;throw new Error(cause instanceof DOMException&&cause.name==='TimeoutError'?'La libreria font non risponde. Controlla che il server locale sia attivo e premi Riprova.':cause instanceof Error?cause.message:'Libreria font non disponibile');}
+   }else showProjectFontChoices(assets);
    const next=props.initialDocument?await projectFonts.prepare(props.initialDocument):undefined;if(active)setPrepared(next);
-   if(active){setMessage(libraryMessage||(!defaultLibraryFont()?'La libreria è vuota: carica un font nel pannello amministrativo per aggiungere testi.':''));setReady(true);}
+   if(active){setMessage(!props.initialDocument&&!defaultLibraryFont()?'La libreria è vuota: carica un font nel pannello amministrativo per aggiungere testi.':'');setReady(true);}
   })().catch(cause=>{if(active){setMessage(cause instanceof Error?cause.message:'Font del progetto non caricabili');setFailed(true);}});
-  return()=>{active=false;};
+  return()=>{active=false;controller.abort();};
  },[attempt]);
  if(!ready)return <><section className="editor-lab" aria-label="Caricamento editor"><p role={failed?'alert':'status'}>{message||'Caricamento dei font della libreria…'}</p>{failed&&<><button onClick={()=>setAttempt(value=>value+1)}>Riprova</button>{props.initialDocument&&<button onClick={()=>download('progetto-originale.json',JSON.stringify(props.initialDocument,null,2),'application/json')}>Scarica progetto originale</button>}<a href="/editor/admin?section=fonts">Apri libreria font</a></>}</section>{projectFonts.dialog}</>;
  return <>{message&&<p role="status">{message}</p>}<EditorLabSession {...props} initialDocument={prepared??props.initialDocument}/></>;

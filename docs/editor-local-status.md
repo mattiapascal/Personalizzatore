@@ -2,7 +2,11 @@
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.
 
-## Varianti reali, stili misti e scelte per progetto — ultimo incremento
+## Schermata di caricamento font — ultimo incremento
+
+[Correzione e prove](iteration-editor-library-font-policy.md): elenco e primo file hanno un limite complessivo di otto secondi, con errore e **Riprova** se la richiesta non risponde. Non viene più aperta una bozza priva del testo a causa di un errore di rete. I documenti iniziali con font incorporati si aprono senza attendere l’elenco; la libreria si aggiorna in sottofondo. Due aperture con libreria reale: **1,174 s e 1,059 s**, zero errori e scritture. **616 unitari, build/segreti e 15 browser pertinenti superati**, inclusi quattro nuovi casi di blocco/recupero. Il controllo completo di 363 browser sotto è precedente a questa correzione.
+
+## Varianti reali, stili misti e scelte per progetto
 
 [Comportamenti e prove](iteration-editor-font-regressions.md). B/I ora operano anche su stili misti: corsivo sul box conserva le porzioni in grassetto, selezioni parziali e Unicode restano indipendenti. Cambiare famiglia mantiene gli stili disponibili; una famiglia con un solo file si può scegliere direttamente, con avviso quando applica il proprio stile originale. Nessuna variante simulata o font del computer.
 

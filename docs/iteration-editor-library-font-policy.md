@@ -26,6 +26,18 @@ Due aperture con la libreria reale: **1711 ms e 1350 ms** fino al canvas, un fil
 
 ## Evidenze
 
+### Aggiornamento successivo: attese di rete interrotte e progetti autonomi
+
+La richiesta dell’elenco non aveva un timeout e poteva lasciare indefinitamente la schermata segnalata dal titolare. L’inizializzazione ora condivide un limite di otto secondi fra elenco e primo file font; la richiesta viene annullata, compare un errore con **Riprova** e non viene creata una bozza senza il testo iniziale. Anche un errore HTTP consente un nuovo tentativo nella stessa pagina. La libreria realmente vuota continua invece a permettere le geometrie.
+
+Un documento iniziale senza font storici carica i propri file e apre il canvas senza attendere l’elenco amministrativo. La sessione aggiorna la libreria in sottofondo; i font del documento e il suo contenuto non cambiano. La lettura dell’elenco in sottofondo ha anch’essa un timeout. Chiusura/smontaggio dell’editor annullano la richiesta iniziale.
+
+Verifiche successive: **616 unitari, build, controllo segreti e 15 browser mirati** superati. Quattro casi nuovi coprono elenco bloccato, file bloccato, HTTP 503 con recupero e progetto incorporato modificabile con elenco bloccato. Il controllo completo di 363 browser resta quello dell’incremento precedente; non viene dichiarata una nuova esecuzione completa dopo questa correzione.
+
+Due aperture reali dopo la correzione: **1174 ms e 1059 ms** fino al canvas, zero errori browser e zero scritture amministrative; richieste esterne impedite dalla prova. Rapporto privato `.local/editor-startup-real-library.json`. Nessuna modifica ai file della libreria personale, al negozio o alla chat pubblicata.
+
+### Verifiche dell’incremento iniziale
+
 - 606 unitari / 88 file superati, inclusi due casi Poppler reali per PDF con Helvetica non incorporato, nelle due modalità.
 - 12 browser pertinenti superati: 7 nuovi casi della politica/caricamento, varianti B/I, rotella/hover, alias PitchPrint validi/alterati e faccia esatta SVG.
 - TypeScript/build e scansione dei segreti del client superati.
