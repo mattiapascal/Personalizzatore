@@ -1,3 +1,4 @@
+import {useProjectFontPreparation} from './LegacyFontDialog';
 import {CustomerFieldsPanel} from './CustomerFieldsPanel';
 import {formObjects,selectableObjectIds,validateObjectInputs} from './object-properties';
 import {PlaqueConfigurationPanel} from './PlaqueConfigurationPanel';
@@ -13,8 +14,8 @@ import { fitTemplate, templateCommand } from '../editor-workflow/template-fit';
 import { profileKey } from '../catalog/schema';
 import { FontCheckPanel } from './FontCheckPanel';
 import { InkPreviewFilter } from './InkPreviewFilter';
-import { refreshLibraryFonts } from '../editor-admin/library-fonts';
-import { loadFontAssets, fontAssetArguments } from './fonts';
+import { refreshLibraryFonts,initializeLibraryFonts } from '../editor-admin/library-fonts';
+import { loadFontAssets, fontAssetArguments, defaultLibraryFont, registeredFontAsset } from './fonts';
 import { readAdminSnapshot, readArchiveRecord, localAdminRequest } from '../editor-admin/api';
 import { prepareSvg, svgInsertion } from './svg-import';
 import { MAX_SVG_BYTES } from './svg-sanitize';
@@ -44,7 +45,9 @@ import { normalizedBezier } from './bezier-geometry';
 import { placeObjectAtCenter } from './model';
 
 function createEditorDocument(product: ProductProfile|undefined, catalogVersion: string): GraphicDocument {
-  const doc = createDocument(product, catalogVersion);
+  const doc = createDocument(product, catalogVersion),font=defaultLibraryFont(),asset=font?registeredFontAsset(font):undefined;
+  doc.objects=doc.objects.flatMap<SceneObject>(object=>object.type==='text'?(font?[{...object,fontFamily:font}]:[]):[object]);
+  if(asset)doc.fontAssets=[asset];
   doc.objects = doc.objects.map(object => {
     if (object.type !== 'text' || object.textBox) return object;
     const { widthMm, heightMm } = measureTextFrame(object);
@@ -60,7 +63,8 @@ export function download(name: string, content: string, type: string): void {
 function example(revision: number, objectId = 'text-1'): string {
   return JSON.stringify({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId, arguments: { xMm: 10, yMm: 8 } }, null, 2);
 }
-export function EditorLab({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition' }: { initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[]; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
+function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition' }: { initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[]; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
+  const projectFonts=useProjectFontPreparation();
   const mode=editorMode(),policyRole=mode==='customer'?'customer':'admin';const archiveBusyRef=useRef(false);
   const graphicCatalog=availableProducts?{version:catalogVersion,products:availableProducts}:undefined;
   const inkFilterId=`editor-ink-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
@@ -153,7 +157,7 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
       const response = await fetch('/__editor-local/pdf', { method: 'POST', headers: { 'Content-Type': 'application/pdf', 'X-Editor-Local': '1', 'X-Editor-Text-Mode': importTextMode }, body: file });
       const converted = await response.json(); if (!response.ok) throw new Error(converted.error ?? 'Conversione PDF locale non disponibile');
       const prepared = await prepareSvg(converted.svg, vectorMonochrome, 'editable'), insertion = svgInsertion(prepared, store.document, measureFabric);
-      return () => { store.dispatch(insertion.command, 'manual'); select(insertion.command.arguments.objects.map(object => object.id)); setImportNotice(insertion.report.replace('SVG importato:', 'PDF importato:') + (importTextMode==='editable' ? ` Ricostruite ${converted.textCount??0} righe editabili. Verifica font, spaziature e anteprima; le lettere già in contorni rimangono vettori.` : ' Conversione locale, testi trasformati in contorni.') + ' PDF originale eliminato dopo l’elaborazione.' + (converted.unembeddedFonts?.length ? ' Il PDF contiene font non incorporati: la resa dipende dai font disponibili localmente. Verifica l’anteprima.' : '')); };
+      return () => { store.dispatch(insertion.command, 'manual'); select(insertion.command.arguments.objects.map(object => object.id)); setImportNotice(insertion.report.replace('SVG importato:', 'PDF importato:') + (importTextMode==='editable' ? ` Ricostruite ${converted.textCount??0} righe editabili. Verifica font, spaziature e anteprima; le lettere già in contorni rimangono vettori.` : ' Conversione locale, testi trasformati in contorni.') + ' PDF originale eliminato dopo l’elaborazione.'); };
     });
   };
   const importSvg = (file: File) => {
@@ -192,12 +196,13 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
     act(() => {
       const store = storeRef.current!;
       const object: SceneObject = type === 'text'
-        ? { id: objectId, type, xMm: 0, yMm: 0, text: 'TEST', fontSizePt: 7, fontFamily: 'Arial', fill: '#000000', textAlign: 'center', textBox: { widthMm: Math.min(30, store.document.areaMm.width - 4), heightMm: 6, autoWidth: true, autoHeight: true } }
+        ? { id: objectId, type, xMm: 0, yMm: 0, text: 'TEST', fontSizePt: 7, fontFamily: defaultLibraryFont()??'', fill: '#000000', textAlign: 'center', textBox: { widthMm: Math.min(30, store.document.areaMm.width - 4), heightMm: 6, autoWidth: true, autoHeight: true } }
         : type === 'rect'
           ? { id: objectId, type, xMm: 0, yMm: 0, widthMm: 6, heightMm: 4, strokeMm: 0.25, stroke: '#000000' }
           : type === 'ellipse' ? { id: objectId, type, xMm: 0, yMm: 0, rxMm: 4, ryMm: 2, strokeMm: 0.25, stroke: '#000000' }
           : type === 'line' ? { id: objectId, type, xMm: 0, yMm: 0, lengthMm: 12, strokeMm: 0.25, stroke: '#000000' }
           : { id: objectId, type, xMm: 0, yMm: 0, radiusMm: 2, strokeMm: 0.25, stroke: '#000000' };
+      if(object.type==='text'&&!object.fontFamily)throw new Error('Carica almeno un font nella libreria prima di aggiungere un testo.');
       const box = measureFabric(object);
       object.xMm = (store.document.areaMm.width - box.widthMm) / 2;
       object.yMm = (store.document.areaMm.height - box.heightMm) / 2;
@@ -298,12 +303,12 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
     const fonts = () => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => { if (active) setFontNotice(''); }).catch(error => { if (active) setFontNotice(error.message); }); }; fonts(); window.addEventListener('focus', fonts);
     void readAdminSnapshot().then(state => { if(active){setArchiveVocabulary(archiveTagVocabulary(state));setCustomerPdfEnabled(state.settings.customerPdfEnabled??false);} if (active && !guidesTouched.current) { setGuides({ gridMm: state.settings.gridMm, gridVisible: state.settings.gridVisible, snapEnabled: state.settings.snapEnabled }); setGridRaw(String(state.settings.gridMm)); } }).catch(() => {});
     const archive = new URLSearchParams(window.location.search).get('archive');
-    if (archive) void prepareAndAct(async store => { const record = await readArchiveRecord(archive); const next = parseGraphicDocument(record.document); await Promise.all([loadFontAssets(next.fontAssets), ...next.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]); return () => { if(portable)store.open(next);else store.import(next);store.clearHistory();setSourceRecord(mode==='customer'&&record.kind==='template'?null:record);setArchiveTitle(mode==='customer'&&record.kind==='template'?copyArchiveTitle(record.title):record.title);setArchiveKind(mode==='customer'?'composition':record.kind);setArchiveTags(record.tags.join(', '));originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));setSavedMetadata(metadataKey(mode==='customer'&&record.kind==='template'?copyArchiveTitle(record.title):record.title,mode==='customer'?'composition':record.kind,record.tags.join(', ')));setSessionNotice(`Aperto: ${record.title}`);setImportNotice(`Aperto dall’archivio locale: ${record.title}`); }; });
+    if (archive) void prepareAndAct(async store => { const record = await readArchiveRecord(archive); const next = await projectFonts.prepare(parseGraphicDocument(record.document)); await Promise.all([...next.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]); return () => { if(portable)store.open(next);else store.import(next);store.clearHistory();setSourceRecord(mode==='customer'&&record.kind==='template'?null:record);setArchiveTitle(mode==='customer'&&record.kind==='template'?copyArchiveTitle(record.title):record.title);setArchiveKind(mode==='customer'?'composition':record.kind);setArchiveTags(record.tags.join(', '));originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));setSavedMetadata(metadataKey(mode==='customer'&&record.kind==='template'?copyArchiveTitle(record.title):record.title,mode==='customer'?'composition':record.kind,record.tags.join(', ')));setSessionNotice(`Aperto: ${record.title}`);setImportNotice(`Aperto dall’archivio locale: ${record.title}`); }; });
     const parameters=new URLSearchParams(window.location.search),template=parameters.get('template');
     if(template&&!archive&&product)void prepareAndAct(async store=>{
       const record=await readArchiveRecord(template);
       if(record.kind!=='template'||record.archived||record.version!==Number(parameters.get('templateVersion'))||!record.templateProducts?.profileKeys.includes(profileKey(product)))throw new Error('Template o associazioni cambiati: torna alla galleria e controlla nuovamente l’anteprima.');
-      await Promise.all([loadFontAssets(record.document.fontAssets),...record.document.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source))]);
+      record.document=await projectFonts.prepare(record.document);await Promise.all([...record.document.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source))]);
       const fit=fitTemplate(record.document,product,catalogVersion,measureFabric,parameters.get('shrink')==='1'),command=templateCommand(fit,record.id,record.version,store.document.revision);
       return()=>{store.dispatch(command,'manual');store.clearHistory();originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));setArchiveTitle(copyArchiveTitle(record.title));setArchiveKind('composition');setArchiveTags(record.tags.join(', '));setSavedMetadata(metadataKey(copyArchiveTitle(record.title),'composition',record.tags.join(', ')));setImportNotice(`Copia del template «${record.title}» applicata. L’originale è conservato${fit.scale<1?`; riduzione proporzionale al ${(fit.scale*100).toFixed(1)}%`:''}.`);};
     });
@@ -366,7 +371,7 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
   };
   useEffect(() => { const handle = (event: KeyboardEvent) => keyboard.current(event); window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, []);
   const arrange = (tool: 'alignObject', args: unknown) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool, objectId: selectedId, expectedRevision: doc.revision, arguments: args }, 'manual'));
-  const workflowApi: WorkflowEditorApi = { document: doc, peek: () => cloneGraphicDocument(storeRef.current?.document ?? doc), busy: editing || drawing || assetBusy || conflict || catalogOutdated, busyReason: editing ? 'Termina la scrittura con Esc o con il pulsante di conferma sul foglio.' : drawing ? 'Termina il disegno prima di controllare il progetto.' : assetBusy ? 'Attendi il caricamento della risorsa.' : 'Risolvi il cambio di formato prima di continuare.', capture: () => { const store = storeRef.current; if (!store || !adapter.current) throw new Error('Editor non ancora disponibile'); return { document: cloneGraphicDocument(store.document), svg: adapter.current.exportSvg(store.document) }; }, open: next => prepareAndAct(async store => { if(autosave)await preserveDraftSnapshot(store.document); await Promise.all([loadFontAssets(next.fontAssets), ...next.objects.filter(o => o.type === 'image').map(o => prepareRasterSource(o.source))]); return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);}; }) };
+  const workflowApi: WorkflowEditorApi = { document: doc, peek: () => cloneGraphicDocument(storeRef.current?.document ?? doc), busy: editing || drawing || assetBusy || conflict || catalogOutdated, busyReason: editing ? 'Termina la scrittura con Esc o con il pulsante di conferma sul foglio.' : drawing ? 'Termina il disegno prima di controllare il progetto.' : assetBusy ? 'Attendi il caricamento della risorsa.' : 'Risolvi il cambio di formato prima di continuare.', capture: () => { const store = storeRef.current; if (!store || !adapter.current) throw new Error('Editor non ancora disponibile'); return { document: cloneGraphicDocument(store.document), svg: adapter.current.exportSvg(store.document) }; }, open: next => prepareAndAct(async store => { if(autosave)await preserveDraftSnapshot(store.document); next=await projectFonts.prepare(next);await Promise.all([...next.objects.filter(o => o.type === 'image').map(o => prepareRasterSource(o.source))]); return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);}; }) };
   return <WorkspaceFrame showForm={formObjects(doc).length>0} mode={mode} actions={<>
       <span className="design-session-status" role="status">{sessionNotice||sourceRecord?.title||archiveTitle||'Nuovo design'} · {dirty?'Modifiche da confermare':'Nessuna modifica da salvare'}</span>
       {(mode!=='customer'||customerPdfEnabled)&&<EditorButton icon="download" badge="PDF" label="Scarica PDF" disabled={pdfBusy||editing||drawing||assetBusy} onClick={()=>void exportPdf()}/>}
@@ -398,7 +403,7 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
       <div className="section-heading"><div><span className="eyebrow">02 / Personalizzazione nel canvas</span><h2 id="lab-title" tabIndex={-1}>{conflict ? 'Cambio modello da risolvere' : displayedProduct?.title??(doc.plaque?'Targa a misure personalizzate':'Documento recuperato')}</h2></div><span className="badge">Bozza TEST</span></div>
       <p data-testid="editor-product">Area nominale del progetto: {doc.shape === 'round' ? `Ø ${doc.areaMm.width}` : `${doc.areaMm.width} × ${doc.areaMm.height}`} mm. {product?.variantLabel && <>Variante: {product?.variantLabel}. </>}{conflict && <>Modello richiesto: {product?.title}, {product?.nominalAreaMm.width} × {product?.nominalAreaMm.height} mm.</>}</p>
       <p>Doppio clic sul testo per scrivere direttamente nel canvas; Invio aggiunge una riga, Esc termina la modifica. Puoi trascinare testo e forme.</p>
-      <p className="caption">Area utile da confermare. Margine TEST 1 mm, Arial ≥ 7 pt e nero/bianco sono vincoli di laboratorio, non specifiche produttive del modello.</p>
+      <p className="caption">Area utile da confermare. Margine TEST 1 mm, testo ≥ 7 pt e nero/bianco sono vincoli di laboratorio, non specifiche produttive del modello.</p>
     </>}
     stage={<>
       <InkPreviewFilter id={inkFilterId} color={doc.inkColor??'black'}/>
@@ -500,7 +505,7 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
       {import.meta.env.DEV && (new URLSearchParams(window.location.search).has('configurations') || new URLSearchParams(window.location.search).has('configuration')) && <ConfigurationPanel api={workflowApi}/>}
     </>}
     project={<>
-      {mode!=='customer'&&<FontCheckPanel document={doc}/>}
+      {projectFonts.dialog}{mode!=='customer'&&<FontCheckPanel document={doc}/>}
       {mode!=='customer'&&<EditorButton disabled={editing || drawing || assetBusy} onClick={() => download('progetto.TEST.json', JSON.stringify(storeRef.current!.document, null, 2), 'application/json')} icon="download" label="Esporta JSON" badge="JSON"/>}
       <fieldset className="editor-actions" disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated}><legend>Progetto</legend>
         {import.meta.env.DEV&&product&&<p className="caption"><a href={`/editor/templates?mode=${mode}&model=${encodeURIComponent(profileKey(product))}`}>Scegli un template per questo modello</a></p>}
@@ -516,8 +521,8 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
           const file = e.currentTarget.files?.[0]; e.currentTarget.value = ''; if (!file) return;
           void prepareAndAct(async store => {
             if (file.size > 10_000_000) throw new Error('File oltre 10 MB');
-            const next = parseGraphicDocument(JSON.parse(await file.text()));
-            await Promise.all([loadFontAssets(next.fontAssets), ...next.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]);
+            let next = parseGraphicDocument(JSON.parse(await file.text()));
+            next=await projectFonts.prepare(next);await Promise.all([...next.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]);
             return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));const title=file.name.replace(/\.json$/i,'').slice(0,120);setArchiveTitle(title);setArchiveKind('composition');setArchiveTags('');setSavedMetadata(metadataKey(title,'composition',''));setSessionNotice(`Aperto file: ${file.name}`);};
           });
         }}/>
@@ -529,4 +534,22 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
     </>}
     diagnostics={<details hidden={mode!=='test'}><summary>Stato e storico del documento</summary><pre data-testid="graphic-state">{JSON.stringify(doc, null, 2)}</pre><pre>{eventLog || 'Nessuna modifica'}</pre></details>}
   />;
+}
+
+/** Wait for file-backed fonts before creating or measuring the first composition. */
+export function EditorLab(props:Parameters<typeof EditorLabSession>[0]){
+ const projectFonts=useProjectFontPreparation(),[prepared,setPrepared]=useState<GraphicDocument|undefined>(undefined);
+ const [ready,setReady]=useState(false),[message,setMessage]=useState(''),[failed,setFailed]=useState(false);
+ const [attempt,setAttempt]=useState(0);
+ useEffect(()=>{let active=true;setReady(false);setFailed(false);setMessage('');
+  void(async()=>{
+   const assets=props.initialDocument?.fontAssets??[];await loadFontAssets(assets);
+   let libraryMessage='';try{await initializeLibraryFonts(assets);}catch(cause){libraryMessage=cause instanceof Error?cause.message:'Libreria font non disponibile';}
+   const next=props.initialDocument?await projectFonts.prepare(props.initialDocument):undefined;if(active)setPrepared(next);
+   if(active){setMessage(libraryMessage||(!defaultLibraryFont()?'La libreria è vuota: carica un font nel pannello amministrativo per aggiungere testi.':''));setReady(true);}
+  })().catch(cause=>{if(active){setMessage(cause instanceof Error?cause.message:'Font del progetto non caricabili');setFailed(true);}});
+  return()=>{active=false;};
+ },[attempt]);
+ if(!ready)return <><section className="editor-lab" aria-label="Caricamento editor"><p role={failed?'alert':'status'}>{message||'Caricamento dei font della libreria…'}</p>{failed&&<><button onClick={()=>setAttempt(value=>value+1)}>Riprova</button>{props.initialDocument&&<button onClick={()=>download('progetto-originale.json',JSON.stringify(props.initialDocument,null,2),'application/json')}>Scarica progetto originale</button>}<a href="/editor/admin?section=fonts">Apri libreria font</a></>}</section>{projectFonts.dialog}</>;
+ return <>{message&&<p role="status">{message}</p>}<EditorLabSession {...props} initialDocument={prepared??props.initialDocument}/></>;
 }

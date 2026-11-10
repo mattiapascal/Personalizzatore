@@ -111,3 +111,7 @@ Registrare versione Illustrator/OS, font installati, dimensioni rilevate, screen
 ## Import SVG/PDF e testi editabili
 
 `svg-import.TEST` e `pdf-import.TEST` mostrano vettori con fori e contorni importati; i file sorgente TEST sono separati. `text-import.TEST` contiene due righe importate da SVG come box editabili (Arial e Times New Roman) e una cornice. Generazione: `node --import tsx scripts/capture-editor-text-import.ts`. Verificare in Illustrator testi, font, posizioni e misure; nessuna certificazione produttiva. La modalità PDF editabile ricostruisce righe e non garantisce identità dell’impaginazione. I file reali del titolare restano privati in `.local` e non fanno parte delle fixture. [Limiti e libreria font](iteration-editor-import-font-library.md).
+
+### Alias PitchPrint e facce font
+
+Nuovo campione [JSON](../fixtures/illustrator/pitchprint-font-alias.TEST.json) / [SVG](../fixtures/illustrator/pitchprint-font-alias.TEST.svg), 100 × 40 mm e ABeeZee incorporato con licenza OFL. Generazione tramite `scripts/capture-editor-pitchprint-font-alias.ts`; fonte sintetica, comandi manuali/AI e Undo/Redo. Controllate riapertura, identità del file e glifi. Negli SVG attributi e stili inline mantengono il nome della faccia esatta, distinto dalla famiglia amministrativa. Resta da verificare in Illustrator il riconoscimento della faccia e l’editing dei testi; nessun nuovo esito umano dichiarato. [Dettagli](iteration-editor-pitchprint-font-aliases.md).

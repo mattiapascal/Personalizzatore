@@ -7,8 +7,13 @@ const requestSchema=z.strictObject({svg:z.string().max(MAX_SVG_BYTES),fontAssets
 /** Local, offline conversion through the browser's font shaper and Poppler. */
 export async function outlineLocalSvg(raw:unknown):Promise<string>{
  const {svg,fontAssets}=requestSchema.parse(raw),safe=sanitizeSvg(svg,false,true),{chromium}=await import('playwright'),browser=await chromium.launch({headless:true});
- try{const page=await browser.newPage();await page.route('**/*',route=>route.abort());await page.setContent(`<style>html,body{margin:0;padding:0}svg{display:block}</style>${safe}`);
-  const size=await page.evaluate(async assets=>{for(const asset of assets){const bytes=Uint8Array.from(atob(asset.dataBase64),c=>c.charCodeAt(0)),alias=`EditorFont_${asset.id.slice(5).replaceAll('-','')}`,font=new FontFace(alias,bytes.buffer);await font.load();document.fonts.add(font);}await document.fonts.ready;const box=document.querySelector('svg')!.getBoundingClientRect();return{width:box.width,height:box.height};},fontAssets);
+ try{const page=await browser.newPage();await page.route('**/*',route=>route.abort());await page.setContent('<style>html,body{margin:0;padding:0}svg{display:block}</style>');
+  const size=await page.evaluate(async({assets,svg})=>{
+   const allowed=new Set<string>();for(const asset of assets){const bytes=Uint8Array.from(atob(asset.dataBase64),c=>c.charCodeAt(0)),alias=`EditorFont_${asset.id.slice(5).replaceAll('-','')}`,font=new FontFace(alias,bytes.buffer);await font.load();document.fonts.add(font);allowed.add(alias);}
+   const xml=new DOMParser().parseFromString(svg,'image/svg+xml');
+   for(const text of xml.querySelectorAll('text,tspan')){let family:string|null=null;for(let node:Element|null=text;node&&!family;node=node.parentElement)family=node.getAttribute('font-family');if(!family||!allowed.has(family))throw new Error('Il testo SVG richiede un file font incorporato: i font del computer non sono utilizzabili.');}
+   document.body.append(document.importNode(xml.documentElement,true));await document.fonts.ready;const box=document.querySelector('svg')!.getBoundingClientRect();return{width:box.width,height:box.height};
+  },{assets:fontAssets,svg:safe});
   if(!Number.isFinite(size.width)||!Number.isFinite(size.height)||size.width<=0||size.height<=0||size.width>4000||size.height>4000)throw new Error('Area SVG fuori dal limite locale di 4000 px');
   const pdf=await page.pdf({width:`${size.width}px`,height:`${size.height}px`,margin:{top:0,bottom:0,left:0,right:0},printBackground:true,scale:1});return(await convertLocalPdf(pdf)).svg;
  }finally{await browser.close();}

@@ -349,6 +349,7 @@ export class FabricAdapter {
     if(sources.some(object=>object.editor?.transformLocked))target.set({lockMovementX:true,lockMovementY:true,lockScalingX:true,lockScalingY:true,lockRotation:true,hasControls:false});
   }
   render(document: GraphicDocument, selection: string | null | readonly string[] = this.selectedIds): void {
+    for(const object of document.objects)if(object.type==='text')for(const font of [object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])assertFontAvailable(font);
     const selectedIds = typeof selection === 'string' ? [selection] : selection ?? [], selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
     const active = this.canvas.getActiveObject(), focus = window.document.activeElement as HTMLElement | null;
     const editing = active instanceof EditorTextBox && active.isEditing && this.idByObject.get(active) === selectedId ? { start: active.selectionStart, end: active.selectionEnd, focused: focus === active.hiddenTextarea, snapshot: this.textSnapshot(active), pending: document.revision === this.editingRevision, committedText: this.editingText } : null;

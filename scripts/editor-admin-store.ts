@@ -11,14 +11,22 @@ import { profileKey } from '../src/catalog/schema';
 import { validateProductionProfile } from '../src/editor-admin/production-profile';
 import { planFontLibraryRestore } from '../src/editor-admin/font-backup';
 import { archiveTagVocabulary,canonicalRecordTags,uniqueTags,tagKey } from '../src/editor-admin/archive-tags';
-import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rename, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID,createHash } from 'node:crypto';
 import { AdminStateSchema, AdminCommandSchema, DEFAULT_ADMIN_SETTINGS, type AdminSnapshot, type AdminState } from '../src/editor-admin/schema';
 export function adminSnapshot(state:AdminState):AdminSnapshot {
- return {...state,records:state.records.map(({document,...record})=>({...record,graphicFamily:document.plaque?'plaque' as const:'stamp-test' as const})),fonts:state.fonts.map(({dataBase64,...font})=>{const names=fontNames(Buffer.from(dataBase64,'base64'),font.format);return{...font,fileHash:createHash('sha256').update(Buffer.from(dataBase64,'base64')).digest('hex'),actualFamily:names.family,actualFullName:names.fullName,actualFamilyGroup:font.familyGroup??names.familyGroup,detectedFamilyGroup:names.familyGroup,detectedCategories:detectedFontCategories(Buffer.from(dataBase64,'base64'),font.format),actualStyleName:font.styleName??names.styleName,actualWeight:font.weight??names.weight,actualItalic:font.italic??names.italic};})};
+ return {...state,records:state.records.map(({document,...record})=>({...record,graphicFamily:document.plaque?'plaque' as const:'stamp-test' as const})),fonts:state.fonts.map(({dataBase64,...font})=>{const names=fontNames(Buffer.from(dataBase64,'base64'),font.format);return{...font,fileHash:createHash('sha256').update(Buffer.from(dataBase64,'base64')).digest('hex'),actualFamily:names.postscriptName??names.fullName??names.family,actualFullName:names.fullName,actualFamilyGroup:font.familyGroup??names.familyGroup,detectedFamilyGroup:names.familyGroup,detectedCategories:detectedFontCategories(Buffer.from(dataBase64,'base64'),font.format),actualStyleName:font.styleName??names.styleName,actualWeight:font.weight??names.weight,actualItalic:font.italic??names.italic};})};
 }
 export class EditorAdminStore {
+ private fontFilesCache:{key:string;pending:Promise<Map<string,{format:string;dataBase64:string}>>}|null=null;
+ /** All font GETs share one validated archive read per on-disk revision. */
+ async readFont(id:string):Promise<{format:string;dataBase64:string}|undefined>{
+  const file=join(this.directory,'state.json');let info;try{info=await stat(file);}catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return;throw error;}
+  const key=JSON.stringify([info.ino,info.size,info.mtimeMs,info.ctimeMs]);
+  if(this.fontFilesCache?.key!==key){const pending=this.read().then(state=>new Map(state.fonts.map(font=>[font.id,{format:font.format,dataBase64:font.dataBase64}])));this.fontFilesCache={key,pending};}
+  const cache=this.fontFilesCache;try{return(await cache.pending).get(id);}catch(error){if(this.fontFilesCache===cache)this.fontFilesCache=null;throw error;}
+ }
  private queue:Promise<unknown>=Promise.resolve();
  constructor(private directory:string,private resolveShopProduct?:(id:string)=>Promise<ShopProductDetail>){}
  async previewFontRestore(raw:unknown){const command=AdminCommandSchema.parse(raw);if(command.tool!=='restoreFontLibrary')throw new Error('Richiesta di ripristino non valida');const state=await this.read();if(command.expectedRevision!==state.revision)throw new AdminRevisionConflictError();for(const font of command.arguments.backup.fonts)validateFontFile(font);return planFontLibraryRestore(command.arguments.backup,state);}

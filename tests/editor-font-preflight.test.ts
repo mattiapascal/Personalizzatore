@@ -21,13 +21,13 @@ it('legge il file reale, segnala i caratteri mancanti una volta sola e non cambi
 });
 it('rispetta font sui soli caratteri selezionati e gli indici Unicode, senza controllare asset inutilizzati',async()=>{
  const doc=documentWith(await iconFont(),'A\uea60B'),text=doc.objects[0] as Extract<SceneObject,{type:'text'}>;text.fontFamily='Arial';text.characterStyles=[{start:1,end:2,style:{fontFamily:id}}];
- expect((await inspectDocumentFonts(doc)).issues).toEqual([]);text.characterStyles=[{start:2,end:3,style:{fontFamily:id}}];expect((await inspectDocumentFonts(doc)).issues[0]?.characters).toEqual(['B']);delete text.characterStyles;expect(await inspectDocumentFonts(doc)).toEqual({checkedFonts:0,issues:[]});
- const extended=documentWith(cmapFont(0x1f600),'😀A');(extended.objects[0] as Extract<SceneObject,{type:'text'}>).characterStyles=[{start:1,end:2,style:{fontFamily:'Arial'}}];expect((await inspectDocumentFonts(extended)).issues).toEqual([]);
+ expect((await inspectDocumentFonts(doc)).issues).toMatchObject([{kind:'unembedded-font',fontId:'Arial'}]);text.characterStyles=[{start:2,end:3,style:{fontFamily:id}}];expect((await inspectDocumentFonts(doc)).issues.find(issue=>issue.kind==='missing-characters')?.characters).toEqual(['B']);delete text.characterStyles;expect(await inspectDocumentFonts(doc)).toMatchObject({checkedFonts:0,issues:[{kind:'unembedded-font'}]});
+ const extended=documentWith(cmapFont(0x1f600),'😀A');(extended.objects[0] as Extract<SceneObject,{type:'text'}>).characterStyles=[{start:1,end:2,style:{fontFamily:'Arial'}}];expect((await inspectDocumentFonts(extended)).issues).toMatchObject([{kind:'unembedded-font'}]);
 });
 it('normalizza per controllo gli accenti equivalenti senza riscrivere testo o unire run di font diversi',async()=>{
  const doc=documentWith(cmapFont(0xe9),'e\u0301\ufe0f\u200d');expect((await inspectDocumentFonts(doc)).issues).toEqual([]);expect((doc.objects[0] as any).text).toBe('e\u0301\ufe0f\u200d');
  expect((await inspectDocumentFonts(documentWith(cmapFont([0x65,0x301]),'é'))).issues).toEqual([]);
- (doc.objects[0] as Extract<SceneObject,{type:'text'}>).characterStyles=[{start:1,end:2,style:{fontFamily:'Arial'}}];expect((await inspectDocumentFonts(doc)).issues[0]?.characters).toEqual(['e']);
+ (doc.objects[0] as Extract<SceneObject,{type:'text'}>).characterStyles=[{start:1,end:2,style:{fontFamily:'Arial'}}];expect((await inspectDocumentFonts(doc)).issues.find(issue=>issue.kind==='missing-characters')?.characters).toEqual(['e']);
 });
 it('font non analizzabile è sconosciuto, mai verificato; nessun rifiuto arbitrario per il formato',async()=>{
  const bytes=Buffer.alloc(20);bytes.write('wOF2');const doc=documentWith({...await iconFont(),format:'woff2',dataBase64:bytes.toString('base64')},'ABC');

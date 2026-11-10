@@ -2,6 +2,24 @@
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.
 
+## Font del progetto: solo file incorporati — ultimo aggiornamento
+
+[Politica e prove](iteration-editor-library-font-policy.md). Per richiesta esplicita, nessun font del computer utilizzabile nell’editor: solo libreria/file del progetto, nessun suffisso «Libreria» nel menu. Bozza e nuovi testi incorporano il file; vecchi documenti richiedono una sostituzione esplicita prima dell’apertura. Controlli anche su intervalli, comandi, SVG e PDF. B/I restano visibili; varianti aggiuntive sotto «Altri stili».
+
+Corretta l’attesa dell’intera libreria e la rilettura completa dell’archivio a ogni download: font necessari subito, altri in sottofondo, file già caricati riutilizzati. Canvas con libreria personale misurato in **1,35–1,71 s**, zero scritture. **606 unitari / 88 file, inclusi i due casi PDF reali, 12 browser pertinenti, build e segreti superati**; suite browser storica con font del computer da aggiornare prima del prossimo controllo completo. Nessun collaudo Illustrator nuovo o deploy.
+
+Ultimo censimento in sola lettura dei 370 sorgenti a pagina singola: 83 requisiti font, 69 esatti, 10 da collegare/verificare, 4 mancanti/non equivalenti (Alida, ITC Eras Std Medium 700, Tekton, URW DIN SemiCond Black). «Eras Medium/Bold ITC» caricati sono file diversi da ITC Eras Std; URW DIN Regular/Cond non è SemiCond Black. Nessuna sostituzione con font simili. Elenco privato scaricabile aggiornato nel convertitore.
+
+## Alias verificati e identità delle facce — ultimo incremento
+
+[Contratto e prove](iteration-editor-pitchprint-font-aliases.md). Il convertitore riconosce gli alias del catalogo originale mediante una risposta tipizzata: richiesta, font canonico, hash e prova dei nomi interni o del collegamento originale. Il browser ricontrolla i byte. Peso/corsivo devono coincidere: i casi Nexa Bold 400/700 e Gloria Hallelujah 700/400 restano da trattare esplicitamente. Nessun font simile scelto e nessuna installazione globale implicita.
+
+Confronto controllato sul medesimo archivio temporaneo: **sette requisiti recuperati, nessuno perso** (ultima fotografia 63 → 70 su 83). Analisi reale finale: **93 convertibili e 277 bloccati su 370**, con opzioni TEST esplicite; zero errori browser/scritture amministrative, archivio personale invariato durante la prova. La disponibilità di un file nel vecchio archivio resta distinta dalla sua installazione nella libreria.
+
+Gli SVG conservano la faccia esatta anche negli stili dei caratteri, separata dalle famiglie amministrative. Nuovo campione **pitchprint-font-alias.TEST.json/svg**, con font OFL incorporato, comandi manuali/AI simulata e Undo/Redo. Tutti i glifi del campione presenti; **19 campioni riaperti/riesportati**, con FontAsset identici, zero errori o rete esterna. Illustrator non verificato dall’agente.
+
+**Controlli:** prima suite completa passata (598 unitari / 85 file, build, segreti, 351 browser); dopo il perfezionamento dei metadati SVG **600 unitari / 85 file**, build/segreti e **8 browser pertinenti** passati, incluso il nuovo caso (352 casi complessivi prima della nuova politica font). Anche **13/13 regressioni pubbliche passate**. Non è dichiarato un secondo comando completo non eseguito. Nessun deploy, modifica alla chat pubblicata o al negozio.
+
 ## Correzione delle azioni font e ricontrollo dell’elenco richiesto
 
 Archivio/eliminazione dopo aggiornamenti alle categorie: risolto il blocco della revisione rimasta nella pagina. Lettura della revisione corrente prima dell’azione sul singolo font, controllo dell’identità del file, un solo nuovo tentativo per conflitto, messaggi accanto ai pulsanti. Eliminazione confermata e archiviazione restano distinte. Provato **Alliance No.2 Light su una copia temporanea**: entrambe le azioni riuscite, altri font/progetti conservati e archivio reale invariato. Dettagli ed evidenze nella [guida font](iteration-editor-font-usability.md).

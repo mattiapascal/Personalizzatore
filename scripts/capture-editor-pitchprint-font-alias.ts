@@ -1,0 +1,30 @@
+import {chromium,expect} from '@playwright/test';
+import {readFile,writeFile,mkdir,mkdtemp,rm} from 'node:fs/promises';
+import {join} from 'node:path';import {tmpdir} from 'node:os';import {createHash} from 'node:crypto';
+import {readCatalogPitchprintFont} from './pitchprint-font-resolver';
+const alias='Alias carattere TEST',bytes=await readFile('fixtures/fonts/ABeeZee-subset.TEST.woff2'),directory=await mkdtemp(join(tmpdir(),'font-alias-capture-'));
+const source={title:'Alias font TEST',unit:'cm',pages:[{pageData:{fWidth:10,fHeight:4},canvas:{clipPath:{width:1000,height:400},objects:[
+ {type:'rect',left:20,top:20,width:960,height:360,stroke:'#000000',strokeWidth:2,fill:null},
+ {type:'i-text',width:1,height:1,left:500,top:90,originX:'center',originY:'top',fontFamily:alias,fontSize:70,fontWeight:400,fontStyle:'normal',text:'ABeeZee',textAlign:'center',fill:'#000000',strokeWidth:0,title:'Prima riga TEST',idx:1},
+ {type:'i-text',width:1,height:1,left:500,top:210,originX:'center',originY:'top',fontFamily:alias,fontSize:50,fontWeight:400,fontStyle:'normal',text:'Città 0123',textAlign:'center',fill:'#000000',strokeWidth:0,title:'Seconda riga TEST',idx:2},
+]}}]};
+let browser:Awaited<ReturnType<typeof chromium.launch>>|undefined;
+try{
+ const folder=join(directory,'font-catalog'),path=join(folder,'files','ABeeZee.TEST.woff2');await mkdir(join(folder,'files'),{recursive:true});await writeFile(path,bytes);await writeFile(join(folder,'catalog.json'),JSON.stringify({fontFamilies:1,items:[{fontFamily:alias,files:[{weight:400,style:'normal',path,sha256:createHash('sha256').update(bytes).digest('hex')}]}]}));
+ const resolution=await readCatalogPitchprintFont(directory,alias);resolution.asset.licenseText=await readFile('fixtures/fonts/ABeeZee-OFL.txt','utf8');resolution.asset.sourceUrl='https://fonts.google.com/specimen/ABeeZee';const blockedWrites:string[]=[];browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1440,height:960}});await page.addInitScript({content:'window.__name = value => value;'});
+ await page.route('**/__editor-local/admin/**',route=>{const path=new URL(route.request().url()).pathname;if(path.endsWith('/font-coverage'))return route.continue();if(route.request().method()!=='GET'){blockedWrites.push(path);return route.abort();}return route.fulfill({json:{schemaVersion:1,revision:0,settings:{editorName:'TEST',gridMm:1,gridVisible:false,snapEnabled:false},records:[],fonts:[]}});});
+ await page.goto('http://127.0.0.1:5173/editor?workspace=1&mode=test');
+ const result=await page.evaluate(async({source,resolution})=>{
+  const importerPath='/src/editor/pitchprint-import.ts',modelPath='/src/editor/model.ts',adapterPath='/src/editor/fabric-adapter.ts',fontPath='/src/editor/font-preflight.ts';
+  const {importPitchPrint}=await import(importerPath),{DocumentStore}=await import(modelPath),{FabricAdapter,measureFabric}=await import(adapterPath),{inspectDocumentFonts}=await import(fontPath);
+  const imported=await importPitchPrint(source,{monochrome:false,excludeBackground:false,font:async()=>resolution,image:async()=>{throw new Error('Il campione TEST non contiene immagini');}});imported.document.documentId='77777777-7777-4777-a777-777777777777';
+  const store=new DocumentStore(imported.document,measureFabric),first=store.document.objects[1],second=store.document.objects[2];
+  store.dispatch({schemaVersion:1,expectedRevision:0,tool:'moveObject',objectId:first.id,arguments:{xMm:first.xMm+2,yMm:first.yMm}},'manual');
+  store.dispatch({schemaVersion:1,expectedRevision:1,tool:'setText',objectId:second.id,arguments:{text:'0123 Città'}},'ai-simulation');
+  const changed=store.document.objects[2];store.dispatch({schemaVersion:1,expectedRevision:2,tool:'updateObject',objectId:second.id,arguments:{object:{...changed,characterStyles:[{start:0,end:4,style:{fontSizePt:18}}]}}},'manual');store.undo();store.redo();
+  const doc=store.document,report=await inspectDocumentFonts(doc),adapter=new FabricAdapter(document.createElement('canvas'),()=>store.document.revision,()=>{});adapter.render(doc);adapter.canvas.renderAll();const svg=adapter.exportSvg(doc),png=adapter.canvas.toDataURL({format:'png'});adapter.dispose();return{doc,svg,png,report,warnings:imported.warnings,events:store.events.map((event:any)=>({source:event.source,revision:event.revision,objectId:event.objectId}))};
+ },{source,resolution});
+ expect(result.events.map((event:{source:string})=>event.source)).toEqual(['manual','ai-simulation','manual','undo','redo']);expect(result.doc.revision).toBe(5);expect(result.doc.productId).toBeNull();expect(result.doc.variantId).toBeNull();expect(result.doc.areaMm).toEqual({width:100,height:40});expect(result.doc.fontAssets).toHaveLength(1);expect(result.doc.fontAssets[0]!.dataBase64).toBe(bytes.toString('base64'));expect(result.doc.fontAssets[0]!.family).toBe(resolution.asset.family);expect(result.report.issues).toEqual([]);expect(result.report.checkedFonts).toBe(1);expect(blockedWrites).toEqual([]);expect(result.svg).toContain('100mm');expect(result.svg).toContain(resolution.asset.family);expect(result.svg).not.toContain(alias);
+ await mkdir('.local/previews',{recursive:true});await writeFile('fixtures/illustrator/pitchprint-font-alias-source.TEST.json',JSON.stringify(source,null,2)+'\n');await writeFile('fixtures/illustrator/pitchprint-font-alias.TEST.json',JSON.stringify(result.doc,null,2)+'\n');await writeFile('fixtures/illustrator/pitchprint-font-alias.TEST.svg',result.svg);await writeFile('.local/previews/editor-pitchprint-font-alias.png',Buffer.from(result.png.split(',')[1]!,'base64'));await writeFile('.local/pitchprint-font-alias-capture.json',JSON.stringify({warnings:result.warnings,fontReport:result.report,events:result.events},null,2),{mode:0o600});
+ console.log({fixture:true,areaMm:result.doc.areaMm,objects:result.doc.objects.length,fontFace:resolution.asset.family,fontFiles:1,missingGlyphs:0,manualAndAiCommands:true,undoRedo:true,adminWrites:0});
+}finally{await browser?.close();await rm(directory,{recursive:true,force:true});}

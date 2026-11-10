@@ -4,7 +4,7 @@ import type { GraphicDocument } from './model';
 
 export interface FontIssue {
   objectId: string; fontId: string; fontLabel: string;
-  kind: 'missing-characters' | 'synthetic-style' | 'unknown-coverage';
+  kind: 'missing-characters' | 'synthetic-style' | 'unknown-coverage' | 'unembedded-font';
   characters?: string[];
 }
 export interface FontReport { issues: FontIssue[]; checkedFonts: number; }
@@ -59,6 +59,7 @@ export async function inspectDocumentFonts(doc: Pick<GraphicDocument, 'objects' 
   const used = new Set<string>(), issues: FontIssue[] = [];
   for (const object of doc.objects) {
     if (object.type !== 'text') continue;
+    for(const fontId of new Set([object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]]))if(!fontId.startsWith('font-'))issues.push({objectId:object.id,fontId,fontLabel:fontId,kind:'unembedded-font'});
     const runs: { fontId: string; synthetic: boolean; text: string }[] = [];
     for (const [index, character] of Array.from(object.text).entries()) {
       const style = object.characterStyles?.find(run => run.start <= index && run.end > index)?.style;
@@ -69,7 +70,7 @@ export async function inspectDocumentFonts(doc: Pick<GraphicDocument, 'objects' 
       else runs.push({ fontId, synthetic, text: character });
     }
     const byFont = new Map<string, { synthetic: boolean; text: string[] }>();
-    for (const run of runs) { if (!run.fontId.startsWith('font-')) continue; const entry = byFont.get(run.fontId) ?? { synthetic: false, text: [] }; entry.synthetic ||= run.synthetic; entry.text.push(run.text.normalize('NFC')); byFont.set(run.fontId, entry); }
+    for (const run of runs) { if (!run.fontId.startsWith('font-')) { if(!issues.some(issue=>issue.objectId===object.id&&issue.fontId===run.fontId&&issue.kind==='unembedded-font'))issues.push({objectId:object.id,fontId:run.fontId,fontLabel:run.fontId,kind:'unembedded-font'});continue; } const entry = byFont.get(run.fontId) ?? { synthetic: false, text: [] }; entry.synthetic ||= run.synthetic; entry.text.push(run.text.normalize('NFC')); byFont.set(run.fontId, entry); }
     for (const [fontId, entry] of byFont) {
       used.add(fontId);
       const asset = assets.get(fontId), fontLabel = asset?.label ?? asset?.family ?? fontId, base = { objectId: object.id, fontId, fontLabel };
@@ -86,6 +87,7 @@ export async function inspectDocumentFonts(doc: Pick<GraphicDocument, 'objects' 
 }
 
 export function fontIssueMessage(issue: FontIssue): string {
+  if(issue.kind==='unembedded-font')return `${issue.objectId}: il font «${issue.fontLabel}» non è incorporato. I font del computer non sono utilizzabili: scegli il file dalla libreria.`;
   if (issue.kind === 'missing-characters') {
     const describe = (value: string) => `${/\s/u.test(value) ? 'spazio' : value} (U+${value.codePointAt(0)!.toString(16).toUpperCase().padStart(4,'0')})`;
     const characters = issue.characters ?? [];

@@ -12,7 +12,7 @@ export function fontTable(bytes: Buffer, format: string, tag: string): Buffer | 
     }
   } catch { return; }
 }
-export function fontNames(bytes: Buffer, format: string): { family?: string; fullName?: string; familyGroup?: string; styleName?: string; weight?: number; italic?: boolean } {
+export function fontNames(bytes: Buffer, format: string): { family?: string; postscriptName?:string; fullName?: string; familyGroup?: string; styleName?: string; weight?: number; italic?: boolean } {
   try {
     const table = fontTable(bytes, format, 'name'); if (!table || table.length < 6) return {};
     const found = new Map<number, { text: string; score: number }>(), count = table.readUInt16BE(2), offset = table.readUInt16BE(4);
@@ -25,7 +25,7 @@ export function fontNames(bytes: Buffer, format: string): { family?: string; ful
     }
     const os2 = fontTable(bytes, format, 'OS/2'), head = fontTable(bytes, format, 'head'), weight = os2 && os2.length >= 6 ? os2.readUInt16BE(4) : undefined;
     const italic = os2 && os2.length >= 64 ? !!(os2.readUInt16BE(62) & 1) : head && head.length >= 46 ? !!(head.readUInt16BE(44) & 2) : undefined;
-    return { family: found.get(6)?.text ?? found.get(16)?.text ?? found.get(1)?.text, fullName: found.get(4)?.text ?? found.get(16)?.text ?? found.get(1)?.text, familyGroup: found.get(16)?.text ?? found.get(1)?.text, styleName: found.get(17)?.text ?? found.get(2)?.text, ...(weight && weight >= 1 && weight <= 1000 ? { weight } : {}), ...(italic === undefined ? {} : { italic }) };
+    return { postscriptName:found.get(6)?.text, family: found.get(6)?.text ?? found.get(16)?.text ?? found.get(1)?.text, fullName: found.get(4)?.text ?? found.get(16)?.text ?? found.get(1)?.text, familyGroup: found.get(16)?.text ?? found.get(1)?.text, styleName: found.get(17)?.text ?? found.get(2)?.text, ...(weight && weight >= 1 && weight <= 1000 ? { weight } : {}), ...(italic === undefined ? {} : { italic }) };
   } catch { return {}; }
 }
 

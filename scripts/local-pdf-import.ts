@@ -20,6 +20,7 @@ export async function convertLocalPdf(bytes: Buffer, textMode: 'outlines'|'edita
     if (/^Encrypted:\s+yes/m.test(info)) throw new Error('PDF protetto non supportato');
     let unembeddedFonts: string[];
     try { const fonts = (await run('pdffonts', [input], { timeout: 10000, maxBuffer: 256 * 1024, env: { ...process.env, LC_ALL: 'C' } })).stdout; unembeddedFonts = fonts.split('\n').filter(line => /\sno\s+(?:yes|no)\s+(?:yes|no)\s+\d+\s+\d+\s*$/.test(line)).map(line => line.trim().split(/\s+/)[0]!).slice(0,100); } catch { throw new Error('Analisi dei font PDF non riuscita'); }
+    if(unembeddedFonts.length)throw new Error(`Il PDF usa font non incorporati (${unembeddedFonts.join(', ')}). Riesporta il PDF incorporando i font oppure convertendo i testi in contorni; i font del computer non sono utilizzabili.`);
     try { const images = (await run('pdfimages', ['-list', input], { timeout: 10000, maxBuffer: 256 * 1024, env: { ...process.env, LC_ALL: 'C' } })).stdout; if (images.split('\n').some(line => /^\s*\d+\s+\d+\s+\S+/.test(line))) throw new Error('PDF con immagini raster: questo import accetta soltanto grafica vettoriale'); } catch (error) { if (error instanceof Error && error.message.includes('immagini raster')) throw error; throw new Error('Analisi delle immagini PDF non riuscita'); }
     let svg: string;
     try { svg = (await run('pdftocairo', ['-svg', '-f', '1', '-l', '1', input, '-'], { timeout: 10000, maxBuffer: 256 * 1024, env: { ...process.env, LC_ALL: 'C', XDG_CACHE_HOME: directory } })).stdout; }

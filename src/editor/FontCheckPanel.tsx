@@ -4,7 +4,7 @@ import { fontIssueMessage, inspectDocumentFonts, type FontReport } from './font-
 
 export function FontCheckPanel({ document: doc }: { document: GraphicDocument }) {
   const [result, setResult] = useState<{ document: GraphicDocument; report: FontReport } | null>(null);
-  const relevant = doc.objects.some(object => object.type === 'text' && [object.fontFamily,...object.characterStyles?.map(run=>run.style.fontFamily)??[]].some(id=>id?.startsWith('font-')));
+  const relevant = doc.objects.some(object => object.type === 'text');
   useEffect(() => {
     if (!relevant) return;
     let active = true;

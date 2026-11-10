@@ -46,9 +46,11 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
   const xml = new DOMParser().parseFromString(safe, 'image/svg+xml'), hasText = !!xml.querySelector('text');
   const fontAssets: FontAsset[] = [];
   if (hasText) {
-    if (!xml.documentElement.hasAttribute('font-family')) xml.documentElement.setAttribute('font-family','Times New Roman');
-    for (const element of xml.querySelectorAll('[font-family]')) {
-      const family = importedFontFamily(element.getAttribute('font-family')!); element.setAttribute('font-family',renderFontFamily(family));
+    for (const element of xml.querySelectorAll('text')) {
+      const inherited=(name:string)=>{for(let node:Element|null=element;node;node=node.parentElement){const value=node.getAttribute(name);if(value)return value;}return null;};
+      const declared=inherited('font-family');if(!declared)throw new Error('Il testo SVG non specifica un font: scegli un file della libreria nel documento sorgente oppure converti il testo in contorni.');
+      const weight=inherited('font-weight'),italic=inherited('font-style')==='italic';
+      const family = importedFontFamily(declared,weight==='bold'?700:weight&&weight!=='normal'?Number(weight):400,italic); element.setAttribute('font-family',renderFontFamily(family));element.setAttribute('font-weight','normal');element.setAttribute('font-style','normal');
       const asset = fontAssetArguments({ id:'font-probe',type:'text',xMm:0,yMm:0,text:'A',fontFamily:family,fontSizePt:9,fill:'#000000' }).fontAssets?.[0];
       if (asset && !fontAssets.some(a=>a.id===asset.id)) fontAssets.push(asset);
     }
