@@ -45,3 +45,21 @@ I nuovi caricamenti conservano il nome del file originale nell’archivio. Nomi 
 - Regressioni della chat pubblica e checkpoint Git nello [stato locale](editor-local-status.md).
 
 Nessuna modifica allo shop, al tema, a PitchPrint/BSS o alla chat pubblicata; nessun deploy o AI a pagamento.
+
+## Archiviazione/eliminazione dopo aggiornamenti concorrenti
+
+Segnalazione del titolare su **Alliance No.2 Light**: la pagina poteva conservare una revisione precedente dopo aggiornamenti alle categorie, e ogni clic veniva rifiutato. L’errore generale in cima alla pagina non era visibile vicino alla voce.
+
+Per le sole azioni confermate su un font, l’interfaccia legge la revisione corrente, controlla ID e identità del file (SHA-256 nella snapshot), quindi invia lo stesso comando validato. Una modifica concorrente fra lettura e scrittura consente un solo nuovo tentativo; un file differente blocca l’azione. Font già eliminato o già nello stato richiesto: esito idempotente. Nessuna estensione di questo comportamento a modifiche generiche, prezzi o altri archivi. Il server continua a rifiutare revisioni obsolete, con codice `revision_conflict` e HTTP 409.
+
+Esito, errore e possibilità di riprovare sono mostrati vicino ai pulsanti. Archiviare conserva il font nella vista **Tutti**, indicandolo come Archiviato e proponendo Riattiva; non viene proposto nelle nuove aperture dell’editor. Eliminazione con conferma esplicita; progetti che incorporano il file restano indipendenti.
+
+Evidenze: prima prova del difetto fallita come atteso (`.local/editor-font-delete-before.log`), poi cinque regressioni passate (`.local/editor-font-delete-after.log`), quattro casi su concorrenza/errori/upload e tre ripetizioni dopo il solo adeguamento grafico. **590 test unitari / 84 file, build e controllo segreti passati**. Prova sulla copia temporanea della libreria reale: Alliance No.2 archiviato/eliminato correttamente, altri font e progetti conservati, zero errori browser e zero scritture all’archivio reale (`.local/editor-alliance-font-actions.log`). Il font reale non è stato rimosso dall’agente.
+
+## Ricontrollo della lista dei font richiesti
+
+Alla revisione locale 162: 125 file, 124 attivi. Tutte le 39 varianti Google precedentemente installate risultano presenti. Delle 57 voci della vecchia lista manuale: per la pagina singola, 3 sono coperte esattamente, 4 hanno file presenti da collegare/verificare, 47 non hanno un file corrispondente verificato. Altre 3 voci riguardano soltanto documenti multipagina e sono escluse dal lavoro attuale.
+
+I 370 template a pagina singola richiedono 83 combinazioni dichiarate: 32 esatte (29 Google + 3 manuali), 4 da collegare e 47 da completare/verificare. I numeri riguardano nome/peso/stile, con alias ripetuti, non altrettanti file fisici. Le voci presenti da allineare sono DIN Pro Cond, DIN Pro Regular, Gloria Hallelujah 700 (file 400) e Nexa Bold dichiarato 400 (file Bold 700). Non è autorizzata una sostituzione automatica.
+
+Report aggiornato in `.local/pitchprint-migration/font-audit/font-da-installare-aggiornato.md`, JSON con riscontri e nomi interni; il pulsante di download nell’importatore usa la copia aggiornata, verificata byte per byte (`.local/editor-current-font-report-http.log`). Vecchia lista conservata separatamente. Nessun file installato o modificato durante il ricontrollo.

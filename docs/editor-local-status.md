@@ -2,6 +2,14 @@
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.
 
+## Correzione delle azioni font e ricontrollo dell’elenco richiesto
+
+Archivio/eliminazione dopo aggiornamenti alle categorie: risolto il blocco della revisione rimasta nella pagina. Lettura della revisione corrente prima dell’azione sul singolo font, controllo dell’identità del file, un solo nuovo tentativo per conflitto, messaggi accanto ai pulsanti. Eliminazione confermata e archiviazione restano distinte. Provato **Alliance No.2 Light su una copia temporanea**: entrambe le azioni riuscite, altri font/progetti conservati e archivio reale invariato. Dettagli ed evidenze nella [guida font](iteration-editor-font-usability.md).
+
+**590 unitari / 84 file, build e controllo segreti passati**. Cinque regressioni font/backup e quattro casi specifici passati, poi tre ripetizioni dopo il solo stile dei messaggi. Nessun test automatico rimuove font dall’archivio personale.
+
+Ricontrollo alla revisione 162: **125 file font, 124 attivi**. Tutte le 39 varianti Google installate presenti. Della vecchia lista manuale: **3 esatte, 4 presenti da collegare/verificare, 47 senza file corrispondente verificato** per i 370 template a pagina singola; altre 3 voci servono soltanto ai multipagina, esclusi. Elenco aggiornato scaricabile dall’importatore; vecchia copia conservata. 83 combinazioni dichiarate complessive per pagina singola: 32 esatte, 4 da allineare, 47 da completare/verificare. Nessun fallback, file installato o modifica al negozio durante l’inventario.
+
 ## Ultimo aggiornamento: operazioni massive e usabilità font
 
 Questa sezione prevale sui checkpoint storici sotto. [Guida delle operazioni massive](iteration-editor-bulk-operations.md), [categorie e usabilità font](iteration-editor-font-usability.md).
