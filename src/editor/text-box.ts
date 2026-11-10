@@ -1,0 +1,193 @@
+import { EDITOR_LIMITS,TEST_MIN_FONT_SIZE_PT } from './limits';
+import { justifySpacing, type JustificationSettings } from './justification';
+import type { VisualTextLine } from './text-lines';
+import { Textbox, Rect, Control, type TextboxProps, type TOptions, type TPointerEventInfo } from 'fabric';
+
+export interface TextFrame { width: number; height: number; autoWidth: boolean; autoHeight: true; }
+
+/** Vista Fabric del contenitore: testo originale e parametri restano nel documento. */
+export class EditorTextBox extends Textbox {
+  frame?: TextFrame;
+  justificationSettings?: JustificationSettings;
+  justificationResults: ReturnType<typeof justifySpacing>[] = [];
+  contentWidth = 0;
+  contentHeight = 0;
+  constructor(text: string, options: TOptions<TextboxProps>, frame?: TextFrame, justificationSettings?: JustificationSettings) {
+    super(text, { ...options, minWidth: 0.001 });
+    this.frame = frame; this.justificationSettings = justificationSettings; this.initDimensions();
+  }
+  visualLineRanges(): VisualTextLine[] {
+    let start = 0; const length = Array.from(this.text).length;
+    return this._textLines.map((line, index) => { const end = Math.min(length, start + line.length + this.missingNewlineOffset(index)); const range = { start, end }; start = end; return range; });
+  }
+  private hasLineStyles(): boolean { return Object.values(this.styles ?? {}).some(line => Object.values(line).some(style => !!(style as { editorLineAlign?: string }).editorLineAlign)); }
+  lineAlignment(index: number): Textbox['textAlign'] {
+    const style = this._getStyleDeclaration(index, 0) as { editorLineAlign?: Textbox['textAlign'] };
+    return style?.editorLineAlign === 'justify-left' ? 'justify' : style?.editorLineAlign ?? this.textAlign;
+  }
+  override _getLineLeftOffset(index: number): number {
+    const previous = this.textAlign; this.textAlign = this.lineAlignment(index); try { return super._getLineLeftOffset(index); } finally { this.textAlign = previous; }
+  }
+  override enlargeSpaces(): void {
+    for (let i = 0; i < this._textLines.length; i++) {
+      const alignment = this.lineAlignment(i); if (!alignment.includes('justify') || alignment !== 'justify' && this.isEndOfWrapping(i)) continue;
+      const line = this._textLines[i]!, width = this.getLineWidth(i), words: number[] = [], letters: number[] = [];
+      for (let j = 0; j < line.length; j++) {
+        const space = this._measureChar(' ', this.getCompleteStyleDeclaration(i, j), undefined, {}).width;
+        words.push(/[ \t]/.test(line[j]!) ? space : 0);
+        letters.push(j < line.length - 1 && !/[ \t]/.test(line[j]!) && !/[ \t]/.test(line[j + 1]!) ? space : 0);
+      }
+      const spacing = justifySpacing(width, this.width, words.reduce((sum, value) => sum + value, 0), letters.reduce((sum, value) => sum + value, 0), this.justificationSettings);
+      this.justificationResults.push(spacing); let offset = 0;
+      for (let j = 0; j <= line.length; j++) {
+        const box = this.__charBounds[i]![j]!; box.left += offset;
+        if (j < line.length) { const delta = words[j]! * (spacing.wordPercent - 100) / 100 + letters[j]! * spacing.letterPercent / 100; box.width += delta; box.kernedWidth += delta; offset += delta; }
+      }
+    }
+  }
+  private kerningAt(line: number, char: number): number {
+    const style = this._getStyleDeclaration(line, char) as { editorKerningPt?: number }; return (style?.editorKerningPt ?? 0) * 25.4 / 72 * 8;
+  }
+  private hasKerning(): boolean { return Object.values(this.styles ?? {}).some(line => Object.values(line).some(style => !!(style as { editorKerningPt?: number }).editorKerningPt)); }
+  override _getGraphemeBox(...args: Parameters<Textbox['_getGraphemeBox']>): ReturnType<Textbox['_getGraphemeBox']> {
+    const box = super._getGraphemeBox(...args), extra = this.kerningAt(args[1], args[2]); box.width += extra; box.kernedWidth += extra; return box;
+  }
+  override measureLine(index: number): ReturnType<Textbox['measureLine']> {
+    const result = super.measureLine(index), length = this._textLines[index]?.length ?? 0, tail = length ? this.kerningAt(index, length - 1) : 0;
+    result.width = Math.max(0, result.width - tail); const end = this.__charBounds[index]?.[length]; if (end) end.left -= tail; return result;
+  }
+  override _wrapLine(lineIndex: number, desiredWidth: number, data: Parameters<Textbox['_wrapLine']>[2], reservedSpace = 0): string[][] {
+    if (!this.hasKerning() || this.splitByGrapheme) return super._wrapLine(lineIndex, desiredWidth, data, reservedSpace);
+    const lines: string[][] = []; let line: string[] = [], width = 0, offset = 0;
+    for (const item of data.wordsData[lineIndex]!) {
+      const space = line.length ? this._measureWord([' '], lineIndex, offset - 1) : 0, candidate = width + space + item.width;
+      const tail = super._getWidthOfCharSpacing() + (item.word.length ? this.kerningAt(lineIndex, offset + item.word.length - 1) : 0);
+      if (line.length && candidate - tail > desiredWidth - reservedSpace) { lines.push(line); line = [...item.word]; width = item.width; }
+      else { if (line.length) line.push(' '); line.push(...item.word); width = candidate; }
+      offset += item.word.length + 1;
+    }
+    lines.push(line); return lines;
+  }
+  override _renderChars(...args: Parameters<Textbox['_renderChars']>): void {
+    const previous = this.charSpacing, align = this.textAlign; this.textAlign = this.lineAlignment(args[5]);
+    if (this.hasKerning() || this.hasLineStyles() || this.justificationResults.some(line => line.letterPercent !== 0)) this.charSpacing = 1;
+    try { super._renderChars(...args); } finally { this.charSpacing = previous; this.textAlign = align; }
+  }
+  override toSVG(...args: Parameters<Textbox['toSVG']>): string {
+    if (!this.hasKerning() && !this.hasLineStyles() && !this.justificationResults.some(line => line.letterPercent !== 0)) return super.toSVG(...args);
+    const previous = this.charSpacing; this.charSpacing = 1; try { return super.toSVG(...args); } finally { this.charSpacing = previous; }
+  }
+  override _renderSelection(...args: Parameters<Textbox['_renderSelection']>): void {
+    const draw = (selection: typeof args[1]) => {
+      const end = this.get2DCursorLocation(selection.selectionEnd), box = this.__charBounds[end.lineIndex]?.[end.charIndex - 1], correction = end.charIndex > 0 ? this.kerningAt(end.lineIndex, end.charIndex - 1) : 0;
+      if (box) box.width -= correction; try { super._renderSelection(args[0], selection, args[2]); } finally { if (box) box.width += correction; }
+    };
+    if (!this.hasLineStyles() && !this.justificationResults.length) { draw(args[1]); return; }
+    const previous = this.textAlign;
+    try {
+      for (const [index, line] of this.visualLineRanges().entries()) {
+        const start = Math.max(line.start, args[1].selectionStart), end = Math.min(line.start + this._textLines[index]!.length, args[1].selectionEnd);
+        if (end < start || line.end <= args[1].selectionStart || line.start >= args[1].selectionEnd) continue;
+        this.textAlign = this.lineAlignment(index); draw({ selectionStart: start, selectionEnd: end }); this.textAlign = previous;
+      }
+    } finally { this.textAlign = previous; }
+  }
+  override _renderTextDecoration(context: CanvasRenderingContext2D, type: 'underline' | 'linethrough' | 'overline'): void {
+    if (!this.hasKerning()) { super._renderTextDecoration(context, type); return; }
+    let top = this._getTopOffset();
+    for (let line = 0; line < this._textLines.length; line++) {
+      const height = this.getHeightOfLine(line), baseline = top + height / this.lineHeight * (1 - this._fontSizeFraction), left = this._getLeftOffset() + this._getLineLeftOffset(line);
+      for (let char = 0; char < this._textLines[line]!.length; char++) {
+        const style = this.getCompleteStyleDeclaration(line, char); if (!style[type]) continue;
+        const box = this.__charBounds[line]![char]!, next = char + 1 < this._textLines[line]!.length ? this.getCompleteStyleDeclaration(line, char + 1) : null;
+        const spacing = super._getWidthOfCharSpacing() + this.kerningAt(line, char), width = box.width - (next?.[type] ? 0 : spacing), thickness = this.fontSize * style.textDecorationThickness / 1000;
+        const align = type === 'overline' ? 1 : type === 'linethrough' ? .5 : 0;
+        context.fillStyle = String(style.textDecorationColor || style.fill); context.fillRect(left + box.left, baseline + this.offsets[type] * style.fontSize + style.deltaY - align * thickness, width, thickness);
+      }
+      top += height;
+    }
+  }
+  override mouseUpHandler(options: Parameters<Textbox['mouseUpHandler']>[0]): void {
+    // Anche un box già selezionato richiede un doppio clic per entrare in scrittura.
+    if (!this.isEditing) this.selected = false;
+    super.mouseUpHandler(options);
+  }
+  override doubleClickHandler(options: TPointerEventInfo): void {
+    if (this.group && !this.group.interactive || this.getActiveControl() || options.e.shiftKey) return;
+    if (this.isEditing) { super.doubleClickHandler(options); return; }
+    this.enterEditing(options.e); this.setCursorByClick(options.e); this._updateTextarea(); this.renderCursorOrSelection();
+  }
+  override _wrapText(lines: string[], desiredWidth: number): string[][] {
+    if (!this.frame || this.frame.autoWidth) return lines.map(line => this.graphemeSplit(line));
+    this.isWrapping = true;
+    const data = this.getGraphemeDataForRender(lines);
+    // Una parola più larga del contenitore resta eccedente: non allargare il box.
+    data.largestWordWidth = Math.min(data.largestWordWidth, desiredWidth);
+    const wrapped = data.wordsData.flatMap((_, index) => this._wrapLine(index, desiredWidth, data));
+    this.isWrapping = false; return wrapped;
+  }
+  override initDimensions(): void {
+    if (!this.initialized) return;
+    this.justificationResults = [];
+    if (this.frame && !this.frame.autoWidth) this.width = this.frame.width;
+    super.initDimensions();
+    if (this.hasLineStyles() && !this.textAlign.includes('justify')) this.enlargeSpaces();
+    this.contentWidth = this.calcTextWidth(); this.contentHeight = this.height;
+    if (!this.frame || this.frame.autoWidth) this.width = Math.max(0.001, this.contentWidth);
+    this.clipPath = this.frame && !this.frame.autoWidth
+      ? new Rect({ width: this.width, height: this.height, left: 0, top: 0, originX: 'center', originY: 'center', strokeWidth: 0 }) : undefined;
+  }
+  get overflow(): boolean { return this.contentWidth > this.width + 1e-6 || this.contentHeight > this.height + 1e-6; }
+  resizeFrame(width: number, height: number, autoWidth = false): void {
+    this.frame = { width: Math.max(0.001, width), height: Math.max(0.001, height), autoWidth, autoHeight: true }; this.initDimensions(); this.setCoords();
+  }
+}
+
+export function textBoxControls(object: EditorTextBox): void {
+  const baseScale = object.scaleX, baseScaleY = object.scaleY, baseWidth = object.width * baseScale, baseHeight = object.height * baseScaleY, automatic = object.frame?.autoWidth ?? true;
+  const baseFont = object.fontSize, baseStyles = structuredClone(object.styles), fonts = [baseFont, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.fontSize ?? baseFont))];
+  const spacings = [object.charSpacing / 1000 * baseFont / (25.4 / 72 * 8), ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => (style as { editorKerningPt?: number }).editorKerningPt ?? 0))], spacingScale = Math.min(Infinity, ...spacings.filter(value => value !== 0).map(value => value > 0 ? EDITOR_LIMITS.maxTrackingPt / value : EDITOR_LIMITS.minTrackingPt / value));
+  const minimumFontScale = TEST_MIN_FONT_SIZE_PT * 25.4 / 72 * 8 / Math.min(...fonts), maximumFontScale = Math.min(EDITOR_LIMITS.maxFontSizePt * 25.4 / 72 * 8 / Math.max(...fonts), spacingScale);
+  const handles = { tl: [-0.5, -0.5], tr: [0.5, -0.5], bl: [-0.5, 0.5], br: [0.5, 0.5], ml: [-0.5, 0], mr: [0.5, 0], mt: [0, -0.5], mb: [0, 0.5] } as const;
+  for (const [name, [x, y]] of Object.entries(handles)) {
+    object.controls[name] = new Control({ x, y, actionName: 'resizeTextBox', cursorStyle: y ? x * y > 0 ? 'nwse-resize' : 'nesw-resize' : 'ew-resize', cursorStyleHandler: (_event, control, target) => {
+      // La diagonale dipende dall'angolo della maniglia, non dal rapporto
+      // larghezza/altezza del testo (un box largo non deve mostrare frecce orizzontali agli angoli).
+      const angle = Math.atan2(control.y, control.x) * 180 / Math.PI + target.getTotalAngle();
+      return `${['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'][((Math.round(angle / 45) % 8) + 8) % 8]}-resize`;
+    }, actionHandler: (_event, transform, pointerX, pointerY) => {
+      const target = transform.target as EditorTextBox, angle = -target.angle * Math.PI / 180;
+      // Ogni gesto parte dalla geometria iniziale, non dal centro che si muove.
+      // Il punto opposto resta fermo anche con dilatazione su entrambi gli assi.
+      const dx = pointerX - transform.original.left, dy = pointerY - transform.original.top;
+      const localX = dx * Math.cos(angle) - dy * Math.sin(angle), localY = dx * Math.sin(angle) + dy * Math.cos(angle);
+      const width = x ? Math.max(0.08, Math.sign(x) * localX + baseWidth / 2) : baseWidth;
+      if (automatic) {
+        const height = y ? Math.max(0.08, Math.sign(y) * localY + baseHeight / 2) : baseHeight;
+        const fontScale = Math.max(minimumFontScale, Math.min(maximumFontScale, height / (baseHeight / baseScaleY)));
+        const styles = structuredClone(baseStyles);
+        for (const line of Object.values(styles)) for (const raw of Object.values(line)) {
+          const style = raw as typeof raw & { editorKerningPt?: number };
+          if (style.fontSize !== undefined) style.fontSize *= fontScale;
+          if (style.editorKerningPt !== undefined) style.editorKerningPt *= fontScale;
+        }
+        target.set({ fontSize: baseFont * fontScale, styles, scaleY: 1 }); target.initDimensions();
+        target.set('scaleX', Math.max(.1, Math.min(10, width / target.width)));
+      } else target.resizeFrame(width / baseScale, baseHeight / baseScaleY, false);
+      const offsetX = x ? Math.sign(x) * (target.width * target.scaleX - baseWidth) / 2 : 0;
+      const offsetY = y ? Math.sign(y) * (target.height * target.scaleY - baseHeight) / 2 : 0;
+      target.set({ left: transform.original.left + offsetX * Math.cos(-angle) - offsetY * Math.sin(-angle), top: transform.original.top + offsetX * Math.sin(-angle) + offsetY * Math.cos(-angle) });
+      target.setCoords(); return true;
+    } });
+    if (!x || !y) object.controls[name]!.render = (context, left, top) => {
+      const automatic = object.frame?.autoWidth ?? true;
+      context.save(); context.translate(left, top); context.rotate(object.angle * Math.PI / 180); context.fillStyle = automatic ? '#fff' : '#0088cc'; context.strokeStyle = '#0088cc'; context.lineWidth = 1.5;
+      context.fillRect(-4, -4, 8, 8); context.strokeRect(-4, -4, 8, 8); context.restore();
+    };
+  }
+  object.setControlsVisibility({ mt: automatic, ml: true, mr: true, mb: automatic });
+  object.controls.overflow = new Control({ x: 0.5, y: 0.5, offsetX: 11, offsetY: 11, cursorStyle: 'help', actionHandler: () => false, getVisibility: () => object.overflow, render: (context, left, top) => {
+    context.save(); context.fillStyle = '#fff'; context.strokeStyle = '#b43a29'; context.lineWidth = 1.5; context.fillRect(left - 5, top - 5, 10, 10); context.strokeRect(left - 5, top - 5, 10, 10);
+    context.beginPath(); context.moveTo(left - 3, top); context.lineTo(left + 3, top); context.moveTo(left, top - 3); context.lineTo(left, top + 3); context.stroke(); context.restore();
+  } });
+}

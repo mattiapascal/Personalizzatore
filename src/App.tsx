@@ -11,13 +11,21 @@ import { initialInteraction, selectionInteraction, type SelectionAction, type Se
 import type { SelectionSession } from './selection/schema';
 import { adviseProducts } from './selection/advisor';
 const EditorLab = lazy(() => import('./editor/EditorLab').then(module => ({ default: module.EditorLab })));
+const PitchprintImport=lazy(()=>import('./editor-admin/PitchprintImport'));
+const PlaqueEditor=lazy(()=>import('./editor/PlaqueEditor'));
+const ConfirmedDesign=lazy(()=>import('./editor-workflow/ConfirmedDesign'));
+const EditorAdmin = lazy(() => import('./editor-admin/AdminPanel'));
+const TemplateGallery = lazy(() => import('./editor-workflow/TemplateGallery'));
+const EditorStandalone = lazy(() => import('./editor/EditorStandalone'));
 
 function load(catalog: CatalogAdapter): SelectionSession {
   try { return restoreSession(localStorage.getItem(SESSION_KEY), catalog); } catch { return newSession(catalog); }
 }
 export function App() {
+  const standalone = window.location.pathname === '/editor', admin = import.meta.env.DEV && window.location.pathname === '/editor/admin', templates = import.meta.env.DEV && window.location.pathname === '/editor/templates', plaque=import.meta.env.DEV&&window.location.pathname==='/editor/plaque',confirmed=import.meta.env.DEV&&window.location.pathname==='/editor/confirmed', pitchImport=import.meta.env.DEV&&window.location.pathname==='/editor/import-pitchprint',localOnly = standalone || admin || templates || confirmed || plaque || pitchImport;
   const [initial, setInitial] = useState<RuntimeState | null>(null);
   useEffect(() => {
+    if (localOnly) return;
     let active = true;
     fetch('/api/bootstrap', { signal: AbortSignal.timeout(5000) }).then(response => response.json()).then(data => {
       if (active) setInitial(RuntimeSchema.parse(data));
@@ -25,7 +33,13 @@ export function App() {
       if (active) setInitial({ csrfToken: 'offline'.repeat(8), ai: { mode: 'openai', ready: false, reason: 'Backend locale non raggiungibile. Riavvia npm run dev oppure seleziona esplicitamente la demo.', model: '', budgetUsd: 0, reservedUsd: 0, requests: 0 }, catalog: { version: fixtureCatalog.version, snapshot, checkedAt: null, pending: [] }, sync: { configured: false, intervalSeconds: 300, lastError: null, refreshing: false } });
     });
     return () => { active = false; };
-  }, []);
+  }, [localOnly]);
+  if(pitchImport)return <Suspense fallback={<p>Caricamento importazione…</p>}><PitchprintImport/></Suspense>;
+  if(plaque)return <Suspense fallback={<p>Caricamento targa…</p>}><PlaqueEditor/></Suspense>;
+  if(confirmed)return <Suspense fallback={<p>Caricamento design…</p>}><ConfirmedDesign/></Suspense>;
+  if (admin) return <Suspense fallback={<main><p role="status">Caricamento gestione locale…</p></main>}><EditorAdmin/></Suspense>;
+  if (templates) return <Suspense fallback={<main><p role="status">Caricamento template…</p></main>}><TemplateGallery/></Suspense>;
+  if (standalone) return <Suspense fallback={<main><p role="status">Caricamento editor…</p></main>}><EditorStandalone/></Suspense>;
   return initial ? <Laboratory initial={initial}/> : <main><p role="status">Avvio del laboratorio locale…</p></main>;
 }
 function Laboratory({ initial }: { initial: RuntimeState }) {
@@ -95,7 +109,7 @@ function Laboratory({ initial }: { initial: RuntimeState }) {
       {runtime.catalog.version !== catalogState.version && <aside className="notice" role="status">È disponibile una nuova versione del catalogo. La bozza aperta conserva il proprio prodotto e non viene approvata automaticamente.<button disabled={busy || editorEditing} onClick={() => { setCatalogState(runtime.catalog); dispatch({ type: 'catalog' }); }}>Applica aggiornamento ai risultati</button></aside>}
       {catalogStale && <p role="alert" className="notice">Catalogo da aggiornare: le nuove proposte e lo SVG sono sospesi finché Shopify non viene riletto. Conversazione e bozza sono conservate; puoi salvare il JSON.</p>}
       {editorBinding && editorBinding.version !== catalogState.version && <p className="notice">La bozza usa una versione precedente del catalogo. Per esportare lo SVG, torna alla scelta e riapri un candidato aggiornato; la composizione verrà rivalidata. Puoi salvare subito il JSON della bozza.</p>}
-      <nav aria-label="Sezioni del laboratorio"><button disabled={editorEditing} aria-pressed={tab === 'selection'} onClick={() => setTab('selection')}>01 · Scegli il timbro</button><button disabled={!editorProduct} aria-pressed={tab === 'editor'} onClick={() => setTab('editor')}>02 · Editor Fabric.js</button></nav>
+      <nav aria-label="Sezioni del laboratorio"><button disabled={editorEditing} aria-pressed={tab === 'selection'} onClick={() => setTab('selection')}>01 · Scegli il timbro</button><button aria-pressed={tab === 'editor'} onClick={() => { if (editorProduct) setTab('editor'); else window.location.assign('/editor'); }}>02 · Editor Fabric.js</button></nav>
       {editorBinding && <div hidden={tab !== 'editor'}><Suspense fallback={<p role="status">Caricamento laboratorio…</p>}><EditorLab product={editorBinding.product} draftText={contentBrief?.text} catalogVersion={editorBinding.version} catalogOutdated={catalogStale || editorBinding.version !== catalogState.version} onEditingChange={setEditorEditing} onKeepProduct={(id, variantId) => { const product = catalog.list().find(p => p.productId === id && p.variantIds.includes(variantId)); if (product) setEditorBinding({ product, version: catalog.version }); }}/></Suspense></div>}
       <div hidden={tab !== 'selection'}><div className="selection-grid">
         <section className="panel chat-panel" aria-labelledby="assistant-title">

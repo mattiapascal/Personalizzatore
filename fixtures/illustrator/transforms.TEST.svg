@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="58mm" height="22mm" viewBox="0 0 464 176" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
+<g transform="matrix(0.866 0.5 -0.5 0.866 390.007 70.6865)"  >
+<rect style="stroke: rgb(0,0,0); stroke-width: 2; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-opacity: 0; fill-rule: nonzero; opacity: 1;"  x="-40" y="-20" rx="0" ry="0" width="80" height="40" />
+</g>
+<g transform="matrix(1 0 0 1 233 89)"  >
+<rect style="stroke: rgb(0,0,0); stroke-width: 2; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-opacity: 0; fill-rule: nonzero; opacity: 1;"  x="-216" y="-72" rx="0" ry="0" width="432" height="144" />
+</g>
+<g transform="matrix(1 0 0 1 232 70.351)" style=""  >
+		<text xml:space="preserve" font-family="Arial" font-size="25.4" font-style="normal" font-weight="normal" style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1; text-decoration-thickness: 6.6667%; white-space: pre;" ><tspan x="-69.8562" y="7.9792" >TEST · Città</tspan></text>
+</g>
+<g transform="matrix(0.9659 -0.2588 0.2588 0.9659 86.542 122.7673)" style=""  >
+		<text xml:space="preserve" font-family="Arial" font-size="28.22222222222222" font-style="normal" font-weight="normal" style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1; text-decoration-thickness: 6.6667%; white-space: pre;" ><tspan x="-43.9112" y="8.8657" >COPIA</tspan></text>
+</g>
+<g transform="matrix(1 0 0 1 353 113)"  >
+<circle style="stroke: rgb(0,0,0); stroke-width: 2; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-opacity: 0; fill-rule: nonzero; opacity: 1;"  cx="0" cy="0" r="16" />
+</g>
+</svg>

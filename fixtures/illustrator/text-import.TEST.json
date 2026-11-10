@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 2,
+  "documentId": "037dc669-92c8-471e-b330-b79c7da4a7d0",
+  "revision": 2,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "svg-71661cf1-a651-4a89-848d-43c26cf86e81",
+      "type": "vector",
+      "xMm": 3.8999999999999972,
+      "yMm": 2.9000000000000012,
+      "widthMm": 50,
+      "heightMm": 15.999999999999998,
+      "commands": [
+        [
+          "M",
+          0,
+          0
+        ],
+        [
+          "L",
+          1,
+          0
+        ],
+        [
+          "L",
+          1,
+          1
+        ],
+        [
+          "L",
+          0,
+          1
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeMm": 0.2,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    },
+    {
+      "id": "svg-fa1104a4-19b5-4798-9b69-2af8a8024796",
+      "type": "text",
+      "xMm": 20.26797485351562,
+      "yMm": 7.211474137931037,
+      "rotationDeg": 0,
+      "text": "TEST · Città",
+      "fontSizePt": 9,
+      "fontFamily": "Arial",
+      "fill": "#000000",
+      "textScaleX": 1,
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "textAlign": "center",
+      "lineHeight": 1,
+      "textBox": {
+        "widthMm": 17.46405029296875,
+        "heightMm": 3.5877499999999993,
+        "autoWidth": true,
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "svg-7197ecc3-4bcf-4f4f-9c4b-89a957a096c6",
+      "type": "text",
+      "xMm": 16.14884643554688,
+      "yMm": 12.211474137931036,
+      "rotationDeg": 0,
+      "text": "Testo SVG editabile",
+      "fontSizePt": 9,
+      "fontFamily": "Times New Roman",
+      "fill": "#000000",
+      "textScaleX": 1,
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "textAlign": "center",
+      "lineHeight": 1,
+      "textBox": {
+        "widthMm": 25.702307128906238,
+        "heightMm": 3.5877499999999993,
+        "autoWidth": true,
+        "autoHeight": true
+      }
+    }
+  ],
+  "groups": [
+    {
+      "id": "svg-group-547b3651-de8c-46e4-8303-eeed4db04b3b",
+      "objectIds": [
+        "svg-71661cf1-a651-4a89-848d-43c26cf86e81",
+        "svg-fa1104a4-19b5-4798-9b69-2af8a8024796",
+        "svg-7197ecc3-4bcf-4f4f-9c4b-89a957a096c6"
+      ]
+    }
+  ]
+}

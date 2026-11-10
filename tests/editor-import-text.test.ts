@@ -1,0 +1,17 @@
+import { describe,it,expect } from 'vitest';
+import { pdfEditableText } from '../scripts/pdf-editable-text';
+import { sanitizeSvg } from '../src/editor/svg-sanitize';
+const svg=(body:string)=>`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50">${body}</svg>`;
+const glyphs='<defs><symbol id="glyph-0-0"><path d="M0 0L1 0L1 1Z"/></symbol></defs><path id="logo" d="M0 0L8 0L8 8Z"/><g fill="#000"><use xlink:href="#glyph-0-0" x="10" y="20"/><use xlink:href="#glyph-0-0" x="18" y="20"/></g>';
+const xml='<pdf2xml><page><fontspec id="0" size="12" family="ABCDEF+ArialMT" color="#000000"/><text top="10" left="10" width="18" height="12" font="0">A&amp;B</text></page></pdf2xml>';
+describe('scelta testo editabile o contorni in importazione',()=>{
+ it('mantiene logo e ordine, sostituisce soltanto i glifi con una riga Unicode e una larghezza esplicita',()=>{const result=pdfEditableText(svg(glyphs),xml);expect(result.textCount).toBe(1);expect(result.svg).toContain('id="logo"');expect(result.svg).not.toContain('<use');expect(result.svg).toContain('font-family="ArialMT"');expect(result.svg).toContain('textLength="18"');expect(result.svg).toContain('A&amp;B');expect(result.svg.indexOf('id="logo"')).toBeLessThan(result.svg.indexOf('<text'));expect(()=>sanitizeSvg(result.svg,true,true)).not.toThrow();});
+ it('non tenta OCR sui contorni preesistenti e rifiuta testo senza corrispondenza o con posizioni ambigue',()=>{expect(pdfEditableText(svg('<path d="M0 0L1 1"/>'),'<pdf2xml/>').textCount).toBe(0);expect(()=>pdfEditableText(svg(glyphs),'<pdf2xml/>')).toThrow('Unicode');expect(()=>pdfEditableText(svg(glyphs),xml.replace('top="10"','top="30"'))).toThrow('ambigua');expect(()=>pdfEditableText(svg(glyphs),xml.replace('</page>','<text top="10" left="10" width="18" height="12" font="0">CD</text></page>'))).toThrow('ambigua');});
+ it('rifiuta testo ritagliato, trasformato, verticale o non decodificato senza eliminare tracciati',()=>{expect(()=>pdfEditableText(svg(`<g transform="rotate(10)">${glyphs}</g>`),xml)).toThrow('trasformato');expect(()=>pdfEditableText(svg(glyphs.replace('x="18" y="20"','x="18" y="21"')),xml)).toThrow('verticale');expect(()=>pdfEditableText(svg(glyphs),xml.replace('A&amp;B','\ufffd'))).toThrow('affidabile');});
+ it('abilita solo testo SVG semplice, senza script, font remoti o stili parziali ignorati',()=>{const text=svg('<g font-family="Arial" font-size="12"><text x="2" y="12" text-anchor="middle">Città &amp; Test</text></g>');expect(()=>sanitizeSvg(text,false,true)).not.toThrow();expect(()=>sanitizeSvg(text)).toThrow();for(const body of ['<text onload="x()">A</text>','<text font-family="url(https://example.com/font)">A</text>','<text><tspan x="20">A</tspan></text>','<text font-weight="900">A</text>','<text textLength="NaN">A</text>'])expect(()=>sanitizeSvg(svg(body),false,true)).toThrow();});
+});
+
+it('il ritaglio di un glifo può essere ignorato solo se rettangolare e non taglia alcun punto del glifo',()=>{
+ const clipped=svg(glyphs.replace('<g fill="#000">','<defs><clipPath id="clip"><path d="M18 20L19 20L19 21L18 21Z"/></clipPath></defs><g fill="#000">').replace('<use xlink:href="#glyph-0-0" x="18" y="20"/>','<g clip-path="url(#clip)"><use xlink:href="#glyph-0-0" x="18" y="20"/></g>'));
+ expect(pdfEditableText(clipped,xml).textCount).toBe(1);expect(()=>pdfEditableText(clipped.replace('L19 20L19 21','L18.5 20L18.5 21'),xml)).toThrow('ritagliato');
+});

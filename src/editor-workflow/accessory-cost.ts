@@ -1,0 +1,4 @@
+import {z} from 'zod';
+export const AccessoryCostInputSchema=z.strictObject({packPriceMinor:z.number().int().min(0).max(1000000000000),packSize:z.number().int().min(1).max(10000),quantity:z.number().int().min(0).max(10000),currency:z.string().regex(/^[A-Z]{3}$/)});
+/** Owner-approved proration. Integer minor units, round once on the line total. No Shopify/BSS write. */
+export function accessoryCost(raw:unknown):{amountMinor:number;currency:string}{const value=AccessoryCostInputSchema.parse(raw),numerator=BigInt(value.packPriceMinor)*BigInt(value.quantity),denominator=BigInt(value.packSize),rounded=(numerator*2n+denominator)/(denominator*2n);if(rounded>BigInt(Number.MAX_SAFE_INTEGER))throw new Error('Costo accessori oltre i limiti');return{amountMinor:Number(rounded),currency:value.currency};}

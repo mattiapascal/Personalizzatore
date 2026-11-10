@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "documentId": "00000000-0000-4000-8000-000000000001",
+  "revision": 4,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "text-1",
+      "type": "text",
+      "xMm": 10.077908756608174,
+      "yMm": 1.3897437911661727,
+      "rotationDeg": 8,
+      "text": "GRUPPI · TEST",
+      "fontSizePt": 9.45,
+      "fontFamily": "Arial",
+      "fill": "#000000",
+      "textAlign": "center",
+      "textBox": {
+        "widthMm": 39.9,
+        "heightMm": 4.2,
+        "autoWidth": false,
+        "autoHeight": true
+      },
+      "characterStyles": [
+        {
+          "start": 0,
+          "end": 6,
+          "style": {
+            "fontWeight": "bold"
+          }
+        }
+      ]
+    },
+    {
+      "id": "left-box",
+      "type": "rect",
+      "xMm": 6.586384252761911,
+      "yMm": 9.415732056579223,
+      "rotationDeg": 8,
+      "widthMm": 12.600000000000001,
+      "heightMm": 5.25,
+      "strokeMm": 0.2625,
+      "stroke": "#000000",
+      "cornerRadiusMm": 1.05
+    },
+    {
+      "id": "dot",
+      "type": "circle",
+      "xMm": 23.579660031610423,
+      "yMm": 12.110612376698457,
+      "radiusMm": 2.625,
+      "strokeMm": 0.2625,
+      "stroke": "#000000"
+    },
+    {
+      "id": "right-box",
+      "type": "rect",
+      "xMm": 38.81960989030002,
+      "yMm": 13.945816492829357,
+      "rotationDeg": 8,
+      "widthMm": 10.5,
+      "heightMm": 5.25,
+      "strokeMm": 0.2625,
+      "stroke": "#000000"
+    }
+  ],
+  "groups": [
+    {
+      "id": "body-group",
+      "objectIds": [
+        "left-box",
+        "dot"
+      ]
+    }
+  ]
+}

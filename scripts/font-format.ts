@@ -1,0 +1,1 @@
+export function fontFileFormat(bytes:Buffer):'ttf'|'otf'|'woff'|'woff2'{const magic=bytes.subarray(0,4).toString('latin1'),format=magic==='\0\x01\0\0'?'ttf':magic==='OTTO'?'otf':magic==='wOFF'?'woff':magic==='wOF2'?'woff2':null;if(!format)throw new Error('Formato del file font non riconosciuto');return format;}

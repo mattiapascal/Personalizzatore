@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 2,
+  "documentId": "569aeff1-0fa7-4072-9e13-07a3927d5164",
+  "revision": 3,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "title",
+      "type": "text",
+      "xMm": 8,
+      "yMm": 2,
+      "text": "BÉZIER · TEST",
+      "fontSizePt": 9,
+      "fontFamily": "Arial",
+      "fill": "#000000",
+      "textAlign": "center",
+      "textBox": {
+        "widthMm": 42,
+        "heightMm": 4,
+        "autoWidth": false,
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "object-c71dee0d-ced5-4268-bae0-9b609de59a56",
+      "type": "bezier",
+      "xMm": 7.875,
+      "yMm": 12.045292942431121,
+      "widthMm": 14,
+      "heightMm": 3.464101615137757,
+      "nodes": [
+        {
+          "x": 0,
+          "y": 0.5,
+          "in": {
+            "x": -0.21428571428571427,
+            "y": 2.232050807568876
+          },
+          "out": {
+            "x": 0.21428571428571427,
+            "y": -1.232050807568876
+          }
+        },
+        {
+          "x": 1,
+          "y": 0.5,
+          "in": {
+            "x": 0.7857142857142857,
+            "y": 2.232050807568876
+          },
+          "out": {
+            "x": 1.2142857142857142,
+            "y": -1.232050807568876
+          }
+        }
+      ],
+      "closed": false,
+      "strokeMm": 0.25,
+      "stroke": "#000000"
+    },
+    {
+      "id": "object-cd06c15d-c976-4b8f-902e-6aacb17f98d1",
+      "type": "bezier",
+      "xMm": 31.875,
+      "yMm": 8.77734375,
+      "rotationDeg": 0,
+      "widthMm": 16,
+      "heightMm": 9,
+      "nodes": [
+        {
+          "x": 0,
+          "y": 0.6666666666666666,
+          "in": {
+            "x": 0,
+            "y": 1.1111111111111112
+          },
+          "out": {
+            "x": 0,
+            "y": 0.2222222222222222
+          }
+        },
+        {
+          "x": 0.5,
+          "y": 0,
+          "in": {
+            "x": 0.25,
+            "y": 0
+          },
+          "out": {
+            "x": 0.75,
+            "y": 0
+          }
+        },
+        {
+          "x": 1,
+          "y": 0.6666666666666666,
+          "in": {
+            "x": 1,
+            "y": 0.2222222222222222
+          },
+          "out": {
+            "x": 1,
+            "y": 1.1111111111111112
+          }
+        }
+      ],
+      "closed": true,
+      "strokeMm": 0.25,
+      "stroke": "#000000"
+    }
+  ]
+}

@@ -1,6 +1,24 @@
 # Assistente AI e personalizzatore Shopify
 
+**Nuovo incremento locale:** [importazione PitchPrint](docs/iteration-editor-pitchprint-import.md) da copie native, 473 sorgenti acquisiti in sola lettura; 39 varianti Google installate esatte e [font manuali](.local/pitchprint-migration/font-audit/font-da-installare.md), senza fallback. [Proprietà degli oggetti](docs/iteration-editor-object-properties.md) e modulo cliente con ordine crescente. [Apri importatore](http://127.0.0.1:5173/editor/import-pitchprint?workspace=1&mode=admin).
+
+**Correzioni del collaudo del 10 novembre:** [targa a misura cliente](http://127.0.0.1:5173/editor/plaque?workspace=1&mode=customer), [editor amministrativo](http://127.0.0.1:5173/editor?workspace=1&mode=admin), [ricollaudo aggiornato](docs/editor-retest-2026-11-10.md). Salvataggio esplicito, recupero JSON, PDF locale, fissaggi e template riutilizzabili su misure diverse. L’export PDF usa Chromium di Playwright e `qpdf`; il relativo test strumentale usa anche `pdftotext` (Poppler), già disponibili su questo computer. [Stato e limiti](docs/editor-local-status.md); nessun deploy o modifica al negozio.
+
+Per il collaudo locale del 10 novembre: <http://127.0.0.1:5173/editor/admin?section=acceptance> — 18 prove raggruppate con note, esiti ed esportazione. [Checklist completa](docs/editor-collaudo-2026-11-10.md), [nuovi profili/zone/varianti](docs/iteration-editor-profile-zones-shop-acceptance.md) e [stato verificato](docs/editor-local-status.md). `npm run editor:collaudo` rigenera la copia della checklist dagli stessi casi della pagina interattiva.
+
 Progetto per Incisoria Sacchetti. Repository: [mattiapascal/Personalizzatore](https://github.com/mattiapascal/Personalizzatore).
+
+**Editor grafico locale:** [funzioni, prove e limiti aggiornati](docs/editor-local-status.md). Accesso diretto `http://127.0.0.1:5173/editor?workspace=1`; nessuna pubblicazione dell’editor. Ultimi incrementi: [livelli/selezione/alpha](docs/iteration-editor-layers-selection-alpha.md), [crenatura](docs/iteration-editor-kerning.md) e [dilatazione testo sui due assi](docs/iteration-editor-text-stretch.md), [allineamenti per riga/interlinea](docs/iteration-editor-line-alignment.md) e [maniglie Bézier](docs/iteration-editor-bezier-handles.md).
+
+**Prova configurazioni indipendenti:** <http://127.0.0.1:5173/editor?workspace=1&configurations=1>. Modifica la grafica → **Controlla e aggiungi** → controlla l’anteprima → **Aggiungi al carrello di prova**. Nel riepilogo, **Crea una copia da aggiungere** serve per un altro articolo; **Modifica questo articolo nel carrello** prepara la sostituzione della sola riga, con confronto prima/dopo e conferma distinta. [Guida e limiti](docs/iteration-editor-configurations-font-variants.md). Tutto locale, senza prezzi o acquisti Shopify.
+
+**Controllo font:** caratteri mancanti e stili simulati dei font incorporati sono segnalati nella bozza e bloccano la conferma locale, anche attraverso l’API. [Formati analizzati, limiti ed evidenze](docs/iteration-editor-font-preflight.md).
+
+**Archivio visuale e catalogo reale:** [Template](http://127.0.0.1:5173/editor/admin?section=template) e [Composizioni clienti](http://127.0.0.1:5173/editor/admin?section=composition) con miniature, tag multipli riutilizzabili, filtri AND/OR e priorità dei tag trascinabile/salvabile. Tag anche nel salvataggio dall’editor; copia cliente→template indipendente. [Prodotti del negozio](http://127.0.0.1:5173/editor/admin?section=products) in sola lettura per collezione/tag, con il catalogo reale completo: non equivale ad avere tutti i prodotti già configurati nel canvas. [Font](http://127.0.0.1:5173/editor/admin?section=fonts) con anteprime automatiche e informazioni facoltative richiudibili. [Guida e limiti](docs/iteration-editor-archive-tags-shop.md).
+
+**[Prova guidata per il titolare](docs/editor-collaudo-locale.md):** bozze, cambio modello, template, caso 13/15 e font, con indicazione di cosa succede a ogni conferma.
+
+**Nuovi percorsi locali:** [galleria template](http://127.0.0.1:5173/editor/templates), associazioni a più modelli nel backend, cambio modello con confronto prima/dopo e autosalvataggio delle bozze su questo browser. Nel backend è disponibile anche la preparazione dei profili produttivi e degli schemi di sola foratura/fissaggi. [Guida e limiti](docs/iteration-editor-drafts-templates-products.md): il canvas usa ancora i vincoli TEST; i profili tecnici raccolti non sono ancora applicati alla grafica.
 
 **Pagina pilota pubblicata:** [Crea il tuo timbro](https://www.incisoriasacchetti.it/pages/crea-timbro-online), con chat e selezione dei prodotti reali, backend Cloudflare Workers Free e catalogo aggiornato automaticamente. Il laboratorio locale comprende anche canvas Fabric.js e JSON/SVG con profili grafici TEST. Il percorso di personalizzazione e acquisto esistente continua sulle pagine prodotto. [Registro, verifiche e ripristino](docs/release-cloudflare.md).
 
@@ -41,6 +59,10 @@ Senza credenziali il pannello Collegamenti AI e catalogo spiega cosa manca. La d
 
 Il server `npm run dev` è solo loopback/dev. `npm run build` genera il laboratorio frontend. Il rilascio pubblico ha un ingresso separato Workers e una build cliente: `npm run check:release` li verifica senza pubblicare; `npm run worker:deploy` esegue invece un upload reale autorizzato.
 
+**Gestione font:** nel [backend locale](http://127.0.0.1:5173/editor/admin), ricerca e filtri, campioni personalizzati, download originali, dati descrittivi/licenze e [backup/ripristino della libreria](docs/iteration-editor-font-backup.md) con confronto e conferma. [Guida](docs/iteration-editor-font-administration.md).
+
+**Ultimi incrementi dell’editor:** [anteprima monocolore e analisi WOFF2 locale](docs/iteration-editor-imprint-woff2.md), [capacità estesa](docs/iteration-editor-capacity.md) a 200 oggetti, 100 righe/4.000 caratteri Unicode per box e corpo fino a 500 pt. I limiti delle risorse e i vincoli TEST rimangono espliciti. [Stato e verifiche](docs/editor-local-status.md).
+
 ## Prova della conversazione
 
 1. Scrivi nella chat: Voglio fare un timbro per le fatture.
@@ -78,11 +100,45 @@ Lettura reale aggiornata: 228 prodotti letti, 214 attivi con URL pubblico; 76 pr
 
 ## Canvas
 
+**[Apri direttamente l’editor grafico locale](http://127.0.0.1:5173/editor)** con il server avviato: formato TEST 58×22 mm, strumenti manuali e selezione del formato, senza passare dalla chat. [Trasformazioni, livelli e allineamenti](docs/iteration-editor-transforms.md).
+
+**[Area di disegno a tutto schermo](http://127.0.0.1:5173/editor?workspace=1)**: canvas centrale, pannelli laterali richiudibili, zoom e adattamento all’area; fullscreen nativo opzionale. Si può passare dalla vista normale a quella espansa conservando la stessa bozza. [Dettagli e prove](docs/iteration-editor-workspace.md).
+
+Gli strumenti dell’editor usano pulsanti a icona, con descrizione al passaggio del mouse e nomi accessibili. Le icone dei pannelli in alto permettono di mostrare oggetti/file e proprietà/livelli; le proprietà si aggiornano in tempo reale.
+
 Per iniziare una nuova chat sul futuro sostituto locale di PitchPrint: [handoff aggiornato del configuratore grafico](docs/HANDOFF_EDITOR_GRAFICO.md).
 
-Da un candidato premi Prova nel canvas. Il progetto usa modello, ID/versioni Shopify e dimensioni nominali. Doppio clic sul testo per scrivere, Invio per una nuova riga, Esc o Termina modifica per validare. Testo e bordo si possono trascinare.
+Sviluppo locale dell’8 novembre: [piano incrementale](docs/editor-roadmap.md), [inventario delle capacità PitchPrint con fonti](docs/pitchprint-capabilities.md) e [risultati/prova dell’incremento oggetti](docs/iteration-editor-objects.md). Priorità agli strumenti manuali; multipagina escluso e generazione immagini AI rinviata.
+
+Da un candidato premi Prova nel canvas. Il progetto usa modello, ID/versioni Shopify e dimensioni nominali. Doppio clic sul testo per scrivere, Invio per una nuova riga, Esc o Termina modifica per validare. Testo e forme si possono trascinare. Puoi aggiungere testo/rettangolo/cerchio, selezionare anche dall’elenco, duplicare ed eliminare; Annulla/Ripristina conservano gli ID. Le copie partono sovrapposte: trascinale per spostarle. Anche un progetto vuoto è salvabile e riapribile.
+
+Selezionando un oggetto puoi impostare posizione e dimensioni numeriche e rotazione, usare le maniglie, cambiare ordine livelli e allineare all’area. Il testo cambia corpo in pt senza deformazione; i cerchi mantengono il diametro. JSON grafico v2 con import automatico dei v1; margini verificati anche dopo rotazione. `npm run capture:editor -- --transforms` genera i campioni per Illustrator, che rimane da collaudare.
 
 Modifiche manuali e comandi strutturati passano dallo stesso store revisionato. Il passaggio a un altro modello o variante conserva gli oggetti solo se entrano; altrimenti mantiene il progetto precedente, con possibilità di salvarlo in JSON e creare una nuova bozza per il formato scelto. Non riduce font o deforma automaticamente. Il cambio modello riuscito ricomincia lo storico undo. Nei formati tondi la validazione usa il cerchio reale e il renderer esporta un ritaglio circolare.
+
+**Ispettore contestuale:** modifiche in tempo reale, posizione centrale, riempimento/contorno e strumenti di testo. Box a larghezza fissa o automatica, con altezza sempre automatica; maniglie con lato opposto fermo. Il box selezionato modifica tutto il testo, i caratteri evidenziati ricevono soltanto la modifica locale. [Uso, limiti e verifiche](docs/iteration-editor-inspector.md). Gli oggetti parzialmente esterni sono ammessi; trascinare completamente fuori mostra il cestino e il rilascio elimina, con Annulla disponibile.
+
+**Selezione e gruppi:** Maiusc o riquadro, gruppi semplici, spostamento/copia/eliminazione atomici, allineamenti e distribuzione a spazi uguali nell’ispettore multiplo. Nuovi testi centrati e doppio clic contestuale. Le forme vuote sono agganciabili sul contorno. [Comandi, uso e stato dei test](docs/iteration-editor-selection.md): contorni ora verificati nel browser. [Scala e rotazione dell’insieme](docs/iteration-editor-group-transforms.md) con maniglie e dimensioni collegate; freccine del contorno a 0,05 mm.
+
+Nel pannello Strumenti sono disponibili [griglia e agganci](docs/iteration-editor-guides.md), con Alt per sospenderli, e le [scorciatoie da tastiera](docs/iteration-editor-keyboard.md) per spostamenti fini e operazioni della selezione. Le guide sono soltanto vista e non entrano nei file.
+
+**Disegno diretto:** quattro icone permettono di tracciare linee, rettangoli, cerchi ed ellissi nel canvas. Maiusc vincola le linee a 45° e i rettangoli a quadrati; il cerchio parte dal centro. Esc annulla e al rilascio si torna alla selezione. Disponibile anche Aggiungi linea con lunghezza/rotazione/contorno nell’ispettore. [Uso e verifiche](docs/iteration-editor-lines.md). [Ellissi](docs/iteration-editor-ellipses.md) con assi indipendenti, proporzioni e rotazione.
+
+**[Pennello vettoriale](docs/iteration-editor-freehand.md):** disegno a mano libera, tracciato selezionato al rilascio, Esc annulla, chiusura/riempimento e trasformazioni nell’ispettore. Aggiunti [triangolo, pentagono e stella](docs/iteration-editor-polygons.md) come tracciati modificabili. [Penna per punti](docs/iteration-editor-pen.md): clic aggiunge vertici, Invio/doppio clic termina, primo punto o Maiusc+Invio chiude, Backspace rimuove ed Esc annulla. Sono disponibili anche pulsanti grafici di completamento nella barra. I progetti JSON locali si riaprono fino a 10 MB. [Nodi dei tracciati](docs/iteration-editor-path-nodes.md): seleziona un vertice nell’ispettore, modifica X/Y o trascina il punto azzurro; inserisci/elimina nodi con gli stessi comandi e storico.
+
+**[Curve Bézier](docs/iteration-editor-bezier.md):** penna per nodi angolosi o curvi con trascinamento delle maniglie; curve aperte/chiuse, ispettore live e controlli sul foglio, divisione esatta del segmento, inversione e riflessioni. Un solo comando al completamento o al rilascio; Esc annulla. JSON conserva nodi/maniglie, SVG conserva cubiche vettoriali.
+
+**[Tipografia](docs/iteration-editor-text-decoration.md):** barrato e sopralineato sul box o sui caratteri scelti; testo giustificato nei box a larghezza fissa, altezza sempre automatica.
+
+**[Stile e livelli multipli](docs/iteration-editor-selection-style.md):** riempimento/contorno comuni per selezioni e gruppi, valori misti e [ordine dei livelli](docs/iteration-editor-selection-order.md) e [allineamento dell’insieme all’area](docs/iteration-editor-selection-area.md) senza separare i membri. [Operazioni sui tracciati](docs/iteration-editor-path-operations.md): riflessione, inversione nodi e apertura con contorno conservato.
+
+**[Appunti dell’editor](docs/iteration-editor-clipboard.md):** copia/taglia/incolla di oggetti e gruppi tramite icone o Cmd/Ctrl+C/X/V, con stili e immagini conservati. Restano in memoria fino alla chiusura della pagina.
+
+**[Export PNG](docs/iteration-editor-png-export.md):** bozza a 150/300/600 dpi, sfondo bianco o trasparente; dimensioni e risoluzione nel file, indipendenti da zoom e Retina.
+
+**[PNG](docs/iteration-editor-raster.md) e [JPEG locali](docs/iteration-editor-jpeg.md):** originale incorporato nel progetto e conversione bianco/nero modificabile nell’ispettore (soglia, inversione e bianco trasparente). [Luminosità, contrasto e mezzitoni](docs/iteration-editor-raster-filters.md) locali e non distruttivi. JPEG baseline/progressivi a 8 bit, grigi o tre componenti; EXIF 1–8 normalizzato prima di filtri/crop, originale preservato. CMYK escluso. Nessuna rete o generazione AI; SVG con raster derivato. Limiti TEST iniziali: 256 KB, 1 MP, quattro immagini. [Ritaglio e riflessione](docs/iteration-editor-raster-crop.md) non distruttivi nell’ispettore: coordinate in pixel, centro e scala conservati, ripristino dell’intera sorgente.
+
+**[Font locali](docs/iteration-editor-fonts.md):** Arial, Helvetica, Times New Roman, Georgia, Courier New, Verdana e Trebuchet MS, con selettore sul box o sui soli caratteri selezionati. Controllo disponibilità, nessun download o embedding; le famiglie vanno installate anche sulla macchina Illustrator.
 
 Esporta JSON per riaprire il progetto dopo reload; la bozza rimane in memoria cambiando sezione. Esporta SVG per il collaudo Illustrator. Testo Arial fino a 8 righe, rettangolo e cerchio sono il perimetro attuale; loghi, gruppi e scene complesse restano da sviluppare. Il golden storico senza prodotto è importabile sul 4913, con la stessa area nominale 58×22 mm.
 
@@ -125,3 +181,9 @@ Riferimenti: [specifica originale](01_Specifica_Progetto.md), [AGENTS](AGENTS.md
 Per un primo rilascio della sola selezione assistita: [piano di pubblicazione, hosting e coordinamento dei due Git](docs/publication-plan.md). Le [correzioni editoriali per la prossima versione](docs/next-release.md) sono registrate separatamente. Sono proposte e attività locali: nessuna pubblicazione autorizzata.
 
 Prima di un rilascio occorrono profili produttivi confermati, censimento dei modelli, miglioramento/valutazione del dialogo su frasi reali, collaudo umano Illustrator, accessibilità su dispositivi fisici, privacy e controlli di produzione. Nessun deploy o modifica a tema/BSS/PitchPrint, prezzi, varianti, carrello o checkout è incluso.
+
+**Ultimi incrementi locali:** [Mano/PAN](docs/iteration-editor-pan.md) accanto alla freccia e temporaneo con Space; [testo su tracciato](docs/iteration-editor-text-on-path.md) con allineamento, maniglia di scorrimento e riferimento verticale. [Funzioni ancora mancanti e ordine proposto](docs/editor-gap-review.md). Nessuna integrazione o pubblicazione online.
+
+Importazioni SVG/PDF, scelta testo/contorni, backend locale e font personali: [guida e limiti](docs/iteration-editor-import-font-library.md).
+
+Operazioni massive locali: [guida importazione/associazioni/font](docs/iteration-editor-bulk-operations.md). [Classificazione, lista amministrativa e menu font](docs/iteration-editor-font-usability.md). Lo stato effettivo e i limiti sono in [editor locale](docs/editor-local-status.md).

@@ -1,5 +1,75 @@
 # JSON, SVG e collaudo Illustrator
 
+**Aggiornamento del 10 novembre:** disponibile anche PDF locale, amministrativo e opzionale cliente. Export da SVG con Chromium; qpdf normalizza la pagina alle misure fisiche senza scalare la grafica. Test automatici di pagina e testo estraibile passati; campione HTTP 100×60 mm renderizzato e ispezionato. Fori/accessori restano dati tecnici nel JSON/riepilogo, i marcatori non entrano nei file grafici. Il titolare ha indicato Illustrator superato nel proprio report del 10 novembre: non estende automaticamente la certificazione ai nuovi PDF o a tutti i campioni storici sotto.
+
+`bezier.TEST.json/svg` (`node --import tsx scripts/capture-editor-bezier.ts`): curva aperta a due nodi e curva chiusa a tre nodi disegnate con la penna, testo editabile. Controllare cubiche, maniglie, misure e spessori in Illustrator, senza guide della vista. **Collaudo Illustrator non eseguito.**
+
+`jpeg-source.TEST.jpg` e `jpeg.TEST.json/svg` (`node --import tsx scripts/capture-editor-jpeg.ts`): calibrazione JPEG 40×24 px con orientamento EXIF 6, quindi 24×40 px orientati; due immagini con lo stesso originale, una intera 7,2×12 mm e una ritagliata a 12×40 px (3,6×12 mm) e riflessa. L’originale rimane JPEG nel JSON, lo SVG incorpora il derivato PNG binario. Verificare orientamento, crop, riflessione e misure. **Collaudo Illustrator e lavorazione non eseguiti.**
+
+## Campioni locali — aggiornati al 9 novembre 2026
+
+`text-lines.TEST.json/svg` (`node --import tsx scripts/capture-editor-text-lines.ts`): un solo box con tre righe; prima centrata, seconda giustificata esplicitamente, terza a destra; interlinea 1. Formati applicati dall’ispettore selezionando solo due caratteri per riga. Verificare in Illustrator spazi tra parole, posizioni, altezza e modificabilità; confrontare anche con una riapertura JSON. **Collaudo Illustrator non eseguito.**
+
+`bezier-handles.TEST.json/svg` (`node --import tsx scripts/capture-editor-bezier-handles.ts`): curva chiusa con il secondo nodo reso simmetrico dopo averne spostato la maniglia entrante. Le operazioni non introducono vincoli persistenti. Verificare curve, nodi, misure e contorni in Illustrator; nessuna guida azzurra deve entrare nel file. **Collaudo Illustrator non eseguito.**
+
+`refinements.TEST.json/svg` (`node --import tsx scripts/capture-editor-refinements.ts`): testo editabile con dilatazione 120% × 115%, spaziatura 0,2 pt e correzione −0,1 pt sulla prima coppia; gradiente RGB neutro convertito in nero con alpha proporzionale, sopra un rettangolo nero. Originale RGB conservato nel JSON, derivato PNG nello SVG. Controllare in Illustrator rapporto dei glifi, posizioni delle coppie, testo editabile, misure e sovrapposizione alpha; non equivale a certificazione produttiva binaria. **Illustrator e lavorazione non collaudati.**
+
+`selection-area.TEST.json/svg` (`node --import tsx scripts/capture-editor-selection-area.ts`): gruppo di rettangolo/cerchio allineato come insieme al centro 29×11 mm dell’area 58×22. Controllare centro, distanze interne e struttura del gruppo in Illustrator. **Collaudo Illustrator non eseguito.**
+
+`text-decoration.TEST.json/svg` (`node --import tsx scripts/capture-editor-text-decoration.ts`): box Arial 9 pt largo 38 mm, barrato/sopralineato locali e allineamento giustificato con ultima riga a sinistra. Verificare spazi, decorazioni e modificabilità del testo in Illustrator. **Collaudo Illustrator non eseguito.**
+
+`selection-style.TEST.json/svg` (`node --import tsx scripts/capture-editor-selection-style.ts`): riempimento nero e contorno tratteggiato 0,3 mm applicati a rettangolo/cerchio raggruppati, gruppo portato in primo piano. Verificare centri, tratteggio e livelli in Illustrator. `path-operations.TEST.json/svg` (`node --import tsx scripts/capture-editor-path-operations.ts`): stella riflessa, nodi invertiti e contorno aperto con due estremità indipendenti. **Entrambi da collaudare in Illustrator.**
+
+`preview-raster-300dpi.TEST.png` (685×260 px, bianco) e `preview-raster-transparent-150dpi.TEST.png` (343×130 px) sono export del progetto `raster-filters.TEST.json`, generati da `node --import tsx scripts/capture-editor-png-export.ts`. Contengono metadati fisici pHYs; non sostituiscono il JSON o SVG né certificano la risoluzione produttiva. **Collaudo umano non eseguito.**
+
+`raster-filters.TEST.json/svg` e `raster-gradient.TEST.png` si generano con `node --import tsx scripts/capture-editor-raster.ts --filters`: gradiente con soglia 160, diffusione, luminosità +8/contrasto +20 e bianco trasparente. Verificare dettaglio dei punti alla misura fisica 24×12 mm e la resa reale della lavorazione; non è vettorializzazione. **Collaudo Illustrator e lavorazione non eseguiti.**
+
+`clipboard.TEST.json/svg` si genera con `node --import tsx scripts/capture-editor-clipboard.ts`: gruppo rettangolo/cerchio copiato e incollato con ID nuovi, poi spostato di 6 mm. Verificare in Illustrator che i due gruppi siano separabili senza modificare contorni o ordine e che il testo resti editabile. **Collaudo Illustrator non eseguito.**
+
+`raster-crop.TEST.json/svg` si genera con `node --import tsx scripts/capture-editor-raster.ts --crop`: finestra 120×80 px della sorgente 160×80, risultato 18×12 mm riflesso orizzontalmente. Verificare in Illustrator che il PNG incorporato contenga solo il ritaglio e che misure/riflessione corrispondano alla preview; l’originale si recupera dal JSON. **Collaudo Illustrator non eseguito.**
+
+`raster-source.TEST.png` (calibrazione 160×80 px) e `raster.TEST.json/svg` si generano con `node --import tsx scripts/capture-editor-raster.ts`: immagine 24×12 mm, soglia 160 e bianco trasparente. JSON conserva i byte originali; SVG incorpora un PNG derivato binario, non un vettore. Controllare misure, DPI, alpha, pixel e resa in Illustrator. **Collaudo Illustrator non eseguito.**
+
+`pen.TEST.json/svg` si genera con `node --import tsx scripts/capture-editor-pen.ts`: polilinea a quattro vertici e triangolo costruiti con la penna. Controllare spessori, coordinate dei vertici e assenza dei marcatori di costruzione in Illustrator. **Collaudo Illustrator non eseguito.**
+
+`path-nodes.TEST.json/svg` si genera con `node --import tsx scripts/capture-editor-nodes.ts`: campione tracciati con primo nodo della polilinea spostato a X 36 mm tramite ispettore. Verificare nodi e segmenti in Illustrator, nessuna guida verde nel file. **Collaudo Illustrator non eseguito.**
+
+`fonts.TEST.json/svg` si genera con `npm run capture:inspector -- --fonts`: box largo 30 mm con altezza automatica, Georgia base 9 pt, «Città» Times New Roman 12 pt grassetto e «Testo» Courier New corsivo/sottolineato. Controllare presenza delle famiglie, metriche, a capo e testi editabili in Illustrator; font non incorporati. **Collaudo Illustrator non eseguito.**
+
+`polygons.TEST.json/svg` si genera con `npm run capture:selection -- --polygons`: triangolo, pentagono e stella a cinque punte/tratto 0,25 mm. Verificare nodi, misure e giunzioni in Illustrator. **Collaudo Illustrator non eseguito.**
+
+`paths.TEST.json/svg`, formato fixture 4913 da 58×22 mm, si genera con `npm run capture:selection -- --paths`: polilinea 12×5 mm/tratto 0,3 mm e triangolo chiuso 5×2 mm. Verificare nodi modificabili, giunzioni/cap arrotondati, regola pari/dispari e misure in Illustrator. **Collaudo Illustrator non eseguito.**
+
+`ellipses.TEST.json/svg`, formato fixture 4913 da 58×22 mm, si genera con `npm run capture:selection -- --ellipses`: ellisse 12×4 mm a 15°, tratto 0,3 mm. Verificare in Illustrator raggi/rotazione, spessore, resa dei gruppi e testo editabile. **Collaudo Illustrator non eseguito.**
+
+`lines.TEST.json/svg`, formato fixture 4913 da 58×22 mm, generati con `npm run capture:selection -- --lines`: linea orizzontale 38 mm/tratto 0,3 mm e verticale 6 mm/tratto 0,2 mm tratteggiato. Misurare in Illustrator distanza tra estremità geometriche e ingombro comprensivo dei cap arrotondati, rotazione a 90°, stile dei tratti e testi. **Collaudo Illustrator non eseguito.**
+
+## Scala e rotazione dell’insieme — 8 novembre 2026
+
+`group-transforms.TEST.json/svg`: generati con `npm run capture:selection -- --transforms`, variante fixture 4913 da 58×22 mm. Testo con stili locali, rettangoli e cerchio; un gruppo persistente e una trasformazione uniforme dell’intera selezione (fattore 1,05, 8°). Tratti e raggi scalati insieme alla geometria. Verificare in Illustrator misure, cerchio non deformato, tratti, testi modificabili e stili misti. **Collaudo Illustrator non eseguito.**
+
+## Gruppi e selezione — 8 novembre 2026
+
+`selection.TEST.json/svg`, generati con `npm run capture:selection`, contengono testo a stili misti, due forme raggruppate e una separata, area 58×22 mm del formato fixture 4913. Gli oggetti restano piatti nel JSON e i gruppi sono riferimenti a ID; nello SVG il gruppo è vettoriale. Verificare in Illustrator posizioni, ordine, separazione dei membri e testo editabile. **Collaudo Illustrator non eseguito.** Anteprime rigenerate dopo l’attesa del ridisegno; stato aggiornato in [trasformazioni dell’insieme](iteration-editor-group-transforms.md). [Prove e limite temporaneo della verifica browser](iteration-editor-selection.md).
+
+## Box e stili dei caratteri — 8 novembre 2026
+
+`text-box.TEST.json/svg` è generato con `npm run capture:inspector`: area 58×22 mm, box largo 30 mm con altezza automatica misurata dal testo, corpo base 9 pt, «Città» 12 pt/grassetto e una parte corsiva/sottolineata. Riaprire sul formato fixture 4913. Controllare in Illustrator dimensioni del box, impaginazione e ritaglio, stili misti, accenti e modificabilità dei singoli intervalli. **Collaudo Illustrator non eseguito.** La preview browser è distinta dalla certificazione produttiva.
+
+## Trasformazioni — 8 novembre 2026
+
+Il documento canonico passa a **v2**, con import validato dei v1 a rotazione zero. I vecchi JSON restano apribili; i nuovi non vanno aperti con il vecchio editor. SVG rimane un artefatto distinto, a dimensioni fisiche.
+
+`transforms.TEST.json/svg` aggiungono un rettangolo 10×5 mm a 30°, «COPIA» a 10 pt/−15°, allineamento e ordine livelli. Generazione: `npm run capture:editor -- --transforms`. Riapertura su `http://127.0.0.1:5173/editor`, formato 4913 del catalogo fixture. Verificare in Illustrator angoli, tratto 0,25 mm, misure e modificabilità dei testi; **non collaudati in Illustrator**. Le anteprime sono in `.local/previews/editor-transforms-{desktop,mobile}.png`.
+
+## Campione gestione oggetti — 8 novembre 2026
+
+`objects.TEST.json` e `objects.TEST.svg` in `fixtures/illustrator/` aggiungono al campione 58×22 mm una copia del testo, un rettangolo 10×5 mm e un cerchio raggio 2 mm (tratto 0,25 mm, da considerare separatamente nelle misure esterne). Generati da Fabric con `npm run capture:editor`; il JSON è associato alla variante 4913 del catalogo fixture, non alla versione del catalogo live. Riaprirlo in demo o tramite il trasporto fixture dello script. [Prova e risultati](iteration-editor-objects.md).
+
+Checklist umana aggiuntiva: aprire l’SVG in Illustrator, misurare tavola/forme/tratto, modificare separatamente «TEST · Città» e «COPIA», salvare e confrontare con la preview browser. **Tutte queste prove Illustrator restano da eseguire.** Gli screenshot desktop/mobile sono stati ispezionati; il controllo visivo browser non certifica l’output produttivo.
+
+## Campioni precedenti e formati
+
 Il JSON è il progetto sorgente riapribile nel laboratorio, con UUID, versione schema, revisione e ID oggetti. L'SVG è un output distinto, generato da Fabric e non reimportato come progetto. Entrambi sono TEST e non certificati per produzione.
 
 Fixture: `fixtures/illustrator/stamp.TEST.json` e `stamp.TEST.svg`. Profilo isolato, non collegato a un ID Shopify: area 58×22 mm, Arial 9 pt nel campione, minimo TEST 7 pt, nero/bianco, margine TEST 1 mm. Il canvas visualizza 8 px/mm, mentre l'export imposta misure fisiche e viewBox 464×176. Lo zoom non cambia le dimensioni fisiche del file.
@@ -25,7 +95,19 @@ Stato attuale di ogni voce: **NON ESEGUITO in questa iterazione**. L'esito visiv
 | Salvare e riaprire | Nessuna variazione inattesa o rasterizzazione | Da eseguire |
 | Legno Ø35 e a secco Ø41 | Tavola fisica corretta, cerchio/ritaglio e testo modificabili, nessuna variazione al salvataggio | Da eseguire |
 | Tascabile 12×12 | Misura fisica e testo piccolo leggibile; regole produttive specifiche confermate dal laboratorio | Da eseguire |
-| Testo a 7 pt / 3–8 righe / altri font | Fixture aggiuntive e verifica produttiva per profilo | Non implementato |
-| Logo vettoriale/raster, gruppi e rotazioni | Tracciati preservati, raster identificato come raster | Non implementato |
+| Testo a 7 pt / 3–8 righe / altri font | Fixture aggiuntive e verifica produttiva per profilo | Da eseguire sui campioni e sui font locali |
+| Logo vettoriale/raster, gruppi e rotazioni | Tracciati preservati, raster identificato come raster | Da eseguire sui campioni locali; import SVG/PDF locale con limiti documentati |
 
-Registrare versione Illustrator/OS, font installati, dimensioni rilevate, screenshot e difformità. Non dichiarare file produttivo finché non è stato verificato dal laboratorio. Import loghi, conversione binaria e vettorializzazione sono attività separate e non presenti.
+Registrare versione Illustrator/OS, font installati, dimensioni rilevate, screenshot e difformità. Non dichiarare file produttivo finché non è stato verificato dal laboratorio. Import PNG/JPEG e conversione binaria sono implementati localmente; import SVG/PDF disponibile con limiti; vettorializzazione dei raster ancora distinta e da sviluppare.
+
+## Verifica tecnica degli ultimi campioni
+
+`node --import tsx scripts/verify-editor-artifacts.ts` ha riaperto i dieci campioni `raster`, `raster-crop`, `clipboard`, `raster-filters`, `path-operations`, `selection-style`, `text-decoration`, `selection-area`, `bezier` e `jpeg`: oggetti/gruppi identici ai JSON, nuova esportazione SVG senza valori non finiti, 0 errori browser e 0 richieste esterne. Risultati locali in `.local/editor-artifact-smoke.json`. Non sostituisce il collaudo Illustrator.
+
+## Testo su tracciato
+
+`text-path.TEST.json/svg`, generati da `node --import tsx scripts/capture-editor-text-path.ts`, mostrano «TEST · Città» su ellisse con scostamento verticale +0,8 mm. Il JSON mantiene testo e guida come un unico oggetto editabile; lo SVG conserva i glifi come testi trasformati individualmente, senza convertire in contorni. Confronto Canvas/SVG locale passato per font misti, dilatazione, rotazione, baseline/ascendente/discendente e verso invertito. Verificare in Illustrator misure, posizione e modificabilità: non è certificata la modifica come unico testo collegato al percorso. **Collaudo Illustrator non eseguito.**
+
+## Import SVG/PDF e testi editabili
+
+`svg-import.TEST` e `pdf-import.TEST` mostrano vettori con fori e contorni importati; i file sorgente TEST sono separati. `text-import.TEST` contiene due righe importate da SVG come box editabili (Arial e Times New Roman) e una cornice. Generazione: `node --import tsx scripts/capture-editor-text-import.ts`. Verificare in Illustrator testi, font, posizioni e misure; nessuna certificazione produttiva. La modalità PDF editabile ricostruisce righe e non garantisce identità dell’impaginazione. I file reali del titolare restano privati in `.local` e non fanno parte delle fixture. [Limiti e libreria font](iteration-editor-import-font-library.md).

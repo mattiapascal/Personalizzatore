@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "documentId": "d8df738f-57b5-4be6-a4c8-e85203d2bf32",
+  "revision": 9,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "title",
+      "type": "text",
+      "xMm": 10,
+      "yMm": 3,
+      "text": "PNG · TEST",
+      "fontSizePt": 9,
+      "fontFamily": "Arial",
+      "fill": "#000000",
+      "textAlign": "center",
+      "textBox": {
+        "widthMm": 38,
+        "heightMm": 4,
+        "autoWidth": false,
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "object-82e8d5fa-a0cf-4230-ac40-cc9588d1b423",
+      "type": "image",
+      "xMm": 17,
+      "yMm": 8,
+      "rotationDeg": 0,
+      "widthMm": 24,
+      "heightMm": 12,
+      "source": {
+        "id": "asset-16f972cf-6611-4948-853f-bacf289a6fe3",
+        "mime": "image/png",
+        "pixelWidth": 160,
+        "pixelHeight": 80,
+        "dataUrl": "data:image/png;base64,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"
+      },
+      "raster": {
+        "threshold": 160,
+        "invert": false,
+        "whiteTransparent": true,
+        "method": "diffusion",
+        "brightness": 8,
+        "contrast": 20
+      }
+    }
+  ]
+}

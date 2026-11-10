@@ -25,6 +25,9 @@
     "schemas": "node --import tsx scripts/export-schemas.ts",
     "fixtures:editor": "node --import tsx scripts/export-editor-fixture.ts",
     "capture:lab": "node --import tsx scripts/capture-lab.ts",
+    "capture:selection": "node --import tsx scripts/capture-editor-selection.ts",
+    "capture:inspector": "node --import tsx scripts/capture-editor-inspector.ts",
+    "capture:editor": "node --import tsx scripts/capture-editor-objects.ts",
     "capture:mounts": "node --import tsx scripts/capture-mounts.ts",
     "capture:chat": "node --import tsx scripts/capture-chat-layout.ts",
     "capture:privacy": "node --import tsx scripts/capture-privacy.ts",
@@ -38,7 +41,9 @@
     "check:public-secrets": "node --import tsx scripts/check-client-secrets.ts .local/storefront-dist",
     "check:release": "npm run check && npm run worker:package && npm run test:worker && npm run test:storefront && npm run check:public-secrets",
     "check": "npm test && npm run build && npm run check:secrets && npm run test:e2e",
-    "eval:knowledge": "node --import tsx scripts/eval-store-knowledge.ts"
+    "eval:knowledge": "node --import tsx scripts/eval-store-knowledge.ts",
+    "editor:collaudo": "node --import tsx scripts/export-editor-acceptance.ts",
+    "pitchprint:fonts": "node --import tsx scripts/pitchprint-font-inventory.ts"
   },
   "dependencies": {
     "fabric": "7.4.0",

@@ -1,11 +1,88 @@
 import { describe, expect, it } from 'vitest';
-import { createDocument, DocumentSchema, DocumentStore, type Measure } from '../src/editor/model';
+import { createDocument, DocumentSchema, DocumentStore, type Measure, type SceneObject } from '../src/editor/model';
 import { fixtureCatalog } from '../src/catalog/adapter';
 
 // Geometria deterministica di test. Le metriche browser reali sono verificate negli e2e Fabric.
-const measure: Measure = o => o.type === 'circle' ? { widthMm: o.radiusMm * 2 + o.strokeMm, heightMm: o.radiusMm * 2 + o.strokeMm } : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : { widthMm: Math.max(...o.text.split('\n').map(line => line.length)) * o.fontSizePt * 25.4 / 72 * 0.6, heightMm: o.text.split('\n').length * o.fontSizePt * 25.4 / 72 * 1.2 };
+const measure: Measure = o => o.type === 'image' ? { widthMm: o.widthMm, heightMm: o.heightMm } : o.type === 'path' || o.type === 'bezier' || o.type === 'vector' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : o.type === 'ellipse' ? { widthMm: o.rxMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm), heightMm: o.ryMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm) } : o.type === 'line' ? { widthMm: o.lengthMm + o.strokeMm, heightMm: o.strokeMm } : o.type === 'circle' ? { widthMm: o.radiusMm * 2 + o.strokeMm, heightMm: o.radiusMm * 2 + o.strokeMm } : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : { widthMm: Math.max(...o.text.split('\n').map(line => line.length)) * o.fontSizePt * 25.4 / 72 * 0.6, heightMm: o.text.split('\n').length * o.fontSizePt * 25.4 / 72 * 1.2 };
 const move = (revision: number, xMm = 10) => ({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId: 'text-1', arguments: { xMm, yMm: 8 } });
 describe('documento unico e comandi revisionati', () => {
+  const newText: SceneObject = { id: 'new-text', type: 'text', xMm: 3, yMm: 3, text: 'TEST', fontFamily: 'Arial', fontSizePt: 7, fill: '#000000' };
+  const add = (revision: number, object: SceneObject = newText) => ({ schemaVersion: 1, tool: 'addObject', expectedRevision: revision, objectId: object.id, arguments: { object } });
+  const duplicate = (revision: number, objectId = 'new-text', newObjectId = 'copy-text', xMm = 4) => ({ schemaVersion: 1, tool: 'duplicateObject', expectedRevision: revision, objectId, arguments: { newObjectId, xMm, yMm: 4 } });
+  const remove = (revision: number, objectId: string) => ({ schemaVersion: 1, tool: 'deleteObject', expectedRevision: revision, objectId, arguments: {} });
+  it('aggiunta manuale, modifica AI, copia e cancellazione condividono documento e storico', () => {
+    const s = new DocumentStore(createDocument(), measure), original = structuredClone(s.document);
+    s.dispatch(add(0), 'manual');
+    s.dispatch({ schemaVersion: 1, tool: 'setText', expectedRevision: 1, objectId: 'new-text', arguments: { text: 'Città' } }, 'ai-simulation');
+    s.dispatch(duplicate(2), 'manual');
+    expect(s.document.objects.at(-1)).toEqual({ ...newText, id: 'copy-text', text: 'Città', xMm: 4, yMm: 4 });
+    s.dispatch(remove(3, 'new-text'), 'ai-simulation');
+    expect(s.document.objects.map(o => o.id)).toEqual(['frame-1', 'text-1', 'copy-text']);
+    expect(s.events.map(e => e.source)).toEqual(['manual', 'ai-simulation', 'manual', 'ai-simulation']);
+    for (let i = 0; i < 4; i++) s.undo();
+    expect(s.document).toEqual({ ...original, revision: 8 });
+    for (let i = 0; i < 4; i++) s.redo();
+    expect(s.document.objects.at(-1)).toMatchObject({ id: 'copy-text', text: 'Città' });
+    expect(s.document.revision).toBe(12);
+    expect(() => s.dispatch(remove(3, 'copy-text'), 'ai-simulation')).toThrow('obsoleta');
+  });
+  it('aggiunge e duplica ogni tipo senza alterare sorgente, stile o binding commerciale', () => {
+    const product = fixtureCatalog.list()[0]!;
+    const s = new DocumentStore(createDocument(product, fixtureCatalog.version), measure);
+    const objects: SceneObject[] = [newText, { id: 'new-rect', type: 'rect', xMm: 3, yMm: 3, widthMm: 6, heightMm: 4, strokeMm: 0.25, stroke: '#000000' }, { id: 'new-circle', type: 'circle', xMm: 3, yMm: 3, radiusMm: 2, strokeMm: 0.25, stroke: '#ffffff' }];
+    const binding = { productId: s.document.productId, variantId: s.document.variantId, catalogVersion: s.document.catalogVersion, productProfileVersion: s.document.productProfileVersion };
+    for (const object of objects) {
+      s.dispatch(add(s.document.revision, object), 'ai-simulation');
+      s.dispatch(duplicate(s.document.revision, object.id, `copy-${object.id}`), 'manual');
+      expect(s.document.objects.find(o => o.id === object.id)).toEqual(object);
+      expect(s.document.objects.at(-1)).toEqual({ ...object, id: `copy-${object.id}`, xMm: 4, yMm: 4 });
+    }
+    expect(s.document).toMatchObject({ ...binding, fixture: true, validatedForProduction: false });
+  });
+  it('rifiuta nuovi comandi invalidi atomicamente conservando anche il redo', () => {
+    const s = new DocumentStore(createDocument(), measure);
+    s.dispatch(add(0), 'manual'); s.undo();
+    const before = structuredClone(s.document), events = structuredClone(s.events);
+    const invalid = [add(1), add(2, { ...newText, id: 'text-1' }), { ...add(2), objectId: 'different-id' }, add(2, { ...newText, xMm: 100 }), { ...add(2), arguments: { object: { ...newText, fill: '#888888' } } }, { ...add(2), arguments: { object: { ...newText, type: 'image', src: 'https://example.test/private' } } }, duplicate(2, 'missing'), duplicate(2, 'text-1', 'frame-1'), duplicate(2, 'text-1', 'copy-text', 100), remove(2, 'missing'), { ...remove(2, 'text-1'), arguments: { force: true } }];
+    for (const command of invalid) {
+      expect(() => s.dispatch(command, 'ai-simulation')).toThrow();
+      expect(s.document).toEqual(before); expect(s.events).toEqual(events);
+    }
+    s.redo(); expect(s.document.objects.at(-1)!.id).toBe('new-text');
+  });
+  it('il limite di 200 oggetti vale per aggiunta e copia', () => {
+    const s = new DocumentStore(createDocument(), measure);
+    for (let i = 0; i < 198; i++) s.dispatch(add(s.document.revision, { ...newText, id: `object-${i}` }), 'manual');
+    const before = structuredClone(s.document);
+    expect(() => s.dispatch(add(198), 'manual')).toThrow();
+    expect(() => s.dispatch(duplicate(198, 'text-1'), 'ai-simulation')).toThrow();
+    expect(s.document).toEqual(before); expect(s.events).toHaveLength(198);
+  });
+  it('può svuotare, salvare, riaprire e ricominciare; undo ripristina gli ID', () => {
+    const s = new DocumentStore(createDocument(), measure);
+    s.dispatch(remove(0, 'text-1'), 'manual'); s.dispatch(remove(1, 'frame-1'), 'manual');
+    expect(s.document.objects).toEqual([]);
+    s.import(JSON.parse(JSON.stringify(s.document))); expect(s.document.objects).toEqual([]);
+    s.dispatch(add(3), 'ai-simulation');
+    s.undo(); expect(s.document.objects).toEqual([]);
+    s.undo(); s.undo(); expect(s.document.objects.map(o => o.id)).toEqual(['frame-1']);
+    s.undo(); expect(s.document.objects.map(o => o.id)).toEqual(['frame-1', 'text-1']);
+  });
+  it('una modifica valida dopo undo apre un nuovo ramo e conserva la proprietà degli oggetti', () => {
+    const s = new DocumentStore(createDocument(), measure), payload = structuredClone(newText);
+    s.dispatch(add(0, payload), 'manual'); payload.text = 'MUTATO';
+    expect(s.document.objects.at(-1)).toEqual(newText);
+    s.undo(); s.dispatch(add(2, { ...newText, id: 'new-branch' }), 'manual');
+    s.redo(); expect(s.document.revision).toBe(3); expect(s.document.objects.at(-1)!.id).toBe('new-branch');
+  });
+  it('verifica l’area circolare per nuovi oggetti e copie', () => {
+    const doc = createDocument(); doc.areaMm = { width: 30, height: 30 }; doc.shape = 'round'; doc.objects = [];
+    const s = new DocumentStore(doc, measure);
+    expect(() => s.dispatch(add(0, { ...newText, xMm: -8, yMm: 1 }), 'manual')).toThrow('completamente fuori');
+    s.dispatch(add(0, { ...newText, xMm: 12, yMm: 12 }), 'manual');
+    expect(() => s.dispatch({ ...duplicate(1), arguments: { newObjectId: 'copy-text', xMm: -8, yMm: 1 } }, 'ai-simulation')).toThrow('completamente fuori');
+    expect(s.document.revision).toBe(1); expect(s.document.objects).toHaveLength(1);
+  });
   it('UI e AI modificano lo stesso oggetto senza cambiare ID', () => {
     const s = new DocumentStore(createDocument(), measure);
     s.dispatch({ schemaVersion: 1, expectedRevision: 0, objectId: 'text-1', tool: 'setText', arguments: { text: 'Città' } }, 'manual');
@@ -63,6 +140,6 @@ describe('documento unico e comandi revisionati', () => {
     const s = new DocumentStore(createDocument(product, fixtureCatalog.version), measure);
     for (const patch of [{ productId: 'gid://shopify/Product/123' }, { variantId: 'gid://shopify/ProductVariant/123' }, { catalogVersion: 'future' }, { areaMm: { width: 70, height: 25 } }]) expect(() => s.import({ ...s.document, ...patch })).toThrow();
     s.import(createDocument()); expect(s.document.productId).toBe(product.productId); expect(s.document.revision).toBe(1);
-    expect(() => s.dispatch({ schemaVersion: 1, expectedRevision: 1, objectId: 'text-1', tool: 'setText', arguments: { text: 'A\n'.repeat(9) } }, 'manual')).toThrow();
+    expect(() => s.dispatch({ schemaVersion: 1, expectedRevision: 1, objectId: 'text-1', tool: 'setText', arguments: { text: 'A\n'.repeat(100) } }, 'manual')).toThrow();
   });
 });

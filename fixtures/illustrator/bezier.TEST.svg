@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="58mm" height="22mm" viewBox="0 0 464 176" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
+<g transform="matrix(1 0 0 1 232 30.351)" style="" clip-path="url(#CLIPPATH_0)"  >
+<clipPath id="CLIPPATH_0" >
+	<rect transform="matrix(1 0 0 1 0 0)" x="-168" y="-14.350999999999997" rx="0" ry="0" width="336" height="28.701999999999995" />
+</clipPath>
+		<text xml:space="preserve" font-family="Arial" font-size="25.4" font-style="normal" font-weight="normal" style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1; text-decoration-thickness: 6.6667%; white-space: pre;" ><tspan x="-89.6131" y="7.9792" >BÉZIER · TEST</tspan></text>
+</g>
+<g transform="matrix(1 0 0 1 120 111.2187)"  >
+<path style="stroke: rgb(0,0,0); stroke-width: 2; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: round; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-opacity: 0; fill-rule: evenodd; opacity: 1;"  transform=" translate(-56, -13.8564)" d="M 0 13.8564 C 24 -34.1436 88 61.8564 112 13.8564" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 320 107.2188)"  >
+<path style="stroke: rgb(0,0,0); stroke-width: 2; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: round; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-opacity: 0; fill-rule: evenodd; opacity: 1;"  transform=" translate(-64, -36)" d="M 0 48 C 0 16 32 0 64 0 C 96 0 128 16 128 48 C 128 80 0 80 0 48 Z" stroke-linecap="round" />
+</g>
+</svg>

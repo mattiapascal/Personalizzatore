@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 2,
+  "documentId": "ad1167d2-137a-4e74-b481-60254782c02f",
+  "revision": 2,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "svg-3aa80a79-b135-4978-ba11-5e35e6577b58",
+      "type": "vector",
+      "xMm": 11.36111111111111,
+      "yMm": 2.1805555555555554,
+      "widthMm": 35.27777777777778,
+      "heightMm": 17.63888888888889,
+      "commands": [
+        [
+          "M",
+          0,
+          1
+        ],
+        [
+          "L",
+          1,
+          1
+        ],
+        [
+          "L",
+          1,
+          0
+        ],
+        [
+          "L",
+          0,
+          0
+        ],
+        [
+          "Z"
+        ],
+        [
+          "M",
+          0.25,
+          0.8000000000000002
+        ],
+        [
+          "L",
+          0.75,
+          0.8000000000000002
+        ],
+        [
+          "L",
+          0.75,
+          0.19999999999999998
+        ],
+        [
+          "L",
+          0.25,
+          0.19999999999999998
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "evenodd",
+      "fill": "#000000",
+      "stroke": "none",
+      "strokeMm": 0.25,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    }
+  ]
+}

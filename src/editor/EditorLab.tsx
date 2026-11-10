@@ -1,38 +1,262 @@
-import { useEffect, useRef, useState } from 'react';
-import { FabricAdapter, measureFabric } from './fabric-adapter';
-import { createDocument, DocumentStore, type GraphicDocument } from './model';
+import {CustomerFieldsPanel} from './CustomerFieldsPanel';
+import {formObjects,selectableObjectIds,validateObjectInputs} from './object-properties';
+import {PlaqueConfigurationPanel} from './PlaqueConfigurationPanel';
+import { copyArchiveTitle,editorMode,editorReturnUrl,metadataKey,sessionDocumentKey } from './design-session';
+import type { ArchiveRecord } from '../editor-admin/schema';
+import { ArchiveTagInput } from '../editor-admin/ArchiveTagInput';
+import { archiveTagVocabulary,parseTags } from '../editor-admin/archive-tags';
+import { ConfigurationPanel, type WorkflowEditorApi } from '../editor-workflow/ConfigurationPanel';
+import { ProductPanel } from '../editor-workflow/ProductPanel';
+import { DraftPanel,type DraftControl } from '../editor-workflow/DraftPanel';
+import { preserveDraftSnapshot } from '../editor-workflow/drafts';
+import { fitTemplate, templateCommand } from '../editor-workflow/template-fit';
+import { profileKey } from '../catalog/schema';
+import { FontCheckPanel } from './FontCheckPanel';
+import { InkPreviewFilter } from './InkPreviewFilter';
+import { refreshLibraryFonts } from '../editor-admin/library-fonts';
+import { loadFontAssets, fontAssetArguments } from './fonts';
+import { readAdminSnapshot, readArchiveRecord, localAdminRequest } from '../editor-admin/api';
+import { prepareSvg, svgInsertion } from './svg-import';
+import { MAX_SVG_BYTES } from './svg-sanitize';
+import { EditorButton, EditorIcon } from './EditorButton';
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import { FabricAdapter, measureFabric, measureTextFrame } from './fabric-adapter';
+import { createDocument, DocumentStore, GraphicCommandSchema, parseGraphicDocument, cloneGraphicDocument, type GraphicDocument, type SceneObject } from './model';
 import type { ProductProfile } from '../catalog/schema';
+import './editor.css';
+import { ObjectInspector } from './ObjectInspector';
+import { WorkspaceFrame } from './WorkspaceFrame';
+import { LayersPanel } from './LayersPanel';
+import type { CharacterSelection } from './text-style';
+import { expandSelection } from './selection';
+import { SelectionInspector } from './SelectionInspector';
+import { DEFAULT_GUIDES } from './guides';
+import { primitiveFromEndpoints, type DrawingPrimitive } from './primitive-geometry';
+import { strokeGeometry } from './path-geometry';
+import { regularPolygonPoints, starPoints } from './polygon-geometry';
+import { movePathNode } from './path-nodes';
+import { rasterSourceFromBytes, MAX_RASTER_BYTES } from './raster-source';
+import { prepareRasterSource } from './raster-cache';
+import { DEFAULT_RASTER } from './raster-processing';
+import { captureSelection, clipboardInsertion, type GraphicClipboard } from './clipboard';
+import { PngExportPanel } from './PngExportPanel';
+import { normalizedBezier } from './bezier-geometry';
+import { placeObjectAtCenter } from './model';
 
+function createEditorDocument(product: ProductProfile|undefined, catalogVersion: string): GraphicDocument {
+  const doc = createDocument(product, catalogVersion);
+  doc.objects = doc.objects.map(object => {
+    if (object.type !== 'text' || object.textBox) return object;
+    const { widthMm, heightMm } = measureTextFrame(object);
+    return { ...object, textBox: { widthMm, heightMm, autoWidth: true, autoHeight: true } };
+  });
+  return doc;
+}
 export function download(name: string, content: string, type: string): void {
   const url = URL.createObjectURL(new Blob([content], { type }));
   const anchor = document.createElement('a'); anchor.href = url; anchor.download = name; anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-function example(revision: number): string {
-  return JSON.stringify({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId: 'text-1', arguments: { xMm: 10, yMm: 8 } }, null, 2);
+function example(revision: number, objectId = 'text-1'): string {
+  return JSON.stringify({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId, arguments: { xMm: 10, yMm: 8 } }, null, 2);
 }
-export function EditorLab({ product, draftText, catalogVersion, catalogOutdated = false, onEditingChange, onKeepProduct }: { product: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
+export function EditorLab({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition' }: { initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[]; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
+  const mode=editorMode(),policyRole=mode==='customer'?'customer':'admin';const archiveBusyRef=useRef(false);
+  const graphicCatalog=availableProducts?{version:catalogVersion,products:availableProducts}:undefined;
+  const inkFilterId=`editor-ink-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const importRef = useRef<HTMLInputElement>(null);
+  const pdfImportRef = useRef<HTMLInputElement>(null);
+  const svgImportRef = useRef<HTMLInputElement>(null);
+  const [importNotice, setImportNotice] = useState('');
+  const [vectorMonochrome, setVectorMonochrome] = useState(true);
+  const [importTextMode,setImportTextMode]=useState<'outlines'|'editable'>('outlines');
+  const [fontNotice, setFontNotice] = useState('');
+  const [archiveTitle, setArchiveTitle] = useState(initialTitle??''), [archiveKind, setArchiveKind] = useState<'composition' | 'template'>(initialKind), [archiveBusy, setArchiveBusy] = useState(false);
+  const [fieldsValid,setFieldsValid]=useState(true);
+  const [pdfBusy,setPdfBusy]=useState(false),[customerPdfEnabled,setCustomerPdfEnabled]=useState(false);
+  const [archiveTags,setArchiveTags]=useState(initialTags?.join(', ')??''),[archiveVocabulary,setArchiveVocabulary]=useState<string[]>([]);
+  const imageImportRef = useRef<HTMLInputElement>(null), assetBusyRef = useRef(false);
   const adapter = useRef<FabricAdapter | null>(null);
   const storeRef = useRef<DocumentStore | null>(null);
-  const [doc, setDoc] = useState<GraphicDocument>(() => createDocument(product, catalogVersion));
+  const [doc, setDoc] = useState<GraphicDocument>(() => initialDocument?parseGraphicDocument(initialDocument):createEditorDocument(product, catalogVersion));
+  const [sourceRecord,setSourceRecord]=useState<ArchiveRecord|null>(null),[sessionNotice,setSessionNotice]=useState(''),[sessionDialog,setSessionDialog]=useState<'reload'|'close'|null>(null),[savedStamp,setSavedStamp]=useState(()=>sessionDocumentKey(doc)),[savedMetadata,setSavedMetadata]=useState(()=>metadataKey(initialTitle??'',initialKind,initialTags?.join(', ')??''));
+  const draftControl=useRef<DraftControl|null>(null),originalDocument=useRef<GraphicDocument>(structuredClone(doc)),leaving=useRef(false),sessionModal=useRef<HTMLDialogElement>(null);
+  const dirty=sessionDocumentKey(doc)!==savedStamp||metadataKey(archiveTitle,archiveKind,archiveTags)!==savedMetadata;
   const [command, setCommand] = useState(example(0));
   const [editing, setEditing] = useState(false);
+  const [assetBusy, setAssetBusy] = useState(false);
+  const [drawingTool, setDrawingTool] = useState<DrawingPrimitive | 'freehand' | 'polyline' | 'bezier' | null>(null), [drawing, setDrawing] = useState(false);
+  const [selectionEpoch, setSelectionEpoch] = useState(0), [nodeMode, setNodeMode] = useState(false), [cropMode, setCropMode] = useState(false);
+  const [polylineCount, setPolylineCount] = useState(0);
   const [error, setError] = useState('');
   const [eventLog, setEventLog] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const selectedId = selectedIds.length === 1 ? selectedIds[0]! : null;
+  const [multiple, setMultiple] = useState(false);
+  const guidesTouched = useRef(false);
+  const [guides, setGuides] = useState({ ...DEFAULT_GUIDES }), [gridRaw, setGridRaw] = useState('1');
+  const [panTool, setPanTool] = useState(false), [temporaryPan, setTemporaryPan] = useState(false);
+  useEffect(() => { if (drawingTool || nodeMode || cropMode) setPanTool(false); }, [drawingTool, nodeMode, cropMode]);
+  const [trashVisible, setTrashVisible] = useState(false);
+  const [characterSelection, setCharacterSelection] = useState<CharacterSelection | null>(null);
+  const selectedRef = useRef<string[]>([]);
+  const clipboardRef = useRef<GraphicClipboard | null>(null), [clipboardCount, setClipboardCount] = useState(0);
+  const select = (selection: string | readonly string[] | null) => {
+    const ids = typeof selection === 'string' ? [selection] : selection ?? [];
+    const next = storeRef.current ? selectableObjectIds(storeRef.current.document,expandSelection(storeRef.current.document,ids),policyRole) : [...ids];
+    selectedRef.current = next; setSelectedIds(next);
+  };
   const refresh = () => {
     const store = storeRef.current; if (!store) return;
-    setDoc(structuredClone(store.document)); adapter.current?.render(store.document);
+    select(selectedRef.current);
+    setDoc(cloneGraphicDocument(store.document)); adapter.current?.render(store.document, selectedRef.current);
     setEventLog(store.events.map(e => `r${e.revision}: ${e.source} ${e.objectId ?? ''}`).join('\n'));
   };
-  const act = (action: () => void) => {
-    try { action(); setError(''); refresh(); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Operazione rifiutata'); const store = storeRef.current; if (store) adapter.current?.render(store.document); }
+  const act = (action: () => void, selectAfter?: string | string[]) => {
+    setDrawingTool(null);
+    if(archiveBusyRef.current){setError('Attendi il salvataggio del design.');return false;}
+    try { action(); if (selectAfter) select(selectAfter); setError(''); refresh(); return true; }
+    catch (e) { setError(e instanceof Error ? e.message : 'Operazione rifiutata'); const store = storeRef.current; if (store) adapter.current?.render(store.document, selectedRef.current); return false; }
   };
+  const objectArguments = (object: SceneObject) => fontAssetArguments(object, storeRef.current?.document.fontAssets);
+  const prepareAndAct = async (prepare: (store: DocumentStore) => Promise<() => void>, selectAfter?: string | string[]) => {
+    const store = storeRef.current; if (!store || assetBusyRef.current) return false;
+    const revision = store.document.revision, documentId = store.document.documentId;
+    assetBusyRef.current = true; setAssetBusy(true); setDrawingTool(null); onEditingChange(true);
+    try {
+      const commit = await prepare(store);
+      if (storeRef.current !== store || store.document.revision !== revision || store.document.documentId !== documentId) throw new Error('Documento cambiato durante il caricamento: importazione annullata');
+      return act(commit, selectAfter);
+    } catch (e) { if (storeRef.current) setError(e instanceof Error ? e.message : 'Importazione non riuscita'); return false; }
+    finally { assetBusyRef.current = false; if (storeRef.current) { setAssetBusy(false); onEditingChange(false); } }
+  };
+  const saveArchive = async (close=false,copy=true) => {
+    const snapshot = structuredClone(storeRef.current!.document);archiveBusyRef.current=true;setArchiveBusy(true);setError('');setSessionNotice('');
+    try {
+      if(mode==='customer'){if(!fieldsValid)throw new Error('Correggi il campo del modulo non ancora applicato al design.');validateObjectInputs(snapshot);}
+      const state=await readAdminSnapshot(),title=archiveTitle.trim()||sourceRecord?.title||`Composizione ${new Date().toLocaleDateString('it-IT')}`;
+      const replace=!copy&&sourceRecord&&(mode==='admin'||sourceRecord.kind==='composition');
+      const saved=await localAdminRequest('',replace?{tool:'replaceRecord',expectedRevision:state.revision,arguments:{id:sourceRecord.id,recordVersion:sourceRecord.version,title,tags:parseTags(archiveTags),document:snapshot}}:{tool:'saveRecord',expectedRevision:state.revision,arguments:{kind:mode==='customer'?'composition':archiveKind,title,tags:parseTags(archiveTags),clientRef:'',document:snapshot}})as Awaited<ReturnType<typeof readAdminSnapshot>>;
+      const id=replace?sourceRecord.id:saved.records.at(-1)!.id,record={...saved.records.find(item=>item.id===id)!,document:snapshot};
+      setSourceRecord(record);setArchiveTitle(title);setArchiveKind(record.kind);setArchiveVocabulary(archiveTagVocabulary(saved));originalDocument.current=structuredClone(snapshot);setSavedStamp(sessionDocumentKey(snapshot));setSavedMetadata(metadataKey(title,record.kind,archiveTags));setSessionNotice(`Design salvato: ${title} · v${record.version}`);setImportNotice(`Design salvato: ${title} · v${record.version}`);
+      if(close&&sessionDocumentKey(storeRef.current!.document)!==sessionDocumentKey(snapshot)){setSessionNotice('Design salvato, ma ci sono modifiche successive: l’editor resta aperto per conservarle.');return true;}if(close){await draftControl.current?.discard();leaving.current=true;window.location.assign(mode==='admin'?editorReturnUrl(mode,record.kind):`/editor/confirmed?project=${id}&mode=${mode}`);}
+      return true;
+    }catch(e){setError(e instanceof Error?e.message:'Salvataggio non riuscito. Il design rimane aperto.');return false;}finally{archiveBusyRef.current=false;setArchiveBusy(false);}
+  };
+  useEffect(()=>{const dialog=sessionModal.current;if(sessionDialog&&!dialog?.open)dialog?.showModal();else if(!sessionDialog&&dialog?.open)dialog.close();},[sessionDialog]);
+  useEffect(()=>{const warn=(event:BeforeUnloadEvent)=>{if(!leaving.current&&dirty){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
+  const exportPdf=async()=>{const snapshot=structuredClone(storeRef.current!.document);setPdfBusy(true);setError('');try{const response=await fetch('/__editor-local/export-pdf',{method:'POST',headers:{'Content-Type':'application/json','X-Editor-Local':'1'},body:JSON.stringify(snapshot)});if(!response.ok){const data=await response.json();throw new Error(data.error??'PDF non esportato');}const blob=await response.blob();if(sessionDocumentKey(storeRef.current!.document)!==sessionDocumentKey(snapshot))throw new Error('Il design è cambiato durante l’esportazione: PDF non scaricato. Ripeti l’operazione.');const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='design.pdf';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(cause){setError(cause instanceof Error?cause.message:'PDF non esportato');}finally{setPdfBusy(false);}};
+  const importPdf = (file: File) => {
+    void prepareAndAct(async store => {
+      if (file.size > 2 * 1024 * 1024) throw new Error('PDF oltre 2 MB');
+      const response = await fetch('/__editor-local/pdf', { method: 'POST', headers: { 'Content-Type': 'application/pdf', 'X-Editor-Local': '1', 'X-Editor-Text-Mode': importTextMode }, body: file });
+      const converted = await response.json(); if (!response.ok) throw new Error(converted.error ?? 'Conversione PDF locale non disponibile');
+      const prepared = await prepareSvg(converted.svg, vectorMonochrome, 'editable'), insertion = svgInsertion(prepared, store.document, measureFabric);
+      return () => { store.dispatch(insertion.command, 'manual'); select(insertion.command.arguments.objects.map(object => object.id)); setImportNotice(insertion.report.replace('SVG importato:', 'PDF importato:') + (importTextMode==='editable' ? ` Ricostruite ${converted.textCount??0} righe editabili. Verifica font, spaziature e anteprima; le lettere già in contorni rimangono vettori.` : ' Conversione locale, testi trasformati in contorni.') + ' PDF originale eliminato dopo l’elaborazione.' + (converted.unembeddedFonts?.length ? ' Il PDF contiene font non incorporati: la resa dipende dai font disponibili localmente. Verifica l’anteprima.' : '')); };
+    });
+  };
+  const importSvg = (file: File) => {
+    let ids: string[] = [];
+    void prepareAndAct(async store => {
+      if (file.size > MAX_SVG_BYTES) throw new Error('SVG oltre 256 KB');
+      const prepared = await prepareSvg(new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()), vectorMonochrome, importTextMode), insertion = svgInsertion(prepared, store.document, measureFabric); ids = insertion.command.arguments.objects.map(object => object.id);
+      return () => { store.dispatch(insertion.command, 'manual'); select(ids); setImportNotice(insertion.report); };
+    });
+  };
+  const importImage = (file: File) => {
+    const objectId = `object-${crypto.randomUUID()}`;
+    void prepareAndAct(async store => {
+      if (file.size > MAX_RASTER_BYTES) throw new Error('Immagine oltre 256 KB');
+      const source = rasterSourceFromBytes(`asset-${crypto.randomUUID()}`, new Uint8Array(await file.arrayBuffer())); await prepareRasterSource(source);
+      const area = store.document.areaMm, scale = Math.min(Math.min(30, area.width - 4) / source.pixelWidth, Math.min(12, area.height - 4) / source.pixelHeight);
+      const widthMm = source.pixelWidth * scale, heightMm = source.pixelHeight * scale;
+      const object: SceneObject = { id: objectId, type: 'image', source, raster: { ...DEFAULT_RASTER }, widthMm, heightMm, xMm: (area.width - widthMm) / 2, yMm: (area.height - heightMm) / 2 };
+      const expectedRevision = store.document.revision;
+      return () => store.dispatch({ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision, arguments: objectArguments(object) }, 'manual');
+    }, objectId);
+  };
+  const executeCommand = () => {
+    try {
+      const parsed = GraphicCommandSchema.parse(JSON.parse(command));
+      const images = (parsed.tool === 'insertObjects' ? parsed.arguments.objects : parsed.tool === 'addObject' || parsed.tool === 'updateObject' ? [parsed.arguments.object] : []).filter(object => object.type === 'image');
+      const sources=[...images.map(image=>image.source),...(parsed.tool==='replaceImageSource'?[parsed.arguments.source]:[])];
+      const fontAssets = 'fontAssets' in parsed.arguments ? parsed.arguments.fontAssets ?? [] : [];
+      if (sources.length || fontAssets.length) {
+        void prepareAndAct(async store => { await Promise.all([loadFontAssets(fontAssets), ...sources.map(source => prepareRasterSource(source))]); return () => store.dispatch(parsed, 'ai-simulation'); });
+      } else act(() => storeRef.current!.dispatch(parsed, 'ai-simulation'));
+    } catch (e) { setError(e instanceof Error ? e.message : 'Comando non valido'); }
+  };
+  const addObject = (type: Exclude<SceneObject['type'], 'path' | 'image' | 'bezier' | 'vector'>) => {
+    const objectId = `object-${crypto.randomUUID()}`;
+    act(() => {
+      const store = storeRef.current!;
+      const object: SceneObject = type === 'text'
+        ? { id: objectId, type, xMm: 0, yMm: 0, text: 'TEST', fontSizePt: 7, fontFamily: 'Arial', fill: '#000000', textAlign: 'center', textBox: { widthMm: Math.min(30, store.document.areaMm.width - 4), heightMm: 6, autoWidth: true, autoHeight: true } }
+        : type === 'rect'
+          ? { id: objectId, type, xMm: 0, yMm: 0, widthMm: 6, heightMm: 4, strokeMm: 0.25, stroke: '#000000' }
+          : type === 'ellipse' ? { id: objectId, type, xMm: 0, yMm: 0, rxMm: 4, ryMm: 2, strokeMm: 0.25, stroke: '#000000' }
+          : type === 'line' ? { id: objectId, type, xMm: 0, yMm: 0, lengthMm: 12, strokeMm: 0.25, stroke: '#000000' }
+          : { id: objectId, type, xMm: 0, yMm: 0, radiusMm: 2, strokeMm: 0.25, stroke: '#000000' };
+      const box = measureFabric(object);
+      object.xMm = (store.document.areaMm.width - box.widthMm) / 2;
+      object.yMm = (store.document.areaMm.height - box.heightMm) / 2;
+      store.dispatch({ schemaVersion: 1, tool: 'addObject', expectedRevision: store.document.revision, objectId, arguments: objectArguments(object) }, 'manual');
+    }, objectId);
+  };
+  const addBezier = () => {
+    const objectId = `object-${crypto.randomUUID()}`;
+    act(() => {
+      const store = storeRef.current!, object = placeObjectAtCenter({ id: objectId, type: 'bezier', ...normalizedBezier([{ x: 0, y: 3, out: { x: 3, y: -3 } }, { x: 12, y: 3, in: { x: 9, y: 9 } }], false), closed: false, strokeMm: 0.25, stroke: '#000000' }, { xMm: store.document.areaMm.width / 2, yMm: store.document.areaMm.height / 2 }, measureFabric);
+      store.dispatch({ schemaVersion: 1, tool: 'addObject', expectedRevision: store.document.revision, objectId, arguments: objectArguments(object) }, 'manual');
+    }, objectId);
+  };
+  const addPolygon = (preset: 'triangle' | 'pentagon' | 'star') => {
+    const objectId = `object-${crypto.randomUUID()}`;
+    act(() => {
+      const store = storeRef.current!, points = preset === 'star' ? starPoints(5, 4, 0.45) : regularPolygonPoints(preset === 'triangle' ? 3 : 5, 4);
+      const object: SceneObject = { id: objectId, type: 'path', ...strokeGeometry(points), closed: true, strokeMm: 0.25, stroke: '#000000' };
+      const bounds = measureFabric(object); object.xMm = (store.document.areaMm.width - bounds.widthMm) / 2; object.yMm = (store.document.areaMm.height - bounds.heightMm) / 2;
+      store.dispatch({ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision: store.document.revision, arguments: objectArguments(object) }, 'manual');
+    }, objectId);
+  };
+  const duplicate = () => {
+    const selected = selectedRef.current, store = storeRef.current!;
+    if (selected.length === 1) {
+      const object = store.document.objects.find(object => object.id === selected[0])!, newObjectId = `object-${crypto.randomUUID()}`;
+      act(() => store.dispatch({ schemaVersion: 1, tool: 'duplicateObject', expectedRevision: store.document.revision, objectId: object.id, arguments: { newObjectId, xMm: object.xMm, yMm: object.yMm } }, 'manual'), newObjectId);
+    } else if (selected.length) {
+      const copies = selected.map(objectId => ({ objectId, newObjectId: `object-${crypto.randomUUID()}` }));
+      const groups = (store.document.groups ?? []).filter(group => group.objectIds.every(id => selected.includes(id))).map(group => ({ groupId: group.id, newGroupId: `group-${crypto.randomUUID()}` }));
+      act(() => store.dispatch({ schemaVersion: 1, tool: 'duplicateObjects', expectedRevision: store.document.revision, objectId: selected[0], arguments: { copies, groups } }, 'manual'), copies.map(copy => copy.newObjectId));
+    }
+  };
+  const deleteSelection = () => act(() => {
+    const store = storeRef.current!, ids = selectedRef.current;
+    store.dispatch({ schemaVersion: 1, tool: ids.length === 1 ? 'deleteObject' : 'deleteObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: ids.length === 1 ? {} : { objectIds: ids } }, 'manual');
+  });
+  const copySelection = (cut = false) => {
+    try {
+      const copied = captureSelection(storeRef.current!.document, selectedRef.current);
+      if (cut && !deleteSelection()) return;
+      clipboardRef.current = copied; setClipboardCount(copied.objects.length); setError('');
+    } catch (e) { setError(e instanceof Error ? e.message : 'Copia non riuscita'); }
+  };
+  const pasteSelection = () => {
+    const clipboard = clipboardRef.current, store = storeRef.current;
+    if (!clipboard || !store || assetBusyRef.current) return;
+    const insertion = clipboardInsertion(clipboard, store.document.revision), ids = insertion.arguments.objects.map(object => object.id);
+    const sources = insertion.arguments.objects.filter(object => object.type === 'image').map(object=>object.source), fontAssets = insertion.arguments.fontAssets ?? [];
+    if (sources.length || fontAssets.length) void prepareAndAct(async current => { await Promise.all([loadFontAssets(fontAssets), ...sources.map(source => prepareRasterSource(source))]); return () => current.dispatch(insertion, 'manual'); }, ids);
+    else act(() => store.dispatch(insertion, 'manual'), ids);
+  };
+  const selectionCommand = (tool: string, args: unknown, objectId = selectedRef.current[0]) => act(() => {
+    const store = storeRef.current!; store.dispatch({ schemaVersion: 1, tool, expectedRevision: store.document.revision, objectId, arguments: args }, 'manual');
+  });
   useEffect(() => {
     if (!canvasRef.current) return;
-    const initial = createDocument(product, catalogVersion);
-    let store = new DocumentStore(initial, measureFabric);
+    const initial = structuredClone(doc);
+    let store = new DocumentStore(initial, measureFabric, graphicCatalog,policyRole);
     if (draftText) {
       try {
         const text = initial.objects.find(o => o.type === 'text')!;
@@ -41,49 +265,268 @@ export function EditorLab({ product, draftText, catalogVersion, catalogOutdated 
         const yMm = initial.shape === 'round' ? (initial.areaMm.height - box.heightMm) / 2 : 1;
         store.dispatch({ schemaVersion: 1, tool: 'moveObject', expectedRevision: 0, objectId: 'text-1', arguments: { xMm, yMm } }, 'manual');
         store.dispatch({ schemaVersion: 1, tool: 'setText', expectedRevision: 1, objectId: 'text-1', arguments: { text: draftText } }, 'manual');
-      } catch { store = new DocumentStore(initial, measureFabric); setError('Il testo raccolto non entra nella bozza iniziale con i vincoli di prova. È conservato nella chat: scegli un formato più ampio o verifica l’impaginazione.'); }
+      } catch { store = new DocumentStore(initial, measureFabric, graphicCatalog,policyRole); setError('Il testo raccolto non entra nella bozza iniziale con i vincoli di prova. È conservato nella chat: scegli un formato più ampio o verifica l’impaginazione.'); }
     }
     storeRef.current = store;
     const view = new FabricAdapter(canvasRef.current, () => storeRef.current!.document.revision,
       (objectId, xMm, yMm, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'moveObject', expectedRevision, objectId, arguments: { xMm, yMm } }, 'manual')),
-      (objectId, text, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'setText', expectedRevision, objectId, arguments: { text } }, 'manual')),
-      value => { setEditing(value); onEditingChange(value); });
-    adapter.current = view; view.render(store.document); setDoc(structuredClone(store.document));
+      (objectId, object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', expectedRevision, objectId, arguments: objectArguments(object) }, 'manual')),
+      value => { setEditing(value); onEditingChange(value); }, undefined,
+      (objectId, args, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'transformObject', objectId, expectedRevision, arguments: args }, 'manual')),
+      (objectId, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'deleteObject', objectId, expectedRevision, arguments: {} }, 'manual')), setTrashVisible, setCharacterSelection, select,
+      (objectIds, deltaXmm, deltaYmm, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'moveObjects', objectId: objectIds[0], expectedRevision, arguments: { objectIds, deltaXmm, deltaYmm } }, 'manual')),
+      (objectIds, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'deleteObjects', objectId: objectIds[0], expectedRevision, arguments: { objectIds } }, 'manual')),
+      (objectIds, args, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'transformObjects', objectId: objectIds[0], expectedRevision, arguments: { ...args, objectIds } }, 'manual')));
+    view.setRole(policyRole);adapter.current = view;
+    view.setNodeDragHandlers((source, index, point, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', objectId: source.id, expectedRevision, arguments: { object: movePathNode(source, index, point, measureFabric) } }, 'manual')), active => { setDrawing(active); onEditingChange(active); });
+    view.setTextPathHandler((object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'setTextPath', objectId: object.id, expectedRevision, arguments: { offsetMm: object.textPath!.offsetMm } }, 'manual')));
+    view.setRasterCropHandler((object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', objectId: object.id, expectedRevision, arguments: objectArguments(object) }, 'manual')));
+    view.setBezierDragHandler((object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', objectId: object.id, expectedRevision, arguments: objectArguments(object) }, 'manual')));
+    view.render(store.document); setDoc(structuredClone(store.document));
     setEventLog(store.events.map(e => `r${e.revision}: ${e.source} ${e.objectId ?? ''}`).join('\n'));
     document.getElementById('lab-title')?.focus();
     return () => { view.dispose(); adapter.current = null; storeRef.current = null; };
   }, []);
   useEffect(() => {
     const store = storeRef.current;
-    if (!store || (store.document.productId === product.productId && store.document.variantId === product.variantIds[0] && store.document.catalogVersion === catalogVersion)) return;
+    if (!product||!store || (store.document.productId === product.productId && store.document.variantId === product.variantIds[0] && store.document.catalogVersion === catalogVersion)) return;
     try { store.changeProduct(product, catalogVersion); setError(''); refresh(); }
     catch { setError('La composizione non entra nel modello richiesto. Il progetto precedente è conservato: scegli un modello più grande o torna al prodotto del progetto.'); }
-  }, [product, catalogVersion]);
-  const conflict = doc.productId !== product.productId || doc.variantId !== product.variantIds[0] || doc.catalogVersion !== catalogVersion;
-  return <section className="lab panel" aria-labelledby="lab-title">
-    <div className="section-heading"><div><span className="eyebrow">02 / Personalizzazione nel canvas</span><h2 id="lab-title" tabIndex={-1}>{conflict ? 'Cambio modello da risolvere' : product.title}</h2></div><span className="badge">Bozza TEST</span></div>
-    <p data-testid="editor-product">Area nominale del progetto: {doc.shape === 'round' ? `Ø ${doc.areaMm.width}` : `${doc.areaMm.width} × ${doc.areaMm.height}`} mm. {product.variantLabel && <>Variante: {product.variantLabel}. </>}{conflict && <>Modello richiesto: {product.title}, {product.nominalAreaMm.width} × {product.nominalAreaMm.height} mm.</>}</p>
-    <p>Doppio clic sul testo per scrivere direttamente nel canvas; Invio aggiunge una riga, Esc termina la modifica. Puoi trascinare testo e bordo. Il testo deve entrare nell’area: altrimenti viene ripristinata la versione precedente.</p>
-    <p className="caption">Area utile da confermare. Margine TEST 1 mm, Arial ≥ 7 pt e nero/bianco sono vincoli di laboratorio, non specifiche produttive del modello.</p>
-    <div className="canvas-scroll" inert={conflict}><canvas ref={canvasRef} aria-label="Canvas grafico del laboratorio"/></div>
-    {editing && <div role="status" className="notice">Scrittura nel canvas in corso. Premi Esc o <button onClick={() => adapter.current?.finishEditing()}>Termina modifica</button> per validare il testo.</div>}
-    {conflict && <div className="notice"><p>Il documento è ancora associato al formato precedente. Puoi esportarne il JSON per conservarlo. Creando una nuova bozza sostituisci la composizione corrente.</p><button onClick={() => { setError(''); onKeepProduct(doc.productId!, doc.variantId!); }}>Torna al prodotto del progetto</button><button onClick={() => act(() => { const fresh = createDocument(product, catalogVersion); fresh.revision = storeRef.current!.document.revision + 1; storeRef.current = new DocumentStore(fresh, measureFabric); })}>Crea nuova bozza per questo formato</button></div>}
-    <p className="caption" data-testid="revision">Revisione grafica: {doc.revision} · oggetto stabile text-1 · esportazione non approvata per produzione</p>
-    <button disabled={editing} onClick={() => download('progetto.TEST.json', JSON.stringify(storeRef.current!.document, null, 2), 'application/json')}>Esporta JSON</button>
-    <fieldset className="editor-actions" disabled={editing || conflict || catalogOutdated}><legend>Progetto</legend>
-      <div className="button-row"><button onClick={() => act(() => storeRef.current!.undo())}>Annulla</button><button onClick={() => act(() => storeRef.current!.redo())}>Ripristina</button></div>
-      <div className="button-row"><button onClick={() => act(() => download('impronta.TEST.svg', adapter.current!.exportSvg(storeRef.current!.document), 'image/svg+xml'))}>Esporta SVG</button></div>
-      <label htmlFor="json-import">Riapri progetto JSON (max 100 KB)</label><input id="json-import" type="file" accept=".json,application/json" onChange={async e => {
-        const file = e.target.files?.[0]; if (!file) return;
-        if (file.size > 100_000) { setError('File oltre 100 KB'); return; }
-        try { const raw: unknown = JSON.parse(await file.text()); act(() => storeRef.current!.import(raw)); } catch { setError('JSON non valido'); }
-        e.target.value = '';
-      }}/>
-    <details><summary>Strumenti sviluppatore · comandi strutturati di prova</summary>
-      <label htmlFor="graphic-command">Comando AI simulato (JSON)</label><textarea id="graphic-command" rows={11} value={command} onChange={e => setCommand(e.target.value)}/>
-      <div className="button-row"><button onClick={() => setCommand(example(storeRef.current!.document.revision))}>Prepara comando aggiornato</button><button className="primary" onClick={() => act(() => storeRef.current!.dispatch(JSON.parse(command), 'ai-simulation'))}>Esegui comando</button></div>
-    </details></fieldset>
-    {error && <p role="alert" className="error">{error}</p>}
-    <details><summary>Stato e storico del documento</summary><pre data-testid="graphic-state">{JSON.stringify(doc, null, 2)}</pre><pre>{eventLog || 'Nessuna modifica'}</pre></details>
-  </section>;
+  }, [product?.productId,product?.variantIds[0],product?.profileVersion,product?.nominalAreaMm.width,product?.nominalAreaMm.height,catalogVersion]);
+  useEffect(() => {
+    if (!import.meta.env.DEV) return; let active = true;
+    const fonts = () => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => { if (active) setFontNotice(''); }).catch(error => { if (active) setFontNotice(error.message); }); }; fonts(); window.addEventListener('focus', fonts);
+    void readAdminSnapshot().then(state => { if(active){setArchiveVocabulary(archiveTagVocabulary(state));setCustomerPdfEnabled(state.settings.customerPdfEnabled??false);} if (active && !guidesTouched.current) { setGuides({ gridMm: state.settings.gridMm, gridVisible: state.settings.gridVisible, snapEnabled: state.settings.snapEnabled }); setGridRaw(String(state.settings.gridMm)); } }).catch(() => {});
+    const archive = new URLSearchParams(window.location.search).get('archive');
+    if (archive) void prepareAndAct(async store => { const record = await readArchiveRecord(archive); const next = parseGraphicDocument(record.document); await Promise.all([loadFontAssets(next.fontAssets), ...next.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]); return () => { if(portable)store.open(next);else store.import(next);store.clearHistory();setSourceRecord(mode==='customer'&&record.kind==='template'?null:record);setArchiveTitle(mode==='customer'&&record.kind==='template'?copyArchiveTitle(record.title):record.title);setArchiveKind(mode==='customer'?'composition':record.kind);setArchiveTags(record.tags.join(', '));originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));setSavedMetadata(metadataKey(mode==='customer'&&record.kind==='template'?copyArchiveTitle(record.title):record.title,mode==='customer'?'composition':record.kind,record.tags.join(', ')));setSessionNotice(`Aperto: ${record.title}`);setImportNotice(`Aperto dall’archivio locale: ${record.title}`); }; });
+    const parameters=new URLSearchParams(window.location.search),template=parameters.get('template');
+    if(template&&!archive&&product)void prepareAndAct(async store=>{
+      const record=await readArchiveRecord(template);
+      if(record.kind!=='template'||record.archived||record.version!==Number(parameters.get('templateVersion'))||!record.templateProducts?.profileKeys.includes(profileKey(product)))throw new Error('Template o associazioni cambiati: torna alla galleria e controlla nuovamente l’anteprima.');
+      await Promise.all([loadFontAssets(record.document.fontAssets),...record.document.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source))]);
+      const fit=fitTemplate(record.document,product,catalogVersion,measureFabric,parameters.get('shrink')==='1'),command=templateCommand(fit,record.id,record.version,store.document.revision);
+      return()=>{store.dispatch(command,'manual');store.clearHistory();originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));setArchiveTitle(copyArchiveTitle(record.title));setArchiveKind('composition');setArchiveTags(record.tags.join(', '));setSavedMetadata(metadataKey(copyArchiveTitle(record.title),'composition',record.tags.join(', ')));setImportNotice(`Copia del template «${record.title}» applicata. L’originale è conservato${fit.scale<1?`; riduzione proporzionale al ${(fit.scale*100).toFixed(1)}%`:''}.`);};
+    });
+    return () => { active = false; window.removeEventListener('focus', fonts); };
+  }, []);
+  useEffect(()=>{if(availableProducts&&doc.productId&&doc.variantId&&(doc.productId!==product?.productId||doc.variantId!==product?.variantIds[0]))onKeepProduct(doc.productId,doc.variantId);},[doc.productId,doc.variantId]);
+  useEffect(() => { adapter.current?.setGuides(guides); }, [guides]);
+  useEffect(() => { adapter.current?.setDrawingTool(drawingTool, {
+    onCurve: (nodes, closed, expectedRevision) => {
+      const objectId = `object-${crypto.randomUUID()}`;
+      act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision, arguments: { object: { id: objectId, type: 'bezier', ...normalizedBezier(nodes, closed), closed, strokeMm: 0.25, stroke: '#000000' } } }, 'manual'), objectId);
+    },
+    onPath: (points, closed, expectedRevision) => {
+      const objectId = `object-${crypto.randomUUID()}`;
+      act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision, arguments: { object: { id: objectId, type: 'path', ...strokeGeometry(points), closed, strokeMm: 0.25, stroke: '#000000' } } }, 'manual'), objectId);
+    },
+    onCount: setPolylineCount,
+    onStroke: (points, expectedRevision) => {
+      const objectId = `object-${crypto.randomUUID()}`;
+      act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision, arguments: { object: { id: objectId, type: 'path', ...strokeGeometry(points), closed: false, strokeMm: 0.25, stroke: '#000000' } } }, 'manual'), objectId);
+    },
+    onPrimitive: (kind, start, end, expectedRevision) => {
+      const objectId = `object-${crypto.randomUUID()}`;
+      act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision, arguments: { object: primitiveFromEndpoints(kind, objectId, start, end) } }, 'manual'), objectId);
+    },
+    onActive: active => { setDrawing(active); onEditingChange(active); }, onExit: () => setDrawingTool(null),
+  }); }, [drawingTool]);
+  useEffect(()=>{onDocumentState?.(doc);},[doc.documentId,doc.productId,doc.variantId,doc.areaMm.width,doc.areaMm.height]);
+  const displayedProduct=availableProducts?.find(item=>item.productId===doc.productId&&item.variantIds.includes(doc.variantId??''))??(product&&doc.productId===product.productId&&doc.variantId===product.variantIds[0]?product:null);
+  const conflict = !!product && !portable && (doc.productId !== product.productId || doc.variantId !== product.variantIds[0] || doc.catalogVersion !== catalogVersion);
+  const selectedObject = doc.objects.find(o => o.id === selectedId);
+  const selectedGroups = (doc.groups ?? []).filter(group => group.objectIds.every(id => selectedIds.includes(id)));
+  const keyboard = useRef<(event: KeyboardEvent) => void>(() => {});
+  keyboard.current = event => {
+    const target = event.target, root = canvasRef.current?.closest('[data-testid="editor-workspace"]');
+    if (event.defaultPrevented || event.isComposing || editing || drawing || assetBusy || conflict || catalogOutdated || !(target instanceof HTMLElement) || !root?.getClientRects().length || root.closest('[inert]')) return;
+    if (target.closest('input, textarea, select, [contenteditable="true"], [role="combobox"], [role="listbox"], dialog[open]') || target !== window.document.body && !root.contains(target)) return;
+    const ids = selectedRef.current, key = event.key.toLowerCase(), run = (action: () => void) => { event.preventDefault(); setDrawingTool(null); action(); };
+    if ((event.metaKey || event.ctrlKey) && !event.altKey) {
+      if (key === 'z') run(() => act(() => { if (event.shiftKey) storeRef.current!.redo(); else storeRef.current!.undo(); }));
+      else if (key === 'y' && !event.shiftKey) run(() => act(() => storeRef.current!.redo()));
+      else if (key === 'a' && !event.shiftKey) run(() => { select(storeRef.current!.document.objects.map(object => object.id)); adapter.current?.selectObjects(selectedRef.current); });
+      else if (key === 'd' && !event.shiftKey && ids.length) run(duplicate);
+      else if (key === 'c' && !event.shiftKey && ids.length) run(() => copySelection());
+      else if (key === 'x' && !event.shiftKey && ids.length) run(() => copySelection(true));
+      else if (key === 'v' && !event.shiftKey && clipboardRef.current) run(pasteSelection);
+      else if (key === 'g' && event.shiftKey && selectedGroups.length) run(() => selectionCommand('ungroupObjects', { groupIds: selectedGroups.map(group => group.id) }, selectedGroups[0]!.objectIds[0]));
+      else if (key === 'g' && !event.shiftKey && ids.length > 1 && !selectedGroups.length) run(() => selectionCommand('groupObjects', { objectIds: ids, groupId: `group-${crypto.randomUUID()}` }));
+      return;
+    }
+    if (event.metaKey || event.ctrlKey || !ids.length) return;
+    if (key === 'delete' || key === 'backspace') { run(deleteSelection); return; }
+    const direction = ({ arrowleft: [-1, 0], arrowright: [1, 0], arrowup: [0, -1], arrowdown: [0, 1] } as const)[key as 'arrowleft' | 'arrowright' | 'arrowup' | 'arrowdown'];
+    if (!direction) return;
+    const step = event.altKey ? 0.01 : event.shiftKey ? 1 : 0.1, deltaXmm = direction[0] * step, deltaYmm = direction[1] * step;
+    run(() => act(() => {
+      const store = storeRef.current!, object = store.document.objects.find(object => object.id === ids[0])!;
+      store.dispatch({ schemaVersion: 1, tool: ids.length === 1 ? 'moveObject' : 'moveObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: ids.length === 1 ? { xMm: object.xMm + deltaXmm, yMm: object.yMm + deltaYmm } : { objectIds: ids, deltaXmm, deltaYmm } }, 'manual');
+    }));
+  };
+  useEffect(() => { const handle = (event: KeyboardEvent) => keyboard.current(event); window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, []);
+  const arrange = (tool: 'alignObject', args: unknown) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool, objectId: selectedId, expectedRevision: doc.revision, arguments: args }, 'manual'));
+  const workflowApi: WorkflowEditorApi = { document: doc, peek: () => cloneGraphicDocument(storeRef.current?.document ?? doc), busy: editing || drawing || assetBusy || conflict || catalogOutdated, busyReason: editing ? 'Termina la scrittura con Esc o con il pulsante di conferma sul foglio.' : drawing ? 'Termina il disegno prima di controllare il progetto.' : assetBusy ? 'Attendi il caricamento della risorsa.' : 'Risolvi il cambio di formato prima di continuare.', capture: () => { const store = storeRef.current; if (!store || !adapter.current) throw new Error('Editor non ancora disponibile'); return { document: cloneGraphicDocument(store.document), svg: adapter.current.exportSvg(store.document) }; }, open: next => prepareAndAct(async store => { if(autosave)await preserveDraftSnapshot(store.document); await Promise.all([loadFontAssets(next.fontAssets), ...next.objects.filter(o => o.type === 'image').map(o => prepareRasterSource(o.source))]); return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);}; }) };
+  return <WorkspaceFrame showForm={formObjects(doc).length>0} mode={mode} actions={<>
+      <span className="design-session-status" role="status">{sessionNotice||sourceRecord?.title||archiveTitle||'Nuovo design'} · {dirty?'Modifiche da confermare':'Nessuna modifica da salvare'}</span>
+      {(mode!=='customer'||customerPdfEnabled)&&<EditorButton icon="download" badge="PDF" label="Scarica PDF" disabled={pdfBusy||editing||drawing||assetBusy} onClick={()=>void exportPdf()}/>}
+      <EditorButton icon="refresh" label="Ricarica design originale" disabled={archiveBusy||editing||drawing||assetBusy} onClick={()=>setSessionDialog('reload')}/>
+      <EditorButton icon="close" label="Chiudi editor senza salvare" disabled={archiveBusy||assetBusy} onClick={()=>{adapter.current?.finishEditing();setSessionDialog('close');}}/>
+      <EditorButton className="primary" icon="apply" label="Conferma design" disabled={mode==='customer'&&!fieldsValid||archiveBusy||editing||drawing||assetBusy||conflict} onClick={()=>void saveArchive(true,false)}/>
+      <dialog ref={sessionModal} className="configuration-dialog" aria-label={sessionDialog==='reload'?'Ricaricare il design originale':'Chiudere senza salvare'} onCancel={event=>{event.preventDefault();setSessionDialog(null);}}><h2>{sessionDialog==='reload'?'Ricaricare il design originale?':'Chiudere senza salvare?'}</h2><p>{sessionDialog==='reload'?'Le modifiche non confermate verranno annullate. Il design salvato resta invariato.':'Le modifiche non confermate non saranno applicate al progetto salvato.'}</p><div className="button-row"><button type="button" onClick={()=>setSessionDialog(null)}>Continua a modificare</button><button type="button" onClick={()=>{void(async()=>{try{await draftControl.current?.discard();if(sessionDialog==='reload'){act(()=>storeRef.current!.open(originalDocument.current));setSavedStamp(sessionDocumentKey(storeRef.current!.document));const [title,kind,tags]=JSON.parse(savedMetadata);setArchiveTitle(title);setArchiveKind(kind);setArchiveTags(tags.join(', '));setSessionNotice('Design originale ricaricato');setSessionDialog(null);}else{leaving.current=true;window.location.assign(mode==='admin'?editorReturnUrl(mode,sourceRecord?.kind??archiveKind):'/editor/templates?mode=customer');}}catch(cause){setError(cause instanceof Error?cause.message:'Operazione non riuscita');setSessionDialog(null);}})();}}>{sessionDialog==='reload'?'Conferma ricarica originale':'Esci senza salvare'}</button></div></dialog>
+    </>} panTool={panTool} onTemporaryPan={setTemporaryPan} document={doc} editing={editing || drawing || assetBusy} onZoom={zoom => { const store = storeRef.current; if (store) adapter.current?.setZoom(zoom, store.document); }}
+    layers={<LayersPanel customer={mode==='customer'} actions={<>
+      <p className="caption layer-selection-status" role="status">{selectedIds.length > 1 ? `Selezionati: ${selectedIds.length} elementi${selectedGroups.length ? ` · ${selectedGroups.length} gruppi` : ''}` : selectedId ? `Selezionato: ${selectedId}` : doc.objects.length ? 'Seleziona un oggetto nel canvas o nell’elenco.' : 'Il progetto è vuoto. Aggiungi un testo o una forma per iniziare.'}</p>
+      <div className="button-row layers-primary-actions"><EditorButton icon="multiSelect" label="Selezione multipla" aria-pressed={multiple} onClick={() => setMultiple(!multiple)}/><EditorButton icon="selectAll" label="Seleziona tutto" disabled={!doc.objects.length} onClick={() => { setDrawingTool(null); select(doc.objects.map(object => object.id)); adapter.current?.selectObjects(selectedRef.current); }}/><EditorButton icon="deselect" label="Deseleziona" disabled={!selectedIds.length} onClick={() => { setDrawingTool(null); select(null); adapter.current?.selectObjects([]); }}/><EditorButton disabled={!selectedIds.length} onClick={duplicate} icon="duplicate" label="Duplica selezionato"/><EditorButton disabled={!selectedIds.length} onClick={deleteSelection} icon="delete" label="Elimina selezionato"/></div>
+      <div className="button-row" role="group" aria-label="Appunti dell’editor"><EditorButton disabled={!selectedIds.length} onClick={() => copySelection()} icon="copy" label="Copia negli appunti dell’editor"/><EditorButton disabled={!selectedIds.length} onClick={() => copySelection(true)} icon="cut" label="Taglia negli appunti dell’editor"/><EditorButton disabled={!clipboardCount} onClick={pasteSelection} icon="paste" label="Incolla dagli appunti dell’editor"/></div>
+      {clipboardCount > 0 && <p className="caption" role="status">Appunti dell’editor: {clipboardCount} elementi. Conservati fino alla chiusura della pagina; incolla nelle stesse posizioni.</p>}
+      <div className="button-row"><EditorButton icon="group" label="Raggruppa selezione" disabled={selectedIds.length < 2 || !!selectedGroups.length} onClick={() => selectionCommand('groupObjects', { objectIds: selectedRef.current, groupId: `group-${crypto.randomUUID()}` })}/><EditorButton icon="ungroup" label="Separa gruppi selezionati" disabled={!selectedGroups.length} onClick={() => selectionCommand('ungroupObjects', { groupIds: selectedGroups.map(group => group.id) }, selectedGroups[0]?.objectIds[0])}/></div>
+      <details className="layers-help"><summary>Aiuto livelli</summary><p className="caption">Maiusc + clic o riquadro nel canvas per selezioni multiple; il pulsante Selezione multipla serve anche su touch. Le copie sono sovrapposte all’originale: trascinale per spostarle.</p></details>
+    </>} document={doc} selectedIds={selectedIds} disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated} multiple={multiple}
+      onSelect={(id, additive) => {
+        setDrawingTool(null); const unit = expandSelection(doc, [id]);
+        const next = additive ? unit.every(id => selectedIds.includes(id)) ? selectedIds.filter(id => !unit.includes(id)) : [...selectedIds, ...unit] : unit;
+        select([...new Set(next)]); adapter.current?.selectObjects(selectedRef.current);
+      }} onReorder={position => selectedIds.length > 1 ? selectionCommand('reorderObjects', { objectIds: selectedRef.current, position }) : act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'reorderObject', objectId: selectedId, expectedRevision: doc.revision, arguments: { position } }, 'manual'))}
+      onPlace={(ids, targetObjectId, side, expectedRevision) => {
+        const current = storeRef.current!.document, target = expandSelection(current, [targetObjectId]), ordered = current.objects.map(object => object.id), moving = ordered.filter(id => ids.includes(id)), remaining = ordered.filter(id => !ids.includes(id)), at = side === 'above' ? Math.max(...target.map(id => remaining.indexOf(id))) + 1 : Math.min(...target.map(id => remaining.indexOf(id)));
+        const next = [...remaining.slice(0, at), ...moving, ...remaining.slice(at)];
+        if (current.revision === expectedRevision && next.every((id, index) => id === ordered[index])) return;
+        act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'placeObjects', objectId: ids[0], expectedRevision, arguments: { objectIds: ids, targetObjectId, side } }, 'manual'), ids);
+      }}/>}
+    context={<>
+      <div className="section-heading"><div><span className="eyebrow">02 / Personalizzazione nel canvas</span><h2 id="lab-title" tabIndex={-1}>{conflict ? 'Cambio modello da risolvere' : displayedProduct?.title??(doc.plaque?'Targa a misure personalizzate':'Documento recuperato')}</h2></div><span className="badge">Bozza TEST</span></div>
+      <p data-testid="editor-product">Area nominale del progetto: {doc.shape === 'round' ? `Ø ${doc.areaMm.width}` : `${doc.areaMm.width} × ${doc.areaMm.height}`} mm. {product?.variantLabel && <>Variante: {product?.variantLabel}. </>}{conflict && <>Modello richiesto: {product?.title}, {product?.nominalAreaMm.width} × {product?.nominalAreaMm.height} mm.</>}</p>
+      <p>Doppio clic sul testo per scrivere direttamente nel canvas; Invio aggiunge una riga, Esc termina la modifica. Puoi trascinare testo e forme.</p>
+      <p className="caption">Area utile da confermare. Margine TEST 1 mm, Arial ≥ 7 pt e nero/bianco sono vincoli di laboratorio, non specifiche produttive del modello.</p>
+    </>}
+    stage={<>
+      <InkPreviewFilter id={inkFilterId} color={doc.inkColor??'black'}/>
+      <div className="canvas-scroll" style={{'--editor-imprint-filter':doc.inkColor&&doc.inkColor!=='black'?`url(#${inkFilterId})`:'none'}as CSSProperties} inert={conflict || assetBusy || archiveBusy} onPointerDown={event => {
+        if (event.button !== 0 || assetBusy || conflict || (event.target instanceof Element && event.target.closest('.canvas-container'))) return;
+        adapter.current?.activateSelectionTool(); setDrawingTool(null); setDrawing(false); setNodeMode(false); select(null); adapter.current?.selectObjects([]);
+      }}><canvas ref={canvasRef} aria-label="Canvas grafico del laboratorio"/></div>
+      {assetBusy && <div role="status" className="notice">Preparazione della risorsa locale…</div>}
+      {trashVisible && <div className="drag-trash" role="status"><EditorIcon name="delete"/><strong>Rilascia per eliminare</strong><span>Esc annulla il trascinamento</span></div>}
+      <div className="stage-messages">
+        <p className="caption" data-testid="revision">Revisione grafica: {doc.revision} · {doc.objects.length} oggetti · {doc.areaMm.width} × {doc.areaMm.height} mm · bozza TEST</p>
+        {editing && <div role="status" className="notice editing-notice">Scrittura nel canvas in corso. Premi Esc o <EditorButton onClick={() => adapter.current?.finishEditing()} icon="apply" label="Termina modifica"/> per validare il testo.</div>}
+        {conflict && product && <div className="notice"><p>Il documento è ancora associato al formato precedente. Puoi esportarne il JSON per conservarlo. Creando una nuova bozza sostituisci la composizione corrente.</p><EditorButton onClick={() => { setError(''); onKeepProduct(doc.productId!, doc.variantId!); }} icon="return" label="Torna al prodotto del progetto"/><EditorButton onClick={() => act(() => { const fresh = createEditorDocument(product, catalogVersion); fresh.revision = storeRef.current!.document.revision + 1; storeRef.current = new DocumentStore(fresh, measureFabric, graphicCatalog,policyRole); })} icon="newFile" label="Crea nuova bozza per questo formato"/></div>}
+        {error && <p role="alert" className="error">{error}</p>}
+      </div>
+    </>}
+    tools={<><h3 className="tools-title">Strumenti</h3><div className="tools-mode"><EditorButton icon="select" label="Strumento selezione" aria-pressed={!drawingTool && !editing && !nodeMode && !cropMode && !panTool && !temporaryPan} onClick={() => {
+      adapter.current?.activateSelectionTool(); setDrawingTool(null); setDrawing(false); setMultiple(false); setNodeMode(false); setCropMode(false); setPanTool(false); setSelectionEpoch(value => value + 1);
+    }}/><EditorButton icon="hand" label="Strumento Mano" aria-pressed={panTool || temporaryPan} onClick={() => { adapter.current?.activateSelectionTool(); setDrawingTool(null); setDrawing(false); setNodeMode(false); setCropMode(false); setSelectionEpoch(value => value + 1); setPanTool(value => !value); }}/>{drawingTool === 'polyline' || drawingTool === 'bezier' ? <div className="button-row path-drawing-actions" role="group" aria-label="Costruzione tracciato">
+      <span className="caption" role="status" data-testid="pen-point-count">{polylineCount}/{drawingTool === 'bezier' ? 64 : 512} nodi</span>
+      <EditorButton icon="apply" label="Termina tracciato aperto" disabled={polylineCount < 2} onClick={() => drawingTool === 'bezier' ? adapter.current?.finishBezier(false) : adapter.current?.finishPolyline(false)}/>
+      <EditorButton icon="closePath" label="Chiudi tracciato disegnato" disabled={polylineCount < 3} onClick={() => drawingTool === 'bezier' ? adapter.current?.finishBezier(true) : adapter.current?.finishPolyline(true)}/>
+      <EditorButton icon="return" label="Annulla costruzione tracciato" onClick={() => drawingTool === 'bezier' ? adapter.current?.cancelBezier() : adapter.current?.cancelPolyline()}/>
+    </div> : null}</div><fieldset className="editor-actions" disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated}><legend className="sr-only">Disegno e oggetti</legend>
+      <div className="button-row"><EditorButton onClick={() => addObject('text')} icon="addText" label="Aggiungi testo"/><EditorButton onClick={() => addObject('rect')} icon="addRect" label="Aggiungi rettangolo"/><EditorButton onClick={() => addObject('circle')} icon="addCircle" label="Aggiungi cerchio"/><EditorButton onClick={() => addObject('line')} icon="addLine" label="Aggiungi linea"/><EditorButton onClick={() => addObject('ellipse')} icon="addEllipse" label="Aggiungi ellisse"/><EditorButton onClick={() => addPolygon('triangle')} icon="addTriangle" label="Aggiungi triangolo"/><EditorButton onClick={() => addPolygon('pentagon')} icon="addPolygon" label="Aggiungi pentagono"/><EditorButton onClick={() => addPolygon('star')} icon="addStar" label="Aggiungi stella"/><EditorButton onClick={addBezier} icon="bezier" label="Aggiungi curva Bézier"/></div>
+      <div className="button-row"><EditorButton icon="importImage" label="Importa immagine PNG o JPEG" onClick={() => imageImportRef.current?.click()}/></div>
+      <label>Importa testi SVG/PDF come<select aria-label="Importa testi SVG/PDF come" value={importTextMode} disabled={assetBusy} onChange={event=>setImportTextMode(event.target.value as 'outlines'|'editable')}><option value="outlines">Contorni vettoriali</option><option value="editable">Testo editabile</option></select></label><p className="caption">Il testo editabile richiede il font nella libreria. Nei PDF la ricostruzione va controllata; le lettere già convertite in tracciati restano vettori.</p>
+      <label className="ratio-toggle"><input type="checkbox" checked={vectorMonochrome} onChange={event => setVectorMonochrome(event.target.checked)}/> Converti colori SVG/PDF in nero</label>
+      <div className="button-row"><EditorButton icon="importSvg" label="Importa SVG vettoriale" onClick={() => svgImportRef.current?.click()}/></div>
+      {import.meta.env.DEV && <><div className="button-row"><EditorButton icon="importSvg" label="Importa PDF vettoriale locale" badge="PDF" onClick={() => pdfImportRef.current?.click()}/></div><label htmlFor="pdf-import" className="sr-only">File PDF vettoriale locale</label><input ref={pdfImportRef} id="pdf-import" className="sr-only" type="file" accept=".pdf,application/pdf" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) importPdf(file); }}/></>}
+      <label htmlFor="svg-import" className="sr-only">File SVG locale</label><input ref={svgImportRef} id="svg-import" className="sr-only" type="file" accept=".svg,image/svg+xml" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) importSvg(file); }}/>
+      {fontNotice && <p className="caption" role="status">{fontNotice}</p>}
+      {importNotice && <p className="caption" role="status">{importNotice}</p>}
+      <label htmlFor="png-import" className="sr-only">File immagine locale</label><input ref={imageImportRef} id="png-import" className="sr-only" type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) importImage(file); }}/>
+      <p className="caption">PNG/JPEG locali: massimo 256 KB e 1 milione di pixel. Originale conservato; conversione bianco/nero modificabile nell’ispettore.</p>
+      <div className="button-row"><EditorButton icon="drawLine" label="Disegna linea nel canvas" aria-pressed={drawingTool === 'line'} onClick={() => setDrawingTool(drawingTool === 'line' ? null : 'line')}/><EditorButton icon="drawRect" label="Disegna rettangolo nel canvas" aria-pressed={drawingTool === 'rect'} onClick={() => setDrawingTool(drawingTool === 'rect' ? null : 'rect')}/><EditorButton icon="drawCircle" label="Disegna cerchio nel canvas" aria-pressed={drawingTool === 'circle'} onClick={() => setDrawingTool(drawingTool === 'circle' ? null : 'circle')}/><EditorButton icon="drawEllipse" label="Disegna ellisse nel canvas" aria-pressed={drawingTool === 'ellipse'} onClick={() => setDrawingTool(drawingTool === 'ellipse' ? null : 'ellipse')}/><EditorButton icon="freehand" label="Disegna a mano libera" aria-pressed={drawingTool === 'freehand'} onClick={() => setDrawingTool(drawingTool === 'freehand' ? null : 'freehand')}/><EditorButton icon="pen" label="Disegna tracciato per punti" aria-pressed={drawingTool === 'polyline'} onClick={() => setDrawingTool(drawingTool === 'polyline' ? null : 'polyline')}/><EditorButton icon="bezier" label="Disegna curva Bézier" aria-pressed={drawingTool === 'bezier'} onClick={() => setDrawingTool(drawingTool === 'bezier' ? null : 'bezier')}/></div>
+      {drawingTool && <p className="caption">{drawingTool === 'bezier' ? 'Clicca per un nodo angoloso; clicca e trascina per le maniglie simmetriche. Invio o doppio clic termina; clic sul primo nodo chiude. Maiusc vincola a 45°, Backspace elimina l’ultimo nodo. Usa anche i pulsanti nella barra in alto.' : drawingTool === 'polyline' ? 'Clicca i vertici. Invio o doppio clic termina; clic sul primo punto chiude. Maiusc vincola a 45°, Backspace rimuove l’ultimo nodo. Usa anche i pulsanti nella barra in alto.' : drawingTool === 'freehand' ? 'Trascina per disegnare un tracciato vettoriale. I punti vengono semplificati al rilascio.' : drawingTool === 'circle' ? 'Trascina dal centro alla circonferenza.' : drawingTool === 'rect' || drawingTool === 'ellipse' ? `Trascina tra due angoli opposti. Maiusc disegna ${drawingTool === 'rect' ? 'un quadrato' : 'un cerchio'}.` : 'Trascina tra due punti nel foglio. Maiusc vincola a 45°.'} Alt sospende gli agganci. Esc annulla. {drawingTool === 'bezier' || drawingTool === 'polyline' ? 'Al completamento torni alla selezione.' : 'Al rilascio torni alla selezione.'}</p>}
+      <div className="inspector-content"><h3>Griglia e agganci</h3>
+        <div className="button-row"><EditorButton icon="grid" label="Mostra griglia" aria-pressed={guides.gridVisible} onClick={() => { guidesTouched.current = true; setGuides(previous => ({ ...previous, gridVisible: !previous.gridVisible })); }}/><EditorButton icon="magnet" label="Aggancia alla griglia e agli oggetti" aria-pressed={guides.snapEnabled} onClick={() => { guidesTouched.current = true; setGuides(previous => ({ ...previous, snapEnabled: !previous.snapEnabled })); }}/></div>
+        <label>Passo griglia (mm)<input type="number" min="0.1" max="10" step="0.1" value={gridRaw} aria-invalid={!gridRaw.trim() || !Number.isFinite(Number(gridRaw)) || Number(gridRaw) < 0.1 || Number(gridRaw) > 10} onChange={event => {
+          guidesTouched.current = true; const value = event.target.value; setGridRaw(value);
+          if (value.trim() && Number.isFinite(Number(value)) && Number(value) >= 0.1 && Number(value) <= 10) setGuides(previous => ({ ...previous, gridMm: Number(value) }));
+        }}/></label>
+        <p className="caption">Agganci a griglia, bordi e centri durante il trascinamento. Alt li sospende. Griglia e guide sono escluse da JSON e SVG.</p>
+      </div>
+      <details><summary>Scorciatoie da tastiera</summary><p className="caption">Frecce: 0,1 mm · Maiusc: 1 mm · Alt: 0,01 mm. Cmd/Ctrl+A seleziona tutto, C copia, X taglia, V incolla dagli appunti dell’editor, D duplica, G raggruppa, Maiusc+G separa, Z annulla, Maiusc+Z ripristina. Canc o Backspace elimina. I campi e la scrittura del testo conservano i propri tasti.</p></details>
+    </fieldset></>}
+    properties={<fieldset className="editor-actions" disabled={assetBusy || drawing || archiveBusy || conflict || catalogOutdated}><legend>Ispettore</legend>
+      {mode==='customer'&&doc.objects.some(object=>selectedIds.includes(object.id)&&object.editor?.hideMenus)?<p className="caption">I menu di questo elemento sono nascosti nel template.</p>:selectedIds.length > 1 ? <SelectionInspector document={doc} ids={selectedIds} onAttachText={(textId, pathObjectId) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'attachTextToPath', objectId: textId, expectedRevision: doc.revision, arguments: { pathObjectId } }, 'manual'), textId)} onMove={(deltaXmm, deltaYmm, expectedRevision) => {
+        const store = storeRef.current!;
+        return act(() => store.dispatch({ schemaVersion: 1, tool: 'moveObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, deltaXmm, deltaYmm } }, 'manual')) ? store.document.revision : null;
+      }} onTransform={(args, expectedRevision) => {
+        const store = storeRef.current!;
+        return act(() => store.dispatch({ schemaVersion: 1, tool: 'transformObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { ...args, objectIds: selectedRef.current } }, 'manual')) ? store.document.revision : null;
+      }} onAlignArea={alignment => selectionCommand('alignObjectsToArea', { objectIds: selectedRef.current, alignment })} onAlign={alignment => selectionCommand('alignObjects', { objectIds: selectedRef.current, alignment })} onDistribute={axis => selectionCommand('distributeObjects', { objectIds: selectedRef.current, axis })} onStyle={(style, expectedRevision) => act(() => {
+        const store = storeRef.current!; store.dispatch({ schemaVersion: 1, tool: 'styleObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, style } }, 'manual');
+      })}/> : selectedObject ? <ObjectInspector key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} revision={doc.revision}
+        onProperties={mode!=='customer'?properties=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setObjectProperties',objectId:selectedObject.id,expectedRevision:storeRef.current!.document.revision,arguments:properties},'manual')):undefined}
+        characterSelection={characterSelection}
+        onFontMenuOpen={() => { if (import.meta.env.DEV) void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => setFontNotice('')).catch(error => setFontNotice(error.message)); }}
+        onDetachText={() => { if (selectedObject.type !== 'text' || !selectedObject.textPath) return; const preferred = selectedObject.textPath.originalPathId, pathObjectId = doc.objects.some(object => object.id === preferred) || doc.groups?.some(group => group.id === preferred) ? `path-${crypto.randomUUID()}` : preferred; act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'detachTextFromPath', objectId: selectedObject.id, expectedRevision: doc.revision, arguments: { pathObjectId } }, 'manual'), selectedObject.id); }}
+        onCropFocus={id => { adapter.current?.setRasterCropFocus(id); setCropMode(!!id); }}
+        onNodeFocus={focus => { adapter.current?.setNodeFocus(focus); setNodeMode(!!focus); }}
+        onKerning={value => act(() => {
+          const update = adapter.current?.kernedText(value); if (update) storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', expectedRevision: update.revision, objectId: update.object.id, arguments: objectArguments(update.object) }, 'manual');
+        })}
+        onTextStretch={value => {
+          const update = adapter.current?.stretchedText(value);
+          if (update) act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', expectedRevision: update.revision, objectId: update.object.id, arguments: objectArguments(update.object) }, 'manual'));
+        }}
+        onLineAlignment={alignment => {
+          const update = adapter.current?.alignedText(alignment);
+          if (update) act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', expectedRevision: update.revision, objectId: update.object.id, arguments: objectArguments(update.object) }, 'manual'));
+        }}
+        onCharacterStyle={style => {
+          const update = adapter.current?.styledText(style);
+          if (update) act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', expectedRevision: update.revision, objectId: update.object.id, arguments: objectArguments(update.object) }, 'manual'));
+        }}
+        onApply={(object, expectedRevision) => {
+          const store = storeRef.current!;
+          if (!act(() => { const update = adapter.current?.mergeEditingObject(object) ?? object; store.dispatch({ schemaVersion: 1, tool: 'updateObject', objectId: selectedObject.id, expectedRevision, arguments: objectArguments(update) }, 'manual'); })) return null;
+          return { object: store.document.objects.find(item => item.id === object.id)!, revision: store.document.revision };
+        }}
+        arrangement={<>
+        <div role="group" aria-label="Allinea all’area" className="button-row">
+          {([['left', 'Allinea a sinistra'], ['centerX', 'Centra orizzontalmente'], ['right', 'Allinea a destra'], ['top', 'Allinea in alto'], ['centerY', 'Centra verticalmente'], ['bottom', 'Allinea in basso']] as const).map(([alignment, label]) => <EditorButton key={alignment} icon={alignment} label={label} onClick={() => arrange('alignObject', { alignment })}/>)}
+        </div>
+        <p className="caption">Bordi al margine TEST di 1 mm, centri al centro dell’area. Nessun ridimensionamento.</p>
+        </>}
+      /> : <p className="caption">Seleziona un oggetto per visualizzarne le proprietà nell’ispettore.</p>}
+    </fieldset>}
+    workflow={<>
+      <CustomerFieldsPanel document={doc} onValidity={setFieldsValid} disabled={editing||drawing||assetBusy||archiveBusy} onText={(objectId,text)=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setText',objectId,expectedRevision:storeRef.current!.document.revision,arguments:{text}},'manual'))} onSelect={id=>{select(id);adapter.current?.selectObjects(selectedRef.current);}} onImage={(objectId,file)=>{void prepareAndAct(async store=>{if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 256 KB');const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);return()=>store.dispatch({schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision:store.document.revision,arguments:{source}},'manual');});}}/>
+
+      {doc.plaque&&<PlaqueConfigurationPanel document={doc} disabled={editing||drawing||assetBusy} onChange={(areaMm,mounting)=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'configurePlaque',objectId:'project',expectedRevision:storeRef.current!.document.revision,arguments:{areaMm,mounting}},'manual'))}/>}
+
+      {import.meta.env.DEV && autosave && <DraftPanel api={workflowApi} leaving={leaving} emergency={mode!=='test'} dirty={dirty} control={draftControl}/>}
+      {import.meta.env.DEV && availableProducts && !doc.plaque && <ProductPanel api={workflowApi} products={availableProducts} catalogVersion={catalogVersion} onInk={color=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setInkColor',objectId:'project',expectedRevision:storeRef.current!.document.revision,arguments:{color}},'manual'))} onConfirm={(key,revision)=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'changeFormat',objectId:'project',expectedRevision:revision,arguments:{profileKey:key,catalogVersion,allowShrink:true}},'manual'))}/>}
+      {import.meta.env.DEV && (new URLSearchParams(window.location.search).has('configurations') || new URLSearchParams(window.location.search).has('configuration')) && <ConfigurationPanel api={workflowApi}/>}
+    </>}
+    project={<>
+      {mode!=='customer'&&<FontCheckPanel document={doc}/>}
+      {mode!=='customer'&&<EditorButton disabled={editing || drawing || assetBusy} onClick={() => download('progetto.TEST.json', JSON.stringify(storeRef.current!.document, null, 2), 'application/json')} icon="download" label="Esporta JSON" badge="JSON"/>}
+      <fieldset className="editor-actions" disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated}><legend>Progetto</legend>
+        {import.meta.env.DEV&&product&&<p className="caption"><a href={`/editor/templates?mode=${mode}&model=${encodeURIComponent(profileKey(product))}`}>Scegli un template per questo modello</a></p>}
+        {import.meta.env.DEV && mode!=='customer' && <details onToggle={event=>{if(event.currentTarget.open)void readAdminSnapshot().then(state=>setArchiveVocabulary(archiveTagVocabulary(state))).catch(()=>{});}}><summary>Archivio locale di template e composizioni</summary><label>Nome copia in archivio<input aria-label="Nome copia in archivio" maxLength={120} value={archiveTitle} onChange={event => setArchiveTitle(event.target.value)}/></label><label>Tipo di archivio<select aria-label="Tipo di archivio" value={archiveKind} onChange={event => setArchiveKind(event.target.value as 'composition' | 'template')}><option value="composition">Composizione cliente</option><option value="template">Template</option></select></label><ArchiveTagInput label="Tag della copia in archivio" value={archiveTags} onChange={setArchiveTags} vocabulary={archiveVocabulary}/><button type="button" disabled={!archiveTitle.trim() || archiveBusy} onClick={() => void saveArchive()}>Salva copia nell’archivio locale</button><p className="caption"><a href="/editor/admin">Apri gestione configuratore</a></p>{sessionNotice&&<p role="status">{sessionNotice}</p>}</details>}
+
+
+
+        <div className="button-row"><EditorButton onClick={() => act(() => storeRef.current!.undo())} icon="undo" label="Annulla"/><EditorButton onClick={() => act(() => storeRef.current!.redo())} icon="redo" label="Ripristina"/></div>
+        {mode!=='customer'&&<><div className="button-row"><EditorButton onClick={() => act(() => download('impronta.TEST.svg', adapter.current!.exportSvg(storeRef.current!.document), 'image/svg+xml'))} icon="download" label="Esporta SVG" badge="SVG"/></div>
+        <PngExportPanel document={doc}/>
+        <EditorButton icon="upload" label="Apri file JSON" badge="JSON" onClick={() => importRef.current?.click()}/>
+        <label htmlFor="json-import" className="sr-only">Riapri progetto JSON (max 10 MB)</label><input ref={importRef} className="sr-only" id="json-import" type="file" accept=".json,application/json" onChange={async e => {
+          const file = e.currentTarget.files?.[0]; e.currentTarget.value = ''; if (!file) return;
+          void prepareAndAct(async store => {
+            if (file.size > 10_000_000) throw new Error('File oltre 10 MB');
+            const next = parseGraphicDocument(JSON.parse(await file.text()));
+            await Promise.all([loadFontAssets(next.fontAssets), ...next.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]);
+            return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));const title=file.name.replace(/\.json$/i,'').slice(0,120);setArchiveTitle(title);setArchiveKind('composition');setArchiveTags('');setSavedMetadata(metadataKey(title,'composition',''));setSessionNotice(`Aperto file: ${file.name}`);};
+          });
+        }}/>
+        {mode==='test'&&<details><summary>Strumenti sviluppatore · comandi strutturati di prova</summary>
+          <label htmlFor="graphic-command">Comando AI simulato (JSON)</label><textarea id="graphic-command" rows={11} value={command} onChange={e => setCommand(e.target.value)}/>
+          <div className="button-row"><EditorButton disabled={!doc.objects.length} onClick={() => setCommand(example(storeRef.current!.document.revision, selectedRef.current[0] ?? doc.objects.find(o => o.type === 'text')?.id ?? doc.objects[0]!.id))} icon="refresh" label="Prepara comando aggiornato"/><EditorButton className="primary" onClick={executeCommand} icon="play" label="Esegui comando"/></div>
+        </details>}</>}
+      </fieldset>
+    </>}
+    diagnostics={<details hidden={mode!=='test'}><summary>Stato e storico del documento</summary><pre data-testid="graphic-state">{JSON.stringify(doc, null, 2)}</pre><pre>{eventLog || 'Nessuna modifica'}</pre></details>}
+  />;
 }

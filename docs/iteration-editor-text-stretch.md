@@ -1,0 +1,15 @@
+# Dilatazione e misure del testo — stato del 9 novembre 2026
+
+Le ultime precisazioni del titolare prevalgono sui passaggi intermedi. Solo «Dilataz. Orizz. (%)» nella scheda Testo; nessun campo di dilatazione verticale. Il valore è editabile anche durante l’editing e interessa tutto il box, conservando contenuto/cursore/selezione. `textScaleX` è un rapporto, default 1 (100%), limite TEST 10–1000%; `textScaleY` rimane leggibile per i progetti intermedi ma non viene più creato dai controlli.
+
+Nuovi testi e template iniziale «TEST · Città» partono con larghezza automatica attiva. Spunta nell’ispettore o doppio clic su una maniglia laterale sinistra/destra attivano la larghezza automatica; un trascinamento da solo non cambia modalità. Con righe giustificate il box deve restare a larghezza fissa finché non cambia l’allineamento.
+
+Con larghezza automatica: lati sinistro/destro modificano la dilatazione orizzontale; alto/basso modificano il corpo del font e compensano la dilatazione orizzontale per mantenere la larghezza; angoli combinano le due variazioni. Corpo/stili/tracking/crenature scalati insieme nel ridimensionamento verticale, senza deformare verticalmente i glifi. I limiti TEST di corpo e spaziatura restano rispettati. Con larghezza fissa le maniglie cambiano solo il contenitore e ricompongono il testo, conservandone proprietà e altezza automatica. Punto opposto fermo anche con rotazione; numeri centrali.
+
+Geometria: X/Y, Larghezza/Altezza, Rotazione su riga dedicata, sempre a due colonne anche fuori dal workspace. Tutti editabili; numeri dell’altezza testo cambiano il corpo e compensano la dilatazione, lasciando visibile tutto il contenuto e invariata la larghezza. Larghezza numerica nel modo automatico modifica la dilatazione; a larghezza fissa modifica il contenitore. Nessun corpo/dilatazione/riepilogo ingombro nella scheda Geometria.
+
+Scheda Testo: Font su riga intera; stile, poi Corpo/Dilataz. Orizz., Interlinea/Spaziatura e Allineamento. Testo scritto soltanto sul canvas; rimossi «Contenuto testo» e «Informazioni font». Interlinea default 1 e passo 0,1. In editing senza caratteri selezionati font/corpo/stile non fanno nulla, su esplicita indicazione del titolare; con selezione agiscono solo su quella.
+
+Corretto un vincolo HTML dell’altezza arrotondata che poteva rendere invalido l’intero modulo e bloccare anche gli altri numeri; uniformata la visualizzazione iniziale dei decimali. Il commit protegge dal rientro del blur durante il render e conserva il testo ancora in scrittura anche dopo un comando rifiutato. JSON, SVG e PNG condividono le proprietà; schema v2 compatibile con progetti senza percentuali.
+
+Prove: tutte le otto maniglie a 0/30°, punto opposto e preview/commit, font/correzioni, percentuale anche in editing, coordinate/dimensioni/rotazione da tastiera con contenuto pendente, layout, JSON/Undo e comandi invalidi. `npm run check`: 426 unitari, 243 browser laboratorio, build e controllo segreti superati; 13 browser pubblici locali superati. Nessun deploy; Illustrator da collaudare.

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "documentId": "1a498fa0-f1f9-4c7d-bed5-7f31c269ddb9",
+  "revision": 5,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "title",
+      "type": "text",
+      "xMm": 10,
+      "yMm": 3,
+      "text": "PNG · TEST",
+      "fontSizePt": 9,
+      "fontFamily": "Arial",
+      "fill": "#000000",
+      "textAlign": "center",
+      "textBox": {
+        "widthMm": 38,
+        "heightMm": 4,
+        "autoWidth": false,
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "object-53ab9443-7e55-45a2-8ce1-8a2c74c082fb",
+      "type": "image",
+      "xMm": 20,
+      "yMm": 9.5,
+      "rotationDeg": 0,
+      "widthMm": 18,
+      "heightMm": 9,
+      "source": {
+        "id": "asset-f8f5870b-892f-4e00-8a2c-1ae186e0550a",
+        "mime": "image/png",
+        "pixelWidth": 160,
+        "pixelHeight": 80,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABQCAYAAACeXX40AAAByklEQVR4nO3SwW3DMABD0UySmXrWnNrPvdcNiraWSAfvA5yA7/Eob4xRvTln9Y7jqF59aWAAAli9NDAAF5cGBuB+gEfTxhjVm3NWrzAAAYwGIIDRAAQwGoAARgMQwGgAAhgNQACjAQhgNAABjAYggNEABDAagABGAxDAaAACGA1AAKMBCGA0AP8E7fnx+wH4XQAuh1cEsTAAt8ErgFgYgBF8IYSFARiBF4JYGIBxfBsRFgZgBb5NCAsDEMBoANbg24CwMACr8C1GWBiAAEYDsA7fQoSFAQhgNADj0DYiLAzAODIAAawdgHl0AAJYMwABBBDAKwMwjgxAAGsHYB4dgADWDEAAAQTwygCMIwMQwNoBmEe3GmAtwovxAQgggOcArES4AB+AAAJ4DsA6hIvwAXgDgHGEC/EBCCCA5wCsQbgYH4A3Argd4QZ8AN4M4BaIm+ABeGOAyxBuxgfgjQFeCjEAD8A3AfgviEF4AL4ZwJcwC5ABCGDtCgMQwGgAAhgNQACjAQhgNAABjAYggNEABDAagABGAxDAaAACGA1AAKMBCGA0AAGMBiCA0X4EWNUYo3pzzup9Pbxt9aWBAQhg9dLAAFxcGhiAa/cJVCU/xPlNbeEAAAAASUVORK5CYII="
+      },
+      "raster": {
+        "threshold": 160,
+        "invert": false,
+        "whiteTransparent": true
+      },
+      "crop": {
+        "leftPx": 20,
+        "topPx": 10,
+        "widthPx": 120,
+        "heightPx": 60
+      }
+    }
+  ]
+}

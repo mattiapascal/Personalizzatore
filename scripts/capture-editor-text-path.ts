@@ -1,0 +1,11 @@
+import { chromium, expect } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import { clickEditorButton } from '../tests/helpers/editor-ui';
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } }); const errors: string[] = []; page.on('pageerror', error => errors.push(error.message)); await page.goto('http://127.0.0.1:5173/editor?workspace=1'); const doc = JSON.parse((await page.getByTestId('graphic-state').textContent())!);
+  doc.objects = [{ id: 'text-1', type: 'text', xMm: 5, yMm: 3, text: 'TEST · Città', fontSizePt: 9, fontFamily: 'Arial', fill: '#000000', textAlign: 'center' }, { id: 'guide', type: 'ellipse', xMm: 15, yMm: 6, rxMm: 12, ryMm: 6, stroke: '#000000', strokeMm: .25 }]; delete doc.groups;
+  await page.getByLabel('Riapri progetto JSON').setInputFiles({ name: 'text-path.TEST.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc)) }); await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 1 ·'); await clickEditorButton(page, { name: 'Seleziona tutto', exact: true }); await page.getByRole('button', { name: 'Applica testo al tracciato', exact: true }).click(); await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 2 ·'); await page.getByRole('tab', { name: 'Testo', exact: true }).click(); await page.getByLabel('Scostamento verticale (mm)', { exact: true }).fill('0.8'); await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 3 ·');
+  for (const [label, extension] of [['Esporta JSON', 'json'], ['Esporta SVG', 'svg']] as const) { const pending = page.waitForEvent('download'); await page.getByRole('button', { name: label, exact: true }).click(); await (await pending).saveAs(`fixtures/illustrator/text-path.TEST.${extension}`); }
+  mkdirSync('.local/previews', { recursive: true }); await page.getByRole('complementary', { name: 'Strumenti', exact: true }).evaluate(element => { element.scrollTop = 0; }); await page.screenshot({ path: '.local/previews/editor-text-path-desktop.png' }); expect(errors).toEqual([]); console.log('Testo su ellisse: campioni JSON/SVG e anteprima locale generati. Illustrator da verificare.');
+} finally { await browser.close(); }

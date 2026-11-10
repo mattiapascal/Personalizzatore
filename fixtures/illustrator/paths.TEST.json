@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "documentId": "00000000-0000-4000-8000-000000000001",
+  "revision": 3,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "text-1",
+      "type": "text",
+      "xMm": 10,
+      "yMm": 4,
+      "text": "TRACCIATI · TEST",
+      "fontSizePt": 9,
+      "fontFamily": "Arial",
+      "fill": "#000000",
+      "textAlign": "center",
+      "textBox": {
+        "widthMm": 38,
+        "heightMm": 4,
+        "autoWidth": false,
+        "autoHeight": true
+      },
+      "characterStyles": [
+        {
+          "start": 0,
+          "end": 6,
+          "style": {
+            "fontWeight": "bold"
+          }
+        }
+      ]
+    },
+    {
+      "id": "left-box",
+      "type": "rect",
+      "xMm": 8,
+      "yMm": 12,
+      "widthMm": 12,
+      "heightMm": 5,
+      "strokeMm": 0.25,
+      "stroke": "#000000",
+      "cornerRadiusMm": 1
+    },
+    {
+      "id": "dot",
+      "type": "circle",
+      "xMm": 24,
+      "yMm": 12,
+      "radiusMm": 2.5,
+      "strokeMm": 0.25,
+      "stroke": "#000000"
+    },
+    {
+      "id": "right-box",
+      "type": "path",
+      "xMm": 38,
+      "yMm": 12,
+      "widthMm": 12,
+      "heightMm": 5,
+      "points": [
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0.2,
+          "y": 0.4
+        },
+        {
+          "x": 0.35,
+          "y": 0
+        },
+        {
+          "x": 0.5,
+          "y": 0.4
+        },
+        {
+          "x": 0.65,
+          "y": 0.8
+        },
+        {
+          "x": 0.8,
+          "y": 0.4
+        },
+        {
+          "x": 1,
+          "y": 0
+        }
+      ],
+      "closed": false,
+      "strokeMm": 0.3,
+      "stroke": "#000000"
+    },
+    {
+      "id": "triangle",
+      "type": "path",
+      "xMm": 16,
+      "yMm": 8,
+      "widthMm": 5,
+      "heightMm": 2,
+      "points": [
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0.5,
+          "y": 0
+        },
+        {
+          "x": 1,
+          "y": 1
+        }
+      ],
+      "closed": true,
+      "strokeMm": 0.25,
+      "stroke": "#000000",
+      "fill": "#000000"
+    }
+  ],
+  "groups": [
+    {
+      "id": "body-group",
+      "objectIds": [
+        "left-box",
+        "dot"
+      ]
+    }
+  ]
+}

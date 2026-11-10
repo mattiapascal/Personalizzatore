@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 2,
+  "documentId": "9b13fd7f-acd9-4995-956d-fb262181fcb4",
+  "revision": 5,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "background",
+      "type": "rect",
+      "xMm": 9,
+      "yMm": 9,
+      "widthMm": 18,
+      "heightMm": 10,
+      "strokeMm": 0.25,
+      "stroke": "#000000",
+      "fill": "#000000"
+    },
+    {
+      "id": "text-1",
+      "type": "text",
+      "xMm": 9,
+      "yMm": 3,
+      "text": "TEST · Città",
+      "fontSizePt": 10.35,
+      "fontFamily": "Arial",
+      "fill": "#000000",
+      "textScaleX": 1.0434782608695652,
+      "textAlign": "center",
+      "letterSpacingPt": 0.23,
+      "textBox": {
+        "widthMm": 40,
+        "heightMm": 4,
+        "autoWidth": false,
+        "autoHeight": true
+      },
+      "characterStyles": [
+        {
+          "start": 0,
+          "end": 1,
+          "style": {
+            "kerningPt": -0.115
+          }
+        }
+      ]
+    },
+    {
+      "id": "object-9a918e84-c15c-46bd-993d-1db0e0b621be",
+      "type": "image",
+      "xMm": 14,
+      "yMm": 10.25,
+      "rotationDeg": 0,
+      "widthMm": 30,
+      "heightMm": 7.5,
+      "source": {
+        "id": "asset-36d389f8-202e-4283-a737-3ecf09186902",
+        "mime": "image/png",
+        "pixelWidth": 32,
+        "pixelHeight": 8,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAICAYAAACYhf2vAAAAcklEQVR4nO3OkRYEIQBA0fmVMEwHwzBMB8MwDcPBNAzDcDQc7Ffe+H7A7tlz5uGju/Hjts8hhEBKiVKKfd/RWmOMwVqLc47jOPDeE0IgxkhKiZwz53lSSqHWSmuN3jtjDK7rYs7Jfd+stV7AC/gDwLd7ANTBJQY9+pYlAAAAAElFTkSuQmCC"
+      },
+      "raster": {
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false,
+        "backgroundRemoval": "luminance"
+      }
+    }
+  ]
+}

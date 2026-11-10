@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "documentId": "20c3eb5a-68ff-45c9-8e83-e688a784d6a6",
+  "revision": 3,
+  "productId": "gid://shopify/Product/15106096497020",
+  "variantId": "gid://shopify/ProductVariant/55021442564476",
+  "catalogVersion": "TEST-2026-11-05-v1",
+  "catalogProductProfileVersion": 1,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 58,
+    "height": 22
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "text-1",
+      "type": "text",
+      "xMm": 17.537352206807792,
+      "yMm": 3.051169276821799,
+      "rotationDeg": 0,
+      "text": "TEST · Città",
+      "fontSizePt": 9,
+      "fontFamily": "Arial",
+      "fill": "#000000",
+      "textPath": {
+        "guide": {
+          "type": "ellipse",
+          "rxMm": 12,
+          "ryMm": 6,
+          "stroke": "#000000",
+          "strokeMm": 0.25
+        },
+        "originalPathId": "guide",
+        "offsetMm": 0,
+        "normalOffsetMm": 0.8,
+        "baseline": "baseline",
+        "reversed": false,
+        "showGuide": false
+      },
+      "textScaleX": 1,
+      "textScaleY": 1,
+      "textAlign": "center"
+    }
+  ]
+}

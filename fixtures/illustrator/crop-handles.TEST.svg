@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="58mm" height="22mm" viewBox="0 0 464 176" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
+<g transform="matrix(1 0 0 1 232 38.351)" style="" clip-path="url(#CLIPPATH_6)"  >
+<clipPath id="CLIPPATH_6" >
+	<rect transform="matrix(1 0 0 1 0 0)" x="-152" y="-14.350999999999997" rx="0" ry="0" width="304" height="28.701999999999995" />
+</clipPath>
+		<text xml:space="preserve" font-family="Arial" font-size="25.4" font-style="normal" font-weight="normal" style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1; text-decoration-thickness: 6.6667%; white-space: pre;" ><tspan x="-71.2639" y="7.9792" >PNG · TEST</tspan></text>
+</g>
+<g transform="matrix(1.2 0 0 1.2 232 112)"  >
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAA8CAYAAACtrX6oAAABn0lEQVR4AezYW27DMAxEUbf733ObIaAPBY7ih4KQowuUTq3Krjin/Onvtm1/i9Wj3XW+BLxOtwt2CrA5OsAAmydg3h4TDLB5AubtMcEAWyawTFNMsDk1wADbJTD616xds0xwT9rw+9XCdwDv49lAA7wP3FYF3b4v+QnwezYhq97vTLgD4OMoJZGfgI93u+jOcsgAm/+lAnweuNQUA3weWE+UQQZYXMYF8HXcElMM8HXgEk8CfI8p/RQDHMC+F4B9baMzgCMG3wvAvrbRGcARg+8FYF/b6AzgiMH3ArCvbXQGcMTgexkD+/a9TGcAm1MDDLB5Avfa+7n3+OefZoI/n/FXfwPA1+NPP71qDWClYFwAX8MtMb1qDWCl8Fzj+zK4agNgpWBcAJ/DLTW9ag1gpXCsyuGqLYCVwrgEqxrvSvpTgMcwZWFbWwC3JPpPwar61YJ3APdoQlX1q4XvVgQW4KsqTLl/9FPA+69gNXMCAGfWmXA2gCeEmPkVAGfWmXA2gCeEmPkVAGfWmXA2gCeEmPkVAGfWmXA2gA+EWHnLPwAAAP//5udX5gAAAAZJREFUAwBUV1A9eS3a6wAAAABJRU5ErkJggg==" x="-60" y="-30" width="120" height="60"></image>
+</g>
+</svg>

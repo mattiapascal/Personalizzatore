@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="58mm" height="22mm" viewBox="0 0 464 176" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
+<g transform="matrix(1 0 0 1 232 38.351)" style="" clip-path="url(#CLIPPATH_7)"  >
+<clipPath id="CLIPPATH_7" >
+	<rect transform="matrix(1 0 0 1 0 0)" x="-152" y="-14.350999999999997" rx="0" ry="0" width="304" height="28.701999999999995" />
+</clipPath>
+		<text xml:space="preserve" font-family="Arial" font-size="25.4" font-style="normal" font-weight="normal" style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1; text-decoration-thickness: 6.6667%; white-space: pre;" ><tspan x="-71.2639" y="7.9792" >PNG · TEST</tspan></text>
+</g>
+<g transform="matrix(-1.2 0 0 1.2 232 112)"  >
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABQCAYAAADSm7GJAAACLklEQVR4Aeza0VKDMBCFYfT931lZh1yE0E4poe6e8ztmUiJNd89HvNHvhS/pBACW5l0WgAEWT0C8vTjBP2uPmcdaHt/vJhDA776X9xVIAOACSFdKBPhKegXe6wpcgGZOiQDPyTHtLgCnpZlTGMBzcky7C8BpaeYUBvCcHNPuAnBamjmFATwnx7S7AJyWZk5hO+A5m7JLngQAzmNxSyUA3xJrnk0BzmNxSyUVgJ/9M8ItoShtWgH4Wd4N/9k91j+rDtzwgG5J7GYV4NZWQLfXzGsCasBrS0sgx4jXLw7d2xSBmxbIaxLKwGt7f6c5ZtuhDmwL2xp3ALb+Ve0AHA+zLbILcCBbDidgy1PsBMwJHhLQW7A7xZxgvYe46wjgLg69C4D1TLuOAO7i0LsAWM+06wjgLg69C4D1TLuOAO7i2C6EJoCFMI9aAfgoFaE1gIUwj1oB+CgVoTU34C8hu5dacQN+KRSlm5yA7U5vPKhOwNGv3TgFXDgdy9MbXg7AtrguwNGn7VA/wdanN55qZWB7XFXggI0R/dkPtRMM7O6RVgEO2Bi79risDhyoMW6VrLx5BeAAfDQqZ/+R2isAfyQI1Q8BWFV26wvgLQjVCWBV2a0vgLcgVCeAVWW3vgDeglCdrgCrZiLVF8BSnGMzAI+ZSK0ALMU5NgPwmInUCsBSnGMzAI+ZSK0ALMU5NhPAj/7WmmV9rPp/V0p9egCXKphizyUA8Lm8yt0NcDmycwX/AgAA//9WHvRuAAAABklEQVQDANPMPKHIFPi8AAAAAElFTkSuQmCC" x="-60" y="-40" width="120" height="80"></image>
+</g>
+</svg>

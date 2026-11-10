@@ -116,13 +116,13 @@ describe('Montature: conversazione, selezione e geometrie', () => {
     expect(proposalFromArguments(args({ sizeUnknown: true }), 2)).toMatchObject({ arguments: { diameterMm: null, minimumAreaMm: null, sizeUnknown: true } });
     expect(proposalFromArguments(args({ diameterMm: 35, widthMm: 20, heightMm: 10 }), 2)).toMatchObject({ arguments: {}, clarification: expect.stringContaining('diametro') });
   });
-  it('rifiuta un testo nel quadrato circoscritto ma fuori dal cerchio; cambio variante conserva ID e stato', () => {
+  it('rifiuta un testo totalmente fuori dal cerchio; cambio variante conserva ID e stato', () => {
     const mountFixtureCatalog = manualTestCatalog();
     const profiles = mountFixtureCatalog.list().filter(p => p.productId.endsWith('/15106681799036'));
     const small = profiles.find(p => p.nominalAreaMm.width === 35)!, large = profiles.find(p => p.nominalAreaMm.width === 40)!;
     const store = new DocumentStore(createDocument(small, mountFixtureCatalog.version), measure);
     const before = structuredClone(store.document);
-    expect(() => store.dispatch({ schemaVersion: 1, expectedRevision: 0, objectId: 'text-1', tool: 'moveObject', arguments: { xMm: 1, yMm: 1 } }, 'manual')).toThrow('circolare');
+    expect(() => store.dispatch({ schemaVersion: 1, expectedRevision: 0, objectId: 'text-1', tool: 'moveObject', arguments: { xMm: -10, yMm: 1 } }, 'manual')).toThrow('completamente fuori');
     expect(store.document).toEqual(before);
     store.changeProduct(large, mountFixtureCatalog.version);
     expect(store.document.objects).toEqual(before.objects); expect(store.document.documentId).toBe(before.documentId);

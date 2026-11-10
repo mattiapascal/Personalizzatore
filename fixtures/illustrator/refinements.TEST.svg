@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="58mm" height="22mm" viewBox="0 0 464 176" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
+<g transform="matrix(1 0 0 1 145 113)"  >
+<rect style="stroke: rgb(0,0,0); stroke-width: 2; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  x="-72" y="-40" rx="0" ry="0" width="144" height="80" />
+</g>
+<g transform="matrix(1.0435 0 0 1 232 40.5036)" style="" clip-path="url(#CLIPPATH_4)"  >
+<clipPath id="CLIPPATH_4" >
+	<rect transform="matrix(1 0 0 1 0 0)" x="-153.33333333333334" y="-16.503649999999997" rx="0" ry="0" width="306.6666666666667" height="33.007299999999994" />
+</clipPath>
+		<text xml:space="preserve" font-family="Arial" font-size="29.209999999999997" font-style="normal" font-weight="normal" style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1; text-decoration-thickness: 6.6667%; white-space: pre;" ><tspan x="-83.7425" y="9.176" >T</tspan><tspan x="-65.5753" y="9.176" >E</tspan><tspan x="-45.4433" y="9.176" >S</tspan><tspan x="-25.3114" y="9.176" >T</tspan><tspan x="-6.8196" y="9.176" style="white-space: pre; "> </tspan><tspan x="1.945" y="9.176" >·</tspan><tspan x="12.3212" y="9.176" style="white-space: pre; "> </tspan><tspan x="21.0858" y="9.176" >C</tspan><tspan x="42.8294" y="9.176" >i</tspan><tspan x="49.9681" y="9.176" >t</tspan><tspan x="58.7327" y="9.176" >t</tspan><tspan x="67.4973" y="9.176" >à</tspan></text>
+</g>
+<g transform="matrix(7.5 0 0 7.5 232 112)"  >
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAICAYAAACYhf2vAAAAhElEQVR4AezSoRJBURAGYONNaDQijUajEWk0GpFGoxFpNBqNSKPxKr56Zk41t9yd/cLObPhnZ7OZhCsW4CPTiwc3Lpw4sGPDigUzJowY0KNDiwY1KpQokCPoWIBg4d9DGiC9QOwCeY9XpEyVOk3adOkzZMyUOUvWbNlz5MyVO0/efAn6BwAA//+bspskAAAABklEQVQDADZ+GBHV5jHiAAAAAElFTkSuQmCC" x="-16" y="-4" width="32" height="8"></image>
+</g>
+</svg>

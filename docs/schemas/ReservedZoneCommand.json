@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tool": {
+          "type": "string",
+          "const": "addZone"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "xMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "yMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "widthMm": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1000
+            },
+            "heightMm": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1000
+            },
+            "shape": {
+              "type": "string",
+              "enum": [
+                "rectangle",
+                "ellipse"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "xMm",
+            "yMm",
+            "widthMm",
+            "heightMm",
+            "shape"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "expectedRevision",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tool": {
+          "type": "string",
+          "const": "updateZone"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "xMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "yMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "widthMm": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1000
+            },
+            "heightMm": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1000
+            },
+            "shape": {
+              "type": "string",
+              "enum": [
+                "rectangle",
+                "ellipse"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "xMm",
+            "yMm",
+            "widthMm",
+            "heightMm",
+            "shape"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "expectedRevision",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tool": {
+          "type": "string",
+          "const": "removeZone"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "expectedRevision",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

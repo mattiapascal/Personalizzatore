@@ -1,0 +1,13 @@
+import {z} from 'zod';import type {ShopReadConfig} from './editor-shop-catalog';
+// Source namespace/key observed in the existing local theme and in the official PitchPrint Shopify SDK.
+export const EDITOR_PITCHPRINT_ASSOCIATIONS_QUERY=`query EditorPitchprintAssociations($after: String) {
+ products(first: 50, after: $after) {
+  nodes { id title pitchprint: metafield(namespace: "global", key: "pprint") { value } }
+  pageInfo { hasNextPage endCursor }
+ }
+}`;
+export async function fetchPitchprintProductBindings(config:ShopReadConfig,fetcher:typeof fetch=fetch){
+ if(config.domain!=='zqu2eg-72.myshopify.com'||!config.token)throw new Error('Lettura Shopify read_products non configurata');const product=z.object({id:z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/),title:z.string().max(1000),pitchprint:z.object({value:z.string().max(1024*1024)}).nullable()}),page=z.object({products:z.object({nodes:z.array(product).max(50),pageInfo:z.object({hasNextPage:z.boolean(),endCursor:z.string().nullable()})})}),products:z.infer<typeof product>[]=[],seen=new Set<string>(),ids=new Set<string>();let after:string|null=null;const signal=AbortSignal.timeout(180000);
+ for(let index=0;;index++){if(index>=100)throw new Error('Catalogo oltre 5000 prodotti: nessuna associazione parziale salvata');let data:unknown;for(let attempt=0;attempt<3;attempt++){const response=await fetcher(`https://${config.domain}/admin/api/2026-10/graphql.json`,{method:'POST',headers:{'Content-Type':'application/json','X-Shopify-Access-Token':config.token},body:JSON.stringify({query:EDITOR_PITCHPRINT_ASSOCIATIONS_QUERY,variables:{after}}),signal,redirect:'error'});if(!response.ok)throw new Error(`Lettura associazioni Shopify HTTP ${response.status}`);const text=await response.text();if(text.length>4*1024*1024)throw new Error('Risposta Shopify oltre il limite locale');const result=z.object({data:z.unknown().optional(),errors:z.array(z.object({extensions:z.object({code:z.string().optional()}).optional()})).optional()}).parse(JSON.parse(text));if(result.errors?.length){if(result.errors.every(error=>error.extensions?.code==='THROTTLED')&&attempt<2){await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));continue;}throw new Error('Shopify non ha completato la lettura delle associazioni');}data=result.data;break;}const current=page.parse(data).products;for(const item of current.nodes){if(ids.has(item.id))throw new Error('Prodotto duplicato durante la lettura: riprova');ids.add(item.id);products.push(item);}if(!current.pageInfo.hasNextPage)break;const cursor=current.pageInfo.endCursor;if(!cursor||seen.has(cursor))throw new Error('Paginazione associazioni incoerente');seen.add(cursor);after=cursor;}
+ return products;
+}

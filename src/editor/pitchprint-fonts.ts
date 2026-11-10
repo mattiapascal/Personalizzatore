@@ -1,0 +1,15 @@
+export interface PitchprintFontRequest {family:string;weight:number;italic:boolean;}
+export const fontNameKey=(name:string)=>name.trim().toLocaleLowerCase('en').replace(/[\s_-]/g,'');
+/** Use the first declared face. A CSS fallback list never authorizes choosing another family. */
+export function pitchprintFontRequest(raw:Record<string,unknown>):PitchprintFontRequest{
+ if(typeof raw.fontFamily!=='string'||!raw.fontFamily.trim())throw new Error('Famiglia font non dichiarata nel sorgente.');const source=raw.fontFamily.trim(),family=(source.match(/^(['"])(.*?)\1(?:\s*,|$)/)?.[2]??source.split(',')[0]!).trim().replace(/^['"]|['"]$/g,'');
+ const declared=typeof raw.fontWeight==='string'?raw.fontWeight.trim().toLowerCase():raw.fontWeight,weight=declared==='bold'?700:declared==='normal'||declared===undefined||declared===''?400:Number(declared),style=String(raw.fontStyle??'normal').trim().toLowerCase();if(!Number.isInteger(weight)||weight<1||weight>1000)throw new Error('Peso font non riconosciuto.');if(!['','normal','italic'].includes(style))throw new Error(`Stile font «${style}» da mappare esplicitamente.`);return{family,weight,italic:style==='italic'};
+}
+export interface RequiredPitchprintFont extends PitchprintFontRequest {templateIds:string[];sourceNames:string[];}
+export function requiredPitchprintFonts(sources:readonly {id:string;source:unknown}[]):{fonts:RequiredPitchprintFont[];issues:{templateId:string;reason:string}[]}{
+ const found=new Map<string,RequiredPitchprintFont>(),issues:{templateId:string;reason:string}[]=[];
+ const add=(raw:Record<string,unknown>,id:string)=>{try{const value=pitchprintFontRequest(raw),key=JSON.stringify([fontNameKey(value.family),value.weight,value.italic]),entry=found.get(key)??{...value,templateIds:[],sourceNames:[]};if(!entry.templateIds.includes(id))entry.templateIds.push(id);const name=String(raw.fontFamily);if(!entry.sourceNames.includes(name))entry.sourceNames.push(name);found.set(key,entry);}catch(cause){issues.push({templateId:id,reason:cause instanceof Error?cause.message:'Font non riconosciuto'});}};
+ const visit=(node:any,id:string)=>{if(!node||typeof node!=='object')return;if(['text','i-text','textbox'].includes(node.type)){add(node,id);if(node.styles&&typeof node.styles==='object')for(const line of Object.values(node.styles) as any[])if(line&&typeof line==='object')for(const style of Object.values(line) as any[])if(style&&typeof style==='object'&&['fontFamily','fontWeight','fontStyle'].some(key=>style[key]!==undefined))add({...node,...style},id);}if(Array.isArray(node.objects))node.objects.forEach((child:any)=>visit(child,id));};
+ for(const source of sources){const raw=source.source as any;if(Array.isArray(raw?.pages))for(const page of raw.pages)visit({objects:page.canvas?.objects??[]},source.id);else issues.push({templateId:source.id,reason:'Sorgente privo di pagine'});}
+ return{fonts:[...found.values()].sort((a,b)=>a.family.localeCompare(b.family,'it')||a.weight-b.weight||Number(a.italic)-Number(b.italic)),issues};
+}
