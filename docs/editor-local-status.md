@@ -2,7 +2,13 @@
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.
 
-## Schermata di caricamento font — ultimo incremento
+## Importazione dei gruppi PitchPrint — ultimo incremento
+
+[Comportamento e limiti](iteration-editor-pitchprint-groups.md): gruppi grafici con trasformazioni concatenate, testo editabile, vettori anche riflessi e immagini raggruppate; blocchi ereditati validati dagli stessi comandi manuali/AI. Annidamento ricondotto al gruppo esterno con avviso. Contenitori con label/ordine propri restano bloccati, così come deformazioni non rappresentabili: non si perdono proprietà per far riuscire la conversione.
+
+**620 unitari / 92 file, build/segreti, 11 browser di migrazione e 20 artefatti passati.** Campione portabile 100 × 60 mm, due gruppi, sei oggetti e Arimo incorporato; confronto separato con circa 0,10% di differenza sui pixel dell’inchiostro. Analisi reale senza salvataggi: **112/370 convertibili**, inclusi **tre template con gruppi**; 24 bloccati da proprietà del contenitore ancora da gestire. Libreria personale e dati grafici invariati. Nessuna nuova suite browser completa o verifica Illustrator dichiarata.
+
+## Schermata di caricamento font
 
 [Correzione e prove](iteration-editor-library-font-policy.md): elenco e primo file hanno un limite complessivo di otto secondi, con errore e **Riprova** se la richiesta non risponde. Non viene più aperta una bozza priva del testo a causa di un errore di rete. I documenti iniziali con font incorporati si aprono senza attendere l’elenco; la libreria si aggiorna in sottofondo. Due aperture con libreria reale: **1,174 s e 1,059 s**, zero errori e scritture. **616 unitari, build/segreti e 15 browser pertinenti superati**, inclusi quattro nuovi casi di blocco/recupero. Il controllo completo di 363 browser sotto è precedente a questa correzione.
 

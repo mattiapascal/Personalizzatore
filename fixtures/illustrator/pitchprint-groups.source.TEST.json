@@ -1,0 +1,16 @@
+{
+ "title":"Gruppi nativi TEST","unit":"mm","pages":[{"pageData":{"fWidth":100,"fHeight":60},"canvas":{"clipPath":{"left":10,"top":20,"width":1000,"height":600},"objects":[
+  {"type":"group","left":450,"top":310,"width":300,"height":200,"originX":"center","originY":"center","scaleX":1.1,"scaleY":1.1,"angle":20,"strokeWidth":0,"mtx":[1,0,0,1,999,999],"objects":[
+   {"type":"rect","left":-110,"top":-70,"width":90,"height":65,"originX":"left","originY":"top","fill":"#000000","stroke":null,"strokeWidth":0,"title":"Marchio TEST","idx":2},
+   {"type":"i-text","left":0,"top":70,"width":1,"height":1,"originX":"center","originY":"center","fontFamily":"Arimo","fontSize":38,"fontWeight":"normal","fontStyle":"normal","text":"TEST · Città","fill":"#000000","strokeWidth":0,"textAlign":"center","lineHeight":1,"charSpacing":0,"title":"Intestazione","idx":1,"includeInForm":true},
+   {"type":"group","left":70,"top":-40,"width":70,"height":70,"originX":"center","originY":"center","scaleX":0.8,"scaleY":0.8,"angle":-35,"strokeWidth":0,"objects":[
+    {"type":"circle","left":0,"top":0,"width":50,"height":50,"radius":25,"originX":"center","originY":"center","fill":"#000000","stroke":null,"strokeWidth":0},
+    {"type":"rect","left":8,"top":0,"width":12,"height":20,"originX":"center","originY":"center","fill":"#ffffff","stroke":null,"strokeWidth":0}
+   ]}
+  ]},
+  {"type":"group","left":810,"top":290,"width":120,"height":120,"originX":"center","originY":"center","scaleX":1.2,"scaleY":0.7,"angle":-15,"flipX":true,"strokeWidth":0,"objects":[
+   {"type":"rect","left":-20,"top":0,"width":70,"height":65,"originX":"center","originY":"center","fill":"#000000","stroke":null,"strokeWidth":0},
+   {"type":"rect","left":-35,"top":8,"width":18,"height":22,"originX":"center","originY":"center","fill":"#ffffff","stroke":null,"strokeWidth":0}
+  ]}
+ ]}}]
+}
