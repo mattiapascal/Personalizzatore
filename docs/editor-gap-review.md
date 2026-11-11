@@ -1,4 +1,4 @@
-**Aggiornamento 11 novembre — posizione delle foto:** [spostamento dentro il crop rettangolare con cornice ferma](iteration-editor-raster-pan.md), limiti sorgente e gesti/numeri/AI sul medesimo documento. Non equivale a maschere arbitrarie o al contratto completo dei segnaposto foto.
+**Aggiornamento 11 novembre — posizione delle foto:** [spostamento dentro il crop rettangolare con cornice ferma](iteration-editor-raster-pan.md), limiti sorgente e gesti/numeri/AI sul medesimo documento. [Frecce fini](iteration-editor-raster-pan-keyboard.md) disponibili nello stesso modo, con focus dei campi e Redo conservati. Non equivale a maschere arbitrarie o al contratto completo dei segnaposto foto.
 
 **Aggiornamento 11 novembre — risorse immagini:** [riuso dei pixel già verificati per file identici sotto ID diversi](iteration-editor-raster-sharing.md), con filtri indipendenti e controlli sugli errori. Condivisione provata su quattro alias da 12 MP; gestione globale della memoria per molte sorgenti uniche e storico lungo ancora da completare. Documento e comandi invariati.
 

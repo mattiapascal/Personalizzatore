@@ -46,6 +46,7 @@ import { regularPolygonPoints, starPoints } from './polygon-geometry';
 import { movePathNode } from './path-nodes';
 import { rasterSourceFromBytes, MAX_RASTER_BYTES } from './raster-source';
 import { prepareRasterSource } from './raster-cache';
+import { panRasterContents } from './raster-crop-edit';
 import { DEFAULT_RASTER } from './raster-processing';
 import { captureSelection, clipboardInsertion, type GraphicClipboard } from './clipboard';
 import { PngExportPanel } from './PngExportPanel';
@@ -102,6 +103,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const [assetBusy, setAssetBusy] = useState(false);
   const [drawingTool, setDrawingTool] = useState<DrawingPrimitive | 'freehand' | 'polyline' | 'bezier' | null>(null), [drawing, setDrawing] = useState(false);
   const [selectionEpoch, setSelectionEpoch] = useState(0), [nodeMode, setNodeMode] = useState(false), [cropMode, setCropMode] = useState(false);
+  const cropContentsFocus = useRef<string | null>(null);
   const [polylineCount, setPolylineCount] = useState(0);
   const [error, setError] = useState('');
   const [fontRendering, setFontRendering] = useState<{blocked:readonly string[];pending:readonly string[]}>({blocked:[],pending:[]});
@@ -370,6 +372,11 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     const step = event.altKey ? 0.01 : event.shiftKey ? 1 : 0.1, deltaXmm = direction[0] * step, deltaYmm = direction[1] * step;
     run(() => act(() => {
       const store = storeRef.current!, object = store.document.objects.find(object => object.id === ids[0])!;
+      if (ids.length === 1 && object.type === 'image' && cropContentsFocus.current === object.id) {
+        const next = panRasterContents(object, deltaXmm, deltaYmm);
+        if (next !== object) store.dispatch({ schemaVersion: 1, tool: 'updateObject', expectedRevision: store.document.revision, objectId: object.id, arguments: objectArguments(next) }, 'manual');
+        return;
+      }
       const single=ids.length===1&&!rootGroupFor(store.document,ids[0]!);store.dispatch({ schemaVersion: 1, tool: single ? 'moveObject' : 'moveObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: single ? { xMm: object.xMm + deltaXmm, yMm: object.yMm + deltaYmm } : { objectIds: ids, deltaXmm, deltaYmm } }, 'manual');
     }));
   };
@@ -476,7 +483,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         characterSelection={characterSelection}
         onFontMenuOpen={() => { if (import.meta.env.DEV) void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => setFontNotice('')).catch(error => setFontNotice(error.message)); }}
         onDetachText={() => { if (selectedObject.type !== 'text' || !selectedObject.textPath) return; const preferred = selectedObject.textPath.originalPathId, pathObjectId = doc.objects.some(object => object.id === preferred) || doc.groups?.some(group => group.id === preferred) ? `path-${crypto.randomUUID()}` : preferred; act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'detachTextFromPath', objectId: selectedObject.id, expectedRevision: doc.revision, arguments: { pathObjectId } }, 'manual'), selectedObject.id); }}
-        onCropFocus={(id,moveContents) => { adapter.current?.setRasterCropFocus(id,moveContents); setCropMode(!!id); }}
+        onCropFocus={(id,moveContents) => { cropContentsFocus.current = moveContents ? id : null; adapter.current?.setRasterCropFocus(id,moveContents); setCropMode(!!id); }}
         onNodeFocus={focus => { adapter.current?.setNodeFocus(focus); setNodeMode(!!focus); }}
         onKerning={value => act(() => {
           const update = adapter.current?.kernedText(value); if (update) storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', expectedRevision: update.revision, objectId: update.object.id, arguments: objectArguments(update.object) }, 'manual');

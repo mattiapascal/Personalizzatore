@@ -3765,3 +3765,65 @@ test.describe('foto nella cornice touch',()=>{test.use({hasTouch:true,isMobile:t
 test('foto nella cornice UI: Space sposta il foglio e lascia attiva la modalità contenuto',async({page})=>{
  await replacementScene(page);await page.getByRole('tab',{name:'Ritaglio',exact:true}).click();const mode=page.getByRole('button',{name:'Sposta foto nella cornice',exact:true});await mode.click();await page.getByRole('button',{name:'Apri area di disegno a tutto schermo',exact:true}).click();await expect(page.getByTestId('editor-workspace')).toHaveAttribute('data-view-ready','true');const before=await refinementState(page),canvas=page.locator('.upper-canvas');await canvas.focus();const box=(await canvas.boundingBox())!,zoom=box.width/(before.areaMm.width*8),a=Math.PI/6,cx=5+(20*Math.cos(a)+10*Math.sin(a))/2,cy=5+(20*Math.sin(a)+10*Math.cos(a))/2,start={x:box.x+cx*8*zoom,y:box.y+cy*8*zoom};await page.keyboard.down('Space');await page.mouse.move(start.x,start.y);await page.mouse.down();await page.mouse.move(start.x+40,start.y+25,{steps:6});await page.mouse.up();await page.keyboard.up('Space');expect(await refinementState(page)).toEqual(before);await expect(mode).toHaveAttribute('aria-pressed','true');const panned=(await canvas.boundingBox())!;expect(panned.x-box.x).toBeCloseTo(40,5);expect(panned.y-box.y).toBeCloseTo(25,5);await page.mouse.move(start.x+40,start.y+25);await page.mouse.down();await page.mouse.move(start.x+50,start.y+30,{steps:4});await page.mouse.up();await expect.poll(async()=>(await refinementState(page)).revision).toBe(before.revision+1);const after=(await refinementState(page)).objects[0];expect(after.crop).not.toEqual(before.objects[0].crop);for(const key of['xMm','yMm','widthMm','heightMm','rotationDeg','flipX','flipY'])expect(after[key]).toEqual(before.objects[0][key]);await expect(page.getByRole('alert')).toHaveCount(0);
 });
+
+async function keyboardPhotoScene(page: Page, angle = 0, flipX = false, locked = false, crop = { leftPx: 20.25, topPx: 10.5, widthPx: 100.5, heightPx: 70.25 }) {
+  const doc = JSON.parse(await readFile('fixtures/illustrator/raster-pan.source.TEST.json', 'utf8'));
+  doc.objects[0] = { ...doc.objects[0], rotationDeg: angle, flipX, flipY: true, crop, widthMm: crop.widthPx * .4, heightMm: crop.heightPx * .4, editor: { transformLocked: locked } };
+  await page.goto('/editor');
+  await page.getByLabel('Riapri progetto JSON').setInputFiles({ name: 'keyboard-photo.TEST.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc)) });
+  await clickEditorButton(page, { name: 'Immagine · photo', exact: true });
+  await page.getByRole('tab', { name: 'Ritaglio', exact: true }).click();
+  const mode = page.getByRole('button', { name: 'Sposta foto nella cornice', exact: true });
+  await mode.click(); await expect(mode).toHaveAttribute('aria-pressed', 'true');
+  const canvas = page.locator('.upper-canvas'); await canvas.focus();
+  return { canvas, mode, before: await refinementState(page) };
+}
+for (const angle of [0, 30]) for (const flipX of [false, true]) test(`foto tastiera: passi fini, cornice bloccata ${angle} gradi flipX ${flipX}`, async ({ page }) => {
+  const { canvas, before } = await keyboardPhotoScene(page, angle, flipX, true), original = before.objects[0], radians = angle * Math.PI / 180;
+  let previous = original;
+  for (const [key, dx, dy] of [['ArrowRight', .1, 0], ['Shift+ArrowDown', 0, 1], ['Alt+ArrowLeft', -.01, 0]] as const) {
+    await canvas.press(key);
+    const after = await refinementState(page), object = after.objects[0];
+    expect(object.crop.leftPx - previous.crop.leftPx).toBeCloseTo(-(dx * Math.cos(radians) + dy * Math.sin(radians)) / .4 * (flipX ? -1 : 1), 9);
+    expect(object.crop.topPx - previous.crop.topPx).toBeCloseTo(-(-dx * Math.sin(radians) + dy * Math.cos(radians)) / .4 * -1, 9);
+    const { crop: _before, ...frame } = original, { crop: _after, ...nextFrame } = object;
+    expect(nextFrame).toEqual(frame); previous = object;
+  }
+  const final = await refinementState(page); expect(final.revision).toBe(before.revision + 3);
+  for (let index = 0; index < 3; index++) await canvas.press('Control+z');
+  expect((await refinementState(page)).objects).toEqual(before.objects);
+  for (let index = 0; index < 3; index++) await canvas.press('Control+Shift+Z');
+  expect((await refinementState(page)).objects).toEqual(final.objects);
+  const pending = page.waitForEvent('download'); await page.getByRole('button', { name: 'Esporta JSON', exact: true }).click();
+  const file = await (await pending).path(); await page.reload(); await page.getByLabel('Riapri progetto JSON').setInputFiles(file);
+  await expect.poll(async () => (await refinementState(page)).objects[0]?.source?.id).toBe(original.source.id);
+  expect((await refinementState(page)).objects).toEqual(final.objects);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('foto tastiera: limite senza revisioni conserva il redo, asse senza margine resta fermo', async ({ page }) => {
+  const { canvas, before } = await keyboardPhotoScene(page, 0, false, false, { leftPx: 0, topPx: 0, widthPx: 100.5, heightPx: 120 });
+  await canvas.press('ArrowRight'); await canvas.press('ArrowDown'); await canvas.press('Shift+ArrowUp');
+  expect(await refinementState(page)).toEqual(before);
+  await canvas.press('ArrowLeft'); const changed = await refinementState(page); expect(changed.objects[0].crop.leftPx).toBeCloseTo(.25, 9);
+  await canvas.press('Control+z'); await canvas.press('Shift+ArrowRight'); await canvas.press('Alt+ArrowUp');
+  const undone = await refinementState(page); expect(undone.objects).toEqual(before.objects); expect(undone.revision).toBe(before.revision + 2);
+  await canvas.press('Control+y'); expect((await refinementState(page)).objects).toEqual(changed.objects);
+  await expect(page.getByLabel('Verticale foto (mm)', { exact: true })).toBeDisabled();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('foto tastiera: focus dei campi, uscita modo e cambio selezione non dirottano le frecce', async ({ page }) => {
+  const { canvas, mode, before } = await keyboardPhotoScene(page), x = page.getByLabel('Orizzontale foto (mm)', { exact: true });
+  await x.press('ArrowUp'); await expect.poll(async () => (await refinementState(page)).revision).toBe(before.revision + 1);
+  const typed = await refinementState(page); expect(typed.objects[0].crop.leftPx).toBeCloseTo(20, 9);
+  await x.press('ArrowRight'); expect(await refinementState(page)).toEqual(typed);
+  await page.getByRole('link', { name: 'Selettore prodotti', exact: true }).focus(); await page.keyboard.press('ArrowDown'); expect(await refinementState(page)).toEqual(typed);
+  await mode.click(); await expect(mode).toHaveAttribute('aria-pressed', 'false'); await canvas.press('ArrowRight');
+  const moved = await refinementState(page); expect(moved.objects[0].crop).toEqual(typed.objects[0].crop); expect(moved.objects[0].xMm).toBeCloseTo(typed.objects[0].xMm + .1, 9);
+  await mode.click(); await page.getByRole('tab', { name: 'Geometria', exact: true }).click(); await canvas.press('ArrowDown');
+  const geometry = await refinementState(page); expect(geometry.objects[0].crop).toEqual(moved.objects[0].crop); expect(geometry.objects[0].yMm).toBeCloseTo(moved.objects[0].yMm + .1, 9);
+  await page.getByRole('button', { name: 'Aggiungi rettangolo', exact: true }).click(); await canvas.press('ArrowRight');
+  const rectangle = await refinementState(page); expect(rectangle.objects[0]).toEqual(geometry.objects[0]); expect(rectangle.objects.at(-1).type).toBe('rect');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});

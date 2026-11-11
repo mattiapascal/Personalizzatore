@@ -1,3 +1,5 @@
+**11 novembre — foto nella cornice:** [le frecce spostano il contenuto quando il modo è attivo](iteration-editor-raster-pan-keyboard.md), senza muovere la cornice. Passi consueti 0,1/1/0,01 mm, limiti, Undo/Redo e protezione del focus.
+
 # Tastiera dell’editor — 8 novembre 2026
 
 ## Piano
