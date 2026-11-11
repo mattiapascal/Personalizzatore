@@ -1,3 +1,4 @@
+import { paintWithOpacity } from './paint-opacity';
 import { mapVector } from './vector-geometry';
 import { Path, util } from 'fabric';
 import { bezierCommands } from './bezier-geometry';
@@ -11,7 +12,7 @@ export function createTextGuide(guide: TextPathGuide): Path {
   else if (guide.type === 'vector') commands = mapVector(guide.commands,(x,y)=>({x:x*guide.widthMm*8,y:y*guide.heightMm*8})).map(c=>c.join(' ')).join(' ');
   else if (guide.type === 'bezier') commands = bezierCommands(guide.nodes, guide.closed, guide.widthMm * 8, guide.heightMm * 8).map(command => command.join(' ')).join(' ');
   else commands = guide.points.map((point, i) => `${i ? 'L' : 'M'} ${point.x * guide.widthMm * 8} ${point.y * guide.heightMm * 8}`).join(' ') + (guide.closed ? ' Z' : '');
-  const path = new Path(commands, { left: 0, top: 0, originX: 'center', originY: 'center', fill: null, stroke: guide.stroke, strokeWidth: guide.stroke === 'none' ? 0 : guide.strokeMm * 8, visible: false, objectCaching: false, strokeLineCap: 'round', strokeLineJoin: 'round', strokeDashArray: guide.strokeDash === 'dashed' ? [guide.strokeMm * 32, guide.strokeMm * 16] : guide.strokeDash === 'dotted' ? [guide.strokeMm * 8, guide.strokeMm * 16] : null });
+  const path = new Path(commands, { left: 0, top: 0, originX: 'center', originY: 'center', fill: null, stroke: paintWithOpacity(guide.stroke, guide.strokeOpacity), strokeWidth: guide.stroke === 'none' ? 0 : guide.strokeMm * 8, visible: false, objectCaching: false, strokeLineCap: 'round', strokeLineJoin: 'round', strokeDashArray: guide.strokeDash === 'dashed' ? [guide.strokeMm * 32, guide.strokeMm * 16] : guide.strokeDash === 'dotted' ? [guide.strokeMm * 8, guide.strokeMm * 16] : null });
   path.segmentsInfo = util.getPathSegmentsInfo(path.path); return path;
 }
 export function guideLength(path: Path): number { return path.segmentsInfo?.at(-1)?.length ?? 0; }

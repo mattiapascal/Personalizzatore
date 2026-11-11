@@ -1,3 +1,4 @@
+import { OpacityControls } from './OpacityControls';
 import { EDITOR_LIMITS } from './limits';
 import { useEffect, useRef, useState } from 'react';
 import type { GraphicDocument, SelectionStyle } from './model';
@@ -16,6 +17,8 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
     return effective.mixed.includes('fill') ? 'mixed' : effective.style.fill ?? object.fill;
   }));
   const strokes = objects.flatMap(object => object.type === 'text' || object.type === 'image' ? [] : [object]), stroke = common(strokes.map(object => object.stroke)), width = common(strokes.map(object => object.strokeMm)), dash = common(strokes.map(object => object.strokeDash ?? 'solid'));
+  const [linked, setLinked] = useState(true);
+  useEffect(() => setLinked(true), [ids.join(',')]);
   const [status, setStatus] = useState(''), timer = useRef<ReturnType<typeof setTimeout> | null>(null), pending = useRef<{ style: SelectionStyle; revision: number } | null>(null), ownRevision = useRef(-1);
   const apply = useRef(onStyle); apply.current = onStyle;
   const cancel = () => { if (timer.current) clearTimeout(timer.current); timer.current = null; pending.current = null; };
@@ -41,6 +44,14 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
       <NumberField label="Spessore contorno selezione (mm)" value={pending.current?.style.strokeMm ?? width ?? strokes[0]!.strokeMm} mixed={width === null && !pending.current?.style.strokeMm} revision={document.revision} min={0.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={stroke === 'none'} onChange={strokeMm => change({ strokeMm }, false)}/>
       <label>Tipo contorno selezione<select aria-label="Tipo contorno selezione" value={dash ?? ''} disabled={stroke === 'none'} onChange={event => change({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' })}>{dash === null && <option value="" disabled>Misto</option>}<option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>
     </>}
+    <OpacityControls canFill={canFill} canStroke={canStroke} linked={linked} onLinkedChange={setLinked} revision={document.revision} selection
+      fill={common(objects.map(object => {
+        if (object.type === 'image') return 1;
+        if (object.type !== 'text') return object.fillOpacity ?? 1;
+        const scope = selectionStyle(object,0,Array.from(object.text).length);
+        return scope.mixed.includes('fillOpacity') ? null : scope.style.fillOpacity ?? object.fillOpacity ?? 1;
+      }))}
+      stroke={common(strokes.map(object => object.strokeOpacity ?? 1))} onChange={style => change(style)}/>
     <p className="caption">Stesso stile per tutti gli elementi selezionati. Sui testi il colore riguarda tutti i caratteri; i centri delle forme restano fermi.</p>
     {status && <p className="caption" role="status">{status}</p>}
   </div>;

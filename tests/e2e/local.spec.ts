@@ -3827,3 +3827,111 @@ test('foto tastiera: focus dei campi, uscita modo e cambio selezione non dirotta
   const rectangle = await refinementState(page); expect(rectangle.objects[0]).toEqual(geometry.objects[0]); expect(rectangle.objects.at(-1).type).toBe('rect');
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
+
+for (const angle of [0, 30]) for (const flipX of [false, true]) test(`zoom foto nella cornice: percentuale e posizione ${angle} gradi flipX ${flipX}`, async ({ page }) => {
+  const { canvas, before } = await keyboardPhotoScene(page, angle, flipX, true), original = before.objects[0];
+  const zoom = page.getByLabel('Ingrandimento foto (%)', { exact: true }); await zoom.fill('200');
+  await expect.poll(async () => (await refinementState(page)).revision).toBe(before.revision + 1);
+  const enlarged = await refinementState(page), photo = enlarged.objects[0];
+  expect(photo.crop.widthPx).toBeCloseTo(80, 10); expect(photo.crop.heightPx).toBeCloseTo(80 * 70.25 / 100.5, 10);
+  expect(photo.crop.leftPx + photo.crop.widthPx / 2).toBeCloseTo(70.5, 10); expect(photo.crop.topPx + photo.crop.heightPx / 2).toBeCloseTo(45.625, 10);
+  const { crop: _a, ...frame } = original, { crop: _b, ...after } = photo; expect(after).toEqual(frame);
+  await zoom.press('ArrowUp'); await expect.poll(async () => (await refinementState(page)).revision).toBe(before.revision + 2); await expect(zoom).toHaveValue('201');
+  await canvas.press('Control+z'); expect((await refinementState(page)).objects).toEqual(enlarged.objects);
+  await canvas.press('ArrowRight'); const nudged = (await refinementState(page)).objects[0], a = angle * Math.PI / 180;
+  expect(nudged.crop.leftPx - photo.crop.leftPx).toBeCloseTo(-.1 * Math.cos(a) * 80 / original.widthMm * (flipX ? -1 : 1), 9);
+  expect(nudged.crop.topPx - photo.crop.topPx).toBeCloseTo(-.1 * Math.sin(a) * photo.crop.heightPx / original.heightMm, 9);
+  await page.getByRole('button', { name: 'Riempi cornice con foto centrata', exact: true }).click();
+  const fitted = await refinementState(page), fit = fitted.objects[0]; expect(fit.crop.leftPx).toBe(0); expect(fit.crop.widthPx).toBe(160);
+  expect(fit.crop.topPx + fit.crop.heightPx / 2).toBeCloseTo(60, 10); await expect(zoom).toHaveValue('100');
+  const { crop: _c, ...fitFrame } = fit; expect(fitFrame).toEqual(frame);
+  await page.getByRole('button', { name: 'Riempi cornice con foto centrata', exact: true }).click(); expect(await refinementState(page)).toEqual(fitted);
+  await canvas.press('Control+z'); expect((await refinementState(page)).objects[0]).toEqual(nudged);
+  await canvas.press('Control+Shift+Z'); expect((await refinementState(page)).objects).toEqual(fitted.objects);
+  const saved = page.waitForEvent('download'); await page.getByRole('button', { name: 'Esporta JSON', exact: true }).click(); const file = await (await saved).path();
+  await page.reload(); await page.getByLabel('Riapri progetto JSON').setInputFiles(file); await expect.poll(async () => (await refinementState(page)).objects[0]?.source?.id).toBe(original.source.id);
+  expect((await refinementState(page)).objects).toEqual(fitted.objects); await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('zoom foto nella cornice: intera immagine, campi errati e ritorno al minimo senza perdere redo', async ({ page }) => {
+  const doc = JSON.parse(await readFile('fixtures/illustrator/raster-pan.source.TEST.json', 'utf8')); doc.objects[0] = { ...doc.objects[0], widthMm: 64, heightMm: 48, crop: undefined, rotationDeg: 0 };
+  await page.goto('/editor'); await page.getByLabel('Riapri progetto JSON').setInputFiles({ name: 'zoom-full.TEST.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc)) });
+  await clickEditorButton(page, { name: 'Immagine · photo', exact: true }); await page.getByRole('tab', { name: 'Ritaglio', exact: true }).click();
+  const mode = page.getByRole('button', { name: 'Sposta foto nella cornice', exact: true }), zoom = page.getByLabel('Ingrandimento foto (%)', { exact: true }), before = await refinementState(page);
+  await expect(mode).toBeDisabled(); await expect(zoom).toHaveValue('100'); await zoom.fill('99');
+  expect(await zoom.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(false); expect(await refinementState(page)).toEqual(before);
+  await expect(page.getByText('L’ingrandimento deve essere almeno 100%', { exact: false })).toBeVisible();
+  await zoom.fill('200'); await expect.poll(async () => (await refinementState(page)).revision).toBe(before.revision + 1); await expect(mode).toBeEnabled();
+  const enlarged = await refinementState(page); expect(enlarged.objects[0].crop).toEqual({ leftPx: 40, topPx: 30, widthPx: 80, heightPx: 60 });
+  await expect(page.getByText('L’ingrandimento deve essere almeno 100%', { exact: false })).toHaveCount(0);
+  const canvas = page.locator('.upper-canvas'); await canvas.press('Control+z'); expect((await refinementState(page)).objects).toEqual(before.objects);
+  const undone = await refinementState(page); await page.getByRole('button', { name: 'Riempi cornice con foto centrata', exact: true }).click(); expect(await refinementState(page)).toEqual(undone);
+  await canvas.press('Control+y'); expect((await refinementState(page)).objects).toEqual(enlarged.objects); await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('zoom foto nella cornice: comando AI proporzionale e revisioni obsolete preservano il documento', async ({ page }) => {
+  const { before } = await keyboardPhotoScene(page), zoom = page.getByLabel('Ingrandimento foto (%)', { exact: true }); await zoom.fill('200');
+  await expect.poll(async () => (await refinementState(page)).revision).toBe(before.revision + 1); const manual = await refinementState(page), object = manual.objects[0], c = object.crop;
+  const ai = { ...object, crop: { widthPx: c.widthPx * 2 / 3, heightPx: c.heightPx * 2 / 3, leftPx: c.leftPx + c.widthPx / 6, topPx: c.topPx + c.heightPx / 6 } };
+  await page.getByText('Strumenti sviluppatore', { exact: false }).click(); const input = page.getByLabel('Comando AI simulato');
+  await input.fill(JSON.stringify({ schemaVersion: 1, tool: 'updateObject', objectId: 'photo', expectedRevision: manual.revision, arguments: { object: ai } })); await page.getByRole('button', { name: 'Esegui comando', exact: true }).click();
+  await expect.poll(async () => (await refinementState(page)).revision).toBe(manual.revision + 1); const final = await refinementState(page); await expect(zoom).toHaveValue('300'); expect(final.objects[0]).toEqual(ai);
+  await page.getByRole('button', { name: 'Annulla', exact: true }).click(); const undone = await refinementState(page); expect(undone.objects).toEqual(manual.objects);
+  await page.getByRole('button', { name: 'Esegui comando', exact: true }).click(); await expect(page.getByRole('alert')).toContainText('obsoleta'); expect(await refinementState(page)).toEqual(undone);
+  await page.getByRole('button', { name: 'Ripristina', exact: true }).click(); expect((await refinementState(page)).objects).toEqual(final.objects);
+  const svg = page.waitForEvent('download'); await page.getByRole('button', { name: 'Esporta SVG', exact: true }).click(); const output = await readFile(await (await svg).path(), 'utf8');
+  expect(output).toContain('100mm'); expect(output).toContain('80mm'); expect(output).toContain('clipPath'); expect(output).toContain(object.source.dataUrl); await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+async function paintOpacityScene(page: Page) {
+  const doc = createTestDocument(); doc.fontAssets = []; doc.colorMode = 'color'; doc.areaMm = {width:80,height:60};
+  doc.objects = [
+    {id:'bg',type:'rect',xMm:0,yMm:0,widthMm:80,heightMm:60,fill:'#0000ff',stroke:'none',strokeMm:.1},
+    {id:'paint',type:'rect',xMm:10,yMm:10,widthMm:20,heightMm:10,fill:'#ff0000',stroke:'#00ff00',strokeMm:2},
+  ];
+  await page.goto('/editor'); await page.getByLabel('Riapri progetto JSON').setInputFiles({name:'paint-opacity.TEST.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});
+  await clickEditorButton(page,{name:'Rettangolo · paint',exact:true}); await page.getByRole('tab',{name:'Riempimento',exact:true}).click();
+  return refinementState(page);
+}
+test('trasparenza UI: slider collegati, separati, cambio colore, AI, Undo/Redo e JSON',async({page})=>{
+  const before=await paintOpacityScene(page),link=page.getByRole('button',{name:'Collega trasparenza riempimento e contorno',exact:true}),fill=page.getByLabel('Trasparenza riempimento (%)',{exact:true}),stroke=page.getByLabel('Trasparenza contorno (%)',{exact:true});
+  await expect(link).toHaveAttribute('aria-pressed','true');const slider=page.getByRole('slider',{name:'Trasparenza riempimento',exact:true});await slider.press('End');await expect.poll(async()=>(await refinementState(page)).objects[1].fillOpacity).toBe(0);expect((await refinementState(page)).objects[1].strokeOpacity).toBe(0);await expect(stroke).toHaveValue('100');
+  await fill.fill('50');await expect.poll(async()=>(await refinementState(page)).objects[1].fillOpacity).toBe(.5);const linked=await refinementState(page);expect(linked.objects[1].strokeOpacity).toBe(.5);
+  await link.click();expect(await refinementState(page)).toEqual(linked);await stroke.fill('80');await expect.poll(async()=>(await refinementState(page)).objects[1].strokeOpacity).toBe(.2);await expect(fill).toHaveValue('50');
+  await page.getByRole('button',{name:'Riempimento: Bianco',exact:true}).click();const independent=await refinementState(page);expect(independent.objects[1]).toMatchObject({fill:'#ffffff',fillOpacity:.5,strokeOpacity:.2});for(const key of['xMm','yMm','widthMm','heightMm','strokeMm'])expect(independent.objects[1][key]).toEqual(before.objects[1][key]);
+  await page.getByRole('tab',{name:'Contorno',exact:true}).click();await expect(link).toHaveAttribute('aria-pressed','false');await link.click();expect(await refinementState(page)).toEqual(independent);await stroke.fill('25');await expect.poll(async()=>(await refinementState(page)).objects[1].fillOpacity).toBe(.75);const synced=await refinementState(page);expect(synced.objects[1].strokeOpacity).toBe(.75);
+  await page.getByText('Strumenti sviluppatore',{exact:false}).click();const ai={...synced.objects[1],fillOpacity:.4,strokeOpacity:.1};await page.getByLabel('Comando AI simulato').fill(JSON.stringify({schemaVersion:1,tool:'updateObject',objectId:'paint',expectedRevision:synced.revision,arguments:{object:ai}}));await page.getByRole('button',{name:'Esegui comando',exact:true}).click();await expect(fill).toHaveValue('60');await expect(stroke).toHaveValue('90');const final=await refinementState(page);
+  await page.getByRole('button',{name:'Annulla',exact:true}).click();expect((await refinementState(page)).objects).toEqual(synced.objects);await page.getByRole('button',{name:'Ripristina',exact:true}).click();expect((await refinementState(page)).objects).toEqual(final.objects);
+  const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Esporta JSON',exact:true}).click();const file=await(await pending).path();await page.reload();await page.getByLabel('Riapri progetto JSON').setInputFiles(file);await expect.poll(async()=>(await refinementState(page)).objects[1]?.fillOpacity).toBe(.4);expect((await refinementState(page)).objects).toEqual(final.objects);await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('trasparenza nativa: compositing separato di riempimento/contorno e SVG con alpha esatti',async({page})=>{
+  const source=await paintOpacityScene(page);source.objects[1].fillOpacity=.5;source.objects[1].strokeOpacity=.25;
+  const result=await page.evaluate(async doc=>{const h='/tests/helpers/browser-module.ts',{loadedEditorModule}=await import(h),{FabricAdapter,exportDocumentSvg}=await import(loadedEditorModule('/src/editor/fabric-adapter.ts'));const element=document.createElement('canvas');document.body.append(element);const view=new FabricAdapter(element,()=>0,()=>{});view.render(doc);view.canvas.renderAll();const canvas=view.canvas.lowerCanvasEl,ctx=canvas.getContext('2d')!,sample=(x:number,y:number):number[]=>Array.from(ctx.getImageData(Math.round(x*8),Math.round(y*8),1,1).data as Uint8ClampedArray);const native=[sample(20,16),sample(10.5,16),sample(11.5,16)],svg=await exportDocumentSvg(doc),output=document.createElement('canvas');output.width=640;output.height=480;const image=new Image();image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);await image.decode();output.getContext('2d')!.drawImage(image,0,0,640,480);const pixels=[[20,16],[10.5,16],[11.5,16]].map(([x,y])=>Array.from(output.getContext('2d')!.getImageData(x!*8,y!*8,1,1).data));view.dispose();return{native,pixels,svg};},source);
+  for(const samples of[result.native,result.pixels])for(const [index,expected]of[[128,0,127,255],[0,64,191,255],[96,64,95,255]].entries())for(let channel=0;channel<4;channel++)expect(Math.abs(samples[index]![channel]!-expected[channel]!)).toBeLessThanOrEqual(2);
+  expect(result.svg).toContain('fill-opacity: 0.5');expect(result.svg).toContain('stroke-opacity: 0.25');
+});
+
+test('trasparenza testo: selezione locale, cursore vuoto, digitazione e stile del box',async({page})=>{
+  const doc=createTestDocument();doc.areaMm={width:100,height:60};doc.objects=[{id:'text',type:'text',xMm:5,yMm:5,text:'ABCDEF',fontFamily:doc.fontAssets![0]!.id,fontSizePt:18,fill:'#000000'}];await page.goto('/editor');await page.getByLabel('Riapri progetto JSON').setInputFiles({name:'text-opacity.TEST.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});await clickEditorButton(page,{name:'Testo · text',exact:true});const canvas=page.locator('.upper-canvas');await canvas.dblclick({position:{x:6*8,y:7*8}});const input=page.getByLabel('Testo nel canvas',{exact:true});await input.press('Home');await input.press('Shift+ArrowRight');await input.press('Shift+ArrowRight');await page.getByRole('tab',{name:'Riempimento',exact:true}).click();const fill=page.getByLabel('Trasparenza riempimento (%)',{exact:true});await fill.fill('50');await expect.poll(async()=>(await refinementState(page)).objects[0].characterStyles?.[0]?.style.fillOpacity).toBe(.5);const selected=await refinementState(page);expect(selected.objects[0].fillOpacity).toBeUndefined();expect(selected.objects[0].characterStyles[0]).toMatchObject({start:0,end:2,style:{fillOpacity:.5}});
+  await input.press('ArrowRight');await expect(fill).toBeDisabled();const caret=await refinementState(page);await input.press('End');await input.press('Z');await input.press('Escape');await expect.poll(async()=>(await refinementState(page)).objects[0].text).toBe('ABCDEFZ');const typed=await refinementState(page);expect(typed.objects[0].characterStyles[0]).toMatchObject({start:0,end:2,style:{fillOpacity:.5}});expect(typed.revision).toBeGreaterThan(caret.revision);await expect(fill).toBeEnabled();await fill.fill('20');await expect.poll(async()=>(await refinementState(page)).objects[0].fillOpacity).toBe(.8);expect((await refinementState(page)).objects[0].characterStyles?.some((run:any)=>run.style.fillOpacity!==undefined)??false).toBe(false);await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('trasparenza selezione: valori misti, gruppo e comando atomico sui membri',async({page})=>{
+  const doc=createTestDocument();doc.fontAssets=[];doc.colorMode='color';doc.areaMm={width:100,height:60};doc.objects=[{id:'a',type:'rect',xMm:5,yMm:5,widthMm:10,heightMm:8,fill:'#ff0000',stroke:'#000000',strokeMm:.5,fillOpacity:.4},{id:'b',type:'rect',xMm:25,yMm:5,widthMm:10,heightMm:8,fill:'#0000ff',stroke:'#000000',strokeMm:.5,fillOpacity:.8}];await page.goto('/editor');await page.getByLabel('Riapri progetto JSON').setInputFiles({name:'multi-opacity.TEST.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});await clickEditorButton(page,{name:'Seleziona tutto',exact:true});const fill=page.getByLabel('Trasparenza riempimento selezione (%)',{exact:true});await expect(fill).toHaveValue('');await fill.fill('30');await expect.poll(async()=>(await refinementState(page)).objects.every((o:any)=>o.fillOpacity===.7&&o.strokeOpacity===.7)).toBe(true);const changed=await refinementState(page);await page.locator('.upper-canvas').press('Control+g');expect((await refinementState(page)).groups).toHaveLength(1);await page.getByRole('button',{name:'Collega trasparenza riempimento e contorno',exact:true}).click();await page.getByLabel('Trasparenza contorno selezione (%)',{exact:true}).fill('80');await expect.poll(async()=>(await refinementState(page)).objects.every((o:any)=>o.fillOpacity===.7&&o.strokeOpacity===.2)).toBe(true);for(let i=0;i<2;i++)for(const key of['xMm','yMm','widthMm','heightMm'])expect((await refinementState(page)).objects[i][key]).toBe(changed.objects[i][key]);await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('trasparenza zero: il riempimento invisibile lascia selezionare soltanto il bordo',async({page})=>{
+  await paintOpacityScene(page);await page.getByRole('button',{name:'Collega trasparenza riempimento e contorno',exact:true}).click();await page.getByLabel('Trasparenza riempimento (%)',{exact:true}).fill('100');await expect.poll(async()=>(await refinementState(page)).objects[1].fillOpacity).toBe(0);const canvas=page.locator('.upper-canvas');await canvas.click({position:{x:20*8,y:16*8}});await expect(page.locator('.object-inspector .object-identity-id')).toHaveText('bg');await canvas.click({position:{x:10.5*8,y:16*8}});await expect(page.locator('.object-inspector .object-identity-id')).toHaveText('paint');await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('trasparenza testo su tracciato: alpha conservato nello SVG e alla separazione',async({page})=>{
+  await textPathScene(page,'circle');await page.getByRole('tab',{name:'Riempimento',exact:true}).click();await page.getByLabel('Trasparenza riempimento (%)',{exact:true}).fill('50');await expect.poll(async()=>(await refinementState(page)).objects[0].fillOpacity).toBe(.5);const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Esporta SVG',exact:true}).click();const svg=await readFile(await(await pending).path(),'utf8');expect(svg).toContain('fill="rgba(0,0,0,0.5)"');const pixels=await page.evaluate(async svg=>{const image=new Image();image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);await image.decode();const canvas=document.createElement('canvas');canvas.width=800;canvas.height=400;const c=canvas.getContext('2d')!;c.fillStyle='white';c.fillRect(0,0,800,400);c.drawImage(image,0,0,800,400);const data=c.getImageData(0,0,800,400).data;let minimum=255,ink=0;for(let i=0;i<data.length;i+=4){minimum=Math.min(minimum,data[i]!);if(data[i]!<250)ink++;}return{minimum,ink};},svg);expect(pixels.ink).toBeGreaterThan(30);expect(pixels.minimum).toBeGreaterThanOrEqual(126);expect(pixels.minimum).toBeLessThanOrEqual(129);await page.getByRole('tab',{name:'Testo',exact:true}).click();await page.getByRole('button',{name:'Separa testo dal tracciato',exact:true}).click();expect((await refinementState(page)).objects.find((o:any)=>o.type==='text').fillOpacity).toBe(.5);await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('trasparenza guida visibile: contorno conservato durante il testo su tracciato',async({page})=>{
+  const attached=await textPathScene(page,'line');attached.objects[0].textPath.guide.strokeOpacity=.4;attached.objects[0].textPath.showGuide=true;
+  await page.getByLabel('Riapri progetto JSON').setInputFiles({name:'guide-opacity.TEST.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(attached))});await expect.poll(async()=>(await refinementState(page)).revision).toBe(3);
+  const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Esporta SVG',exact:true}).click();const svg=await readFile(await(await pending).path(),'utf8');expect(svg).toContain('stroke-opacity: 0.4');
+  await clickEditorButton(page,{name:'Testo su tracciato · text-1',exact:true});await page.getByRole('tab',{name:'Testo',exact:true}).click();await page.getByRole('button',{name:'Separa testo dal tracciato',exact:true}).click();expect((await refinementState(page)).objects.find((o:any)=>o.type==='line').strokeOpacity).toBe(.4);await expect(page.getByRole('alert')).toHaveCount(0);
+});

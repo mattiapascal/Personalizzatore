@@ -34,3 +34,27 @@ export function panRasterContents(object:ImageObject,deltaXmm:number,deltaYmm:nu
   const angle=(object.rotationDeg??0)*Math.PI/180,offset=rasterContentOffsetMm(object);
   return positionRasterContents(object,{x:offset.x+deltaXmm*Math.cos(angle)+deltaYmm*Math.sin(angle),y:offset.y-deltaXmm*Math.sin(angle)+deltaYmm*Math.cos(angle)});
 }
+
+/** 100% is the widest source window that fills this frame without distortion. */
+export function rasterContentZoom(object: ImageObject): { value: number; max: number } {
+  const crop = checkedRasterCrop(object.source, object.crop);
+  const room = Math.min(object.source.pixelWidth / crop.widthPx, object.source.pixelHeight / crop.heightPx);
+  return { value: Math.max(100, room * 100), max: Math.max(100, room * Math.min(crop.widthPx, crop.heightPx) * 100) };
+}
+
+/** Enlarge the photo about the visible center, preserving frame and pixel proportions. */
+export function zoomRasterContents(object: ImageObject, percent: number): ImageObject {
+  const zoom = rasterContentZoom(object);
+  if (!Number.isFinite(percent) || percent < 100 || percent > zoom.max) throw new Error('Ingrandimento fuori dai limiti della foto');
+  if (percent === zoom.value) return object;
+  const before = checkedRasterCrop(object.source, object.crop), scale = zoom.value / percent;
+  // Only normalize arithmetic at the computed endpoints; never repair imported crops.
+  const widthPx = Math.max(1, Math.min(object.source.pixelWidth, before.widthPx * scale));
+  const heightPx = Math.max(1, Math.min(object.source.pixelHeight, before.heightPx * scale));
+  const crop = checkedRasterCrop(object.source, {
+    widthPx, heightPx,
+    leftPx: Math.max(0, Math.min(object.source.pixelWidth - widthPx, before.leftPx + (before.widthPx - widthPx) / 2)),
+    topPx: Math.max(0, Math.min(object.source.pixelHeight - heightPx, before.topPx + (before.heightPx - heightPx) / 2)),
+  });
+  return { ...object, crop };
+}

@@ -1,3 +1,4 @@
+import { OpacitySchema, PaintOpacityFields } from './paint-opacity';
 import {coverRasterReplacement} from './raster-replacement';
 import { UnverifiedTextGeometryError } from './unverified-text-geometry';
 import { StrokeWidthSchema } from './stroke';
@@ -33,7 +34,7 @@ const color = ColorSchema;
 const paint = PaintSchema;
 const fontFamily = z.union([z.enum(FONT_FAMILIES), FontIdSchema]);
 export const CharacterStyleSchema = z.strictObject({
-  fontSizePt: z.number().finite().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt).optional(), fontFamily: fontFamily.optional(), fill: color.optional(),
+  fontSizePt: z.number().finite().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt).optional(), fontFamily: fontFamily.optional(), fill: color.optional(), fillOpacity: OpacitySchema.optional(),
   kerningPt: z.number().finite().min(EDITOR_LIMITS.minTrackingPt).max(EDITOR_LIMITS.maxTrackingPt).optional(),
   fontWeight: z.enum(['normal', 'bold']).optional(), fontStyle: z.enum(['normal', 'italic']).optional(), underline: z.boolean().optional(), linethrough: z.boolean().optional(), overline: z.boolean().optional(),
 });
@@ -44,6 +45,7 @@ export const TextAlignmentSchema = z.enum(['left', 'center', 'right', 'justify-l
 export type TextAlignment = z.infer<typeof TextAlignmentSchema>;
 const lineStyles = z.array(z.strictObject({ start: z.number().int().nonnegative(), end: z.number().int().nonnegative(), alignment: TextAlignmentSchema })).max(EDITOR_LIMITS.textCharacters+1).optional();
 const textAppearance = {
+  fillOpacity: OpacitySchema.optional(),
   lineStyles, justification: JustificationSchema.optional(), textPath: TextPathSchema.optional(),
   textScaleX: textScale.optional(),
   textScaleY: textScale.optional(),
@@ -51,18 +53,18 @@ const textAppearance = {
   textAlign: TextAlignmentSchema.optional(), lineHeight: z.number().finite().min(EDITOR_LIMITS.minLineHeight).max(EDITOR_LIMITS.maxLineHeight).optional(),
   letterSpacingPt: z.number().finite().min(EDITOR_LIMITS.minTrackingPt).max(EDITOR_LIMITS.maxTrackingPt).optional(),
 };
-const shapeAppearance = { fill: paint.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() };
+const shapeAppearance = { ...PaintOpacityFields, fill: paint.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() };
 export const TextBoxSchema = z.strictObject({ widthMm: z.number().finite().positive().max(1000), heightMm: z.number().finite().positive().max(1000), autoWidth: z.boolean(), autoHeight: z.literal(true) });
 const textContent = z.string().min(1).max(EDITOR_LIMITS.textCharacters*2).refine(t => !/[\r\u0000-\u0009\u000b-\u001f]/.test(t) && Array.from(t).length<=EDITOR_LIMITS.textCharacters && t.split('\n').length <= EDITOR_LIMITS.textLines, `Massimo ${EDITOR_LIMITS.textCharacters} caratteri Unicode e ${EDITOR_LIMITS.textLines} righe per box nel laboratorio`);
 export const SceneObjectSchema = z.discriminatedUnion('type', [
   z.strictObject({ id, type: z.literal('text'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), text: textContent, fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fontFamily, fill: color, ...textAppearance, textBox: TextBoxSchema.optional(), characterStyles: characterRuns }),
   z.strictObject({ id, type: z.literal('rect'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().positive().max(1000), heightMm: z.number().positive().max(1000), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance, cornerRadiusMm: z.number().finite().min(0).max(500).optional() }),
   z.strictObject({ id, type: z.literal('circle'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: z.literal(0).optional(), radiusMm: z.number().positive().max(500), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
-  z.strictObject({ id, type: z.literal('line'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), lengthMm: z.number().finite().positive().max(1000), strokeMm: StrokeWidthSchema, stroke: color, fill: z.literal('none').optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }),
+  z.strictObject({ id, type: z.literal('line'), ...PaintOpacityFields, ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), lengthMm: z.number().finite().positive().max(1000), strokeMm: StrokeWidthSchema, stroke: color, fill: z.literal('none').optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }),
   z.strictObject({ id, type: z.literal('ellipse'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), rxMm: z.number().finite().positive().max(500), ryMm: z.number().finite().positive().max(500), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
   z.strictObject({ id, type: z.literal('path'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000), points: z.array(z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) })).min(2).max(512), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
   z.strictObject({ id, type: z.literal('image'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().positive().max(1000), heightMm: z.number().finite().positive().max(1000), source: RasterSourceSchema, raster: RasterParametersSchema, pixelAspectRatio: z.number().finite().min(0.01).max(100).optional(), crop: RasterCropSchema.optional(), flipX: z.boolean().optional(), flipY: z.boolean().optional() }),
-  z.strictObject({ id, type: z.literal('vector'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000), commands: VectorCommandsSchema, clipRect: VectorClipSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), fillRule: z.enum(['evenodd', 'nonzero']), fill: paint, stroke: paint, strokeMm: StrokeWidthSchema, strokeLineCap: z.enum(['butt', 'round', 'square']), strokeLineJoin: z.enum(['miter', 'round', 'bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
+  z.strictObject({ id, type: z.literal('vector'), ...PaintOpacityFields, ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000), commands: VectorCommandsSchema, clipRect: VectorClipSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), fillRule: z.enum(['evenodd', 'nonzero']), fill: paint, stroke: paint, strokeMm: StrokeWidthSchema, strokeLineCap: z.enum(['butt', 'round', 'square']), strokeLineJoin: z.enum(['miter', 'round', 'bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
   z.strictObject({ id, type: z.literal('bezier'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
 ]);
 export type SceneObject = z.infer<typeof SceneObjectSchema>;
@@ -203,7 +205,7 @@ const ids = z.array(id).min(1).max(EDITOR_LIMITS.objects);
 const alignment = z.enum(['left', 'centerX', 'right', 'top', 'centerY', 'bottom']);
 export const SelectionTransformSchema = z.strictObject({ objectIds: ids.min(2), scale: z.number().finite().min(0.01).max(100), rotationDeg: rotation, center: z.strictObject(position) });
 export type SelectionTransformArguments = z.infer<typeof SelectionTransformSchema>;
-export const SelectionStyleSchema = z.strictObject({ fill: paint.optional(), stroke: paint.optional(), strokeMm: StrokeWidthSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }).refine(style => Object.values(style).some(value => value !== undefined), 'Scegli almeno una proprietà di stile');
+export const SelectionStyleSchema = z.strictObject({ ...PaintOpacityFields, fill: paint.optional(), stroke: paint.optional(), strokeMm: StrokeWidthSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }).refine(style => Object.values(style).some(value => value !== undefined), 'Scegli almeno una proprietà di stile');
 export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),

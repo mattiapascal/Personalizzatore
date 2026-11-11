@@ -4,8 +4,8 @@ import { applyCharacterStyle } from './text-style';
 export function objectWithAppearance(object: SceneObject, style: SelectionStyle, measure: Measure): SceneObject {
   if (object.type === 'image') throw new Error('Le immagini non hanno riempimento o contorno modificabili');
   if (object.type === 'text') {
-    if (style.stroke !== undefined || style.strokeMm !== undefined || style.strokeDash !== undefined || style.fill === 'none') throw new Error('Stile incompatibile con un testo della selezione');
-    return style.fill === undefined ? cloneSceneObject(object) : applyCharacterStyle(object, { fill: style.fill });
+    if (style.stroke !== undefined || style.strokeMm !== undefined || style.strokeDash !== undefined || style.strokeOpacity !== undefined || style.fill === 'none') throw new Error('Stile incompatibile con un testo della selezione');
+    return applyCharacterStyle(object, { ...(style.fill === undefined ? {} : { fill: style.fill }), ...(style.fillOpacity === undefined ? {} : { fillOpacity: style.fillOpacity }) });
   }
   const center = objectCenter(object, measure);
   if ((object.type === 'line' || (object.type === 'path' || object.type === 'bezier') && !object.closed) && style.fill !== undefined && style.fill !== 'none') throw new Error('Un elemento aperto della selezione non ammette riempimento');

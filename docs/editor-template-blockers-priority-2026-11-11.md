@@ -8,9 +8,9 @@ Riesaminati con l’importatore attuale i 370 sorgenti a pagina singola acquisit
 
 | Perimetro a pagina singola | Convertibili | Bloccati | Totale |
 | --- | ---: | ---: | ---: |
-| Prioritari, senza testo curvo | 258 | 86 | 344 |
+| Prioritari, con l’eccezione autorizzata Azienda Agricola 99×139 | 258 | 87 | 345 |
 | Biglietti da Visita / Templates PitchPrint | 1 | 12 | 13 |
-| Testo curvo nelle altre categorie | 0 | 13 | 13 |
+| Testo curvo nelle altre categorie, esclusa l’eccezione | 0 | 12 | 12 |
 | Totale | 259 | 111 | 370 |
 
 L’inventario complessivo ha 473 sorgenti: altri 95 delle due categorie a bassa priorità sono multipagina, insieme a 8 delle categorie prioritarie. **Il multipagina resta escluso dall’editor.** I quattro sorgenti di numeri civici a nove pagine e i quattro di cartelli viari a due pagine possono essere valutati per estrazione di pagine utili come template autonomi.
@@ -30,7 +30,7 @@ Le varianti dei civici possono diventare alternative selezionabili; le facciate 
 
 Il titolare propone ora di valutare il multipagina. Consigliata una prima modalità fronte/retro, con progetto unico, comandi riferiti alla tavola, miniature, salvataggio/conferma di tutte le facciate, SVG per facciata e PDF multipagina. È una proposta in discussione: non è ancora una funzione implementata o una migrazione dei progetti esistenti.
 
-## Gli 86 blocchi prioritari
+## Gli 87 blocchi prioritari
 
 Conteggi per **primo errore rilevato**. Sono gruppi esclusivi, ma un template può presentare altre incompatibilità dopo la correzione della prima: non sono promesse di recupero immediato.
 
@@ -41,10 +41,10 @@ Conteggi per **primo errore rilevato**. Sono gruppi esclusivi, ma un template pu
 | Maschere/opacità | 21 | 7 rettangoli con opacità 0,9; 12 immagini con clip rettangolare; 2 testi con clip |
 | Testo giustificato | 4 | Collegare l’allineamento già supportato dall’editor verificando le differenze di impaginazione |
 | Limite TEST di 200 elementi | 3 | 301/542/543 elementi foglia; compattazione senza perdita di proprietà o capacità maggiore collaudata |
-| Altri casi | 8 | Formato, risorse, indici di stile e grafica vuota |
-| **Totale** | **86** | |
+| Altri casi | 9 | Formato, filtri, risorse, indici di stile e grafica vuota |
+| **Totale** | **87** | |
 
-I 13 template con testo curvo ora in coda comprendono i 12 già fermati da `curvedText` e un Azienda Agricola il cui primo errore riguarda i filtri immagine. La nuova priorità è stata applicata cercando ricorsivamente il testo curvo nei sorgenti completi, non soltanto nel messaggio di errore. Prima di questa scelta i prioritari bloccati erano 99; nessun sorgente è stato scartato o convertito per far diminuire il conteggio.
+La ricerca ricorsiva ha individuato 13 template con testo curvo. Il titolare autorizza ora una sola eccezione: **Azienda Agricola 99×139** torna ad alta priorità con esclusione del solo elemento «Nome del vino», che reinserirà manualmente. Copia derivata preparata con sette elementi e manifest della rimozione; sorgente originale invariato per SHA-256. Il template è ancora bloccato dai filtri immagine. Gli altri **12 template curvi** restano in coda, compreso Azienda Agricola 99×93. I prioritari erano 99 prima dell’abbassamento di priorità dei testi curvi, poi 86; ora sono 87 per questa eccezione. Queste differenze non rappresentano recuperi tecnici.
 
 ### Font
 
@@ -92,6 +92,8 @@ Nelle tre categorie relative ai cartelli: **23 sorgenti a pagina singola, 9 conv
 
 ## Evidenze e confini
 
-Esecuzione privata `.local/analyze-priority-templates-readonly.ts`, log `.local/priority-template-analysis.log`, report `.local/pitchprint-migration/priority-analysis-2026-11-11.report.json`. Elenco nominativo completo con ID e categorie in `.local/pitchprint-migration/analisi-template-prioritari-2026-11-11.md`; contiene tutti gli 86 casi prioritari e gli otto sorgenti multipagina prioritari. I dati sorgente e i file personali non vengono pubblicati nel repository.
+Esecuzione privata `.local/analyze-priority-templates-readonly.ts`, log `.local/priority-template-analysis.log`, report `.local/pitchprint-migration/priority-analysis-2026-11-11.report.json`. Elenco nominativo completo con ID e categorie in `.local/pitchprint-migration/analisi-template-prioritari-2026-11-11.md`; contiene tutti gli 87 casi prioritari e gli otto sorgenti multipagina prioritari. I dati sorgente e i file personali non vengono pubblicati nel repository.
 
-**370 analisi completate, zero scritture amministrative/errori browser, hash dell’archivio invariato.** Restano 117 bozze importate; nessuna nuova importazione, correzione di template/font, associazione prodotto o approvazione produttiva. Il controllo è tecnico, non certifica la resa visiva di tutti i template o Illustrator. Nessun deploy o intervento su Shopify/tema/PitchPrint/BSS/prezzi/carrello/checkout/chat pubblicata.
+**370 analisi completate, zero scritture amministrative/errori browser, hash dell’archivio invariato.** Restano 117 bozze importate; nessuna nuova importazione, modifica dell’archivio template/font, associazione prodotto o approvazione produttiva. Unica trasformazione del sorgente: copia derivata di Azienda Agricola 99×139 senza il testo curvo, su richiesta esplicita; originale conservato. Il controllo è tecnico, non certifica la resa visiva di tutti i template o Illustrator. Nessun deploy o intervento su Shopify/tema/PitchPrint/BSS/prezzi/carrello/checkout/chat pubblicata.
+
+**Sequenza richiesta dal titolare:** sviluppare e collaudare prima le funzioni necessarie, poi convertire i template non a bassa priorità. La sola rimozione di un blocco non equivale a un’anteprima approvata. Per Azienda Agricola è richiesta la conversione esplicita dell’immagine in grigi, bianco→alpha proporzionale e tinta scelta; non ignorare silenziosamente i filtri originali.

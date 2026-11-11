@@ -1,9 +1,10 @@
+import { PaintOpacityFields } from './paint-opacity';
 import { StrokeWidthSchema } from './stroke';
 import { VectorCommandsSchema, vectorBounds } from './vector-geometry';
 import { z } from 'zod';
 import { BezierNodeSchema, bezierBounds, MAX_BEZIER_NODES } from './bezier-geometry';
 const size = z.number().finite().positive().max(1000), dimension = z.number().finite().nonnegative().max(1000), paint = z.enum(['#000000', '#ffffff', 'none']);
-const appearance = { stroke: paint, strokeMm: StrokeWidthSchema, fill: paint.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() };
+const appearance = { ...PaintOpacityFields, stroke: paint, strokeMm: StrokeWidthSchema, fill: paint.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() };
 const point = z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) });
 export const TextPathGuideSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('vector'), widthMm: dimension, heightMm: dimension, commands: VectorCommandsSchema, ...appearance, fill: paint, fillRule: z.enum(['evenodd','nonzero']), strokeLineCap: z.enum(['butt','round','square']), strokeLineJoin: z.enum(['miter','round','bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),

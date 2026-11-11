@@ -1,4 +1,4 @@
-**11 novembre — priorità dei template:** [analisi aggiornata degli esclusi](editor-template-blockers-priority-2026-11-11.md). Biglietti da Visita, Templates PitchPrint e tutti i template con testo curvo in coda. Nel perimetro prioritario: **258/344 convertibili, 86 bloccati**, più otto sorgenti multipagina da valutare solo per estrazione di pagine autonome. Principali blocchi prioritari: font/simboli, contorni deformati e maschere. Archivio invariato; nessuna importazione aggiuntiva.
+**11 novembre — priorità dei template:** [analisi aggiornata degli esclusi](editor-template-blockers-priority-2026-11-11.md). Biglietti da Visita, Templates PitchPrint e i template con testo curvo in coda; eccezione autorizzata Azienda Agricola 99×139, copia senza il solo testo curvo da reinserire manualmente. Nel perimetro prioritario: **258/345 convertibili, 87 bloccati**, più otto sorgenti multipagina da valutare solo per estrazione di pagine autonome. Principali blocchi prioritari: font/simboli, contorni deformati e maschere. Archivio invariato; nessuna importazione aggiuntiva.
 
 # Configuratore grafico locale — percorso incrementale
 

@@ -1,3 +1,4 @@
+import { OpacityControls } from './OpacityControls';
 import {ImageReplacementControl} from './ImageReplacementControl';
 import { textGeometryVerified } from './font-measurement';
 import { fontCoverageVersion, subscribeFontCoverage } from './font-coverage-cache';
@@ -36,6 +37,8 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
   const form = useRef<HTMLFormElement>(null);
   const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
   const [section, setSection] = useState<Section>('geometry');
+  const [opacityLinked, setOpacityLinked] = useState(true);
+  useEffect(() => setOpacityLinked(true), [object.id]);
   const [ratioLocked, setRatioLocked] = useState(false),[cropContents,setCropContents]=useState(false);
   useEffect(()=>setCropContents(false),[object.id,section]);
   useEffect(() => {
@@ -92,6 +95,13 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
     ...(onProperties?[{id:'template' as const,label:'Proprietà template',icon:'properties' as const}]:[]),
   ];
   const title = tabs.find(tab => tab.id === section)?.label ?? 'Geometria';
+  const opacityControls = current.type !== 'image' && <OpacityControls
+    fill={current.type === 'text' ? characterScope?.mixed.includes('fillOpacity') ? null : character?.fillOpacity ?? current.fillOpacity ?? 1 : current.fillOpacity ?? 1}
+    stroke={current.type === 'text' ? 1 : current.strokeOpacity ?? 1}
+    canFill={current.type !== 'line' && ((current.type !== 'path' && current.type !== 'bezier') || current.closed)} canStroke={current.type !== 'text'}
+    linked={opacityLinked} onLinkedChange={setOpacityLinked} revision={draft.revision} disabled={current.type === 'text' && noCharacters}
+    onChange={style => { if (current.type === 'text') characterPatch({ fillOpacity: style.fillOpacity }); else patch(style); }}/>;
+
   return <form ref={form} className="object-inspector" aria-label="Proprietà oggetto" onSubmit={event => { event.preventDefault(); flush(); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) flush(); }} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); reset(); } }}>
     <div className="inspector-selection"><ObjectIdentity object={current}/></div>
     <div role="tablist" aria-label="Sezioni dell’ispettore" className="inspector-tabs" onKeyDown={event => {
@@ -190,11 +200,12 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
         </fieldset>}
         {!current.textPath && <p className="caption">Interlinea sul box; allineamento su tutto il box oppure sulle righe interessate durante l’editing; spaziatura generale e crenature locali si sommano. Limite di capacità: {EDITOR_LIMITS.textLines} righe esplicite, {EDITOR_LIMITS.textCharacters} caratteri Unicode per box. Scrivi e modifica il contenuto direttamente sul canvas.</p>}
       </>}
-      {section === 'fill' && current.type !== 'image' && <><fieldset className="inspector-arrangement" disabled={current.type === 'text' && noCharacters}><PaintPicker allowColor={allowColor} label="Riempimento" value={current.type === 'text' ? characterScope?.mixed.includes('fill') ? 'mixed' : character?.fill ?? current.fill : current.fill ?? 'none'} allowNone={current.type !== 'text'} onChange={fill => { if (current.type === 'text') { if (fill !== 'none') characterPatch({ fill }, true); } else patch({ fill }, true); }}/></fieldset><p className="caption">{allowColor ? 'Colori RGB del progetto.' : 'Palette del profilo TEST: nero e bianco.'}</p></>}
+      {section === 'fill' && current.type !== 'image' && <><fieldset className="inspector-arrangement" disabled={current.type === 'text' && noCharacters}><PaintPicker allowColor={allowColor} label="Riempimento" value={current.type === 'text' ? characterScope?.mixed.includes('fill') ? 'mixed' : character?.fill ?? current.fill : current.fill ?? 'none'} allowNone={current.type !== 'text'} onChange={fill => { if (current.type === 'text') { if (fill !== 'none') characterPatch({ fill }, true); } else patch({ fill }, true); }}/></fieldset><p className="caption">{allowColor ? 'Colori RGB del progetto.' : 'Palette del profilo TEST: nero e bianco.'}</p>{opacityControls}</>}
       {section === 'stroke' && current.type !== 'text' && current.type !== 'image' && <>
         <PaintPicker allowColor={allowColor} label="Contorno" value={current.stroke} allowNone={current.type !== 'line' && current.type !== 'path' && current.type !== 'bezier'} onChange={stroke => { if (current.type !== 'line' && current.type !== 'path' && current.type !== 'bezier' || stroke !== 'none') patch({ stroke }, true); }}/>
         <NumberField {...fields} label="Spessore contorno (mm)" value={current.strokeMm} min={0.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={current.stroke === 'none'} onChange={strokeMm => patch({ strokeMm })}/>
         <label>Tipo di contorno<select disabled={current.stroke === 'none'} value={current.strokeDash ?? 'solid'} onChange={event => patch({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' }, true)}><option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>
+        {opacityControls}
       </>}
       {section === 'image' && current.type === 'image' && <>
         {onReplaceImage&&<ImageReplacementControl revision={draft.revision} disabled={dirty} onReplace={onReplaceImage}/>}

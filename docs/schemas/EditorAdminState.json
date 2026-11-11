@@ -480,6 +480,11 @@
                           "type": "string",
                           "pattern": "^#[0-9a-f]{6}$"
                         },
+                        "fillOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
                         "lineStyles": {
                           "maxItems": 4001,
                           "type": "array",
@@ -705,6 +710,16 @@
                                         ]
                                       }
                                     },
+                                    "fillOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    "strokeOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
                                     "stroke": {
                                       "type": "string",
                                       "enum": [
@@ -790,6 +805,16 @@
                                       "exclusiveMinimum": 0,
                                       "maximum": 1000
                                     },
+                                    "fillOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    "strokeOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
                                     "stroke": {
                                       "type": "string",
                                       "enum": [
@@ -834,6 +859,16 @@
                                       "type": "number",
                                       "exclusiveMinimum": 0,
                                       "maximum": 500
+                                    },
+                                    "fillOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    "strokeOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
                                     },
                                     "stroke": {
                                       "type": "string",
@@ -889,6 +924,16 @@
                                       "type": "number",
                                       "exclusiveMinimum": 0,
                                       "maximum": 500
+                                    },
+                                    "fillOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    "strokeOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
                                     },
                                     "stroke": {
                                       "type": "string",
@@ -973,6 +1018,16 @@
                                     },
                                     "closed": {
                                       "type": "boolean"
+                                    },
+                                    "fillOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    "strokeOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
                                     },
                                     "stroke": {
                                       "type": "string",
@@ -1098,6 +1153,16 @@
                                     },
                                     "closed": {
                                       "type": "boolean"
+                                    },
+                                    "fillOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    "strokeOpacity": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
                                     },
                                     "stroke": {
                                       "type": "string",
@@ -1309,6 +1374,11 @@
                                     "type": "string",
                                     "pattern": "^#[0-9a-f]{6}$"
                                   },
+                                  "fillOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
                                   "kerningPt": {
                                     "type": "number",
                                     "minimum": -20,
@@ -1463,6 +1533,16 @@
                             }
                           ]
                         },
+                        "fillOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "strokeOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
                         "fill": {
                           "anyOf": [
                             {
@@ -1596,6 +1676,16 @@
                             }
                           ]
                         },
+                        "fillOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "strokeOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
                         "fill": {
                           "anyOf": [
                             {
@@ -1638,6 +1728,16 @@
                         "type": {
                           "type": "string",
                           "const": "line"
+                        },
+                        "fillOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "strokeOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
                         },
                         "xMm": {
                           "type": "number",
@@ -1841,6 +1941,16 @@
                             }
                           ]
                         },
+                        "fillOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "strokeOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
                         "fill": {
                           "anyOf": [
                             {
@@ -1994,6 +2104,16 @@
                         "stroke": {
                           "type": "string",
                           "pattern": "^#[0-9a-f]{6}$"
+                        },
+                        "fillOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "strokeOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
                         },
                         "fill": {
                           "anyOf": [
@@ -2269,6 +2389,16 @@
                         "type": {
                           "type": "string",
                           "const": "vector"
+                        },
+                        "fillOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "strokeOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
                         },
                         "xMm": {
                           "type": "number",
@@ -2726,6 +2856,16 @@
                         "stroke": {
                           "type": "string",
                           "pattern": "^#[0-9a-f]{6}$"
+                        },
+                        "fillOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "strokeOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
                         },
                         "fill": {
                           "anyOf": [

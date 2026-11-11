@@ -228,3 +228,7 @@
 .font-repair-row { display: grid; gap: .5rem; margin: .6rem 0 1rem; }
 .font-repair-row .caption { margin: 0; }
 .font-repair-row select, .font-repair-row button { max-width: 100%; }
+
+.paint-opacity { margin-top: 1rem; }
+.paint-opacity-row { margin-top: .65rem; }
+.paint-opacity-row input[type="range"] { width: 100%; accent-color: #0088cc; }

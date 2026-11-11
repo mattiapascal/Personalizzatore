@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Color } from 'fabric';
-/** Canonical opaque sRGB; gradients and partial paint opacity require a separate model. */
+/** Canonical sRGB paint. Alpha is stored independently in fillOpacity/strokeOpacity. */
 export const ColorSchema = z.string().regex(/^#[0-9a-f]{6}$/, 'Usa un colore RGB nel formato #rrggbb');
 export const PaintSchema = z.union([ColorSchema, z.literal('none')]);
 export function canonicalPaint(raw: unknown, monochrome = false): string {

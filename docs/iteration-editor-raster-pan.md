@@ -1,3 +1,5 @@
+**Campione aggiornato successivamente:** [zoom interno](iteration-editor-raster-zoom.md), stesso risultato grafico con zoom 200%/Undo aggiuntivi; revisione finale attuale 9. I numeri delle revisioni nel resoconto storico sotto si riferiscono alla versione precedente del generatore.
+
 # Spostare la foto nella cornice — 11 novembre 2026
 
 Base `f985be9`. Completamento manuale del ritaglio: la fotografia può scorrere dentro la finestra visibile senza spostare o ridimensionare la cornice. Il file originale e i filtri rimangono invariati. Il PAN del foglio resta disponibile separatamente.

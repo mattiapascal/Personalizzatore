@@ -1,3 +1,4 @@
+import { paintWithOpacity, textPaintFromFabric } from './paint-opacity';
 import {preciseIntermediateSvg} from './svg-precision';
 import { assertTextGeometry, textGeometryVerified } from './font-measurement';
 import { originalRasterSvg } from './raster-svg';
@@ -80,13 +81,13 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
     assertFontAvailable(o.fontFamily);
     for (const run of o.characterStyles ?? []) if (run.style.fontFamily) assertFontAvailable(run.style.fontFamily);
     assertTextGeometry(o);
-    const options = { ...common, scaleX: o.textScaleX ?? 1, scaleY: o.textScaleY ?? 1, fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: renderFontFamily(o.fontFamily), fill: o.fill, strokeWidth: 0,
+    const options = { ...common, scaleX: o.textScaleX ?? 1, scaleY: o.textScaleY ?? 1, fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: renderFontFamily(o.fontFamily), fill: paintWithOpacity(o.fill, o.fillOpacity), strokeWidth: 0,
       fontWeight: o.fontWeight ?? 'normal', fontStyle: o.fontStyle ?? 'normal', underline: o.underline ?? false, linethrough: o.linethrough ?? false, overline: o.overline ?? false,
       textAlign: o.textAlign ?? 'left', lineHeight: o.lineHeight ?? 1, charSpacing: (o.letterSpacingPt ?? 0) / o.fontSizePt * 1000 };
     const styles: IText['styles'] = {}, characters = characterStyles(o), alignments = lineAlignments(o);
     let line = 0, column = 0;
     Array.from(o.text).forEach((character, index) => {
-      const { fontSizePt, kerningPt, ...style } = characters[index]!; if (style.fontFamily) style.fontFamily = renderFontFamily(style.fontFamily);
+      const { fontSizePt, kerningPt, fillOpacity, ...style } = characters[index]!; if (style.fill !== undefined || fillOpacity !== undefined) style.fill = paintWithOpacity(style.fill ?? o.fill, fillOpacity ?? o.fillOpacity); if (style.fontFamily) style.fontFamily = renderFontFamily(style.fontFamily);
       const editorLineAlign = alignments[index];
       if (Object.keys(style).length || fontSizePt !== undefined || kerningPt !== undefined || editorLineAlign !== undefined) (styles[line] ??= {})[column] = { ...style, ...(editorLineAlign === undefined ? {} : { editorLineAlign }), ...(kerningPt === undefined ? {} : { editorKerningPt: kerningPt }), ...(fontSizePt === undefined ? {} : { fontSize: fontSizePt * PT_TO_MM * PX_PER_MM }) };
       if (character === '\n') { line++; column = 0; } else column++;
@@ -102,7 +103,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
     if(o.raster.mode==='original')originalRasterSvg(image,o.source,o.crop);object=image;
   } else {
     const strokeWidth = o.stroke === 'none' ? 0 : o.strokeMm * PX_PER_MM;
-    const appearance = { fill: !o.fill || o.fill === 'none' ? 'transparent' : o.fill, perPixelTargetFind: !o.fill || o.fill === 'none', stroke: o.stroke === 'none' ? undefined : o.stroke, strokeWidth,
+    const appearance = { fill: paintWithOpacity(o.fill, o.fillOpacity), perPixelTargetFind: !o.fill || o.fill === 'none' || o.fillOpacity === 0, stroke: o.stroke === 'none' ? undefined : paintWithOpacity(o.stroke, o.strokeOpacity), strokeWidth,
       strokeDashArray: o.strokeDash === 'dashed' ? [strokeWidth * 4, strokeWidth * 2] : o.strokeDash === 'dotted' ? [0, strokeWidth * 2] : undefined,
       strokeLineCap: o.strokeDash === 'dotted' ? 'round' as const : 'butt' as const };
     object = o.type === 'circle'
@@ -635,7 +636,7 @@ export class FabricAdapter {
       if (character === '\n') { line++; column = 0; return {}; }
       const raw = target.styles[line]?.[column++] as { editorKerningPt?: number } | undefined;
       const { fontSize, fontWeight, fontStyle, underline, linethrough, overline, fill, fontFamily } = raw as (IText['styles'][number][number] & { editorKerningPt?: number }) ?? {};
-      return Object.fromEntries(Object.entries({ kerningPt: raw?.editorKerningPt, fontSizePt: fontSize === undefined ? undefined : fontPoints(fontSize), fontWeight, fontStyle, underline, linethrough, overline, fill, fontFamily: canonicalFontFamily(fontFamily) }).filter(([, value]) => value !== undefined)) as CharacterStyle;
+      return Object.fromEntries(Object.entries({ kerningPt: raw?.editorKerningPt, fontSizePt: fontSize === undefined ? undefined : fontPoints(fontSize), fontWeight, fontStyle, underline, linethrough, overline, ...textPaintFromFabric(fill, source.fillOpacity), fontFamily: canonicalFontFamily(fontFamily) }).filter(([, value]) => value !== undefined)) as CharacterStyle;
     });
     alignments.push((target.styles[line]?.[column] as { editorLineAlign?: import('./model').TextAlignment } | undefined)?.editorLineAlign);
     const next = { ...source, text: target.text, characterStyles: compressStyles(styles), lineStyles: compressLineAlignments(alignments, Array.from(target.text).length, target.text.endsWith('\n')) };

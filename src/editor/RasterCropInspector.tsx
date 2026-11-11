@@ -2,14 +2,22 @@ import { useState } from 'react';
 import { NumberField } from './InspectorNumberField';
 import { EditorButton } from './EditorButton';
 import { cropFromInsetsMm, rasterInsetsMm, fullRasterCrop, checkedRasterCrop, type ImageObject, type RasterInsets } from './raster-geometry';
-import { cropRasterInPlace, rasterContentOffsetMm,positionRasterContents } from './raster-crop-edit';
+import { cropRasterInPlace, rasterContentOffsetMm,positionRasterContents, rasterContentZoom, zoomRasterContents } from './raster-crop-edit';
 import { measureFabric } from './fabric-adapter';
 export function RasterCropInspector({ object, revision, onChange,moveContents=false,onMoveContents }: { object: ImageObject; revision: number; onChange: (object: ImageObject, immediate?: boolean) => void;moveContents?:boolean;onMoveContents?:(value:boolean)=>void }) {
   const inset = rasterInsetsMm(object),crop=checkedRasterCrop(object.source,object.crop),sx=object.widthMm/crop.widthPx,sy=object.heightMm/crop.heightPx,[error, setError] = useState('');
   const change = (patch: Partial<RasterInsets>) => { try { setError(''); onChange(cropRasterInPlace(object, cropFromInsetsMm(object, patch), measureFabric)); } catch { setError('Il ritaglio deve restare dentro l’originale e lasciare almeno un pixel visibile per lato.'); } };
   const offset=rasterContentOffsetMm(object),maxX=Math.max(0,(object.source.pixelWidth-crop.widthPx)/2)*sx,maxY=Math.max(0,(object.source.pixelHeight-crop.heightPx)/2)*sy;
+  const zoom = rasterContentZoom(object);
+  const enlarge = (percent: number, center = false) => {
+    try { setError(''); const next = zoomRasterContents(object, percent); onChange(center ? positionRasterContents(next, { x: 0, y: 0 }) : next, center); }
+    catch { setError('L’ingrandimento deve essere almeno 100% e lasciare almeno un pixel visibile per lato.'); }
+  };
   return <>
-    {onMoveContents&&<><EditorButton icon="panImage" label="Sposta foto nella cornice" aria-pressed={moveContents} disabled={!moveContents&&maxX<1e-9&&maxY<1e-9} onClick={()=>{setError('');onMoveContents(!moveContents);}}/><p className="caption">{moveContents?'Trascina dentro la foto per spostare il contenuto. La cornice resta ferma. Frecce: 0,1 mm; Maiusc: 1 mm; Alt: 0,01 mm lungo gli assi del foglio. Esc annulla il gesto; premi di nuovo il pulsante per tornare ai bordi.':maxX<1e-9&&maxY<1e-9?'Per spostare la foto nella cornice, ritaglia prima almeno un bordo.':'Puoi anche spostare la foto dentro il ritaglio mantenendo ferma la cornice.'}</p></>}
+    <NumberField label="Ingrandimento foto (%)" value={zoom.value} revision={revision} min={100} max={zoom.max} step={1} disabled={zoom.max<=100} onChange={enlarge}/>
+    <EditorButton icon="fit" label="Riempi cornice con foto centrata" onClick={()=>enlarge(100,true)}/>
+    <p className="caption">100% mostra più foto possibile riempiendo la cornice. Aumentando ingrandisci il dettaglio centrale senza cambiare la cornice o deformare la foto. I bordi dell’originale limitano lo spostamento.</p>
+    {onMoveContents&&<><EditorButton icon="panImage" label="Sposta foto nella cornice" aria-pressed={moveContents} disabled={!moveContents&&maxX<1e-9&&maxY<1e-9} onClick={()=>{setError('');onMoveContents(!moveContents);}}/><p className="caption">{moveContents?'Trascina dentro la foto per spostare il contenuto. La cornice resta ferma. Frecce: 0,1 mm; Maiusc: 1 mm; Alt: 0,01 mm lungo gli assi del foglio. Esc annulla il gesto; premi di nuovo il pulsante per tornare ai bordi.':maxX<1e-9&&maxY<1e-9?'Per spostare la foto nella cornice, ritaglia un bordo oppure aumenta l’ingrandimento.':'Puoi anche spostare la foto dentro il ritaglio mantenendo ferma la cornice.'}</p></>}
     {moveContents?<>
       <div className="property-grid">
         <NumberField label="Orizzontale foto (mm)" value={offset.x} revision={revision} min={-maxX} max={maxX} step={.1} disabled={maxX<1e-9} onChange={x=>onChange(positionRasterContents(object,{x}))}/>

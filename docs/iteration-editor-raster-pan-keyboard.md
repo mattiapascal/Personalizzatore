@@ -1,3 +1,5 @@
+**Campione aggiornato successivamente:** [zoom interno](iteration-editor-raster-zoom.md), stesso risultato grafico con zoom 200%/Undo aggiuntivi; revisione finale attuale 9. I numeri delle revisioni nel resoconto storico sotto si riferiscono alla versione precedente del generatore.
+
 # Posizione della foto da tastiera — 11 novembre 2026
 
 Base `a0ef2fc`. Completa lo [spostamento interno alla cornice](iteration-editor-raster-pan.md) usando le stesse frecce già presenti per gli oggetti. Con **Sposta foto nella cornice** attivo, Frecce = 0,1 mm; Maiusc = 1 mm; Alt = 0,01 mm. Le direzioni seguono gli assi del foglio, quindi un particolare si muove nella direzione della freccia anche quando la cornice è ruotata/riflessa. Gli input dell’ispettore restano riferiti agli assi locali della cornice e conservano il loro comportamento nativo.

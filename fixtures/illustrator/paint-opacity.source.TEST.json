@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 2,
+  "documentId": "70707070-7070-4707-a070-707070707070",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 80,
+    "height": 60
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "xMm": 0,
+      "yMm": 0,
+      "widthMm": 80,
+      "heightMm": 60,
+      "fill": "#0000ff",
+      "stroke": "none",
+      "strokeMm": 0.1
+    },
+    {
+      "id": "paint",
+      "type": "rect",
+      "xMm": 10,
+      "yMm": 10,
+      "widthMm": 20,
+      "heightMm": 10,
+      "fill": "#ff0000",
+      "stroke": "#00ff00",
+      "strokeMm": 2
+    }
+  ],
+  "fontAssets": [],
+  "colorMode": "color"
+}
