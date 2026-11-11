@@ -1,6 +1,6 @@
 import { useCanvasPan } from './use-canvas-pan';
 import { EditorButton } from './EditorButton';
-import { useEffect, useRef, useState, useId, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties, type ReactNode } from 'react';
 import type { GraphicDocument } from './model';
 import { PX_PER_MM } from './fabric-adapter';
 
@@ -19,11 +19,13 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const [layersOpen, setLayersOpen] = useState(false), layerAnchor = useRef<HTMLDivElement>(null), layerId = useId();
   const [layerPosition, setLayerPosition] = useState<CSSProperties>({});
   const [zoom, setZoom] = useState(1), [screenError, setScreenError] = useState('');
+  const [viewReady,setViewReady]=useState(false),autoFit=useRef(true);
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
   const view = useRef({ zoom: 1, panX: 0, panY: 0 }), live = useRef({ onZoom, editing }); live.current = { onZoom, editing };
   useCanvasPan(viewport, view, panTool, editing, onTemporaryPan);
-  const updateZoom = (value: number, anchor?: { x: number; y: number }) => {
-    const next = Math.max(0.25, Math.min(4, value)), container = viewport.current?.querySelector<HTMLElement>('.canvas-container'), before = container?.getBoundingClientRect(), previous = view.current.zoom;
+  const updateZoom = (value: number, anchor?: { x: number; y: number }, fitting=false) => {
+    autoFit.current=fitting;
+    const next = Math.max(0.01, Math.min(4, value)), container = viewport.current?.querySelector<HTMLElement>('.canvas-container'), before = container?.getBoundingClientRect(), previous = view.current.zoom;
     if (anchor && Math.abs(next - previous) < 1e-9) return;
     const point = anchor && before ? { x: (anchor.x - before.left) / previous, y: (anchor.y - before.top) / previous } : null;
     if (!point) { view.current.panX = 0; view.current.panY = 0; if (container) container.style.transform = ''; }
@@ -68,9 +70,21 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     position();window.addEventListener('pointerdown',outside,true);window.addEventListener('focusin',focusOutside,true);window.addEventListener('keydown',key,true);window.addEventListener('resize',position);return()=>{window.removeEventListener('pointerdown',outside,true);window.removeEventListener('focusin',focusOutside,true);window.removeEventListener('keydown',key,true);window.removeEventListener('resize',position);};
   },[workflowOpen,mode]);
   const fit = () => {
-    const area = viewport.current; if (!area) return;
-    updateZoom(Math.min((area.clientWidth - 80) / (doc.areaMm.width * PX_PER_MM), (area.clientHeight - 120) / (doc.areaMm.height * PX_PER_MM)));
+    const area = viewport.current?.querySelector<HTMLElement>('.canvas-scroll'); if (!area||area.clientWidth<=48||area.clientHeight<=48) return;
+    area.scrollLeft=0;area.scrollTop=0;
+    updateZoom(Math.min((area.clientWidth - 48) / (doc.areaMm.width * PX_PER_MM), (area.clientHeight - 48) / (doc.areaMm.height * PX_PER_MM)),undefined,true);
   };
+  useLayoutEffect(()=>{setViewReady(!expanded);},[expanded,doc.documentId,doc.areaMm.width,doc.areaMm.height]);
+  useEffect(()=>{
+    if(!expanded)return;
+    autoFit.current=true;
+    const frame=requestAnimationFrame(()=>{fit();setViewReady(true);});
+    return()=>cancelAnimationFrame(frame);
+  },[expanded,doc.documentId,doc.areaMm.width,doc.areaMm.height]);
+  useEffect(()=>{
+    const area=viewport.current?.querySelector<HTMLElement>('.canvas-scroll');if(!expanded||!area)return;
+    const observer=new ResizeObserver(()=>{if(autoFit.current&&!live.current.editing)fit();});observer.observe(area);return()=>observer.disconnect();
+  },[expanded,doc.documentId,doc.areaMm.width,doc.areaMm.height]);
   const close = () => {
     if (document.fullscreenElement === root.current) void document.exitFullscreen();
     updateZoom(1); setExpanded(false);
@@ -85,7 +99,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
       }
       if (current.parentElement === document.body) break;
     }
-    const frame = requestAnimationFrame(() => { fit(); root.current?.querySelector<HTMLButtonElement>('.workspace-close')?.focus(); });
+    const frame = requestAnimationFrame(() => { root.current?.querySelector<HTMLButtonElement>('.workspace-close')?.focus(); });
     return () => { document.body.style.overflow = overflow; blocked.forEach(({ element, inert }) => { element.inert = inert; }); cancelAnimationFrame(frame); root.current?.querySelector<HTMLButtonElement>('.workspace-toolbar button')?.focus(); };
   }, [expanded]);
   useEffect(() => {
@@ -112,7 +126,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     const changed = () => setNativeFullscreen(document.fullscreenElement === root.current);
     document.addEventListener('fullscreenchange', changed); return () => document.removeEventListener('fullscreenchange', changed);
   }, []);
-  return <section ref={root} role={expanded ? 'dialog' : 'region'} aria-modal={expanded || undefined} data-editor-mode={mode} className={`lab panel${expanded ? ' editor-workspace' : ''}`} aria-labelledby={expanded ? 'workspace-title' : 'lab-title'} data-testid="editor-workspace">
+  return <section ref={root} role={expanded ? 'dialog' : 'region'} aria-modal={expanded || undefined} data-editor-mode={mode} className={`lab panel${expanded ? ' editor-workspace' : ''}`} aria-labelledby={expanded ? 'workspace-title' : 'lab-title'} data-testid="editor-workspace" data-view-ready={viewReady}>
     <div className="workspace-toolbar">
       {expanded ? <>
         <strong id="workspace-title">Area di disegno <span className="caption">· {mode==='admin'?'Amministrazione':mode==='customer'?'Cliente':'TEST'}</span></strong>
@@ -120,7 +134,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
           <EditorButton aria-pressed={objectsOpen} onClick={() => { setObjectsOpen(!objectsOpen); if (window.innerWidth < 900) { setPropertiesOpen(false); } }} icon="objects" label="Strumenti"/>
           <EditorButton aria-pressed={propertiesOpen} onClick={() => { setPropertiesOpen(!propertiesOpen); if (window.innerWidth < 900) { setObjectsOpen(false); } }} icon="properties" label="Ispettore"/>
         </div>
-        <label className="workspace-zoom">Zoom<input aria-label="Zoom canvas (%)" type="range" min="25" max="400" step="1" disabled={editing} value={Math.round(zoom * 100)} onChange={event => updateZoom(Number(event.target.value) / 100)}/><output>{Math.round(zoom * 100)}%</output></label>
+        <label className="workspace-zoom">Zoom<input aria-label="Zoom canvas (%)" type="range" min="1" max="400" step="1" disabled={editing} value={Math.round(zoom * 100)} onChange={event => updateZoom(Number(event.target.value) / 100)}/><output>{Math.round(zoom * 100)}%</output></label>
         <EditorButton disabled={editing} onClick={fit} icon="fit" label="Adatta all’area"/>
         {document.fullscreenEnabled && <EditorButton disabled={editing} icon={nativeFullscreen ? 'collapse' : 'expand'} label={nativeFullscreen ? 'Riduci finestra browser' : 'Schermo intero browser'} onClick={() => {
           if (nativeFullscreen) void document.exitFullscreen();

@@ -20,6 +20,7 @@ export function checkedPitchprintEffects(item:Record<string,unknown>,name:string
  if(item.visible===false)throw new Error(`${name}: elemento nascosto, da gestire prima della conversione.`);
  if(Array.isArray(item.strokeDashArray)&&item.strokeDashArray.length)throw new Error(`${name}: tratteggio personalizzato da convertire. Il sorgente resta intatto.`);
  if(item.globalCompositeOperation&&item.globalCompositeOperation!=='source-over')throw new Error(`${name}: metodo di fusione non supportato.`);
+ if(item.fillRule!==undefined&&!['evenodd','nonzero'].includes(String(item.fillRule)))throw new Error(`${name}: regola di riempimento non riconosciuta.`);
  if(item.shadow||item.clipPath||item.clipTo||item.transformMatrix||Number(item.skewX??0)||Number(item.skewY??0)||item.opacity!==undefined&&item.opacity!==1)throw new Error(`${name}: maschera, ombra, skew o opacità non supportati.`);
 }
 const inheritedKeys=['transformLocked','selectionLocked','deleteLocked','hideMenus','reference'] as const;

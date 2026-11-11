@@ -1,3 +1,5 @@
+**Nuovo incremento 11 novembre:** [fori, PNG persistenti e avvio/zoom](iteration-editor-preview-cache-startup.md). «Oltre i 100a» corretto nel solo archivio locale, revisione 365; altri record/font conservati. Confrontati 117 sorgenti e 216 vettori: tre regole perse, solo il caso segnalato mostra differenze nei pixel a 1024 px. Cache PNG IndexedDB con fingerprint dello snapshot, caricamento diretto del progetto senza TEST transitorio e adattamento iniziale della vista a tutto schermo con 24 px di margine. Stato delle prove aggiornato nel documento collegato.
+
 **Stato corrente 11 novembre:** [117 bozze PitchPrint importate con colori conservati](iteration-editor-pitchprint-colors.md), tag «Da verificare», nessuna associazione prodotto. Tutte riaperte/riesportate in SVG in sola lettura; controllo font distinto con 20 casi di simboli assenti e due coperture non verificabili. Le note sotto sull’attesa di autorizzazione sono superate. [Archivio locale](http://127.0.0.1:5173/editor/admin?section=template).
 
 # Handoff — sviluppo locale del configuratore grafico

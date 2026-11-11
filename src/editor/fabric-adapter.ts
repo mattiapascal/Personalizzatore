@@ -133,7 +133,16 @@ export function measureTextFrame(object: TextObject) {
 }
 /** Canvas temporaneo: né overlay della vista né selezione entrano nel PNG. */
 export async function exportDocumentPng(document: GraphicDocument, dpi: PngDpi, transparent: boolean): Promise<Blob> {
-  const size = pngExportSize(document.areaMm, dpi);
+  const size = pngExportSize(document.areaMm, dpi), blob = await renderDocumentPng(document, size, transparent);
+  return new Blob([pngWithDpi(new Uint8Array(await blob.arrayBuffer()), dpi)], { type: 'image/png' });
+}
+/** Browser cache image: bounded resolution independent of paper size and editor zoom. */
+export async function exportDocumentThumbnail(document: GraphicDocument, side = 512): Promise<Blob> {
+  if (!Number.isInteger(side) || side < 32 || side > 1024) throw new Error('Dimensione miniatura non valida');
+  const pixelsPerMm = side / Math.max(document.areaMm.width, document.areaMm.height);
+  return renderDocumentPng(document, { width: Math.max(1, Math.round(document.areaMm.width * pixelsPerMm)), height: Math.max(1, Math.round(document.areaMm.height * pixelsPerMm)), pixelsPerMm }, true);
+}
+async function renderDocumentPng(document: GraphicDocument, size: {width:number;height:number;pixelsPerMm:number}, transparent: boolean): Promise<Blob> {
   DocumentSchema.parse(document); validateLayout(document, measureFabric, 'edit');
   const element = window.document.createElement('canvas');
   const output = new StaticCanvas(element, { width: size.width, height: size.height, enableRetinaScaling: false, renderOnAddRemove: false });
@@ -149,7 +158,7 @@ export async function exportDocumentPng(document: GraphicDocument, dpi: PngDpi, 
     }
     if(document.colorMode!=='color'&&document.inkColor&&document.inkColor!=='black'){const context=element.getContext('2d');if(!context)throw new Error('Anteprima colore non disponibile');const pixels=context.getImageData(0,0,size.width,size.height);tintImprintPixels(pixels.data,document.inkColor);context.putImageData(pixels,0,0);}
     const blob = await new Promise<Blob>((resolve, reject) => element.toBlob(value => value ? resolve(value) : reject(new Error('Il browser non ha generato il PNG')), 'image/png'));
-    return new Blob([pngWithDpi(new Uint8Array(await blob.arrayBuffer()), dpi)], { type: 'image/png' });
+    return blob;
   } finally { await output.dispose(); }
 }
 export class FabricAdapter {
@@ -609,7 +618,7 @@ export class FabricAdapter {
     } finally { this.zoom = zoom; this.render(document, selected); }
   }
   setZoom(zoom: number, document: GraphicDocument): void {
-    if (!Number.isFinite(zoom) || zoom < 0.25 || zoom > 4) throw new Error('Zoom non valido');
+    if (!Number.isFinite(zoom) || zoom < 0.01 || zoom > 4) throw new Error('Zoom non valido');
     this.zoom = zoom; this.render(document);
   }
   activateSelectionTool(): void {

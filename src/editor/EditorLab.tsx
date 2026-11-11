@@ -65,7 +65,7 @@ export function download(name: string, content: string, type: string): void {
 function example(revision: number, objectId = 'text-1'): string {
   return JSON.stringify({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId, arguments: { xMm: 10, yMm: 8 } }, null, 2);
 }
-function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition' }: { initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[]; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
+function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition',initialSource }: { initialSource?:{record:ArchiveRecord;mode:'archive'|'template'};initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[]; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
   const projectFonts=useProjectFontPreparation();
   const mode=editorMode(),policyRole=mode==='customer'?'customer':'admin';const archiveBusyRef=useRef(false);
   const graphicCatalog=availableProducts?{version:catalogVersion,products:availableProducts}:undefined;
@@ -88,7 +88,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const [doc, setDoc] = useState<GraphicDocument>(() => initialDocument?parseGraphicDocument(initialDocument):createEditorDocument(product, catalogVersion));
   useEffect(() => setVectorMonochrome(doc.colorMode !== 'color'), [doc.colorMode]);
   const firstProductEffect=useRef(true);
-  const [sourceRecord,setSourceRecord]=useState<ArchiveRecord|null>(null),[sessionNotice,setSessionNotice]=useState(''),[sessionDialog,setSessionDialog]=useState<'reload'|'close'|null>(null),[savedStamp,setSavedStamp]=useState(()=>sessionDocumentKey(doc)),[savedMetadata,setSavedMetadata]=useState(()=>metadataKey(initialTitle??'',initialKind,initialTags?.join(', ')??''));
+  const [sourceRecord,setSourceRecord]=useState<ArchiveRecord|null>(()=>initialSource?.mode==='archive'&&!(mode==='customer'&&initialSource.record.kind==='template')?initialSource.record:null),[sessionNotice,setSessionNotice]=useState(initialSource?`Aperto: ${initialTitle??initialSource.record.title}`:''),[sessionDialog,setSessionDialog]=useState<'reload'|'close'|null>(null),[savedStamp,setSavedStamp]=useState(()=>sessionDocumentKey(doc)),[savedMetadata,setSavedMetadata]=useState(()=>metadataKey(initialTitle??'',initialKind,initialTags?.join(', ')??''));
   const draftControl=useRef<DraftControl|null>(null),originalDocument=useRef<GraphicDocument>(structuredClone(doc)),leaving=useRef(false),sessionModal=useRef<HTMLDialogElement>(null);
   const dirty=sessionDocumentKey(doc)!==savedStamp||metadataKey(archiveTitle,archiveKind,archiveTags)!==savedMetadata;
   const [command, setCommand] = useState(example(0));
@@ -307,16 +307,6 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     if (!import.meta.env.DEV) return; let active = true;
     const fonts = () => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => { if (active) setFontNotice(''); }).catch(error => { if (active) setFontNotice(error.message); }); }; fonts(); window.addEventListener('focus', fonts);
     void readAdminSnapshot().then(state => { if(active){setArchiveVocabulary(archiveTagVocabulary(state));setCustomerPdfEnabled(state.settings.customerPdfEnabled??false);} if (active && !guidesTouched.current) { setGuides({ gridMm: state.settings.gridMm, gridVisible: state.settings.gridVisible, snapEnabled: state.settings.snapEnabled }); setGridRaw(String(state.settings.gridMm)); } }).catch(() => {});
-    const archive = new URLSearchParams(window.location.search).get('archive');
-    if (archive) void prepareAndAct(async store => { const record = await readArchiveRecord(archive); const next = await projectFonts.prepare(parseGraphicDocument(record.document)); await Promise.all([...next.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]); return () => { if(portable)store.open(next);else store.import(next);store.clearHistory();setSourceRecord(mode==='customer'&&record.kind==='template'?null:record);setArchiveTitle(mode==='customer'&&record.kind==='template'?copyArchiveTitle(record.title):record.title);setArchiveKind(mode==='customer'?'composition':record.kind);setArchiveTags(record.tags.join(', '));originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));setSavedMetadata(metadataKey(mode==='customer'&&record.kind==='template'?copyArchiveTitle(record.title):record.title,mode==='customer'?'composition':record.kind,record.tags.join(', ')));setSessionNotice(`Aperto: ${record.title}`);setImportNotice(`Aperto dall’archivio locale: ${record.title}`); }; });
-    const parameters=new URLSearchParams(window.location.search),template=parameters.get('template');
-    if(template&&!archive&&product)void prepareAndAct(async store=>{
-      const record=await readArchiveRecord(template);
-      if(record.kind!=='template'||record.archived||record.version!==Number(parameters.get('templateVersion'))||!record.templateProducts?.profileKeys.includes(profileKey(product)))throw new Error('Template o associazioni cambiati: torna alla galleria e controlla nuovamente l’anteprima.');
-      record.document=await projectFonts.prepare(record.document);await Promise.all([...record.document.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source))]);
-      const fit=fitTemplate(record.document,product,catalogVersion,measureFabric,parameters.get('shrink')==='1'),command=templateCommand(fit,record.id,record.version,store.document.revision);
-      return()=>{store.dispatch(command,'manual');store.clearHistory();originalDocument.current=structuredClone(store.document);setSavedStamp(sessionDocumentKey(store.document));setArchiveTitle(copyArchiveTitle(record.title));setArchiveKind('composition');setArchiveTags(record.tags.join(', '));setSavedMetadata(metadataKey(copyArchiveTitle(record.title),'composition',record.tags.join(', ')));setImportNotice(`Copia del template «${record.title}» applicata. L’originale è conservato${fit.scale<1?`; riduzione proporzionale al ${(fit.scale*100).toFixed(1)}%`:''}.`);};
-    });
     return () => { active = false; window.removeEventListener('focus', fonts); };
   }, []);
   useEffect(()=>{if(availableProducts&&doc.productId&&doc.variantId&&(doc.productId!==product?.productId||doc.variantId!==product?.variantIds[0]))onKeepProduct(doc.productId,doc.variantId);},[doc.productId,doc.variantId]);
@@ -546,26 +536,42 @@ export function EditorLab(props:Parameters<typeof EditorLabSession>[0]){
  const projectFonts=useProjectFontPreparation(),[prepared,setPrepared]=useState<GraphicDocument|undefined>(undefined);
  const recoveryInput=useRef<HTMLInputElement>(null),[recoveryTitle,setRecoveryTitle]=useState<string|undefined>(),[openingFile,setOpeningFile]=useState(false);
  const [ready,setReady]=useState(false),[message,setMessage]=useState(''),[failed,setFailed]=useState(false);
- const [attempt,setAttempt]=useState(0);
+ const [attempt,setAttempt]=useState(0),[initialSource,setInitialSource]=useState<{record:ArchiveRecord;mode:'archive'|'template'}|undefined>();
  useEffect(()=>{let active=true;const controller=new AbortController();setReady(false);setFailed(false);setMessage('');
   void(async()=>{
-   const assets=props.initialDocument?.fontAssets??[];await loadFontAssets(assets);
+   const parameters=new URLSearchParams(window.location.search),archive=parameters.get('archive'),template=parameters.get('template');
+   let source=props.initialDocument,loaded:typeof initialSource;
+   if(!source&&(archive||template)){
+    setMessage('Caricamento del progetto…');
+    const record=await readArchiveRecord((archive??template)!,AbortSignal.any([controller.signal,AbortSignal.timeout(8000)]));
+    source=parseGraphicDocument(record.document);loaded={record,mode:archive?'archive':'template'};
+   }
+   const assets=source?.fontAssets??[];await loadFontAssets(assets);
    // A portable project already has every file needed for rendering. The library
    // is refreshed by the session, without delaying or changing its composition.
-   if(!props.initialDocument||legacyFontRequests(props.initialDocument).length){
+   if(!source||legacyFontRequests(source).length){
     try{await initializeLibraryFonts(assets,AbortSignal.any([controller.signal,AbortSignal.timeout(8000)]));}
     catch(cause){if(controller.signal.aborted)throw cause;throw new Error(cause instanceof DOMException&&cause.name==='TimeoutError'?'La libreria font non risponde. Controlla che il server locale sia attivo e premi Riprova.':cause instanceof Error?cause.message:'Libreria font non disponibile');}
    }else showProjectFontChoices(assets);
-   const next=props.initialDocument?await projectFonts.prepare(props.initialDocument):undefined;if(active)setPrepared(next);
-   if(active){setMessage(!props.initialDocument&&!defaultLibraryFont()?'La libreria è vuota: carica un font nel pannello amministrativo per aggiungere testi.':'');setReady(true);}
+   let next=source?await projectFonts.prepare(source):undefined;
+   if(next)await Promise.all(next.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source)));
+   if(loaded?.mode==='archive'&&next)next={...next,revision:1};
+   if(loaded?.mode==='template'&&next){
+    const record=loaded.record,product=props.product;
+    if(!product||record.kind!=='template'||record.archived||record.version!==Number(parameters.get('templateVersion'))||!record.templateProducts?.profileKeys.includes(profileKey(product)))throw new Error('Template o associazioni cambiati: torna alla galleria e controlla nuovamente l’anteprima.');
+    const fit=fitTemplate(next,product,props.catalogVersion,measureFabric,parameters.get('shrink')==='1'),store=new DocumentStore(createEditorDocument(product,props.catalogVersion),measureFabric,undefined,editorMode()==='customer'?'customer':'admin');
+    store.dispatch(templateCommand(fit,record.id,record.version,store.document.revision),'manual');next=store.document;
+   }
+   if(active){setInitialSource(loaded);setPrepared(next);setMessage(!source&&!defaultLibraryFont()?'La libreria è vuota: carica un font nel pannello amministrativo per aggiungere testi.':'');setReady(true);}
   })().catch(cause=>{if(active){setMessage(cause instanceof Error?cause.message:'Font del progetto non caricabili');setFailed(true);}});
   return()=>{active=false;controller.abort();};
  },[attempt]);
  if(!ready)return <><section className="editor-lab" aria-label="Caricamento editor"><p role={failed&&!openingFile?'alert':'status'}>{message||'Caricamento dei font della libreria…'}</p>{failed&&<><button disabled={openingFile} onClick={()=>setAttempt(value=>value+1)}>Riprova</button><button disabled={openingFile} onClick={()=>recoveryInput.current?.click()}>Apri progetto JSON</button><label className="sr-only">Riapri progetto JSON (max 10 MB)<input ref={recoveryInput} type="file" accept=".json,application/json" disabled={openingFile} onChange={event=>{
   const file=event.currentTarget.files?.[0];event.currentTarget.value='';if(!file)return;setOpeningFile(true);setMessage('Apertura progetto…');void(async()=>{
-   try{if(file.size>10_000_000)throw new Error('File oltre 10 MB');const next=await projectFonts.prepare(parseGraphicDocument(JSON.parse(await file.text())));await Promise.all(next.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source)));showProjectFontChoices(next.fontAssets);setPrepared(next);setRecoveryTitle(file.name.replace(/\.json$/i,'').slice(0,120));setFailed(false);setMessage('');setReady(true);}
+   try{if(file.size>10_000_000)throw new Error('File oltre 10 MB');const next=await projectFonts.prepare(parseGraphicDocument(JSON.parse(await file.text())));await Promise.all(next.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source)));showProjectFontChoices(next.fontAssets);setPrepared(next);setRecoveryTitle(file.name.replace(/\.json$/i,'').slice(0,120));setInitialSource(undefined);setFailed(false);setMessage('');setReady(true);}
    catch(cause){setMessage(cause instanceof Error?cause.message:'Progetto non caricabile');setFailed(true);}finally{setOpeningFile(false);}
   })();
  }}/></label>{props.initialDocument&&<button onClick={()=>download('progetto-originale.json',JSON.stringify(props.initialDocument,null,2),'application/json')}>Scarica progetto originale</button>}<a href="/editor/admin?section=fonts">Apri libreria font</a></>}</section>{projectFonts.dialog}</>;
- return <>{message&&<p role="status">{message}</p>}<EditorLabSession {...props} initialDocument={prepared??props.initialDocument} initialTitle={recoveryTitle??props.initialTitle}/></>;
+ const record=initialSource?.record,copy=initialSource?.mode==='template'||editorMode()==='customer'&&record?.kind==='template';
+ return <>{message&&<p role="status">{message}</p>}<EditorLabSession {...props} initialSource={initialSource} initialDocument={prepared??props.initialDocument} initialTitle={recoveryTitle??(record?(copy?copyArchiveTitle(record.title):record.title):props.initialTitle)} initialKind={record?(copy?'composition':record.kind):props.initialKind} initialTags={record?.tags??props.initialTags}/></>;
 }

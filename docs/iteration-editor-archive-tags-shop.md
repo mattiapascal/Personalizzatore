@@ -1,5 +1,7 @@
 # Archivio visuale, tag e prodotti reali
 
+**Aggiornamento 11 novembre:** le note sulla cache SVG in memoria sotto sono storiche. Ora sono disponibili [cache PNG persistente e chiave grafica](iteration-editor-preview-cache-startup.md), riutilizzate al ricaricamento senza rigenerazione.
+
 Incremento locale del 9 novembre 2026. [Piano iniziale](iteration-editor-archive-catalog-plan.md). Nessuna pubblicazione o modifica allo store.
 
 ## Archivio e tag

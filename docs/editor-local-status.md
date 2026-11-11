@@ -2,6 +2,10 @@
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.
 
+## Correzione fori, miniature persistenti e apertura dell’editor
+
+[Comportamento e prove](iteration-editor-preview-cache-startup.md): corretto il tracciato rosso di «Oltre i 100a» conservando `evenodd`, con backup e altri record/font invariati. Controllati 117 sorgenti/216 vettori: altri due campi differenti, zero differenze visibili nel confronto a 1024 px. PNG in cache persistente del browser; titolo/tag non li rigenerano, cambiamenti grafici sì. L’avvio carica il progetto richiesto prima del canvas e la vista a tutto schermo lo adatta con 24 px di margine, anche sotto il 25% di zoom. 635 unitari/build/segreti e 76 browser mirati passati. Il controllo completo precedente resta distinto. Nessun deploy o collaudo Illustrator.
+
 ## 117 template PitchPrint importati con colori originali
 
 [Comportamento e prove](iteration-editor-pitchprint-colors.md). Dopo l’autorizzazione del titolare sono stati salvati **117 template** nel backend locale: 37 con pitture a colori, 79 vettoriali già B/N e uno con immagine originale. Tutti con tag **Da verificare**, nessun prodotto o variante associati. Sfondo/materiale e primo piano esclusi come indicato nel piano; sorgenti originali conservati. Archivio da revisione 247 a 364, 119 record totali: i due precedenti sono composizioni cliente, entrambe invariate. File font invariati; backup privato verificato prima dell’importazione.
