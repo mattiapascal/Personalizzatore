@@ -8,7 +8,9 @@ import type {FontAsset} from '../../src/editor/font-assets';
 export async function pitchprintReferenceSvg(source:any,asset:FontAsset):Promise<string>{
  await loadFontAssets([asset]);
  const build=async(raw:any):Promise<FabricObject>=>{
-  const {type,objects,...options}=raw;
+  const {type,objects,...serialized}=raw;
+  // Legacy Fabric 3/PitchPrint defaults differ from Fabric 7's centered origin.
+  const options={originX:'left' as const,originY:'top' as const,...serialized};
   if(raw.type==='group'){
    const group=new Group([],{...options}),children=await Promise.all(objects.map(build));Object.assign(group,{_objects:children});for(const child of children)group.enterGroup(child,false);return group;
   }

@@ -1,3 +1,5 @@
+**Aggiornamento 11 novembre:** [contorni reali e nuova analisi](iteration-editor-wide-strokes.md): 123/370 sorgenti convertibili, sei in più senza ulteriori importazioni nell’archivio. Le 117 bozze già importate conservano colori e stato «Da verificare»; [fori, anteprime persistenti e avvio adattato](iteration-editor-preview-cache-startup.md) completati. I riferimenti sotto alle sole palette B/N o a font del computer sono storici: la politica attuale usa esclusivamente file incorporati e ammette RGB nei progetti senza montatura timbro.
+
 # Punto della situazione — funzioni mancanti al 10 novembre 2026
 
 **Correzioni dal collaudo del 10 novembre:** [stato corrente](editor-local-status.md) e [ricollaudo](editor-retest-2026-11-10.md). Salvataggio manuale esplicito, sessioni separate, recupero senza modello, cancellazioni e controlli numerici corretti; targhe parametriche e primo riuso template su più misure disponibili localmente.

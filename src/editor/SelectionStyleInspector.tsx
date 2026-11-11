@@ -1,3 +1,4 @@
+import { EDITOR_LIMITS } from './limits';
 import { useEffect, useRef, useState } from 'react';
 import type { GraphicDocument, SelectionStyle } from './model';
 import { PaintPicker } from './PaintPicker';
@@ -37,7 +38,7 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
     {canStroke && <>
       <h4>Contorno</h4><PaintPicker allowColor={document.colorMode==='color'} label="Contorno selezione" value={stroke ?? 'mixed'} allowNone={objects.every(object => object.type !== 'line' && object.type !== 'path' && object.type !== 'bezier')} onChange={stroke => change({ stroke })}/>
       {stroke === null && <p className="caption">Contorni misti</p>}
-      <NumberField label="Spessore contorno selezione (mm)" value={pending.current?.style.strokeMm ?? width ?? strokes[0]!.strokeMm} mixed={width === null && !pending.current?.style.strokeMm} revision={document.revision} min={0.01} max={2} step={0.05} disabled={stroke === 'none'} onChange={strokeMm => change({ strokeMm }, false)}/>
+      <NumberField label="Spessore contorno selezione (mm)" value={pending.current?.style.strokeMm ?? width ?? strokes[0]!.strokeMm} mixed={width === null && !pending.current?.style.strokeMm} revision={document.revision} min={0.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={stroke === 'none'} onChange={strokeMm => change({ strokeMm }, false)}/>
       <label>Tipo contorno selezione<select aria-label="Tipo contorno selezione" value={dash ?? ''} disabled={stroke === 'none'} onChange={event => change({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' })}>{dash === null && <option value="" disabled>Misto</option>}<option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>
     </>}
     <p className="caption">Stesso stile per tutti gli elementi selezionati. Sui testi il colore riguarda tutti i caratteri; i centri delle forme restano fermi.</p>

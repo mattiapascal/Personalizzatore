@@ -1,3 +1,5 @@
+**11 novembre — contorni ampi:** nuovo campione [JSON](../fixtures/illustrator/wide-strokes.TEST.json) / [SVG](../fixtures/illustrator/wide-strokes.TEST.svg), da [sorgente PitchPrint sintetico](../fixtures/illustrator/wide-strokes.source.TEST.json), 300 × 180 mm. Cornice ruotata 9,2 mm, cerchio 6 mm e curva 5 mm, tutti vettoriali e senza dipendenze da font. Rigenerare con `node --import tsx scripts/capture-editor-wide-strokes.ts`. Verificare in Illustrator tavola, spessori, curve e centro; il confronto browser indipendente non certifica la produzione. [Incremento e prove](iteration-editor-wide-strokes.md).
+
 # JSON, SVG e collaudo Illustrator
 
 **Aggiornamento del 10 novembre:** disponibile anche PDF locale, amministrativo e opzionale cliente. Export da SVG con Chromium; qpdf normalizza la pagina alle misure fisiche senza scalare la grafica. Test automatici di pagina e testo estraibile passati; campione HTTP 100×60 mm renderizzato e ispezionato. Fori/accessori restano dati tecnici nel JSON/riepilogo, i marcatori non entrano nei file grafici. Il titolare ha indicato Illustrator superato nel proprio report del 10 novembre: non estende automaticamente la certificazione ai nuovi PDF o a tutti i campioni storici sotto.
@@ -118,7 +120,7 @@ Nuovo campione [JSON](../fixtures/illustrator/pitchprint-font-alias.TEST.json) /
 
 ## Campioni con font incorporati — aggiornamento del 10 novembre
 
-La [politica corrente](iteration-editor-library-font-policy.md) esclude i font del computer. I campioni storici e i loro vecchi comandi di generazione riportati sopra conservano le dipendenze originarie e non costituiscono oggi una prova portabile. Per il collaudo attuale usare `stamp-embedded.TEST.json/svg`, `node --import tsx scripts/verify-editor-artifacts.ts` (20 copie TEST in `.local/verified-fixtures`) e `node --import tsx scripts/capture-editor-font-styles.ts` (testo misto con quattro file reali). I generatori storici restanti vanno migrati prima di riutilizzarli con la politica corrente.
+La [politica corrente](iteration-editor-library-font-policy.md) esclude i font del computer. I campioni storici e i loro vecchi comandi di generazione riportati sopra conservano le dipendenze originarie e non costituiscono oggi una prova portabile. Per il collaudo attuale usare `stamp-embedded.TEST.json/svg`, `node --import tsx scripts/verify-editor-artifacts.ts` (21 copie TEST in `.local/verified-fixtures`) e `node --import tsx scripts/capture-editor-font-styles.ts` (testo misto con quattro file reali). I generatori storici restanti vanno migrati prima di riutilizzarli con la politica corrente.
 
 [Varianti, copie di prova e verifiche](iteration-editor-font-regressions.md). Originali conservati; nessuna sostituzione automatica sui progetti reali. Misure fisiche, struttura, risorse e glifi controllati in browser; Illustrator rimane da verificare sul nuovo corpus.
 

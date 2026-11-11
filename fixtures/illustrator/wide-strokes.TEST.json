@@ -1,0 +1,223 @@
+{
+  "colorMode": "color",
+  "schemaVersion": 2,
+  "documentId": "99999999-9999-4999-a999-999999999999",
+  "revision": 4,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 300,
+    "height": 180
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "pp-1",
+      "type": "vector",
+      "xMm": 13.425274064532571,
+      "yMm": 21.97099688547592,
+      "editor": {
+        "label": "Cornice 9,2 mm",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "widthMm": 131.78039906479597,
+      "heightMm": 100.97096266815596,
+      "commands": [
+        [
+          "M",
+          0.1622904231377098,
+          0.0013107332746836238
+        ],
+        [
+          "L",
+          0.9639266424007066,
+          0.22369608065560587
+        ],
+        [
+          "C",
+          0.9885228345568714,
+          0.23051941598584516,
+          1.0042237900348308,
+          0.2620740422903156,
+          0.9989957079999364,
+          0.2941753111319965
+        ],
+        [
+          "L",
+          0.8917112022922824,
+          0.9529195192912505
+        ],
+        [
+          "C",
+          0.8864831202573881,
+          0.9850207881329316,
+          0.862305769018455,
+          1.0055126020555558,
+          0.8377095768622903,
+          0.9986892667253163
+        ],
+        [
+          "L",
+          0.03607335759929354,
+          0.7763039193443941
+        ],
+        [
+          "C",
+          0.011477165443128708,
+          0.7694805840141548,
+          -0.004223790034830783,
+          0.7379259577096843,
+          0.0010042920000638024,
+          0.7058246888680034
+        ],
+        [
+          "L",
+          0.10828879770771756,
+          0.0470804807087495
+        ],
+        [
+          "C",
+          0.11351687974261217,
+          0.014979211867068541,
+          0.13769423098154496,
+          -0.005512602055555682,
+          0.1622904231377098,
+          0.0013107332746836238
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeMm": 9.200000000002209,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "round",
+      "strokeMiterLimit": 4
+    },
+    {
+      "id": "pp-2",
+      "type": "vector",
+      "xMm": 200.33333333333334,
+      "yMm": 50.33333333333333,
+      "editor": {
+        "label": "Cerchio 6 mm",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "widthMm": 46.66666666666663,
+      "heightMm": 46.66666666666667,
+      "commands": [
+        [
+          "M",
+          0,
+          0.5000000000000001
+        ],
+        [
+          "C",
+          0,
+          0.22385762508460336,
+          0.2238576250846031,
+          0,
+          0.5,
+          0
+        ],
+        [
+          "C",
+          0.7761423749153968,
+          0,
+          1,
+          0.22385762508460322,
+          1,
+          0.5000000000000001
+        ],
+        [
+          "C",
+          1,
+          0.7761423749153968,
+          0.7761423749153968,
+          1,
+          0.5,
+          1
+        ],
+        [
+          "C",
+          0.2238576250846031,
+          1,
+          0,
+          0.7761423749153968,
+          0,
+          0.5000000000000001
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeMm": 6,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    },
+    {
+      "id": "pp-3",
+      "type": "vector",
+      "xMm": 43.333333333333336,
+      "yMm": 143.33333333333334,
+      "editor": {
+        "label": "Curva 5 mm",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "widthMm": 99.99999999999997,
+      "heightMm": 15.396007178389993,
+      "commands": [
+        [
+          "M",
+          0,
+          0.5
+        ],
+        [
+          "C",
+          0.3333333333333334,
+          2.23205080756888,
+          0.6666666666666667,
+          -1.2320508075688805,
+          1,
+          0.5
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeMm": 5,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    }
+  ]
+}

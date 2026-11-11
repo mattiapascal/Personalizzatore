@@ -1,3 +1,5 @@
+**11 novembre — contorni fisici estesi:** [incremento e verifiche](iteration-editor-wide-strokes.md). Limite di capacità 100 mm condiviso da forme/guide/comandi/import e ispettori, passo 0,05 mm conservato; maggiore precisione delle matrici SVG intermedie. **639 unitari, 113 browser pertinenti, 21 campioni, build/schemi/segreti passati**. Analisi reale: **123/370 convertibili**, sei in più, nessuna regressione sui 117 precedenti, nessuna nuova importazione o modifica all’archivio personale. Campione 300 × 180 mm, Illustrator da collaudare.
+
 # Editor grafico — stato locale dell’11 novembre 2026
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.

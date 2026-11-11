@@ -624,7 +624,7 @@
                           "strokeMm": {
                             "type": "number",
                             "exclusiveMinimum": 0,
-                            "maximum": 2
+                            "maximum": 100
                           },
                           "fill": {
                             "type": "string",
@@ -708,7 +708,7 @@
                           "strokeMm": {
                             "type": "number",
                             "exclusiveMinimum": 0,
-                            "maximum": 2
+                            "maximum": 100
                           },
                           "fill": {
                             "type": "string",
@@ -754,7 +754,7 @@
                           "strokeMm": {
                             "type": "number",
                             "exclusiveMinimum": 0,
-                            "maximum": 2
+                            "maximum": 100
                           },
                           "fill": {
                             "type": "string",
@@ -809,7 +809,7 @@
                           "strokeMm": {
                             "type": "number",
                             "exclusiveMinimum": 0,
-                            "maximum": 2
+                            "maximum": 100
                           },
                           "fill": {
                             "type": "string",
@@ -892,7 +892,7 @@
                           "strokeMm": {
                             "type": "number",
                             "exclusiveMinimum": 0,
-                            "maximum": 2
+                            "maximum": 100
                           },
                           "fill": {
                             "type": "string",
@@ -1017,7 +1017,7 @@
                           "strokeMm": {
                             "type": "number",
                             "exclusiveMinimum": 0,
-                            "maximum": 2
+                            "maximum": 100
                           },
                           "fill": {
                             "type": "string",
@@ -1357,7 +1357,7 @@
               "strokeMm": {
                 "type": "number",
                 "exclusiveMinimum": 0,
-                "maximum": 2
+                "maximum": 100
               },
               "stroke": {
                 "anyOf": [
@@ -1490,7 +1490,7 @@
               "strokeMm": {
                 "type": "number",
                 "exclusiveMinimum": 0,
-                "maximum": 2
+                "maximum": 100
               },
               "stroke": {
                 "anyOf": [
@@ -1618,7 +1618,7 @@
               "strokeMm": {
                 "type": "number",
                 "exclusiveMinimum": 0,
-                "maximum": 2
+                "maximum": 100
               },
               "stroke": {
                 "type": "string",
@@ -1735,7 +1735,7 @@
               "strokeMm": {
                 "type": "number",
                 "exclusiveMinimum": 0,
-                "maximum": 2
+                "maximum": 100
               },
               "stroke": {
                 "anyOf": [
@@ -1897,7 +1897,7 @@
               "strokeMm": {
                 "type": "number",
                 "exclusiveMinimum": 0,
-                "maximum": 2
+                "maximum": 100
               },
               "stroke": {
                 "type": "string",
@@ -2427,7 +2427,7 @@
               "strokeMm": {
                 "type": "number",
                 "exclusiveMinimum": 0,
-                "maximum": 2
+                "maximum": 100
               },
               "strokeLineCap": {
                 "type": "string",
@@ -2624,7 +2624,7 @@
               "strokeMm": {
                 "type": "number",
                 "exclusiveMinimum": 0,
-                "maximum": 2
+                "maximum": 100
               },
               "stroke": {
                 "type": "string",

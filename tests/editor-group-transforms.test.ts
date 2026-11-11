@@ -56,7 +56,7 @@ describe('trasformazione atomica di gruppi e selezioni', () => {
     text.fontSizePt = 12; text.characterStyles![0]!.style.fontSizePt = 7;
     const store = new DocumentStore(doc, measure), before = structuredClone(store.document);
     expect(() => store.dispatch(command(0, 0.8, 0, center(doc)), 'manual')).toThrow(); expect(store.document).toEqual(before);
-    const thick = source(); (thick.objects[0] as Extract<SceneObject, { type: 'rect' }>).strokeMm = 1.5;
+    const thick = source(); (thick.objects[0] as Extract<SceneObject, { type: 'rect' }>).strokeMm = 60;
     const stroke = new DocumentStore(thick, measure);
     expect(() => stroke.dispatch(command(0, 2, 0, center(thick)), 'manual')).toThrow(); expect(stroke.document).toEqual(thick);
   });

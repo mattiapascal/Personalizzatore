@@ -1,3 +1,4 @@
+import { StrokeWidthSchema } from './stroke';
 import {canonicalPaint} from './paint';
 import { EDITOR_LIMITS,TEST_MIN_FONT_SIZE_PT } from './limits';
 import { compactVectors } from './vector-compaction';
@@ -75,7 +76,7 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
     }
     if (stroke !== 'none' && (Math.abs(sx - sy) > 1e-7 * Math.max(sx, sy) || Math.abs(m[0] * m[2] + m[1] * m[3]) > 1e-7 * sx * sy)) throw new Error('Contorno SVG con deformazione non uniforme: espandilo in tracciati prima di importare');
     const commands = shapeCommands(object); if (!commands.length && stroke === 'none') continue; const box = vectorBounds(commands); if (!Number.isFinite(box.width) || !Number.isFinite(box.height) || !box.width && !box.height) throw new Error('Tracciato SVG degenere');
-    const strokeMm = stroke === 'none' ? .25 : object.strokeWidth * sx * PX_TO_MM; if (!(strokeMm > 0) || strokeMm > 2) throw new Error('Contorno SVG fuori dal limite TEST di 2 mm');
+    const strokeMm = stroke === 'none' ? .25 : object.strokeWidth * sx * PX_TO_MM; if (!StrokeWidthSchema.safeParse(strokeMm).success) throw new Error(`Contorno SVG fuori dal limite di capacità del laboratorio: deve essere positivo e non superare ${EDITOR_LIMITS.maxStrokeMm} mm`);
     let clipRect: VectorObject['clipRect'];
     if (object.clipPath) {
       if (!box.width || !box.height || object.clipPath.clipPath) throw new Error('Ritaglio SVG non rappresentabile');

@@ -3234,3 +3234,42 @@ test('errore apertura archivio: nessun progetto sostitutivo, Riprova carica il d
  const archive=await templateArchive(page);let broken=true;try{await page.route(`**/__editor-local/admin/record/${archive.id}`,route=>broken?route.fulfill({status:503,json:{error:'Progetto temporaneamente non disponibile TEST'}}):route.fallback());await page.goto(`/editor?workspace=1&mode=admin&archive=${archive.id}`);await expect(page.getByRole('alert')).toContainText('Progetto temporaneamente');await expect(page.locator('.canvas-container')).toHaveCount(0);broken=false;await page.getByRole('button',{name:'Riprova',exact:true}).click();await expect.poll(async()=>(await refinementState(page)).documentId).toBe(archive.doc.documentId);
  }finally{await archive.cleanup();}
 });
+
+test('contorni ampi: import PitchPrint in mm, confronto indipendente, JSON/SVG e rifiuto delle deformazioni', async ({page}) => {
+ const source=JSON.parse(await readFile('fixtures/illustrator/wide-strokes.source.TEST.json','utf8'));
+ await page.goto('/editor?workspace=1');await expect(page.getByTestId('revision')).toBeVisible();
+ const result=await page.evaluate(async ({source,asset})=>{
+  const a='/src/editor/pitchprint-import.ts',b='/src/editor/fabric-adapter.ts',c='/tests/helpers/pitchprint-group-reference.browser.ts',d='/src/editor/model.ts';
+  const [{importPitchPrint},{FabricAdapter},{pitchprintReferenceSvg,svgPixelDifference},{parseGraphicDocument}]=await Promise.all([import(a),import(b),import(c),import(d)]),options={monochrome:false,excludeBackground:false,font:async()=>{throw Error('Il campione non usa font');},image:async()=>{throw Error('Il campione non usa immagini');}},converted=await importPitchPrint(source,options),doc=parseGraphicDocument(JSON.parse(JSON.stringify(converted.document))),adapter=new FabricAdapter(document.createElement('canvas'),()=>0,()=>{});
+  try{
+   const svg=adapter.exportSvg(doc),pixels=await svgPixelDifference(await pitchprintReferenceSvg(source,asset),svg,1200,720),errors:string[]=[];
+   for(const mode of ['excess','nonuniform']){const raw=structuredClone(source);if(mode==='excess')raw.pages[0].canvas.objects[0].strokeWidth=303;else raw.pages[0].canvas.objects[0].scaleY=2;try{await importPitchPrint(raw,options);errors.push('Accettato erroneamente');}catch(error){errors.push(String(error));}}
+   return{doc,svg,pixels,errors};
+  }finally{adapter.dispose();}
+ },{source,asset:TEST_FONT_ASSETS[0]});
+ expect(result.doc.objects).toHaveLength(3);expect(result.doc.areaMm).toEqual({width:300,height:180});
+ for(const [index,width] of [9.2,6,5].entries())expect(result.doc.objects[index].strokeMm).toBeCloseTo(width,7);
+ expect(result.pixels.union).toBeGreaterThan(10000);expect(result.pixels.ratio).toBeLessThan(.005);
+ expect(result.svg).toContain('width="300mm"');expect(result.svg).toContain('height="180mm"');expect(result.svg).not.toMatch(/<image|NaN|Infinity/);
+ expect(result.errors[0]).toContain('100 mm');expect(result.errors[1]).toContain('deformazione non uniforme');
+});
+
+test('contorni ampi: ispettore singolo e multiplo, passo 0,05 mm e centri stabili, undo e riapertura', async ({page}) => {
+ await page.goto('/editor?workspace=1');await expect(page.getByTestId('revision')).toBeVisible();
+ const doc=createTestDocument();doc.areaMm={width:300,height:180};doc.objects=[{id:'wide',type:'rect',xMm:25,yMm:25,widthMm:90,heightMm:50,rotationDeg:20,stroke:'#000000',strokeMm:9.2,fill:'none'},{id:'circle',type:'circle',xMm:180,yMm:50,radiusMm:20,stroke:'#000000',strokeMm:6,fill:'none'}];
+ await page.getByLabel('Riapri progetto JSON').setInputFiles({name:'wide.TEST.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});await expect(page.getByTestId('revision')).toContainText('Revisione grafica: 1 ·');
+ const centers=async()=>page.evaluate(async objects=>{const a='/src/editor/model.ts',b='/src/editor/fabric-adapter.ts',{objectCenter}=await import(a),{measureFabric}=await import(b);return objects.map((object:any)=>objectCenter(object,measureFabric));},(await refinementState(page)).objects),before=await centers();
+ await clickEditorButton(page,{name:'Rettangolo · wide',exact:true});await page.getByRole('tab',{name:'Contorno',exact:true}).click();const width=page.getByLabel('Spessore contorno (mm)',{exact:true});await expect(width).toHaveValue('9.2');await width.press('ArrowUp');
+ await expect.poll(async()=>(await refinementState(page)).objects[0].strokeMm).toBeCloseTo(9.25,8);await width.fill('12.35');await width.press('Tab');await expect.poll(async()=>(await refinementState(page)).objects[0].strokeMm).toBe(12.35);
+ const single=await centers();for(const key of ['xMm','yMm'])expect(single[0][key]).toBeCloseTo(before[0][key],8);
+ await clickEditorButton(page,{name:'Seleziona tutto',exact:true});const common=page.getByLabel('Spessore contorno selezione (mm)',{exact:true});await common.fill('15.4');await common.press('Tab');await expect.poll(async()=>(await refinementState(page)).objects.every((o:any)=>o.strokeMm===15.4)).toBe(true);
+ const after=await centers();for(let i=0;i<2;i++)for(const key of ['xMm','yMm'])expect(after[i][key]).toBeCloseTo(before[i][key],8);
+ await page.getByRole('button',{name:'Annulla',exact:true}).click();expect((await refinementState(page)).objects.map((o:any)=>o.strokeMm)).toEqual([12.35,6]);await page.getByRole('button',{name:'Ripristina',exact:true}).click();
+ const saved=await refinementState(page),pending=page.waitForEvent('download');await page.getByRole('button',{name:'Esporta JSON',exact:true}).click();const path=await(await pending).path();await page.reload();await page.getByLabel('Riapri progetto JSON').setInputFiles(path);await expect.poll(async()=>(await refinementState(page)).objects).toEqual(saved.objects);await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('contorni ampi SVG: scala fisica e inserimento AI, oltre limite atomico senza cambiare il progetto',async({page})=>{
+ await page.goto('/editor');await expect(page.getByTestId('revision')).toBeVisible();
+ const result=await page.evaluate(async()=>{const a='/src/editor/svg-import.ts',b='/src/editor/model.ts',c='/src/editor/fabric-adapter.ts',{prepareSvg,svgInsertion}=await import(a),{createDocument,DocumentStore}=await import(b),{measureFabric}=await import(c),svg=(width:number)=>`<svg xmlns="http://www.w3.org/2000/svg" width="300mm" height="180mm" viewBox="0 0 300 180"><path d="M30 30H200V140H30Z" fill="none" stroke="black" stroke-width="${width}"/></svg>`,source=createDocument();source.areaMm={width:300,height:180};source.objects=[];const store=new DocumentStore(source,measureFabric),prepared=await prepareSvg(svg(9.2));store.dispatch(svgInsertion(prepared,store.document,measureFabric).command,'ai-simulation');const saved=JSON.stringify(store.document);let error='';try{const tooWide=await prepareSvg(svg(100.01));store.dispatch(svgInsertion(tooWide,store.document,measureFabric).command,'manual');}catch(cause){error=String(cause);}return{width:store.document.objects[0].strokeMm,error,unchanged:saved===JSON.stringify(store.document),revision:store.document.revision};});
+ expect(result.width).toBeCloseTo(9.2,7);expect(result.error).toContain('100 mm');expect(result.unchanged).toBe(true);expect(result.revision).toBe(1);
+});

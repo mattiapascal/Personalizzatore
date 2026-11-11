@@ -28,7 +28,7 @@ describe('stile comune di selezioni e gruppi', () => {
   });
   it('stile vuoto, limiti, proprietà arbitrarie e gruppo incompleto non alterano il redo', () => {
     const store = storeFor([rect('a'), rect('b', 30), rect('c', 45)]); store.dispatch({ schemaVersion: 1, tool: 'groupObjects', objectId: 'a', expectedRevision: 0, arguments: { objectIds: ['a', 'b'], groupId: 'g' } }, 'manual'); store.dispatch(styleCommand(store, { fill: '#000000' }), 'manual'); store.undo(); const before = cloneGraphicDocument(store.document);
-    for (const style of [{}, { strokeMm: 0 }, { strokeMm: 2.1 }, { opacity: 0.5 }]) { expect(() => store.dispatch(styleCommand(store, style), 'manual')).toThrow(); expect(store.document).toEqual(before); }
+    for (const style of [{}, { strokeMm: 0 }, { strokeMm: 100.01 }, { opacity: 0.5 }]) { expect(() => store.dispatch(styleCommand(store, style), 'manual')).toThrow(); expect(store.document).toEqual(before); }
     expect(() => store.dispatch(styleCommand(store, { fill: '#000000' }, ['a', 'c']), 'manual')).toThrow('intero gruppo'); const stale = { ...styleCommand(store, { fill: '#000000' }), expectedRevision: 0 }; expect(() => store.dispatch(stale, 'ai-simulation')).toThrow('obsoleta'); store.redo(); expect(store.document.objects.every(object => object.type === 'rect' && object.fill === '#000000')).toBe(true);
   });
   it('nascondere il contorno e ripristinarlo conserva il centro e i parametri', () => {

@@ -1,0 +1,16 @@
+{
+  "title": "Contorni fisici ampi TEST",
+  "unit": "mm",
+  "pages": [{
+    "pageData": {"fWidth": 300, "fHeight": 180},
+    "canvas": {
+      "clipPath": {"left": 0, "top": 0, "width": 900, "height": 540},
+      "background": "transparent",
+      "objects": [
+        {"type": "rect", "left": 90, "top": 60, "width": 360, "height": 240, "scaleX": 1, "scaleY": 1, "angle": 12, "rx": 18, "ry": 18, "fill": null, "stroke": "#000000", "strokeWidth": 27.6, "strokeLineJoin": "round", "title": "Cornice 9,2 mm"},
+        {"type": "circle", "left": 680, "top": 230, "width": 140, "height": 140, "radius": 70, "originX": "center", "originY": "center", "fill": null, "stroke": "#000000", "strokeWidth": 18, "title": "Cerchio 6 mm"},
+        {"type": "path", "left": 130, "top": 430, "width": 300, "height": 60, "path": [["M", 0, 0], ["C", 100, 80, 200, -80, 300, 0]], "fill": null, "stroke": "#000000", "strokeWidth": 15, "strokeLineCap": "round", "title": "Curva 5 mm"}
+      ]
+    }
+  }]
+}

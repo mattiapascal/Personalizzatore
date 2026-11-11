@@ -1,5 +1,7 @@
 # Assistente AI e personalizzatore Shopify
 
+**Ultimo incremento locale:** [contorni e template reali](docs/iteration-editor-wide-strokes.md): spessori fino a 100 mm, ispettori e import coerenti, campione JSON/SVG 300 × 180 mm. 639 unitari, 113 browser mirati e 21 campioni passati. Analisi in sola lettura: 123 sorgenti convertibili, sei in più; archivio personale invariato. Nessun deploy.
+
 **Ultimo incremento — 11 novembre:** [foro PitchPrint, miniature PNG persistenti e avvio/zoom](docs/iteration-editor-preview-cache-startup.md). Corretto «Oltre i 100a»; controllo automatico su tutti i 117 sorgenti. Cache delle immagini nel browser, apertura senza bozza TEST transitoria e canvas intero centrato con margine. **635 unitari, build/segreti e 76 browser mirati passati**, senza ripetere l’intera suite. Tutto locale.
 
 **11 novembre — 117 template PitchPrint importati nell’archivio locale**, con colori originali, tag «Da verificare» e nessuna associazione prodotto. Copia di sicurezza verificata; due composizioni preesistenti e font conservati. [Apri i template](http://127.0.0.1:5173/editor/admin?section=template), [comportamento e prove](docs/iteration-editor-pitchprint-colors.md). 633 unitari, 376 casi browser, build/segreti, 13 regressioni pubbliche e 20 campioni passati. Il commit b4e5af4 è sincronizzato su GitHub; nessun deploy.

@@ -1,3 +1,5 @@
+**Aggiornamento 11 novembre:** [contorni fino a 100 mm](iteration-editor-wide-strokes.md) come limite di capacità condiviso; sostituisce il tetto storico di 2 mm nei v2 e nei comandi. Non è una regola produttiva.
+
 # Capacità dei progetti e continuità delle bozze
 
 Incremento locale del 9 novembre 2026. Estende i limiti del laboratorio senza dichiarare verificati i profili produttivi reali.
