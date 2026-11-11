@@ -1,0 +1,4 @@
+import{measureFabric}from'./fabric-adapter';import{svgInsertion,type PreparedSvg}from'./svg-import';import{selectionBounds,transformSelection}from'./selection';import type{GraphicDocument}from'./model';
+export function librarySvgInsertion(prepared:PreparedSvg,doc:GraphicDocument,defaultWidthMm?:number,minimumFontPt:number|null=null){
+ if(!defaultWidthMm)return svgInsertion(prepared,doc,measureFabric,minimumFontPt);const bounds=selectionBounds(prepared.objects,measureFabric);if(bounds.widthMm<=0)throw Error('Risorsa priva di larghezza');const target=Math.min(defaultWidthMm,doc.areaMm.width-4,bounds.heightMm?(doc.areaMm.height-4)*bounds.widthMm/bounds.heightMm:defaultWidthMm),scale=target/bounds.widthMm,objects=transformSelection(prepared.objects,{scale,rotationDeg:0,center:{xMm:0,yMm:0}},measureFabric);return svgInsertion({...prepared,objects,widthMm:target,heightMm:prepared.heightMm*scale},doc,measureFabric,minimumFontPt);
+}

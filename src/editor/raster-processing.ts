@@ -1,12 +1,15 @@
+import { ColorSchema } from './paint';
+import { monochromePixels } from './raster-monochrome';
 import { z } from 'zod';
 import { analyzeRasterPixels } from './raster-analysis';
 export const RasterParametersSchema = z.strictObject({
-  mode: z.enum(['binary', 'original']).optional(),
+  mode: z.enum(['binary', 'original', 'grayscale']).optional(),
   threshold: z.number().int().min(0).max(255), invert: z.boolean(), whiteTransparent: z.boolean(),
   method: z.enum(['threshold', 'ordered', 'diffusion']).optional(),
   brightness: z.number().finite().min(-100).max(100).optional(), contrast: z.number().finite().min(-100).max(100).optional(),
   backgroundRemoval: z.literal('luminance').optional(),
-}).refine(params => params.mode !== 'original' || !params.backgroundRemoval && !params.invert && !params.whiteTransparent && !params.brightness && !params.contrast && (!params.method || params.method === 'threshold'), 'La modalità originale conserva i pixel senza elaborazioni bianco/nero');
+  tintColor: ColorSchema.optional(),
+}).refine(params => params.mode !== 'original' || !params.backgroundRemoval && !params.invert && !params.whiteTransparent && !params.brightness && !params.contrast && (!params.method || params.method === 'threshold'), 'La modalità originale conserva i pixel senza elaborazioni bianco/nero').refine(params => !params.tintColor || params.mode === 'grayscale', 'La tinta richiede la modalità monocolore').refine(params => params.mode !== 'grayscale' || !params.whiteTransparent && (!params.method || params.method === 'threshold'), 'Il monocolore usa grigi continui; soglia e mezzitoni restano nella conversione binaria');
 export type RasterParameters = z.infer<typeof RasterParametersSchema>;
 export const DEFAULT_RASTER: RasterParameters = { threshold: 128, invert: false, whiteTransparent: false };
 const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5] as const;
@@ -16,6 +19,10 @@ export function rasterPixels(source: Uint8ClampedArray, raw: RasterParameters, w
   if (params.mode === 'original') {
     if (!Number.isInteger(width) || width <= 0 || source.length % 4 || source.length / 4 % width) throw new Error('Dimensioni RGBA non valide');
     return source.slice();
+  }
+  if (params.mode === 'grayscale') {
+    if (!Number.isInteger(width) || width <= 0 || source.length % 4 || source.length / 4 % width) throw new Error('Dimensioni RGBA non valide');
+    return monochromePixels(source, params);
   }
   if (!params.backgroundRemoval) return binaryPixels(source, params, width);
   if (!Number.isInteger(width) || width <= 0 || source.length % 4 || source.length / 4 % width) throw new Error('Dimensioni RGBA non valide');

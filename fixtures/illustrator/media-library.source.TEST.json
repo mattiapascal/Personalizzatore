@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 2,
+  "documentId": "94949494-9494-4494-a494-949494949494",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 120,
+    "height": 80
+  },
+  "shape": "rectangle",
+  "objects": [],
+  "fontAssets": [],
+  "colorMode": "color"
+}

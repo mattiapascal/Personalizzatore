@@ -28,8 +28,8 @@ function exifOrientation(bytes: Uint8Array): ExifOrientation {
   }
   return orientation;
 }
-function parse(dataUrl: string): Parsed {
-  const cached = checked.get(dataUrl); if (cached) return cached;
+function parse(dataUrl: string,maxPixels=MAX_RASTER_PIXELS): Parsed {
+  const cacheKey=`${maxPixels}:${dataUrl}`,cached = checked.get(cacheKey); if (cached) return cached;
   const bytes = jpegBytes(dataUrl), view = new DataView(bytes.buffer), app1: [number, number][] = [];
   if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) throw new Error('Firma JPEG non valida');
   let offset = 2, rawWidth = 0, rawHeight = 0, orientation: ExifOrientation = 1, exif = false, progressive = false, scans = 0, quant = false, huffman = false, ended = false;
@@ -45,7 +45,7 @@ function parse(dataUrl: string): Parsed {
       if (rawWidth || size < 11) throw new Error('Intestazione JPEG duplicata o troncata');
       const count = bytes[data + 5]!; if (bytes[data] !== 8 || ![1, 3].includes(count)) throw new Error('JPEG supportati: 8 bit grigi/RGB; CMYK e altre codifiche non supportati');
       if (size !== 8 + count * 3) throw new Error('Componenti JPEG non validi'); rawHeight = view.getUint16(data + 1); rawWidth = view.getUint16(data + 3); progressive = marker === 0xc2;
-      if (!rawWidth || !rawHeight || rawWidth > MAX_RASTER_SIDE || rawHeight > MAX_RASTER_SIDE || rawWidth * rawHeight > MAX_RASTER_PIXELS) throw new Error(`JPEG oltre ${RASTER_PIXEL_LIMIT_LABEL}`);
+      if (!rawWidth || !rawHeight || rawWidth > MAX_RASTER_SIDE || rawHeight > MAX_RASTER_SIDE || rawWidth * rawHeight > maxPixels) throw new Error(`JPEG oltre ${RASTER_PIXEL_LIMIT_LABEL}`);
       for (let i = 0; i < count; i++) {
         const at = data + 6 + i * 3, id = bytes[at]!, sampling = bytes[at + 1]!, x = sampling >> 4, y = sampling & 15;
         if (components.has(id) || x < 1 || x > 4 || y < 1 || y > 4 || bytes[at + 2]! > 3) throw new Error('Campionamento JPEG non valido'); components.add(id);
@@ -76,8 +76,10 @@ function parse(dataUrl: string): Parsed {
   }
   if (!ended || !rawWidth || !scans) throw new Error('JPEG incompleto: mancano immagine, scansione o fine');
   const swap = orientation >= 5, result: Parsed = { info: { width: swap ? rawHeight : rawWidth, height: swap ? rawWidth : rawHeight, rawWidth, rawHeight, orientation, progressive, bytes: bytes.length }, app1 };
-  checked.set(dataUrl, result); if (checked.size > 16) checked.delete(checked.keys().next().value!); return result;
+  checked.set(cacheKey, result); if (checked.size > 16) checked.delete(checked.keys().next().value!); return result;
 }
+/** Library preserves larger originals; canonical raster documents keep their own strict ceiling. */
+export function libraryJpegInfo(dataUrl:string):JpegInfo{return{...parse(dataUrl,40_000_000).info};}
 export function jpegInfo(dataUrl: string): JpegInfo { return { ...parse(dataUrl).info }; }
 /** Decode a derived stream without EXIF/XMP; original bytes remain in the project. */
 export function jpegWithoutApp1(dataUrl: string): Uint8Array<ArrayBuffer> {

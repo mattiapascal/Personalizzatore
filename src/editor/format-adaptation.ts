@@ -42,5 +42,5 @@ export function smallestTemplateMount(source:GraphicDocument,products:readonly P
   throw new Error('Nessun modello associato contiene questa composizione con i vincoli TEST. Modifica il template o le sue associazioni.');
 }
 export function templateCommand(fit:TemplateFit,templateId:string,templateVersion:number,expectedRevision:number):GraphicCommand {
-  return{schemaVersion:1,tool:'applyTemplate',expectedRevision,objectId:fit.document.objects[0]!.id,arguments:{templateId,templateVersion,objects:fit.document.objects,groups:fit.document.groups??[],...(fit.document.inkColor?{inkColor:fit.document.inkColor}:{}),...(fit.document.fontAssets?{fontAssets:fit.document.fontAssets}:{})}};
+  return{schemaVersion:1,tool:'applyTemplate',expectedRevision,objectId:fit.document.objects[0]!.id,arguments:{templateId,templateVersion,objects:fit.document.objects,...(fit.document.backgroundImageId?{backgroundImageId:fit.document.backgroundImageId}:{}),groups:fit.document.groups??[],...(fit.document.inkColor?{inkColor:fit.document.inkColor}:{}),...(fit.document.fontAssets?{fontAssets:fit.document.fontAssets}:{})}};
 }

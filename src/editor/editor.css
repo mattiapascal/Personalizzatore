@@ -232,3 +232,5 @@
 .paint-opacity { margin-top: 1rem; }
 .paint-opacity-row { margin-top: .65rem; }
 .paint-opacity-row input[type="range"] { width: 100%; accent-color: #0088cc; }
+.inspector-paints .paint-custom{display:inline-flex;flex:none;margin:0;min-width:44px}
+.inspector-paints .paint-custom input[type=color]{width:44px;min-width:44px;height:44px;padding:3px;cursor:pointer}

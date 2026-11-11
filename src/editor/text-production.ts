@@ -47,13 +47,13 @@ export function assertDocumentTextProduction(document: GraphicDocument, catalog?
   if (product && product.mechanism !== 'emboss') {
     const partial = (value: number | undefined) => value !== undefined && value > 0 && value < 1;
     const issue = productionDocument(document).objects.find(object => {
-      if (object.type === 'image') return false;
+      if (object.type === 'image') return object.raster.mode === 'grayscale';
       if (object.type === 'text') {
         const styles = characterStyles(object);
         return Array.from(object.text).some((character,index) => !/\s/u.test(character) && partial(styles[index]?.fillOpacity ?? object.fillOpacity));
       }
       return object.fill !== undefined && object.fill !== 'none' && partial(object.fillOpacity) || object.stroke !== 'none' && partial(object.strokeOpacity);
     });
-    if (issue) throw Error(`Il timbro richiede grafica senza trasparenze parziali: correggi «${issue.editor?.label || issue.id}» prima di confermare.`);
+    if (issue) throw Error(`Il timbro richiede grafica in bianco/nero senza sfumature o trasparenze parziali: correggi «${issue.editor?.label || issue.id}» prima di confermare.`);
   }
 }

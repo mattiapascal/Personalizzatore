@@ -76,6 +76,7 @@ const documentFields = z.strictObject({
   colorMode:z.enum(['monochrome','color']).optional(),
   templateOrigin: z.strictObject({id:z.string().uuid(),version:z.number().int().positive()}).optional(),
   fontAssets: FontAssetsSchema.optional(),
+  backgroundImageId:id.optional(),
   schemaVersion: z.literal(2), documentId: z.string().uuid(), revision: z.number().int().nonnegative(),
   productId: z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/).nullable(),
   variantId: z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/).nullable(),
@@ -95,11 +96,12 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
       ...('fill' in object ? [object.fill] : []), ...('stroke' in object ? [object.stroke] : []),
       ...(object.type === 'text' ? object.characterStyles?.map(run => run.style.fill) ?? [] : []),
     ];
-    if (paints.some(paint => !isMonochromePaint(paint)) || object.type === 'image' && object.raster.mode === 'original') ctx.addIssue({ code: 'custom', message: 'Il documento monocromatico ammette soltanto nero/bianco. Per conservare i colori usa un progetto a colori, senza montatura timbro.' });
+    if (paints.some(paint => !isMonochromePaint(paint)) || object.type === 'image' && (object.raster.mode === 'original' || !isMonochromePaint(object.raster.tintColor))) ctx.addIssue({ code: 'custom', message: 'Il documento monocromatico ammette soltanto nero/bianco. Per conservare i colori usa un progetto a colori, senza montatura timbro.' });
   }
   if(d.plaque){if(d.shape!=='rectangle')ctx.addIssue({code:'custom',message:'La targa a misura richiede una sagoma rettangolare'});try{plaqueMountingPoints(d.areaMm,d.plaque);}catch(cause){ctx.addIssue({code:'custom',message:cause instanceof Error?cause.message:'Fissaggi non validi'});}}
   if(d.objects.reduce((count,object)=>count+(object.type==='text'?Array.from(object.text).length:0),0)>EDITOR_LIMITS.documentTextCharacters)ctx.addIssue({code:'custom',message:`Massimo ${EDITOR_LIMITS.documentTextCharacters} caratteri Unicode nell’intero documento`});
   if (new Set(d.objects.map(o => o.id)).size !== d.objects.length) ctx.addIssue({ code: 'custom', message: 'ID duplicati' });
+  if(d.backgroundImageId&&!d.objects.some(o=>o.id===d.backgroundImageId&&o.type==='image'))ctx.addIssue({code:'custom',message:'Sfondo collegato a un’immagine inesistente'});
   const grouped = new Map<string,Set<string>>(), groupIds = new Set<string>();
   for (const group of d.groups ?? []) {
     const indices = group.objectIds.map(id => d.objects.findIndex(o => o.id === id)).sort((a, b) => a - b);
@@ -210,11 +212,12 @@ export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
+  z.strictObject({...base,tool:z.literal('setBackgroundImage'),arguments:z.strictObject({object:SceneObjectSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema,fit:z.enum(['contain','cover']).optional()})}),
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
   z.strictObject({...base,tool:z.literal('changeFormat'),arguments:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1),allowShrink:z.boolean()})}),
-  z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),objects:z.array(SceneObjectSchema).min(1).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
+  z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),objects:z.array(SceneObjectSchema).min(1).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundImageId:id.optional(),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
   z.strictObject({ ...base, tool: z.literal('attachTextToPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...base, tool: z.literal('detachTextFromPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...base, tool: z.literal('setTextPath'), arguments: TextPathOptionsSchema }),
@@ -329,7 +332,13 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   if (command.expectedRevision !== doc.revision) throw new Error('Revisione grafica obsoleta: rileggi il documento');
   const next = cloneGraphicDocument(doc);
   if ('fontAssets' in command.arguments && command.arguments.fontAssets?.length) { const resources = [...next.fontAssets ?? []]; for (const asset of command.arguments.fontAssets) { const old = resources.find(a=>a.id===asset.id); if (old && (old.dataBase64!==asset.dataBase64 || old.format!==asset.format || old.family!==asset.family)) throw new Error('La risorsa originale del font è immutabile'); if (!old) resources.push({...asset}); } next.fontAssets=resources; }
-  if(command.tool==='configurePlaque'){if(!doc.plaque)throw new Error('Il documento non è una targa a misura.');plaqueMountingPoints(command.arguments.areaMm,command.arguments.mounting);const dx=(command.arguments.areaMm.width-doc.areaMm.width)/2,dy=(command.arguments.areaMm.height-doc.areaMm.height)/2;next.areaMm={...command.arguments.areaMm};next.plaque={...command.arguments.mounting};next.objects=next.objects.map(object=>({...object,xMm:object.xMm+dx,yMm:object.yMm+dy}));}
+  if(command.tool==='setBackgroundImage'){
+    const image=command.arguments.object;if(image&&(image.type!=='image'||image.id!==command.objectId))throw new Error('Lo sfondo richiede un’immagine e un ID coerenti');
+    const previous=next.backgroundImageId;if(previous&&next.groups?.some(g=>g.objectIds.includes(previous)))throw new Error('Separa il gruppo dello sfondo prima di sostituirlo');
+    if(previous)next.objects=next.objects.filter(o=>o.id!==previous);delete next.backgroundImageId;
+    if(image){if(next.objects.some(o=>o.id===image.id))throw new Error('ID dello sfondo già presente');next.objects.unshift(cloneSceneObject(image));next.backgroundImageId=image.id;}
+  }
+  else if(command.tool==='configurePlaque'){if(!doc.plaque)throw new Error('Il documento non è una targa a misura.');plaqueMountingPoints(command.arguments.areaMm,command.arguments.mounting);const dx=(command.arguments.areaMm.width-doc.areaMm.width)/2,dy=(command.arguments.areaMm.height-doc.areaMm.height)/2;next.areaMm={...command.arguments.areaMm};next.plaque={...command.arguments.mounting};next.objects=next.objects.map(object=>({...object,xMm:object.xMm+dx,yMm:object.yMm+dy}));}
   else if(command.tool==='setInkColor') {
     const product=catalog?.products.find(item=>item.productId===doc.productId&&item.variantIds.includes(doc.variantId??''));
     if(product?.mechanism==='emboss'&&command.arguments.color!=='black')throw new Error('Il timbro a secco non usa un tampone inchiostrato.');
@@ -347,6 +356,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     next.objects=command.arguments.objects.map(cloneSceneObject);
     if(command.arguments.groups.length)next.groups=command.arguments.groups.map(cloneSceneGroup);else delete next.groups;
     if(command.arguments.fontAssets?.length)next.fontAssets=command.arguments.fontAssets.map(asset=>({...asset}));else delete next.fontAssets;
+    if(command.arguments.backgroundImageId)next.backgroundImageId=command.arguments.backgroundImageId;else delete next.backgroundImageId;
     next.templateOrigin={id:command.arguments.templateId,version:command.arguments.templateVersion};
     if(command.arguments.inkColor)next.inkColor=command.arguments.inkColor;
     validateLayout(next,measure);
@@ -437,6 +447,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
       }
     }
   }
+  if(next.backgroundImageId&&!next.objects.some(o=>o.id===next.backgroundImageId))delete next.backgroundImageId;
   next.revision++;
   const parsed = DocumentSchema.parse(next);
   validateLayout(parsed, measure, 'edit');

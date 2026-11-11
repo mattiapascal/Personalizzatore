@@ -1,6 +1,8 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const icons = {
+  pictures:<><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="2"/><path d="M3 18l6-6 4 4 3-5 5 7"/></>,
+  background:<><rect x="3" y="3" width="18" height="18"/><path d="M3 14l6-6 12 12M12 3l9 9M3 21l6-6"/></>,
   link: <><path d="M9 15l6-6M8 11l-3 3a4 4 0 006 6l3-3M10 7l3-3a4 4 0 016 6l-3 3"/></>,
   unlink: <><path d="M8 11l-3 3a4 4 0 006 6l2-2M11 6l2-2a4 4 0 016 6l-2 2M3 3l18 18"/></>,
   close: <path d="M6 6l12 12M18 6L6 18"/>,

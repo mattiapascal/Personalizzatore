@@ -1,0 +1,141 @@
+{
+  "colorMode": "color",
+  "fontAssets": [],
+  "backgroundImageId": "object-a3335d7f-7646-4707-b13a-5dfd4e6966ac",
+  "schemaVersion": 2,
+  "documentId": "94949494-9494-4494-a494-949494949494",
+  "revision": 5,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 120,
+    "height": 80
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "object-a3335d7f-7646-4707-b13a-5dfd4e6966ac",
+      "type": "image",
+      "xMm": 0,
+      "yMm": 0,
+      "editor": {
+        "label": "Sfondo · Sfondo TEST"
+      },
+      "widthMm": 120,
+      "heightMm": 80,
+      "source": {
+        "id": "asset-7fa73831-6394-4fd3-8c08-b34d938b953b",
+        "mime": "image/png",
+        "pixelWidth": 12,
+        "pixelHeight": 8,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAICAYAAADN5B7xAAAAGklEQVR4nGPYeeLMf2z4zusPWDHDqAZaaAAAjShQcBQm3LMAAAAASUVORK5CYII="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "crop": {
+        "leftPx": 0,
+        "topPx": 0,
+        "widthPx": 12,
+        "heightPx": 8
+      }
+    },
+    {
+      "id": "svg-e09a3302-0230-443f-bf72-d63b66e9b684",
+      "type": "vector",
+      "xMm": 35,
+      "yMm": 25,
+      "widthMm": 50,
+      "heightMm": 30.000000000000004,
+      "commands": [
+        [
+          "M",
+          0,
+          0
+        ],
+        [
+          "L",
+          1,
+          0
+        ],
+        [
+          "L",
+          1,
+          1
+        ],
+        [
+          "L",
+          0,
+          1
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "#0088cc",
+      "stroke": "none",
+      "strokeMm": 0.09448818897637797,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    },
+    {
+      "id": "svg-721ef254-40f5-4099-98a3-7168e1705375",
+      "type": "vector",
+      "xMm": 35,
+      "yMm": 25,
+      "widthMm": 25,
+      "heightMm": 30.000000000000004,
+      "commands": [
+        [
+          "M",
+          0,
+          0
+        ],
+        [
+          "L",
+          1,
+          0
+        ],
+        [
+          "L",
+          1,
+          1
+        ],
+        [
+          "L",
+          0,
+          1
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "#cc2200",
+      "stroke": "none",
+      "strokeMm": 0.09448818897637797,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    }
+  ],
+  "groups": [
+    {
+      "id": "svg-group-4d9eddb3-3e22-4c68-8e00-941b02ea5957",
+      "objectIds": [
+        "svg-e09a3302-0230-443f-bf72-d63b66e9b684",
+        "svg-721ef254-40f5-4099-98a3-7168e1705375"
+      ]
+    }
+  ]
+}

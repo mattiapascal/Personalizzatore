@@ -35,7 +35,7 @@ export function originalRasterImage(source: RasterSource): HTMLImageElement | HT
 export function rasterAnalysis(source: RasterSource): RasterAnalysis { assertRasterPrepared(source); return { ...prepared.get(source.id)!.resource.analysis }; }
 export function assertRasterParameters(source: RasterSource, params: RasterParameters): void {
   assertRasterPrepared(source);
-  if (params.backgroundRemoval && rasterAnalysis(source).kind !== 'grayscale') throw new Error('Rimozione del bianco disponibile solo per originali in scala di grigi; canali RGB differenti richiedono una conversione esplicita');
+  if (params.backgroundRemoval && params.mode !== 'grayscale' && rasterAnalysis(source).kind !== 'grayscale') throw new Error('Rimozione del bianco disponibile solo per originali in scala di grigi; canali RGB differenti richiedono una conversione esplicita');
 }
 function analysisOf(image: HTMLImageElement | HTMLCanvasElement, width: number, height: number): RasterAnalysis {
   // Scan every original pixel in strips; never allocate a second full-size RGBA
@@ -87,7 +87,7 @@ export async function prepareRasterSource(raw: RasterSource): Promise<void> {
 }
 /** Filters stay anchored to original pixels; cropping is a viewport, never a resampling step. */
 export function rasterCanvas(source: RasterSource, params: RasterParameters): HTMLCanvasElement {
-  assertRasterParameters(source, params); const key = `${prepared.get(source.id)!.resource.cacheId}:${params.mode ?? "binary"}:${params.threshold}:${params.invert}:${params.whiteTransparent}:${params.backgroundRemoval ?? 'none'}:${params.method ?? "threshold"}:${params.brightness ?? 0}:${params.contrast ?? 0}`, cached = derived.get(key);
+  assertRasterParameters(source, params); const key = `${prepared.get(source.id)!.resource.cacheId}:${params.mode ?? "binary"}:${params.threshold}:${params.invert}:${params.whiteTransparent}:${params.backgroundRemoval ?? 'none'}:${params.method ?? "threshold"}:${params.brightness ?? 0}:${params.contrast ?? 0}:${params.tintColor ?? "#000000"}`, cached = derived.get(key);
   if (cached) { derived.delete(key); derived.set(key, cached); return cached; }
   const canvas = document.createElement('canvas');
   canvas.width = source.pixelWidth; canvas.height = source.pixelHeight;

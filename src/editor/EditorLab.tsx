@@ -1,3 +1,8 @@
+import {MediaLibraryDialog} from './MediaLibraryDialog';
+import {mediaRasterCommand} from './media-insertion';
+import {librarySvgInsertion} from './media-vector-insertion';
+import {readMediaOriginal,mediaRasterSource} from './media-source';
+import type {MediaAsset,MediaKind} from '../editor-admin/media-schema';
 import {textGeometryVerified} from './font-measurement';
 import { MAX_PROJECT_BYTES } from './project-limits';
 import { assertFontGeometry } from './verified-font-geometry';
@@ -81,6 +86,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const importRef = useRef<HTMLInputElement>(null);
   const pdfImportRef = useRef<HTMLInputElement>(null);
   const svgImportRef = useRef<HTMLInputElement>(null);
+  const [mediaLibrary,setMediaLibrary]=useState<MediaKind|null>(null);
   const [importNotice, setImportNotice] = useState('');
   const [vectorMonochrome, setVectorMonochrome] = useState(initialDocument?.colorMode !== 'color');
   const [importTextMode,setImportTextMode]=useState<'outlines'|'editable'>('outlines');
@@ -193,10 +199,16 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       return () => store.dispatch({ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision, arguments: objectArguments(object) }, 'manual');
     }, objectId);
   };
+  const insertLibraryAsset=async(asset:MediaAsset,asRaster:boolean)=>{
+    let failure:unknown;const ok=await prepareAndAct(async store=>{try{const bytes=await readMediaOriginal(asset);
+      if(asset.mime==='image/svg+xml'&&!asRaster&&asset.kind==='picture'){const prepared=await prepareSvg(new TextDecoder('utf-8',{fatal:true}).decode(bytes),store.document.colorMode!=='color','outlines'),insertion=librarySvgInsertion(prepared,store.document,asset.defaultWidthMm,minimumFontForDocument(store.document,graphicCatalog));return()=>{store.dispatch(insertion.command,'manual');select(insertion.command.arguments.objects.map(o=>o.id));setImportNotice(insertion.report);};}
+      const source=await mediaRasterSource(asset,bytes);await prepareRasterSource(source);const command=mediaRasterCommand(store.document,source,asset.title,asset.kind==='background',asset.defaultWidthMm);return()=>{store.dispatch(command,'manual');select(command.objectId);};
+    }catch(e){failure=e;throw e;}});if(!ok)throw failure??new Error('Inserimento annullato: il documento è cambiato o il contenuto non rispetta i vincoli.');return true;
+  };
   const executeCommand = () => {
     try {
       const parsed = GraphicCommandSchema.parse(JSON.parse(command));
-      const images = (parsed.tool === 'insertObjects' ? parsed.arguments.objects : parsed.tool === 'addObject' || parsed.tool === 'updateObject' ? [parsed.arguments.object] : []).filter(object => object.type === 'image');
+      const images = (parsed.tool === 'insertObjects' ? parsed.arguments.objects : parsed.tool === 'addObject' || parsed.tool === 'updateObject' ? [parsed.arguments.object] : parsed.tool==='setBackgroundImage'&&parsed.arguments.object?[parsed.arguments.object] : []).filter(object => object.type === 'image');
       const sources=[...images.map(image=>image.source),...(parsed.tool==='replaceImageSource'?[parsed.arguments.source]:[])];
       const fontAssets = 'fontAssets' in parsed.arguments ? parsed.arguments.fontAssets ?? [] : [];
       if (sources.length || fontAssets.length || parsed.tool==='changeFormat' || parsed.tool==='applyTemplate') {
@@ -383,7 +395,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   useEffect(() => { const handle = (event: KeyboardEvent) => keyboard.current(event); window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, []);
   const arrange = (tool: 'alignObject', args: unknown) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool, objectId: selectedId, expectedRevision: doc.revision, arguments: args }, 'manual'));
   const workflowApi: WorkflowEditorApi = { document: doc, peek: () => cloneGraphicDocument(storeRef.current?.document ?? doc), busy: editing || drawing || assetBusy || conflict || catalogOutdated, busyReason: editing ? 'Termina la scrittura con Esc o con il pulsante di conferma sul foglio.' : drawing ? 'Termina il disegno prima di controllare il progetto.' : assetBusy ? 'Attendi il caricamento della risorsa.' : 'Risolvi il cambio di formato prima di continuare.', capture: async () => { const store = storeRef.current; if (!store || !adapter.current) throw new Error('Editor non ancora disponibile'); const document = cloneGraphicDocument(store.document), svg = await exportDocumentSvg(document); if (storeRef.current !== store || store.document.documentId !== document.documentId || store.document.revision !== document.revision) throw new Error('Il progetto è cambiato durante il controllo dei font. Ripeti l’anteprima.'); return { document, svg }; }, open: next => prepareAndAct(async store => { if(autosave)await preserveDraftSnapshot(store.document); next=await projectFonts.prepare(next);await Promise.all([...next.objects.filter(o => o.type === 'image').map(o => prepareRasterSource(o.source))]); return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);}; }) };
-  return <WorkspaceFrame showForm={formEntries(doc).length>0} mode={mode} actions={<>
+  return <>{mediaLibrary&&<MediaLibraryDialog kind={mediaLibrary} monochrome={doc.colorMode!=='color'} busy={assetBusy} onClose={()=>setMediaLibrary(null)} onInsert={insertLibraryAsset}/>}<WorkspaceFrame showForm={formEntries(doc).length>0} mode={mode} actions={<>
       <span className="design-session-status" role="status">{sessionNotice||sourceRecord?.title||archiveTitle||'Nuovo design'} · {dirty?'Modifiche da confermare':'Nessuna modifica da salvare'}</span>
       {(mode!=='customer'||customerPdfEnabled)&&<EditorButton icon="download" badge="PDF" label="Scarica PDF" disabled={pdfBusy||editing||drawing||assetBusy} onClick={()=>void exportPdf()}/>}
       <EditorButton icon="refresh" label="Ricarica design originale" disabled={archiveBusy||editing||drawing||assetBusy} onClick={()=>setSessionDialog('reload')}/>
@@ -442,6 +454,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     </div> : null}</div><fieldset className="editor-actions" disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated}><legend className="sr-only">Disegno e oggetti</legend>
       <div className="button-row"><EditorButton onClick={() => addObject('text')} icon="addText" label="Aggiungi testo"/><EditorButton onClick={() => addObject('rect')} icon="addRect" label="Aggiungi rettangolo"/><EditorButton onClick={() => addObject('circle')} icon="addCircle" label="Aggiungi cerchio"/><EditorButton onClick={() => addObject('line')} icon="addLine" label="Aggiungi linea"/><EditorButton onClick={() => addObject('ellipse')} icon="addEllipse" label="Aggiungi ellisse"/><EditorButton onClick={() => addPolygon('triangle')} icon="addTriangle" label="Aggiungi triangolo"/><EditorButton onClick={() => addPolygon('pentagon')} icon="addPolygon" label="Aggiungi pentagono"/><EditorButton onClick={() => addPolygon('star')} icon="addStar" label="Aggiungi stella"/><EditorButton onClick={addBezier} icon="bezier" label="Aggiungi curva Bézier"/></div>
       <div className="button-row"><EditorButton icon="importImage" label="Importa immagine PNG o JPEG" onClick={() => imageImportRef.current?.click()}/></div>
+      <div className="button-row"><EditorButton icon="pictures" label="Apri libreria immagini" onClick={()=>setMediaLibrary('picture')}/><EditorButton icon="background" label="Apri libreria sfondi" onClick={()=>setMediaLibrary('background')}/>{doc.backgroundImageId&&<EditorButton icon="delete" label="Rimuovi sfondo" onClick={()=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setBackgroundImage',objectId:storeRef.current!.document.backgroundImageId!,expectedRevision:storeRef.current!.document.revision,arguments:{object:null}},'manual'))}/>}</div>
       <label>Importa testi SVG/PDF come<select aria-label="Importa testi SVG/PDF come" value={importTextMode} disabled={assetBusy} onChange={event=>setImportTextMode(event.target.value as 'outlines'|'editable')}><option value="outlines">Contorni vettoriali</option><option value="editable">Testo editabile</option></select></label><p className="caption">Il testo editabile richiede il font nella libreria. Nei PDF la ricostruzione va controllata; le lettere già convertite in tracciati restano vettori.</p>
       <label className="ratio-toggle"><input type="checkbox" checked={vectorMonochrome} onChange={event => setVectorMonochrome(event.target.checked)}/> Converti colori SVG/PDF in nero</label>
       <div className="button-row"><EditorButton icon="importSvg" label="Importa SVG vettoriale" onClick={() => svgImportRef.current?.click()}/></div>
@@ -556,7 +569,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       </fieldset>
     </>}
     diagnostics={<details hidden={mode!=='test'}><summary>Stato e storico del documento</summary><pre data-testid="graphic-state">{JSON.stringify(doc, null, 2)}</pre><pre>{eventLog || 'Nessuna modifica'}</pre></details>}
-  />;
+  /></>;
 }
 
 /** Wait for file-backed fonts before creating or measuring the first composition. */

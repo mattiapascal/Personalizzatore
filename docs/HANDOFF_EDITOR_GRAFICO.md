@@ -1,4 +1,6 @@
-**Direttive in corso:** [ordine dei lavori e richieste aggiornate](editor-active-work.md): monocolore/grigi/alpha/tinta, conversioni dopo sviluppo e collaudo, eccezione Azienda Agricola 99×139, librerie Immagini/Sfondi per categorie e trasferimento locale da verificare. Le descrizioni storiche sotto non sostituiscono queste priorità.
+**11 novembre — librerie Immagini/Sfondi e bandiere:** [gestione e trasferimento locale](iteration-editor-media-library.md). 725 immagini, 59 sfondi e 13 categorie; 254 bandiere a 50 mm iniziali, proporzioni conservate. Quattro materiali esclusi dalle grafiche stampabili; una bandiera con font non verificati sospesa. [Monocolore RGB/alpha/tinta](iteration-editor-raster-monochrome.md) completato. **746 unitari**, 487 browser completi più sette ricontrolli delle librerie, 13 pubblici locali e 34 campioni passati; nessun deploy.
+
+**Direttive in corso:** [ordine dei lavori e richieste aggiornate](editor-active-work.md): monocolore e librerie collaudati/trasferiti; restano conversioni dei template, sfondi/primi piani e l’eccezione Azienda Agricola 99×139. Le descrizioni storiche sotto non sostituiscono queste priorità.
 
 **11 novembre — trasparenza e immagini:** [slider collegati/separati di riempimento e contorno](iteration-editor-paint-opacity.md), anche per caratteri selezionati, gruppi e SVG; [ingrandimento della foto nella cornice](iteration-editor-raster-zoom.md). **727 unitari, 478 browser completi, 13 pubblici e 32 campioni passati**, build/schemi/segreti verificati. Nessun deploy.
 

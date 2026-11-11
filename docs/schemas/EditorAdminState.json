@@ -265,6 +265,10 @@
                   "additionalProperties": false
                 }
               },
+              "backgroundImageId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+              },
               "schemaVersion": {
                 "type": "number",
                 "const": 2
@@ -2279,7 +2283,8 @@
                               "type": "string",
                               "enum": [
                                 "binary",
-                                "original"
+                                "original",
+                                "grayscale"
                               ]
                             },
                             "threshold": {
@@ -2314,6 +2319,10 @@
                             "backgroundRemoval": {
                               "type": "string",
                               "const": "luminance"
+                            },
+                            "tintColor": {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
                             }
                           },
                           "required": [
