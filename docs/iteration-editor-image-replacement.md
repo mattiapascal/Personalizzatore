@@ -38,6 +38,8 @@ Log privati: `.local/image-replacement-{all-unit,regressions,build-verified,sche
 
 Nessun dato personale modificato, nuova importazione di template, deploy o scrittura su Shopify, tema, PitchPrint, BSS, prezzi, carrello o checkout. La chat pubblicata resta separata.
 
-## Prossimo consolidamento individuato
+## Prossimo consolidamento individuato (ora completato)
 
-La preparazione delle immagini è indicizzata per ID risorsa; i caricamenti manuali assegnano un nuovo UUID anche quando il file è identico. Verificare e ridurre le decodifiche/bitmap duplicate tra questi ID, condividendo i pixel soltanto dopo aver verificato byte, MIME e dimensioni, senza riscrivere gli ID canonici. Mantenere il rifiuto di ID riutilizzati per file differenti e le garanzie Undo/Redo; provare anche richieste contemporanee e filtri. È un miglioramento di memoria/caricamento, senza nuovi strumenti avanzati o modifiche all’archivio.
+Seguito completato in [riuso dei pixel](iteration-editor-raster-sharing.md). La nota sotto registra la situazione di partenza.
+
+La preparazione delle immagini era indicizzata per ID risorsa; i caricamenti manuali assegnano un nuovo UUID anche quando il file è identico. Verificare e ridurre le decodifiche/bitmap duplicate tra questi ID, condividendo i pixel soltanto dopo aver verificato byte, MIME e dimensioni, senza riscrivere gli ID canonici. Mantenere il rifiuto di ID riutilizzati per file differenti e le garanzie Undo/Redo; provare anche richieste contemporanee e filtri. È un miglioramento di memoria/caricamento, senza nuovi strumenti avanzati o modifiche all’archivio.

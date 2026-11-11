@@ -1,3 +1,5 @@
+**Aggiornamento 11 novembre — risorse immagini:** [riuso dei pixel già verificati per file identici sotto ID diversi](iteration-editor-raster-sharing.md), con filtri indipendenti e controlli sugli errori. Condivisione provata su quattro alias da 12 MP; gestione globale della memoria per molte sorgenti uniche e storico lungo ancora da completare. Documento e comandi invariati.
+
 **Aggiornamento 11 novembre — sostituzione immagini:** [azione nell’ispettore con cornice conservata e crop centrale proporzionale](iteration-editor-image-replacement.md), comandi manuali/AI e Undo/Redo condivisi. La modalità immagine intera del modulo cliente resta distinta. 707 unitari, 68 browser pertinenti, 13 pubblici e 29 campioni passati. Nessun deploy.
 
 **Aggiornamento 11 novembre — fedeltà e font:** [ritagli frazionari, bordi in mm e griglia filtri stabile](iteration-editor-fractional-crop.md): 259/370 sorgenti convertibili, nessuna nuova importazione. [Protezione delle misure dei testi](iteration-editor-font-metric-guard.md) e recupero dei glifi mancanti disponibili; solo file incorporati, nessun font del computer. Le lacune avanzate sotto restano sospese.
