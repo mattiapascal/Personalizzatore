@@ -19,12 +19,12 @@ describe('JPEG locali con originali conservati e orientamento esplicito', () => 
     }
   });
   it('rifiuta URL remoti, formati mascherati, file lunghi/troncati e dati dopo EOI', () => {
-    for (const source of ['https://example.com/photo.jpg', 'data:image/png;base64,AAAA', 'data:image/jpeg;base64,<svg/>', jpegDataUrl(new Uint8Array(45)), jpegDataUrl(new Uint8Array(256001)), jpegDataUrl(testJpeg().subarray(0, -2)), jpegDataUrl(Buffer.concat([testJpeg(), Buffer.from('extra')]))]) expect(() => jpegInfo(source)).toThrow();
+    for (const source of ['https://example.com/photo.jpg', 'data:image/png;base64,AAAA', 'data:image/jpeg;base64,<svg/>', jpegDataUrl(new Uint8Array(45)), jpegDataUrl(new Uint8Array(20_000_001)), jpegDataUrl(testJpeg().subarray(0, -2)), jpegDataUrl(Buffer.concat([testJpeg(), Buffer.from('extra')]))]) expect(() => jpegInfo(source)).toThrow();
   });
   it('rifiuta CMYK, precisione/marker e dimensioni non supportati', () => {
     expect(() => info(testJpeg('cmyk'))).toThrow('CMYK');
     const source = testJpeg(), sof = source.indexOf(Buffer.from([0xff, 0xc0])); expect(sof).toBeGreaterThan(0);
-    for (const edit of [(b: Buffer) => { b[sof + 1] = 0xc3; }, (b: Buffer) => { b[sof + 4] = 12; }, (b: Buffer) => { b.writeUInt16BE(3000, sof + 5); b.writeUInt16BE(2000, sof + 7); }, (b: Buffer) => { b.writeUInt16BE(0, sof + 5); }, (b: Buffer) => { b[sof + 11] = 0; }]) { const bytes = Buffer.from(source); edit(bytes); expect(() => info(bytes)).toThrow(); }
+    for (const edit of [(b: Buffer) => { b[sof + 1] = 0xc3; }, (b: Buffer) => { b[sof + 4] = 12; }, (b: Buffer) => { b.writeUInt16BE(8000, sof + 5); b.writeUInt16BE(4000, sof + 7); }, (b: Buffer) => { b.writeUInt16BE(0, sof + 5); }, (b: Buffer) => { b[sof + 11] = 0; }]) { const bytes = Buffer.from(source); edit(bytes); expect(() => info(bytes)).toThrow(); }
   });
   it('rifiuta directory EXIF, offset, tipi e orientamenti ambigui', () => {
     for (const orientation of [0, 9, 65535]) expect(() => info(jpegWithExif(testJpeg(), orientation))).toThrow('Orientamento');

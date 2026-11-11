@@ -9,5 +9,5 @@ it('una scheda obsoleta non sovrascrive la bozza, mentre una copia riceve un ID 
  const doc=createDocument(),first=prepareDraft(doc,randomUUID(),0,[]);expect(()=>prepareDraft(doc,first.summary.id,0,[first.summary])).toThrow('altra scheda');const copy=prepareDraft(doc,randomUUID(),0,[first.summary]);expect(copy.summary.id).not.toBe(first.summary.id);expect(first.summary.version).toBe(1);
 });
 it('limiti espliciti non cancellano bozze vecchie e un aggiornamento non conta come un nuovo progetto',()=>{
- const doc=createDocument(),records=Array.from({length:20},()=>prepareDraft(doc,randomUUID(),0,[]).summary);expect(()=>prepareDraft(doc,randomUUID(),0,records)).toThrow('20 bozze');expect(prepareDraft(doc,records[0]!.id,1,records).summary.version).toBe(2);expect(()=>prepareDraft(doc,randomUUID(),0,[{...records[0]!,bytes:64*1024*1024}])).toThrow('Spazio');
+ const doc=createDocument(),records=Array.from({length:20},()=>prepareDraft(doc,randomUUID(),0,[]).summary);expect(()=>prepareDraft(doc,randomUUID(),0,records)).toThrow('20 bozze');expect(prepareDraft(doc,records[0]!.id,1,records).summary.version).toBe(2);expect(()=>prepareDraft(doc,randomUUID(),0,[{...records[0]!,bytes:256*1024*1024}])).toThrow('Spazio');
 });

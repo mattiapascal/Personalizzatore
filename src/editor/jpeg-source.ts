@@ -1,4 +1,4 @@
-import { MAX_RASTER_BYTES, MAX_RASTER_PIXELS, MAX_RASTER_SIDE } from './raster-limits';
+import { MAX_RASTER_BYTES, MAX_RASTER_PIXELS, MAX_RASTER_SIDE, RASTER_PIXEL_LIMIT_LABEL } from './raster-limits';
 export type ExifOrientation = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export interface JpegInfo { width: number; height: number; rawWidth: number; rawHeight: number; bytes: number; orientation: ExifOrientation; progressive: boolean; }
 interface Parsed { info: JpegInfo; app1: [number, number][]; }
@@ -8,7 +8,7 @@ export function jpegBytes(dataUrl: string): Uint8Array {
   const encoded = dataUrl.slice(prefix.length);
   if (encoded.length % 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) throw new Error('Codifica JPEG base64 non valida');
   const length = encoded.length / 4 * 3 - (encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0);
-  if (length > MAX_RASTER_BYTES) throw new Error('JPEG oltre 256 KB');
+  if (length > MAX_RASTER_BYTES) throw new Error('JPEG oltre 20 MB');
   return Uint8Array.from(atob(encoded), character => character.charCodeAt(0));
 }
 function exifOrientation(bytes: Uint8Array): ExifOrientation {
@@ -45,7 +45,7 @@ function parse(dataUrl: string): Parsed {
       if (rawWidth || size < 11) throw new Error('Intestazione JPEG duplicata o troncata');
       const count = bytes[data + 5]!; if (bytes[data] !== 8 || ![1, 3].includes(count)) throw new Error('JPEG supportati: 8 bit grigi/RGB; CMYK e altre codifiche non supportati');
       if (size !== 8 + count * 3) throw new Error('Componenti JPEG non validi'); rawHeight = view.getUint16(data + 1); rawWidth = view.getUint16(data + 3); progressive = marker === 0xc2;
-      if (!rawWidth || !rawHeight || rawWidth > MAX_RASTER_SIDE || rawHeight > MAX_RASTER_SIDE || rawWidth * rawHeight > MAX_RASTER_PIXELS) throw new Error('JPEG oltre il limite TEST: 4.000.000 pixel e lato massimo 4096 pixel');
+      if (!rawWidth || !rawHeight || rawWidth > MAX_RASTER_SIDE || rawHeight > MAX_RASTER_SIDE || rawWidth * rawHeight > MAX_RASTER_PIXELS) throw new Error(`JPEG oltre ${RASTER_PIXEL_LIMIT_LABEL}`);
       for (let i = 0; i < count; i++) {
         const at = data + 6 + i * 3, id = bytes[at]!, sampling = bytes[at + 1]!, x = sampling >> 4, y = sampling & 15;
         if (components.has(id) || x < 1 || x > 4 || y < 1 || y > 4 || bytes[at + 2]! > 3) throw new Error('Campionamento JPEG non valido'); components.add(id);

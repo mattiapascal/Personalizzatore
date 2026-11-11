@@ -57,5 +57,5 @@ it('mappa esplicita nel documento, stessi comandi manuali/AI, JSON e Undo; sosti
 it('decodifica un originale oltre il vecchio megapixel senza aumentare il limite dei byte', async () => {
   const bytes = testPng(1280, 1280), source = rasterSourceFromBytes('large-original', bytes);
   expect(bytes.length).toBeLessThan(256_000); expect(source.pixelWidth * source.pixelHeight).toBe(1_638_400); await validatePngData(source.dataUrl);
-  expect(() => rasterSourceFromBytes('too-large', testPng(2001, 2000))).toThrow('4.000.000');
+  expect(() => rasterSourceFromBytes('too-large', testPng(6001, 4000))).toThrow('24 milioni');
 });

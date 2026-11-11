@@ -2072,16 +2072,16 @@
                             "pixelWidth": {
                               "type": "integer",
                               "minimum": 1,
-                              "maximum": 4096
+                              "maximum": 12000
                             },
                             "pixelHeight": {
                               "type": "integer",
                               "minimum": 1,
-                              "maximum": 4096
+                              "maximum": 12000
                             },
                             "dataUrl": {
                               "type": "string",
-                              "maxLength": 341360
+                              "maxLength": 26666700
                             }
                           },
                           "required": [
@@ -2155,22 +2155,22 @@
                             "leftPx": {
                               "type": "integer",
                               "minimum": 0,
-                              "maximum": 4095
+                              "maximum": 11999
                             },
                             "topPx": {
                               "type": "integer",
                               "minimum": 0,
-                              "maximum": 4095
+                              "maximum": 11999
                             },
                             "widthPx": {
                               "type": "integer",
                               "minimum": 1,
-                              "maximum": 4096
+                              "maximum": 12000
                             },
                             "heightPx": {
                               "type": "integer",
                               "minimum": 1,
-                              "maximum": 4096
+                              "maximum": 12000
                             }
                           },
                           "required": [
@@ -2811,7 +2811,7 @@
           "svg": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 8388608
+            "maxLength": 120000000
           }
         },
         "required": [

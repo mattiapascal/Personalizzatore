@@ -14,7 +14,7 @@ export function checkConfigurationSvg(source: string): string {
   let root = false; const stack: string[] = [];
   const checkValue = (value: string) => {
     if (/javascript:|https?:|@import|expression\s*\(/i.test(value)) throw new Error('Anteprima con risorse esterne o attive');
-    for (const match of value.matchAll(/url\(\s*["']?([^)'"\s]+)["']?\s*\)/gi)) if (!match[1]!.startsWith('#') && !/^data:(?:font\/(?:ttf|otf|woff2?)|image\/png);base64,[\w+/=]+$/i.test(match[1]!)) throw new Error('Risorsa SVG non ammessa');
+    for (const match of value.matchAll(/url\(\s*["']?([^)'"\s]+)["']?\s*\)/gi)) if (!match[1]!.startsWith('#') && !/^data:(?:font\/(?:ttf|otf|woff2?)|image\/(?:png|jpeg));base64,[\w+/=]+$/i.test(match[1]!)) throw new Error('Risorsa SVG non ammessa');
   };
   const tags = new Set(['svg','defs','g','path','rect','circle','ellipse','line','polyline','polygon','text','tspan','clipPath','mask','pattern','image','style','metadata','desc','title']);
   const parser = new Parser({ onopentag(name, attrs) {
@@ -24,7 +24,7 @@ export function checkConfigurationSvg(source: string): string {
     for (const [key, value] of Object.entries(attrs)) {
       if (/^on/i.test(key)) throw new Error('Evento non ammesso nell’anteprima');
       if (key.startsWith('xmlns')) continue;
-      if (/href/i.test(key)) { if (!/^#[\w-]+$/.test(value) && !/^data:image\/png;base64,[\w+/=]+$/.test(value)) throw new Error('Riferimento SVG non ammesso'); }
+      if (/href/i.test(key)) { if (!/^#[\w-]+$/.test(value) && !/^data:image\/(?:png|jpeg);base64,[\w+/=]+$/.test(value)) throw new Error('Riferimento SVG non ammesso'); }
       else checkValue(value);
     }
   }, onclosetag() { stack.pop(); }, ontext(value) { if (stack.at(-1) === 'style') { if (/\\|@(?!font-face\s*\{)/i.test(value)) throw new Error('CSS non ammesso nell’anteprima'); checkValue(value); } } }, { xmlMode: true });
@@ -62,7 +62,7 @@ export class ConfigurationStore {
       else state.lines = state.lines.filter(l => l.id !== command.arguments.lineId);
       state.revision++; state.receipts.push({ id: command.requestId, fingerprint });
       ConfigurationStateSchema.parse(state);
-      const content = JSON.stringify(state); if (Buffer.byteLength(content) > 64 * 1024 * 1024) throw new Error('Archivio delle prove oltre 64 MB');
+      const content = JSON.stringify(state); if (Buffer.byteLength(content) > 512 * 1024 * 1024) throw new Error('Archivio delle prove oltre 512 MB');
       await mkdir(this.directory, { recursive: true }); const temp = join(this.directory, `state-${randomUUID()}.tmp`);
       await writeFile(temp, content, { mode: 0o600 }); await rename(temp, join(this.directory, 'state.json'));
       return cartSummary(state);

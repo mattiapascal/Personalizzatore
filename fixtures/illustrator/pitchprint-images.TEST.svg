@@ -6,9 +6,9 @@
 </defs>
 <rect x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
 <g transform="matrix(-5.28 0 0 3.8323 270.24 199.6008)"  >
-	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAtklEQVR4AeyVsQ2AMAwEo8yQIRiBgprpGILBUlGzQ+jdWFSW/g/JheXq/+9Jn9tYlTPOuSqnN/MPA8wBaBAAAeYOUAFzAPgJUgEqYO4AFTAHwO8ViIFTgeiI2w4BbolHvRAQHXHbIcAt8ai379fRKud+3lY5VCAi4bZDgFviUS8EREfcdnkCskAxIHNI/Q4B6gln+iAgc0j9DgHqCWf6ICBzSP0OAeoJZ/ogIHNI/Q4Bagn/1fMBAAD//zEG9lUAAAAGSURBVAMACbf3ofFXKHUAAAAASUVORK5CYII=" x="-32" y="-24" width="64" height="48"></image>
+	<svg x="-32" y="-24" width="64" height="48" viewBox="0 0 64 48" preserveAspectRatio="none" overflow="hidden"><g><image x="0" y="0" width="64" height="48" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAZElEQVR4nO3QMQEAIAgAMEMQwiTehiWEIeyiMTjYsQIbd8arFOuWGgIECBAgQIAAAQIECBAgQIAAAQIECBAgQECjgMj9KuU8pQQIECBAgAABAgQIECBAgAABAgQIECBAgIBGAR/hpBOWQxAMKAAAAABJRU5ErkJggg==" /></g></svg>
 </g>
 <g transform="matrix(6.4 0 0 -7.984 688 159.6806)"  >
-	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAYAAACbU/80AAAASElEQVR4AezRMQ0AIAxE0aYaEIEEBmbUIQJhnZjxUETc0OU3+XvzzqO3VGorUsmt+HgAAQQQQMDHnqZ07jMlJkAAAQQQKBf4AAAA//9NmkVCAAAABklEQVQDAHxme9HmzoGnAAAAAElFTkSuQmCC" x="-16" y="-12" width="32" height="24"></image>
+	<svg x="-16" y="-12" width="32" height="24" viewBox="16 12 32 24" preserveAspectRatio="none" overflow="hidden"><g><image x="0" y="0" width="64" height="48" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAZElEQVR4nO3QMQEAIAgAMEMQwiTehiWEIeyiMTjYsQIbd8arFOuWGgIECBAgQIAAAQIECBAgQIAAAQIECBAgQECjgMj9KuU8pQQIECBAgAABAgQIECBAgAABAgQIECBAgIBGAR/hpBOWQxAMKAAAAABJRU5ErkJggg==" /></g></svg>
 </g>
 </svg>

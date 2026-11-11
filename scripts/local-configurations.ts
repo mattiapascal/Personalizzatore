@@ -1,3 +1,4 @@
+import { MAX_CONFIGURATION_BYTES } from '../src/editor/project-limits';
 import type { Plugin } from 'vite';
 import { resolve } from 'node:path';
 import { cartSummary } from '../src/editor-workflow/schema';
@@ -17,7 +18,7 @@ export function localConfigurationsPlugin(): Plugin {
         }
         if (req.method !== 'POST' || path !== '/' || req.headers['content-type'] !== 'application/json') { json(415, { error: 'Richiesta non valida' }); return; }
         const parts: Buffer[] = []; let length = 0;
-        for await (const part of req) { const bytes = Buffer.from(part); length += bytes.length; if (length > 20 * 1024 * 1024) throw new Error('Configurazione oltre 20 MB'); parts.push(bytes); }
+        for await (const part of req) { const bytes = Buffer.from(part); length += bytes.length; if (length > MAX_CONFIGURATION_BYTES) throw new Error('Configurazione locale troppo grande'); parts.push(bytes); }
         json(200, await store.dispatch(JSON.parse(Buffer.concat(parts).toString('utf8'))));
       } catch (error) { json(422, { error: error instanceof Error ? error.message : 'Operazione locale non riuscita' }); }
     });

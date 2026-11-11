@@ -1,3 +1,4 @@
+import {testJpeg,jpegDataUrl} from './helpers/jpeg';
 import { describe,it,expect } from 'vitest';
 import { mkdtemp,rm,readFile } from 'node:fs/promises';
 import { join } from 'node:path';import { tmpdir } from 'node:os';import { randomUUID } from 'node:crypto';
@@ -23,3 +24,5 @@ describe('configurazioni congelate per il carrello locale',()=>{
   await expect(store.dispatch({requestId:randomUUID(),tool:'replace',arguments:{...replacement,lineId:line.id,expectedConfigurationId:line.configurationId,expectedVersion:line.version}})).rejects.toThrow('simulato');expect(await store.read()).toEqual(before);
  }));
 });
+
+it('SVG fotografico locale: ammette JPEG incorporato e viewport di crop, rifiuta SVG annidati come risorsa e URL remoti',()=>{expect(()=>checkConfigurationSvg(`<svg xmlns="http://www.w3.org/2000/svg"><svg viewBox="2 3 20 10"><g transform="matrix(1 0 0 1 0 0)"><image href="${jpegDataUrl(testJpeg())}"/></g></svg></svg>`)).not.toThrow();for(const href of ['data:image/svg+xml;base64,PHN2Zz4=','https://example.invalid/photo.jpg','javascript:alert(1)'])expect(()=>checkConfigurationSvg(`<svg><image href="${href}"/></svg>`)).toThrow();});

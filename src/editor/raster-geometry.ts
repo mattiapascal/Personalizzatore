@@ -1,7 +1,8 @@
+import { MAX_RASTER_SIDE } from './raster-limits';
 import { z } from 'zod';
 import type { RasterSource } from './raster-source';
 import type { SceneObject } from './model';
-export const RasterCropSchema = z.strictObject({ leftPx: z.number().int().min(0).max(4095), topPx: z.number().int().min(0).max(4095), widthPx: z.number().int().min(1).max(4096), heightPx: z.number().int().min(1).max(4096) });
+export const RasterCropSchema = z.strictObject({ leftPx: z.number().int().min(0).max(MAX_RASTER_SIDE - 1), topPx: z.number().int().min(0).max(MAX_RASTER_SIDE - 1), widthPx: z.number().int().min(1).max(MAX_RASTER_SIDE), heightPx: z.number().int().min(1).max(MAX_RASTER_SIDE) });
 export type RasterCrop = z.infer<typeof RasterCropSchema>;
 export type ImageObject = Extract<SceneObject, { type: 'image' }>;
 export function fullRasterCrop(source: RasterSource): RasterCrop { return { leftPx: 0, topPx: 0, widthPx: source.pixelWidth, heightPx: source.pixelHeight }; }

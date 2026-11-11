@@ -1,3 +1,4 @@
+import { originalRasterSvg } from './raster-svg';
 import {productionDocument,selectableObjectIds,effectiveObjectProperties,type EditorRole} from './object-properties';
 import {rootGroupFor} from './scene-groups';
 import {plaqueMountingPoints} from './plaque';
@@ -84,7 +85,8 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
     object = box;
   } else if (o.type === 'image') {
     const bitmap = rasterCanvas(o.source, o.raster, o.crop);
-    object = new FabricImage(bitmap, { ...common, strokeWidth: 0, perPixelTargetFind: true, flipX: o.flipX ?? false, flipY: o.flipY ?? false, scaleX: o.widthMm * PX_PER_MM / bitmap.width, scaleY: o.heightMm * PX_PER_MM / bitmap.height });
+    const image = new FabricImage(bitmap, { ...common, strokeWidth: 0, perPixelTargetFind: true, flipX: o.flipX ?? false, flipY: o.flipY ?? false, scaleX: o.widthMm * PX_PER_MM / bitmap.width, scaleY: o.heightMm * PX_PER_MM / bitmap.height });
+    if(o.raster.mode==='original')originalRasterSvg(image,o.source,o.crop);object=image;
   } else {
     const strokeWidth = o.stroke === 'none' ? 0 : o.strokeMm * PX_PER_MM;
     const appearance = { fill: !o.fill || o.fill === 'none' ? 'transparent' : o.fill, perPixelTargetFind: !o.fill || o.fill === 'none', stroke: o.stroke === 'none' ? undefined : o.stroke, strokeWidth,

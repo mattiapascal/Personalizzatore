@@ -6,6 +6,8 @@ import { jpegInfo, jpegWithoutApp1, jpegOrientationMatrix } from './jpeg-source'
 interface Prepared { source: RasterSource; image: HTMLImageElement | HTMLCanvasElement; analysis: RasterAnalysis; }
 const prepared = new Map<string, Prepared>(), pending = new Map<string, { data: string; promise: Promise<void> }>();
 const derived = new Map<string, HTMLCanvasElement>();
+// Decode large sources sequentially, including when a document prepares four images.
+let preparationQueue: Promise<unknown> = Promise.resolve();
 function sameSource(a: RasterSource, b: RasterSource): boolean { return a.id === b.id && a.mime === b.mime && a.pixelWidth === b.pixelWidth && a.pixelHeight === b.pixelHeight && a.dataUrl === b.dataUrl; }
 export function assertRasterPrepared(source: RasterSource): void {
   const existing = prepared.get(source.id);
@@ -17,17 +19,25 @@ export function assertRasterParameters(source: RasterSource, params: RasterParam
   if (params.backgroundRemoval && rasterAnalysis(source).kind !== 'grayscale') throw new Error('Rimozione del bianco disponibile solo per originali in scala di grigi; canali RGB differenti richiedono una conversione esplicita');
 }
 function analysisOf(image: HTMLImageElement | HTMLCanvasElement, width: number, height: number): RasterAnalysis {
-  const canvas = image instanceof HTMLCanvasElement ? image : document.createElement('canvas');
-  if (canvas !== image) { canvas.width = width; canvas.height = height; }
+  // Scan every original pixel in strips; never allocate a second full-size RGBA
+  // buffer just to classify a high-resolution photograph.
+  const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = Math.min(height, 128);
   const context = canvas.getContext('2d', { willReadFrequently: true }); if (!context) throw new Error('Analisi raster non disponibile');
-  if (canvas !== image) context.drawImage(image, 0, 0);
-  return analyzeRasterPixels(context.getImageData(0, 0, width, height).data);
+  let visiblePixels = 0, maxChannelDifference = 0;
+  for (let top = 0; top < height; top += canvas.height) {
+    const rows = Math.min(canvas.height, height - top); context.clearRect(0, 0, width, canvas.height);
+    context.drawImage(image, 0, top, width, rows, 0, 0, width, rows);
+    const part = analyzeRasterPixels(context.getImageData(0, 0, width, rows).data);
+    visiblePixels += part.visiblePixels; maxChannelDifference = Math.max(maxChannelDifference, part.maxChannelDifference);
+  }
+  canvas.width = canvas.height = 1;
+  return { kind: !visiblePixels ? 'empty' : maxChannelDifference === 0 ? 'grayscale' : maxChannelDifference <= 3 ? 'near-grayscale' : 'color', visiblePixels, maxChannelDifference };
 }
 export async function prepareRasterSource(raw: RasterSource): Promise<void> {
   const source = RasterSourceSchema.parse(raw), existing = prepared.get(source.id);
   if (existing) { if (!sameSource(source, existing.source)) throw new Error('ID sorgente raster già associato a un’altra immagine'); return; }
   const loading = pending.get(source.id); if (loading) { if (loading.data !== source.dataUrl) throw new Error('ID sorgente raster in conflitto'); return loading.promise; }
-  const promise = (async () => {
+  const promise = preparationQueue.then(async () => {
     if (source.mime === 'image/png') {
       await validatePngData(source.dataUrl);
       const image = new Image(); image.src = source.dataUrl;
@@ -46,7 +56,8 @@ export async function prepareRasterSource(raw: RasterSource): Promise<void> {
         prepared.set(source.id, { source: { ...source }, image: normalized, analysis: analysisOf(normalized, info.width, info.height) });
       } finally { URL.revokeObjectURL(url); }
     }
-  })();
+  });
+  preparationQueue = promise.catch(() => {});
   pending.set(source.id, { data: source.dataUrl, promise });
   try { await promise; } finally { pending.delete(source.id); }
 }
@@ -55,6 +66,10 @@ export function rasterCanvas(source: RasterSource, params: RasterParameters, raw
   if (cached) { derived.delete(key); derived.set(key, cached); return cached; }
   const canvas = document.createElement('canvas'); canvas.width = crop.widthPx; canvas.height = crop.heightPx;
   const context = canvas.getContext('2d', { willReadFrequently: true }); if (!context) throw new Error('Elaborazione raster non disponibile in questo browser');
-  context.drawImage(prepared.get(source.id)!.image, crop.leftPx, crop.topPx, crop.widthPx, crop.heightPx, 0, 0, crop.widthPx, crop.heightPx); const pixels = context.getImageData(0, 0, canvas.width, canvas.height), output = rasterPixels(pixels.data, params, canvas.width); pixels.data.set(output); context.putImageData(pixels, 0, 0);
-  derived.set(key, canvas); if (derived.size > 8) derived.delete(derived.keys().next().value!); return canvas;
+  context.drawImage(prepared.get(source.id)!.image, crop.leftPx, crop.topPx, crop.widthPx, crop.heightPx, 0, 0, crop.widthPx, crop.heightPx);
+  if (params.mode !== 'original') { const pixels = context.getImageData(0, 0, canvas.width, canvas.height), output = rasterPixels(pixels.data, params, canvas.width); pixels.data.set(output); context.putImageData(pixels, 0, 0); }
+  derived.set(key, canvas);
+  let pixels = [...derived.values()].reduce((sum, entry) => sum + entry.width * entry.height, 0);
+  while (derived.size > 1 && (derived.size > 8 || pixels > 32_000_000)) { const oldest = derived.keys().next().value!, entry = derived.get(oldest)!; pixels -= entry.width * entry.height; derived.delete(oldest); }
+  return canvas;
 }

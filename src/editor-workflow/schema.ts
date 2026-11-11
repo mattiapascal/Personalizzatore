@@ -1,3 +1,4 @@
+import { MAX_PROJECT_BYTES } from '../editor/project-limits';
 import { z } from 'zod';
 import { DocumentSchema } from '../editor/model';
 import { InkColorSchema } from '../editor/ink';
@@ -8,7 +9,7 @@ export const ConfigurationOptionsSchema = z.strictObject({
 export const FrozenConfigurationSchema = z.strictObject({
   id: uuid, createdAt: z.string().datetime(), title: z.string().trim().min(1).max(120),
   document: DocumentSchema, options: ConfigurationOptionsSchema,
-  svg: z.string().min(1).max(8 * 1024 * 1024),
+  svg: z.string().min(1).max(MAX_PROJECT_BYTES),
 });
 export const LocalCartLineSchema = z.strictObject({
   id: uuid, configurationId: uuid, version: z.number().int().positive(),

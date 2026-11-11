@@ -1,3 +1,4 @@
+import { MAX_PROJECT_BYTES } from '../editor/project-limits';
 import { z } from 'zod';
 import { parseGraphicDocument, type GraphicDocument } from '../editor/model';
 
@@ -17,7 +18,7 @@ export function prepareDraft(document: GraphicDocument, id: string, expectedVers
   if ((previous?.version ?? 0) !== expectedVersion) throw new Error('Questa bozza è cambiata in un’altra scheda. Salva una nuova copia per conservare le tue modifiche.');
   if (!previous && summaries.length >= 20) throw new Error('Hai già 20 bozze su questo browser. Esporta o elimina una bozza prima di salvarne un’altra.');
   const bytes = new TextEncoder().encode(JSON.stringify(parsed)).byteLength;
-  if (bytes > 10 * 1024 * 1024 || summaries.reduce((sum,item)=>sum+(item.id===id?0:item.bytes),0)+bytes > 64*1024*1024) throw new Error('Spazio delle bozze locali esaurito. Esporta o elimina una bozza; puoi sempre scaricare il progetto JSON.');
+  if (bytes > MAX_PROJECT_BYTES || summaries.reduce((sum,item)=>sum+(item.id===id?0:item.bytes),0)+bytes > 256*1024*1024) throw new Error('Spazio delle bozze locali esaurito. Esporta o elimina una bozza; puoi sempre scaricare il progetto JSON.');
   return { document: parsed, summary: DraftSummarySchema.parse({id,version:expectedVersion+1,savedAt:new Date().toISOString(),title:parsed.objects.filter(o=>o.type==='text').map(o=>o.text.replace(/\s+/g,' ')).join(' · ').slice(0,120)||'Composizione grafica',productId:parsed.productId,variantId:parsed.variantId,catalogVersion:parsed.catalogVersion,widthMm:parsed.areaMm.width,heightMm:parsed.areaMm.height,documentId:parsed.documentId,documentRevision:parsed.revision,bytes}) };
 }
 
