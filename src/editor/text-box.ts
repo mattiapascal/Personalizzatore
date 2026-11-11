@@ -1,4 +1,4 @@
-import { EDITOR_LIMITS,TEST_MIN_FONT_SIZE_PT } from './limits';
+import { EDITOR_LIMITS } from './limits';
 import { justifySpacing, type JustificationSettings } from './justification';
 import type { VisualTextLine } from './text-lines';
 import { Textbox, Rect, Control, type TextboxProps, type TOptions, type TPointerEventInfo } from 'fabric';
@@ -168,7 +168,7 @@ export function textBoxControls(object: EditorTextBox): void {
   const baseScale = object.scaleX, baseScaleY = object.scaleY, baseWidth = object.width * baseScale, baseHeight = object.height * baseScaleY, automatic = object.frame?.autoWidth ?? true;
   const baseFont = object.fontSize, baseStyles = structuredClone(object.styles), fonts = [baseFont, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.fontSize ?? baseFont))];
   const spacings = [object.charSpacing / 1000 * baseFont / (25.4 / 72 * 8), ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => (style as { editorKerningPt?: number }).editorKerningPt ?? 0))], spacingScale = Math.min(Infinity, ...spacings.filter(value => value !== 0).map(value => value > 0 ? EDITOR_LIMITS.maxTrackingPt / value : EDITOR_LIMITS.minTrackingPt / value));
-  const minimumFontScale = TEST_MIN_FONT_SIZE_PT * 25.4 / 72 * 8 / Math.min(...fonts), maximumFontScale = Math.min(EDITOR_LIMITS.maxFontSizePt * 25.4 / 72 * 8 / Math.max(...fonts), spacingScale);
+  const minimumFontScale = EDITOR_LIMITS.minFontSizePt * 25.4 / 72 * 8 / Math.min(...fonts), maximumFontScale = Math.min(EDITOR_LIMITS.maxFontSizePt * 25.4 / 72 * 8 / Math.max(...fonts), spacingScale);
   const handles = { tl: [-0.5, -0.5], tr: [0.5, -0.5], bl: [-0.5, 0.5], br: [0.5, 0.5], ml: [-0.5, 0], mr: [0.5, 0], mt: [0, -0.5], mb: [0, 0.5] } as const;
   for (const [name, [x, y]] of Object.entries(handles)) {
     object.controls[name] = new Control({ x, y, actionName: 'resizeTextBox', cursorStyle: y ? x * y > 0 ? 'nwse-resize' : 'nesw-resize' : 'ew-resize', cursorStyleHandler: (_event, control, target) => {

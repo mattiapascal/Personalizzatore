@@ -6,7 +6,8 @@ import {PlaqueMountingSchema,plaqueMountingPoints} from './plaque';
 import { FontAssetsSchema, FontIdSchema } from './font-assets';
 import { fitComposition } from './format-adaptation';
 import { InkColorSchema } from './ink';
-import { EDITOR_LIMITS, TEST_MIN_FONT_SIZE_PT } from './limits';
+import { EDITOR_LIMITS } from './limits';
+import { assertDocumentTextProduction, assertMinimumText, minimumFontForProduct } from './text-production';
 import { VectorCommandsSchema, VectorClipSchema, vectorBounds, vectorContours } from './vector-geometry';
 import { attachTextPath, detachTextPath, updateTextPath, preserveTextPathGuide } from './text-path-model';
 import { TextPathSchema, TextPathOptionsSchema } from './text-path-spec';
@@ -30,7 +31,7 @@ const color = ColorSchema;
 const paint = PaintSchema;
 const fontFamily = z.union([z.enum(FONT_FAMILIES), FontIdSchema]);
 export const CharacterStyleSchema = z.strictObject({
-  fontSizePt: z.number().finite().min(TEST_MIN_FONT_SIZE_PT).max(EDITOR_LIMITS.maxFontSizePt).optional(), fontFamily: fontFamily.optional(), fill: color.optional(),
+  fontSizePt: z.number().finite().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt).optional(), fontFamily: fontFamily.optional(), fill: color.optional(),
   kerningPt: z.number().finite().min(EDITOR_LIMITS.minTrackingPt).max(EDITOR_LIMITS.maxTrackingPt).optional(),
   fontWeight: z.enum(['normal', 'bold']).optional(), fontStyle: z.enum(['normal', 'italic']).optional(), underline: z.boolean().optional(), linethrough: z.boolean().optional(), overline: z.boolean().optional(),
 });
@@ -52,7 +53,7 @@ const shapeAppearance = { fill: paint.optional(), strokeDash: z.enum(['solid', '
 export const TextBoxSchema = z.strictObject({ widthMm: z.number().finite().positive().max(1000), heightMm: z.number().finite().positive().max(1000), autoWidth: z.boolean(), autoHeight: z.literal(true) });
 const textContent = z.string().min(1).max(EDITOR_LIMITS.textCharacters*2).refine(t => !/[\r\u0000-\u0009\u000b-\u001f]/.test(t) && Array.from(t).length<=EDITOR_LIMITS.textCharacters && t.split('\n').length <= EDITOR_LIMITS.textLines, `Massimo ${EDITOR_LIMITS.textCharacters} caratteri Unicode e ${EDITOR_LIMITS.textLines} righe per box nel laboratorio`);
 export const SceneObjectSchema = z.discriminatedUnion('type', [
-  z.strictObject({ id, type: z.literal('text'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), text: textContent, fontSizePt: z.number().min(TEST_MIN_FONT_SIZE_PT).max(EDITOR_LIMITS.maxFontSizePt), fontFamily, fill: color, ...textAppearance, textBox: TextBoxSchema.optional(), characterStyles: characterRuns }),
+  z.strictObject({ id, type: z.literal('text'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), text: textContent, fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fontFamily, fill: color, ...textAppearance, textBox: TextBoxSchema.optional(), characterStyles: characterRuns }),
   z.strictObject({ id, type: z.literal('rect'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().positive().max(1000), heightMm: z.number().positive().max(1000), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance, cornerRadiusMm: z.number().finite().min(0).max(500).optional() }),
   z.strictObject({ id, type: z.literal('circle'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: z.literal(0).optional(), radiusMm: z.number().positive().max(500), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
   z.strictObject({ id, type: z.literal('line'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), lengthMm: z.number().finite().positive().max(1000), strokeMm: StrokeWidthSchema, stroke: color, fill: z.literal('none').optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }),
@@ -184,7 +185,7 @@ export function cloneGraphicDocument(document: GraphicDocument): GraphicDocument
 }
 export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('vector'), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000) }),
-  z.strictObject({ type: z.literal('text'), fontSizePt: z.number().min(TEST_MIN_FONT_SIZE_PT).max(EDITOR_LIMITS.maxFontSizePt), textScaleX: textScale.optional(), textScaleY: textScale.optional(), textBox: TextBoxSchema.optional(), textPath: TextPathSchema.optional() }),
+  z.strictObject({ type: z.literal('text'), fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), textScaleX: textScale.optional(), textScaleY: textScale.optional(), textBox: TextBoxSchema.optional(), textPath: TextPathSchema.optional() }),
   z.strictObject({ type: z.literal('rect'), widthMm: z.number().positive().max(1000), heightMm: z.number().positive().max(1000) }),
   z.strictObject({ type: z.literal('circle'), radiusMm: z.number().positive().max(500) }),
   z.strictObject({ type: z.literal('line'), lengthMm: z.number().finite().positive().max(1000) }),
@@ -215,7 +216,7 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({ ...base, tool: z.literal('setTextPath'), arguments: TextPathOptionsSchema }),
   z.strictObject({ ...base, tool: z.literal('moveObject'), arguments: z.strictObject(position) }),
   z.strictObject({ ...base, tool: z.literal('setText'), arguments: z.strictObject({ text: textContent }) }),
-  z.strictObject({ ...base, tool: z.literal('setObjectStyle'), arguments: z.strictObject({ fontSizePt: z.number().min(TEST_MIN_FONT_SIZE_PT).max(EDITOR_LIMITS.maxFontSizePt), fill: color }) }),
+  z.strictObject({ ...base, tool: z.literal('setObjectStyle'), arguments: z.strictObject({ fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fill: color }) }),
   z.strictObject({ ...base, tool: z.literal('addObject'), arguments: z.strictObject({ object: SceneObjectSchema, fontAssets: FontAssetsSchema.optional() }) }),
   z.strictObject({ ...base, tool: z.literal('insertObjects'), arguments: z.strictObject({ objects: z.array(SceneObjectSchema).min(1).max(EDITOR_LIMITS.objects), groups: z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups), fontAssets: FontAssetsSchema.optional() }) }),
   z.strictObject({ ...base, tool: z.literal('updateObject'), arguments: z.strictObject({ object: SceneObjectSchema, fontAssets: FontAssetsSchema.optional() }) }),
@@ -342,6 +343,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     next.templateOrigin={id:command.arguments.templateId,version:command.arguments.templateVersion};
     if(command.arguments.inkColor)next.inkColor=command.arguments.inkColor;
     validateLayout(next,measure);
+    assertDocumentTextProduction(next,catalog);
   }
   else if(command.tool==='setGroupProperties'){
     if(role!=='admin')throw new Error('Le proprietà del template si configurano in modalità amministrativa.');
@@ -508,6 +510,7 @@ export class DocumentStore {
     if(this.document.plaque)throw new Error('Il formato di una targa si modifica dal pannello dedicato.');
     const next = DocumentSchema.parse({ ...this.document, ...bindingFor(product, catalogVersion), areaMm: structuredClone(product.nominalAreaMm), shape: product.shape, revision: this.document.revision + 1 });
     validateLayout(next, this.measure);
+    assertMinimumText(next,minimumFontForProduct(product));
     this.document = next;
     this.past = []; this.future = [];
     this.events.push({ source: 'product-change', revision: next.revision });

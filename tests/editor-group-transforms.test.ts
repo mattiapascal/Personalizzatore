@@ -53,7 +53,7 @@ describe('trasformazione atomica di gruppi e selezioni', () => {
   });
   it('limiti dei caratteri locali e del contorno rifiutano l’intera selezione, senza riduzioni automatiche', () => {
     const doc = source(), text = doc.objects[1] as Extract<SceneObject, { type: 'text' }>;
-    text.fontSizePt = 12; text.characterStyles![0]!.style.fontSizePt = 7;
+    text.fontSizePt = 12; text.characterStyles![0]!.style.fontSizePt = .1;
     const store = new DocumentStore(doc, measure), before = structuredClone(store.document);
     expect(() => store.dispatch(command(0, 0.8, 0, center(doc)), 'manual')).toThrow(); expect(store.document).toEqual(before);
     const thick = source(); (thick.objects[0] as Extract<SceneObject, { type: 'rect' }>).strokeMm = 60;

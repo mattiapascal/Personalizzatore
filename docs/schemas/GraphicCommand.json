@@ -567,7 +567,7 @@
                       },
                       "fontSizePt": {
                         "type": "number",
-                        "minimum": 7,
+                        "minimum": 0.1,
                         "maximum": 500
                       },
                       "fontFamily": {
@@ -1396,7 +1396,7 @@
                               "properties": {
                                 "fontSizePt": {
                                   "type": "number",
-                                  "minimum": 7,
+                                  "minimum": 0.1,
                                   "maximum": 500
                                 },
                                 "fontFamily": {
@@ -3305,7 +3305,7 @@
           "properties": {
             "fontSizePt": {
               "type": "number",
-              "minimum": 7,
+              "minimum": 0.1,
               "maximum": 500
             },
             "fill": {
@@ -3435,7 +3435,7 @@
                     },
                     "fontSizePt": {
                       "type": "number",
-                      "minimum": 7,
+                      "minimum": 0.1,
                       "maximum": 500
                     },
                     "fontFamily": {
@@ -4264,7 +4264,7 @@
                             "properties": {
                               "fontSizePt": {
                                 "type": "number",
-                                "minimum": 7,
+                                "minimum": 0.1,
                                 "maximum": 500
                               },
                               "fontFamily": {
@@ -5940,7 +5940,7 @@
                       },
                       "fontSizePt": {
                         "type": "number",
-                        "minimum": 7,
+                        "minimum": 0.1,
                         "maximum": 500
                       },
                       "fontFamily": {
@@ -6769,7 +6769,7 @@
                               "properties": {
                                 "fontSizePt": {
                                   "type": "number",
-                                  "minimum": 7,
+                                  "minimum": 0.1,
                                   "maximum": 500
                                 },
                                 "fontFamily": {
@@ -8507,7 +8507,7 @@
                     },
                     "fontSizePt": {
                       "type": "number",
-                      "minimum": 7,
+                      "minimum": 0.1,
                       "maximum": 500
                     },
                     "fontFamily": {
@@ -9336,7 +9336,7 @@
                             "properties": {
                               "fontSizePt": {
                                 "type": "number",
-                                "minimum": 7,
+                                "minimum": 0.1,
                                 "maximum": 500
                               },
                               "fontFamily": {
@@ -11066,7 +11066,7 @@
                     },
                     "fontSizePt": {
                       "type": "number",
-                      "minimum": 7,
+                      "minimum": 0.1,
                       "maximum": 500
                     },
                     "textScaleX": {

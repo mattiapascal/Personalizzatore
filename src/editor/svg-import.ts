@@ -1,6 +1,7 @@
 import { StrokeWidthSchema } from './stroke';
 import {canonicalPaint} from './paint';
-import { EDITOR_LIMITS,TEST_MIN_FONT_SIZE_PT } from './limits';
+import { EDITOR_LIMITS } from './limits';
+import { assertMinimumText } from './text-production';
 import { compactVectors } from './vector-compaction';
 import { loadSVGFromString, FabricText, Path, Rect, Circle, Ellipse, Line, Polyline, Polygon, util, type FabricObject, type TMat2D } from 'fabric';
 import { importedFontFamily, renderFontFamily, canonicalFontFamily, fontAssetArguments } from './fonts';
@@ -73,7 +74,7 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
       if (object.clipPath || stroke !== 'none' || fill === 'none' || object.path || m[0]*m[3]-m[1]*m[2] <= 0 || Math.abs(m[0]*m[2]+m[1]*m[3]) > 1e-7*sx*sy) throw new Error('Testo SVG con contorno, riflessione, ritaglio o inclinazione non supportato in modalità editabile');
       object.set({strokeWidth:0}); object.setCoords();
       const family=canonicalFontFamily(object.fontFamily)!, fontSizePt=object.fontSize*sy*.75, box=object.getBoundingRect();
-      if(fontSizePt<TEST_MIN_FONT_SIZE_PT-1e-7||fontSizePt>EDITOR_LIMITS.maxFontSizePt+1e-7)throw new Error(`Corpo del testo fuori dall’intervallo ${TEST_MIN_FONT_SIZE_PT}–${EDITOR_LIMITS.maxFontSizePt} pt del laboratorio: usare un altro formato o importare come contorni`);
+      if(fontSizePt<EDITOR_LIMITS.minFontSizePt-1e-7||fontSizePt>EDITOR_LIMITS.maxFontSizePt+1e-7)throw new Error(`Corpo del testo fuori dall’intervallo ${EDITOR_LIMITS.minFontSizePt}–${EDITOR_LIMITS.maxFontSizePt} pt del laboratorio: usare un altro formato o importare come contorni`);
       const length=textLengths.get(object);if(length&&Math.abs(m[1])>1e-7)throw new Error('Testo SVG ruotato con dilatazione non ancora supportato');
       const text:SceneObject={id:`svg-${crypto.randomUUID()}`,type:'text',xMm:box.left*PX_TO_MM,yMm:box.top*PX_TO_MM,rotationDeg:Math.atan2(m[1],m[0])*180/Math.PI,text:object.text,fontFamily:family,fontSizePt,textScaleX:sx/sy*(length?length/object.width:1),fill,fontWeight:object.fontWeight==='bold'||object.fontWeight===700?'bold':'normal',fontStyle:object.fontStyle==='italic'?'italic':'normal',textAlign:textAnchors.get(object)==='middle'?'center':textAnchors.get(object)==='end'?'right':'left',lineHeight:1,...(object.charSpacing?{letterSpacingPt:object.charSpacing/1000*fontSizePt}: {})};
       const measured=measureFabric(text); text.textBox={widthMm:measured.widthMm,heightMm:measured.heightMm,autoWidth:true,autoHeight:true};objects.push(text);continue;
@@ -94,11 +95,11 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
   if (objects.length > EDITOR_LIMITS.objects && objects.every((o):o is VectorObject=>o.type==='vector')) objects = compactVectors(objects);
   if (!objects.length) throw new Error('SVG senza elementi visibili'); const bounds=selectionBounds(objects,measureFabric);return { monochrome, objects, ...(fontAssets.length?{fontAssets}:{}),widthMm:bounds.widthMm,heightMm:bounds.heightMm };
 }
-export function svgInsertion(prepared: PreparedSvg, doc: GraphicDocument, measure: Measure): { command: Extract<GraphicCommand, { tool: 'insertObjects' }>; report: string } {
+export function svgInsertion(prepared: PreparedSvg, doc: GraphicDocument, measure: Measure, minimumFontPt: number | null = null): { command: Extract<GraphicCommand, { tool: 'insertObjects' }>; report: string } {
   if (doc.objects.length + prepared.objects.length > EDITOR_LIMITS.objects) throw new Error(`L’importazione supera i ${EDITOR_LIMITS.objects} oggetti del laboratorio`);
   const bounds = selectionBounds(prepared.objects, measure), scale = Math.min(1, (doc.areaMm.width - 4) / bounds.widthMm, (doc.areaMm.height - 4) / bounds.heightMm);
   const objects = transformSelection(prepared.objects.map(cloneSceneObject), { scale, rotationDeg: 0, center: { xMm: doc.areaMm.width / 2, yMm: doc.areaMm.height / 2 } }, measure), groups = objects.length > 1 ? [{ id: `svg-group-${crypto.randomUUID()}`, objectIds: objects.map(o => o.id) }] : [];
-  if(objects.some(o=>o.type==='text'&&o.fontSizePt<7))throw new Error('L’adattamento porterebbe il testo sotto i 7 pt del profilo TEST. Scegli un formato più grande oppure importa come contorni.');
+  if(scale<1)assertMinimumText({...doc,objects,groups},minimumFontPt);
   const fontAssets=[...doc.fontAssets??[]];for(const asset of prepared.fontAssets??[])if(!fontAssets.some(a=>a.id===asset.id))fontAssets.push(asset);
   DocumentSchema.parse({ ...doc, ...(fontAssets.length?{fontAssets}:{}), objects: [...doc.objects, ...objects], ...(groups.length ? { groups: [...doc.groups ?? [], ...groups] } : {}) });
   const command: Extract<GraphicCommand, { tool: 'insertObjects' }> = { schemaVersion: 1, tool: 'insertObjects', objectId: objects[0]!.id, expectedRevision: doc.revision, arguments: { objects, groups, ...(prepared.fontAssets?.length?{fontAssets:prepared.fontAssets}:{}) } };

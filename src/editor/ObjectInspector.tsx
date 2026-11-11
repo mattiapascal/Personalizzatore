@@ -1,7 +1,7 @@
 import {textFontToggle,textFontFamily,commonTextFontFamily} from './text-font-toggle';
 import {ObjectPropertiesPanel} from './ObjectPropertiesPanel';
 import type {ObjectProperties} from './object-properties';
-import { EDITOR_LIMITS,TEST_MIN_FONT_SIZE_PT } from './limits';
+import { EDITOR_LIMITS } from './limits';
 import { fontVariantChoices, fontVariantLabel, renderFontFamily, chooseFontStyle, fontChoices, registeredFontAsset, fontCatalogVersion, subscribeFonts } from './fonts';
 import { transformSelection } from './selection';
 import { resizeTextHeight, textHeightLimits } from './text-sizing';
@@ -23,12 +23,13 @@ import { RasterCropInspector } from './RasterCropInspector';
 import { jpegInfo } from './jpeg-source';
 import { rasterAnalysis } from './raster-cache';
 import { ObjectIdentity } from './ObjectIdentity';
+import { smallestPrintedFontPt } from './text-production';
 
 type Section = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'arrange' | 'template';
 
-export function ObjectInspector({ allowColor = false, onProperties, object, revision, arrangement, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen }: { allowColor?:boolean; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; arrangement: ReactNode; onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
+export function ObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, object, revision, arrangement, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen }: { minimumFontPt?:number|null;allowColor?:boolean; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; arrangement: ReactNode; onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
   const form = useRef<HTMLFormElement>(null);
-  const { draft, status, patch, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
+  const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
   const [section, setSection] = useState<Section>('geometry');
   const [ratioLocked, setRatioLocked] = useState(false);
   useEffect(() => {
@@ -44,7 +45,7 @@ export function ObjectInspector({ allowColor = false, onProperties, object, revi
   const characterPatch = (style: CharacterStyle, immediate = false) => {
     if (current.type !== 'text') return;
     if (characterSelection) { if (!noCharacters) onCharacterStyle(style); }
-    else patch(applyCharacterStyle(current, style), immediate);
+    else replaceAppearance(applyCharacterStyle(current, style), immediate);
   };
   useSyncExternalStore(subscribeFonts,fontCatalogVersion);
   const activeFont=current.type==='text'?(character?.fontFamily??current.fontFamily):'',variants=fontVariantChoices(activeFont);
@@ -54,8 +55,8 @@ export function ObjectInspector({ allowColor = false, onProperties, object, revi
   const [fontNotice,setFontNotice]=useState<{objectId:string;revision:number;message:string}|null>(null);
   const fontError=fontNotice?.objectId===object.id&&fontNotice.revision===revision?fontNotice.message:'';
   const setFontError=(message:string,nextRevision=revision)=>setFontNotice(message?{objectId:object.id,revision:nextRevision,message}:null);
-  const toggleFace=(next:Extract<SceneObject,{type:'text'}>|null|undefined)=>{if(next){setFontError('');patch(next,true);}};
-  const fontSizeField = current.type === 'text' ? <NumberField {...{ revision: revision + (characterSelection?.start ?? 0) + (characterSelection?.end ?? 0) }} label="Corpo testo (pt)" value={character?.fontSizePt ?? current.fontSizePt} mixed={characterScope?.mixed.includes('fontSizePt')} disabled={noCharacters} min={TEST_MIN_FONT_SIZE_PT} max={EDITOR_LIMITS.maxFontSizePt} onChange={fontSizePt => { if (fontSizePt >= TEST_MIN_FONT_SIZE_PT && fontSizePt <= EDITOR_LIMITS.maxFontSizePt) characterPatch({ fontSizePt }); }}/> : null;
+  const toggleFace=(next:Extract<SceneObject,{type:'text'}>|null|undefined)=>{if(next){setFontError('');replaceAppearance(next,true);}};
+  const fontSizeField = current.type === 'text' ? <NumberField {...{ revision: revision + (characterSelection?.start ?? 0) + (characterSelection?.end ?? 0) }} label="Corpo testo (pt)" value={character?.fontSizePt ?? current.fontSizePt} mixed={characterScope?.mixed.includes('fontSizePt')} disabled={noCharacters} min={EDITOR_LIMITS.minFontSizePt} max={EDITOR_LIMITS.maxFontSizePt} onChange={fontSizePt => { if (fontSizePt >= EDITOR_LIMITS.minFontSizePt && fontSizePt <= EDITOR_LIMITS.maxFontSizePt) characterPatch({ fontSizePt }); }}/> : null;
   const textScaleField = current.type === 'text' ? <NumberField revision={draft.revision} label="Dilataz. Orizz. (%)" value={(current.textScaleX ?? 1) * 100} min={10} max={1000} step={1} onChange={value => { if (value >= 10 && value <= 1000) { if (characterSelection) onTextStretch(value / 100); else patch({ textScaleX: value / 100 }); } }}/> : null;
   let frame: ReturnType<typeof measureTextFrame> | null = null;
   if (current.type === 'text') { try { frame = measureTextFrame(current); } catch { if (object.type === 'text') frame = measureTextFrame(object); } }
@@ -152,6 +153,7 @@ export function ObjectInspector({ allowColor = false, onProperties, object, revi
         {fontError&&<p role="status">{fontError}</p>}
         {variants.length>1&&<details className="font-other-styles"><summary>Altri stili</summary><label>Variante font<select aria-label="Variante font" disabled={noCharacters||!commonFamily} value={activeFont} onChange={event=>characterPatch(chooseFontStyle(event.target.value),true)}>{variants.map(face=><option key={face.id} value={face.id} style={{fontFamily:renderFontFamily(face.id)}}>{fontVariantLabel(face.id)}</option>)}</select></label></details>}
         <div className="property-grid">{fontSizeField}{textScaleField}</div>
+        {minimumFontPt!==null&&<p role="status" data-testid="minimum-font-notice" className="caption">{(smallestPrintedFontPt(current)??Infinity)<minimumFontPt-1e-7?`Questo testo contiene caratteri sotto ${minimumFontPt} pt: correggili prima di confermare il timbro.`:`Per questo modello il corpo minimo è ${minimumFontPt} pt.`}</p>}
         <div className="property-grid">{!current.textPath && <NumberField {...fields} label="Interlinea" value={current.lineHeight ?? 1} min={EDITOR_LIMITS.minLineHeight} max={EDITOR_LIMITS.maxLineHeight} step={0.1} onChange={lineHeight => patch({ lineHeight })}/> }
         <NumberField {...fields} label={characterSelection ? 'Crenatura (pt)' : 'Spaziatura (pt)'} value={characterSelection?.spacing?.value ?? current.letterSpacingPt ?? 0} min={EDITOR_LIMITS.minTrackingPt} max={EDITOR_LIMITS.maxTrackingPt} step={0.1} mixed={characterSelection?.spacing?.mixed} disabled={!!characterSelection && !characterSelection.spacing?.indices.length} onChange={value => { if (value >= EDITOR_LIMITS.minTrackingPt && value <= EDITOR_LIMITS.maxTrackingPt) { if (characterSelection) onKerning(value); else patch({ letterSpacingPt: value }); } }}/>
         </div>

@@ -32,11 +32,15 @@ export function useInspectorDraft(object: SceneObject, revision: number, onApply
     cancel(); publish(next); setStatus('Aggiornamento…');
     if (immediate) flush(); else timer.current = setTimeout(flush, 250);
   };
-  const patch = (changes: Partial<SceneObject>, immediate = false) => {
-    const previous = current.current, next = Object.assign(structuredClone(previous.object), changes);
+  const queueAppearance = (next: SceneObject, immediate: boolean) => {
+    const previous = current.current;
     try { queue({ ...previous, object: previous.object.type === 'text' && previous.object.textPath && next.type === 'text' && textPathStyleChanged(previous.object, next) ? preserveTextPathGuide(previous.object, next, measureFabric) : placeObjectAtCenter(next, previous.center, measureFabric) }, immediate); }
     catch { queue({ ...previous, object: next }, immediate); }
   };
+  const patch = (changes: Partial<SceneObject>, immediate = false) => queueAppearance(Object.assign(structuredClone(current.current.object), changes), immediate);
+  // Full style results may intentionally omit characterStyles/lineStyles.
+  // Merging into the old object would resurrect the runs they just removed.
+  const replaceAppearance = (replacement: SceneObject, immediate = false) => queueAppearance(structuredClone(replacement), immediate);
   const moveCenter = (center: typeof draft.center) => {
     const previous = current.current;
     try { queue({ ...previous, center, object: placeObjectAtCenter(previous.object, center, measureFabric) }, false); }
@@ -49,5 +53,5 @@ export function useInspectorDraft(object: SceneObject, revision: number, onApply
     cancel(); saved.current = { object, revision }; publish(draftFor(saved.current)); setStatus('');
   }, [object, revision]);
   useEffect(() => cancel, []);
-  return { draft, status, patch, replaceObject, moveCenter, flush, reset, dirty: JSON.stringify(draft.object) !== JSON.stringify(object) };
+  return { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty: JSON.stringify(draft.object) !== JSON.stringify(object) };
 }

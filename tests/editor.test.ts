@@ -92,7 +92,7 @@ describe('documento unico e comandi revisionati', () => {
   });
   it('rifiuta stale, ID inesistenti, fuori area, font sotto minimo e colori', () => {
     const s = new DocumentStore(createDocument(), measure); const original = structuredClone(s.document);
-    for (const c of [move(1), { ...move(0), objectId: 'unknown' }, move(0, 90), { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 6, fill: '#000000' } }, { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 9, fill: '#888888' } }, { ...move(0), tool: 'eval', arguments: { script: 'fetch()' } }]) expect(() => s.dispatch(c, 'ai-simulation')).toThrow();
+    for (const c of [move(1), { ...move(0), objectId: 'unknown' }, move(0, 90), { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 0.09, fill: '#000000' } }, { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 9, fill: '#888888' } }, { ...move(0), tool: 'eval', arguments: { script: 'fetch()' } }]) expect(() => s.dispatch(c, 'ai-simulation')).toThrow();
     expect(s.document).toEqual(original); expect(s.events).toHaveLength(0);
   });
   it('undo/redo mantengono revisione monotona e invalidano comandi vecchi', () => {

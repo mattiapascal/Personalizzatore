@@ -42,7 +42,7 @@ describe('stili dei caratteri nel documento comune', () => {
     for (const range of [{ start: -1, end: 3 }, { start: 2, end: 2 }, { start: 3, end: 2 }, { start: 0, end: 13 }, { start: 0.5, end: 3 }]) expect(() => applyCharacterStyle(text(), { underline: true }, range)).toThrow();
     for (const styles of [
       [{ start: 0, end: 13, style: { fontWeight: 'bold' } }],
-      [{ start: 0, end: 3, style: { fontSizePt: 6 } }],
+      [{ start: 0, end: 3, style: { fontSizePt: 0.09 } }],
       [{ start: 0, end: 3, style: { fontFamily: 'Unknown' } }],
       [{ start: 0, end: 3, style: { stroke: 'red' } }],
       [{ start: 0, end: 3, style: { underline: true } }, { start: 2, end: 4, style: { underline: false } }],

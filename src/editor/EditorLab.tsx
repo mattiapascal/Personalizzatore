@@ -32,6 +32,7 @@ import { createDocument, DocumentStore, GraphicCommandSchema, parseGraphicDocume
 import type { ProductProfile } from '../catalog/schema';
 import './editor.css';
 import { ObjectInspector } from './ObjectInspector';
+import { assertDocumentTextProduction, minimumFontForDocument } from './text-production';
 import { WorkspaceFrame } from './WorkspaceFrame';
 import { LayersPanel } from './LayersPanel';
 import type { CharacterSelection } from './text-style';
@@ -72,7 +73,7 @@ function example(revision: number, objectId = 'text-1'): string {
 function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition',initialSource }: { initialSource?:{record:ArchiveRecord;mode:'archive'|'template'};initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[]; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
   const projectFonts=useProjectFontPreparation();
   const mode=editorMode(),policyRole=mode==='customer'?'customer':'admin';const archiveBusyRef=useRef(false);
-  const graphicCatalog=availableProducts?{version:catalogVersion,products:availableProducts}:undefined;
+  const graphicCatalog=availableProducts||product?{version:catalogVersion,products:availableProducts??[product!]}:undefined;
   const inkFilterId=`editor-ink-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
@@ -147,7 +148,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const saveArchive = async (close=false,copy=true) => {
     const snapshot = structuredClone(storeRef.current!.document);archiveBusyRef.current=true;setArchiveBusy(true);setError('');setSessionNotice('');
     try {
-      if(mode==='customer'){if(!fieldsValid)throw new Error('Correggi il campo del modulo non ancora applicato al design.');validateObjectInputs(snapshot);}
+      if(mode==='customer'){if(!fieldsValid)throw new Error('Correggi il campo del modulo non ancora applicato al design.');validateObjectInputs(snapshot);if(close)assertDocumentTextProduction(snapshot,graphicCatalog,true);}
       const state=await readAdminSnapshot(),title=archiveTitle.trim()||sourceRecord?.title||`Composizione ${new Date().toLocaleDateString('it-IT')}`;
       const replace=!copy&&sourceRecord&&(mode==='admin'||sourceRecord.kind==='composition');
       const saved=await localAdminRequest('',replace?{tool:'replaceRecord',expectedRevision:state.revision,arguments:{id:sourceRecord.id,recordVersion:sourceRecord.version,title,tags:parseTags(archiveTags),document:snapshot}}:{tool:'saveRecord',expectedRevision:state.revision,arguments:{kind:mode==='customer'?'composition':archiveKind,title,tags:parseTags(archiveTags),clientRef:'',document:snapshot}})as Awaited<ReturnType<typeof readAdminSnapshot>>;
@@ -165,7 +166,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       if (file.size > 2 * 1024 * 1024) throw new Error('PDF oltre 2 MB');
       const response = await fetch('/__editor-local/pdf', { method: 'POST', headers: { 'Content-Type': 'application/pdf', 'X-Editor-Local': '1', 'X-Editor-Text-Mode': importTextMode }, body: file });
       const converted = await response.json(); if (!response.ok) throw new Error(converted.error ?? 'Conversione PDF locale non disponibile');
-      const prepared = await prepareSvg(converted.svg, vectorMonochrome, 'editable'), insertion = svgInsertion(prepared, store.document, measureFabric);
+      const prepared = await prepareSvg(converted.svg, vectorMonochrome, 'editable'), insertion = svgInsertion(prepared, store.document, measureFabric,minimumFontForDocument(store.document,graphicCatalog));
       return () => { store.dispatch(insertion.command, 'manual'); select(insertion.command.arguments.objects.map(object => object.id)); setImportNotice(insertion.report.replace('SVG importato:', 'PDF importato:') + (importTextMode==='editable' ? ` Ricostruite ${converted.textCount??0} righe editabili. Verifica font, spaziature e anteprima; le lettere già in contorni rimangono vettori.` : ' Conversione locale, testi trasformati in contorni.') + ' PDF originale eliminato dopo l’elaborazione.'); };
     });
   };
@@ -173,7 +174,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     let ids: string[] = [];
     void prepareAndAct(async store => {
       if (file.size > MAX_SVG_BYTES) throw new Error('SVG oltre 256 KB');
-      const prepared = await prepareSvg(new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()), vectorMonochrome, importTextMode), insertion = svgInsertion(prepared, store.document, measureFabric); ids = insertion.command.arguments.objects.map(object => object.id);
+      const prepared = await prepareSvg(new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()), vectorMonochrome, importTextMode), insertion = svgInsertion(prepared, store.document, measureFabric,minimumFontForDocument(store.document,graphicCatalog)); ids = insertion.command.arguments.objects.map(object => object.id);
       return () => { store.dispatch(insertion.command, 'manual'); select(ids); setImportNotice(insertion.report); };
     });
   };
@@ -462,7 +463,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         return act(() => store.dispatch({ schemaVersion: 1, tool: 'transformObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { ...args, objectIds: selectedRef.current } }, 'manual')) ? store.document.revision : null;
       }} onAlignArea={alignment => selectionCommand('alignObjectsToArea', { objectIds: selectedRef.current, alignment })} onAlign={alignment => selectionCommand('alignObjects', { objectIds: selectedRef.current, alignment })} onDistribute={axis => selectionCommand('distributeObjects', { objectIds: selectedRef.current, axis })} onStyle={(style, expectedRevision) => act(() => {
         const store = storeRef.current!; store.dispatch({ schemaVersion: 1, tool: 'styleObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, style } }, 'manual');
-      })}/> : selectedObject ? <ObjectInspector allowColor={doc.colorMode==='color'} key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} revision={doc.revision}
+      })}/> : selectedObject ? <ObjectInspector minimumFontPt={effectiveObjectProperties(doc,selectedObject.id).reference?null:minimumFontForDocument(doc,graphicCatalog)} allowColor={doc.colorMode==='color'} key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} revision={doc.revision}
         onProperties={mode!=='customer'?properties=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setObjectProperties',objectId:selectedObject.id,expectedRevision:storeRef.current!.document.revision,arguments:properties},'manual')):undefined}
         characterSelection={characterSelection}
         onFontMenuOpen={() => { if (import.meta.env.DEV) void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => setFontNotice('')).catch(error => setFontNotice(error.message)); }}

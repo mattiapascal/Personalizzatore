@@ -1,4 +1,6 @@
 import {validateObjectInputs} from '../src/editor/object-properties';
+import {assertDocumentTextProduction} from '../src/editor/text-production';
+import {fixtureCatalog} from '../src/catalog/adapter';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -52,6 +54,7 @@ export class ConfigurationStore {
       if (command.tool === 'add' || command.tool === 'replace') {
         const { title, document, options, svg } = command.arguments; const preview = checkConfigurationSvg(svg);
         validateObjectInputs(document);
+        assertDocumentTextProduction(document,{version:fixtureCatalog.version,products:fixtureCatalog.list()},true);
         await assertOutputFonts(document,{resolveWoff2:async asset=>fontCoverage(Buffer.from(asset.dataBase64,'base64'),'woff2')});
         const configurationId = randomUUID();
         // Zod parses/clones every nested object; no reference to the mutable editor survives.

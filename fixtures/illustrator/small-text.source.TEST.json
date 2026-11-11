@@ -1,0 +1,74 @@
+{
+  "title": "TEST · testo piccolo per stampa",
+  "unit": "mm",
+  "pages": [
+    {
+      "pageData": {
+        "fWidth": 100,
+        "fHeight": 60
+      },
+      "canvas": {
+        "clipPath": {
+          "width": 1000,
+          "height": 600
+        },
+        "objects": [
+          {
+            "type": "rect",
+            "left": 40,
+            "top": 40,
+            "width": 920,
+            "height": 520,
+            "fill": null,
+            "stroke": "#0088cc",
+            "strokeWidth": 2
+          },
+          {
+            "type": "i-text",
+            "left": 100,
+            "top": 140,
+            "width": 450,
+            "height": 35,
+            "text": "ABC abc 123 · Città",
+            "fontFamily": "Arimo",
+            "fontSize": 21.166666666666668,
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "fill": "#000000",
+            "strokeWidth": 0,
+            "lineHeight": 1,
+            "title": "Testo piccolo",
+            "styles": {
+              "0": {
+                "0": {
+                  "fontSize": 10.583333333333334
+                },
+                "1": {
+                  "fontSize": 10.583333333333334
+                },
+                "2": {
+                  "fontSize": 10.583333333333334
+                }
+              }
+            }
+          },
+          {
+            "type": "i-text",
+            "left": 100,
+            "top": 300,
+            "width": 650,
+            "height": 45,
+            "text": "Corpo 6 pt · primi tre caratteri 3 pt",
+            "fontFamily": "Arimo",
+            "fontSize": 28.22222222222222,
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "fill": "#000000",
+            "strokeWidth": 0,
+            "lineHeight": 1
+          }
+        ]
+      }
+    }
+  ]
+}
