@@ -122,8 +122,8 @@ export function ObjectInspector({ allowColor = false, onProperties, object, revi
             <NumberField {...fields} label="Altezza (mm)" value={current.heightMm} min={0.01} max={1000} disabled={current.heightMm === 0} onChange={heightMm => patch({ heightMm, ...(ratioLocked ? { widthMm: heightMm * current.widthMm / current.heightMm } : {}) })}/>
           </>}
           {current.type === 'image' && visiblePixels && <>
-            <NumberField {...fields} label="Larghezza (mm)" value={current.widthMm} min={0.001} max={1000} onChange={widthMm => patch({ widthMm, heightMm: widthMm * visiblePixels.heightPx / visiblePixels.widthPx })}/>
-            <NumberField {...fields} label="Altezza (mm)" value={current.heightMm} min={0.001} max={1000} onChange={heightMm => patch({ heightMm, widthMm: heightMm * visiblePixels.widthPx / visiblePixels.heightPx })}/>
+            <NumberField {...fields} label="Larghezza (mm)" value={current.widthMm} min={0.001} max={1000} onChange={widthMm => patch({ widthMm, heightMm: widthMm * current.heightMm / current.widthMm })}/>
+            <NumberField {...fields} label="Altezza (mm)" value={current.heightMm} min={0.001} max={1000} onChange={heightMm => patch({ heightMm, widthMm: heightMm * current.widthMm / current.heightMm })}/>
           </>}
           {current.type === 'rect' && <>
             <NumberField {...fields} label="Larghezza (mm)" value={current.widthMm} min={0.01} max={1000} onChange={widthMm => patch({ widthMm, ...(ratioLocked ? { heightMm: widthMm * current.heightMm / current.widthMm } : {}) })}/>
@@ -136,7 +136,7 @@ export function ObjectInspector({ allowColor = false, onProperties, object, revi
         {(current.type === 'rect' || current.type === 'ellipse' || current.type === 'path' || current.type === 'bezier') && <label className="ratio-toggle"><input type="checkbox" checked={ratioLocked} onChange={event => setRatioLocked(event.target.checked)}/> Mantieni proporzioni</label>}
         </fieldset>
         {current.type === 'path' && <><label className="ratio-toggle"><input type="checkbox" checked={current.closed} disabled={current.points.length < 3 || current.widthMm === 0 || current.heightMm === 0} onChange={event => patch({ closed: event.target.checked, ...(!event.target.checked ? { fill: 'none' } : {}) }, true)}/> Chiudi tracciato</label><p className="caption">{current.points.length} punti vettoriali · giunzioni ed estremità arrotondate.</p></>}
-        {current.type === 'image' && visiblePixels && <p className="caption">Proporzioni dei pixel visibili mantenute. Risoluzione effettiva: {(visiblePixels.widthPx / current.widthMm * 25.4).toFixed(0)} dpi. Pixel orientati {current.source.pixelWidth} × {current.source.pixelHeight} px. {current.source.mime === 'image/jpeg' ? `Originale JPEG · orientamento EXIF ${jpegInfo(current.source.dataUrl).orientation}, normalizzato localmente.` : 'Originale PNG.'}</p>}
+        {current.type === 'image' && visiblePixels && <p className="caption">Proporzioni dell’immagine mantenute. Risoluzione effettiva: {(visiblePixels.widthPx / current.widthMm * 25.4).toFixed(0)} dpi. Pixel orientati {current.source.pixelWidth} × {current.source.pixelHeight} px. {current.source.mime === 'image/jpeg' ? `Originale JPEG · orientamento EXIF ${jpegInfo(current.source.dataUrl).orientation}, normalizzato localmente.` : 'Originale PNG.'}</p>}
         <p className="caption inspector-anchor"><span aria-hidden="true">⊙</span> Ancoraggio al centro · X/Y del centro. Dimensioni delle forme senza contorno.</p>
       </>}
       {section === 'text' && current.type === 'text' && <>

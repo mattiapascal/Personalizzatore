@@ -4,6 +4,12 @@ import { TEST_FONT_ASSETS } from './helpers/editor-fonts';
 import { createDocument, DocumentSchema, DocumentStore } from '../src/editor/model';
 const base={text:'È😀A\nBC',fontFamily:'Arimo',fontWeight:'normal',fontStyle:'normal',fontSize:40,fill:'#000000',textAlign:'center'};
 const resolve=async(request:{family:string;weight:number;italic:boolean})=>{const font=TEST_FONT_ASSETS.find(font=>font.familyGroup===request.family&&font.weight===request.weight&&font.italic===request.italic);if(!font)throw Error('File esatto mancante');return font;};
+it('segnala gli stili di inserimento esattamente a fine riga senza richiedere font non usati; indici vuoti o fuori riga restano bloccanti',async()=>{
+ let requests=0;const result=await pitchprintTextStyles({...base,styles:{0:{3:{fontFamily:'Font mai dipinto',fontSize:9999}},1:{2:{fill:'red'}}}},.2,false,async()=>{requests++;throw Error('Non deve risolvere font senza caratteri');});
+ expect(result.ignoredInsertionStyles).toBe(2);expect(result.characterStyles).toEqual([]);expect(result.nativeStyles).toEqual({});expect(requests).toBe(0);
+ for(const styles of [{0:{4:{fill:'red'}}},{2:{0:{fill:'red'}}},{0:{3:{unknown:true}}}])await expect(pitchprintTextStyles({...base,styles},.2,false,resolve)).rejects.toThrow();
+ await expect(pitchprintTextStyles({...base,text:'A\n\nB',styles:{1:{0:{fontSize:70}}}},.2,false,resolve)).rejects.toThrow('Indice');
+});
 it('stili Unicode per righe: eredita font, risolve varianti esatte, converte mm/pt e conserva false',async()=>{
  const requests:any[]=[];const result=await pitchprintTextStyles({...base,underline:true,styles:{0:{1:{fontWeight:'bold',fontStyle:'italic',fontSize:50,fill:'#08c',underline:false,stroke:null,strokeWidth:1,deltaY:0,textBackgroundColor:'',textAlign:'center'}},1:{0:{fontFamily:'Cousine',fontStyle:'italic',overline:true},1:{underline:'underline'}}}},.2,false,async request=>{requests.push(request);return resolve(request);});
  expect(requests).toEqual([{family:'Arimo',weight:700,italic:true},{family:'Cousine',weight:400,italic:true}]);

@@ -1,0 +1,100 @@
+{
+  "colorMode": "color",
+  "schemaVersion": 2,
+  "documentId": "99999999-9999-4999-a999-999999999999",
+  "revision": 4,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 160,
+    "height": 100
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "pp-1",
+      "type": "image",
+      "xMm": 12.659999999999993,
+      "yMm": 13.453093812375247,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": -180,
+      "widthMm": 42.24,
+      "heightMm": 22.994011976047904,
+      "source": {
+        "id": "image-pitchprint-test-1",
+        "mime": "image/png",
+        "pixelWidth": 64,
+        "pixelHeight": 48,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAZElEQVR4nO3QMQEAIAgAMEMQwiTehiWEIeyiMTjYsQIbd8arFOuWGgIECBAgQIAAAQIECBAgQIAAAQIECBAgQECjgMj9KuU8pQQIECBAgAABAgQIECBAgAABAgQIECBAgIBGAR/hpBOWQxAMKAAAAABJRU5ErkJggg=="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "pixelAspectRatio": 1.37775,
+      "crop": {
+        "leftPx": 0,
+        "topPx": 0,
+        "widthPx": 64,
+        "heightPx": 48
+      },
+      "flipY": true
+    },
+    {
+      "id": "pp-2",
+      "type": "image",
+      "xMm": 73.2,
+      "yMm": 7.984031936127742,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 25.6,
+      "heightMm": 23.952095808383234,
+      "source": {
+        "id": "image-pitchprint-test-2",
+        "mime": "image/png",
+        "pixelWidth": 64,
+        "pixelHeight": 48,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAZElEQVR4nO3QMQEAIAgAMEMQwiTehiWEIeyiMTjYsQIbd8arFOuWGgIECBAgQIAAAQIECBAgQIAAAQIECBAgQECjgMj9KuU8pQQIECBAgAABAgQIECBAgAABAgQIECBAgIBGAR/hpBOWQxAMKAAAAABJRU5ErkJggg=="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "pixelAspectRatio": 0.8016000000000001,
+      "crop": {
+        "leftPx": 16,
+        "topPx": 12,
+        "widthPx": 32,
+        "heightPx": 24
+      },
+      "flipY": true
+    }
+  ]
+}

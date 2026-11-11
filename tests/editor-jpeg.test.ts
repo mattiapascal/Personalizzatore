@@ -24,7 +24,7 @@ describe('JPEG locali con originali conservati e orientamento esplicito', () => 
   it('rifiuta CMYK, precisione/marker e dimensioni non supportati', () => {
     expect(() => info(testJpeg('cmyk'))).toThrow('CMYK');
     const source = testJpeg(), sof = source.indexOf(Buffer.from([0xff, 0xc0])); expect(sof).toBeGreaterThan(0);
-    for (const edit of [(b: Buffer) => { b[sof + 1] = 0xc3; }, (b: Buffer) => { b[sof + 4] = 12; }, (b: Buffer) => { b.writeUInt16BE(2000, sof + 5); b.writeUInt16BE(1000, sof + 7); }, (b: Buffer) => { b.writeUInt16BE(0, sof + 5); }, (b: Buffer) => { b[sof + 11] = 0; }]) { const bytes = Buffer.from(source); edit(bytes); expect(() => info(bytes)).toThrow(); }
+    for (const edit of [(b: Buffer) => { b[sof + 1] = 0xc3; }, (b: Buffer) => { b[sof + 4] = 12; }, (b: Buffer) => { b.writeUInt16BE(3000, sof + 5); b.writeUInt16BE(2000, sof + 7); }, (b: Buffer) => { b.writeUInt16BE(0, sof + 5); }, (b: Buffer) => { b[sof + 11] = 0; }]) { const bytes = Buffer.from(source); edit(bytes); expect(() => info(bytes)).toThrow(); }
   });
   it('rifiuta directory EXIF, offset, tipi e orientamenti ambigui', () => {
     for (const orientation of [0, 9, 65535]) expect(() => info(jpegWithExif(testJpeg(), orientation))).toThrow('Orientamento');

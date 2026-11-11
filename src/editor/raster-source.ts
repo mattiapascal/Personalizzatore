@@ -24,7 +24,7 @@ export function pngInfo(dataUrl: string): PngInfo {
   if ([137, 80, 78, 71, 13, 10, 26, 10].some((value, index) => bytes[index] !== value) || view.getUint32(8) !== 13 || String.fromCharCode(...bytes.subarray(12, 16)) !== 'IHDR') throw new Error('Firma o intestazione PNG non valida');
   if (crc32(bytes.subarray(12, 29)) !== view.getUint32(29)) throw new Error('Intestazione PNG corrotta');
   const width = view.getUint32(16), height = view.getUint32(20);
-  if (!width || !height || width > MAX_RASTER_SIDE || height > MAX_RASTER_SIDE || width * height > MAX_RASTER_PIXELS) throw new Error('PNG oltre il limite TEST: 1.000.000 pixel e lato massimo 4096 pixel');
+  if (!width || !height || width > MAX_RASTER_SIDE || height > MAX_RASTER_SIDE || width * height > MAX_RASTER_PIXELS) throw new Error('PNG oltre il limite TEST: 4.000.000 pixel e lato massimo 4096 pixel');
   const depths: Record<number, number[]> = { 0: [1, 2, 4, 8, 16], 2: [8, 16], 3: [1, 2, 4, 8], 4: [8, 16], 6: [8, 16] };
   if (!depths[bytes[25]!] ?.includes(bytes[24]!) || bytes[26] !== 0 || bytes[27] !== 0 || bytes[28]! > 1) throw new Error('Formato dei pixel PNG non valido');
   let offset = 8, ended = false, imageData = false;

@@ -15,7 +15,7 @@ describe('sorgenti PNG locali controllate', () => {
   it('rifiuta intestazioni corrotte, dimensioni dichiarate false e immagini troppo grandi', () => {
     const bytes = testPng(); bytes[16] = 1; expect(() => pngInfo(dataUrl(bytes))).toThrow('corrotta');
     const source = rasterSourceFromBytes('asset-test', testPng()); expect(() => RasterSourceSchema.parse({ ...source, pixelWidth: 3 })).toThrow('Dimensioni');
-    const large = testPng(); large.writeUInt32BE(2000, 16); large.writeUInt32BE(1000, 20); large.writeUInt32BE(crc32(large.subarray(12, 29)), 29); expect(() => pngInfo(dataUrl(large))).toThrow('1.000.000');
+    const large = testPng(); large.writeUInt32BE(3000, 16); large.writeUInt32BE(2000, 20); large.writeUInt32BE(crc32(large.subarray(12, 29)), 29); expect(() => pngInfo(dataUrl(large))).toThrow('4.000.000');
   });
   it('rifiuta animazioni, EXIF, chunk troncati e dati aggiunti dopo IEND', () => {
     expect(() => pngInfo(dataUrl(testPng(2, 2, undefined, { kind: 'acTL', data: new Uint8Array(8) })))).toThrow('animati');

@@ -1,0 +1,50 @@
+{
+  "title": "TEST · immagini originali e ritagli PitchPrint",
+  "unit": "mm",
+  "pages": [
+    {
+      "pageData": {
+        "fWidth": 160,
+        "fHeight": 100
+      },
+      "canvas": {
+        "clipPath": {
+          "left": 20,
+          "top": 10,
+          "width": 800,
+          "height": 501
+        },
+        "objects": [
+          {
+            "type": "image",
+            "width": 64,
+            "height": 48,
+            "left": 80,
+            "top": 75,
+            "scaleX": 3.3,
+            "scaleY": 2.4,
+            "strokeWidth": 2,
+            "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGElEQVR4nA3BAQEAAAjDIJo/+hSgbanyDkO8B3iXppb5AAAAAElFTkSuQmCC",
+            "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAZElEQVR4nO3QMQEAIAgAMEMQwiTehiWEIeyiMTjYsQIbd8arFOuWGgIECBAgQIAAAQIECBAgQIAAAQIECBAgQECjgMj9KuU8pQQIECBAgAABAgQIECBAgAABAgQIECBAgIBGAR/hpBOWQxAMKAAAAABJRU5ErkJggg==",
+            "flipX": true
+          },
+          {
+            "type": "image",
+            "width": 32,
+            "height": 24,
+            "cropX": 16,
+            "cropY": 12,
+            "left": 450,
+            "top": 110,
+            "scaleX": 4,
+            "scaleY": 5,
+            "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAZElEQVR4nO3QMQEAIAgAMEMQwiTehiWEIeyiMTjYsQIbd8arFOuWGgIECBAgQIAAAQIECBAgQIAAAQIECBAgQECjgMj9KuU8pQQIECBAgAABAgQIECBAgAABAgQIECBAgIBGAR/hpBOWQxAMKAAAAABJRU5ErkJggg==",
+            "originX": "center",
+            "originY": "center",
+            "flipY": true
+          }
+        ]
+      }
+    }
+  ]
+}

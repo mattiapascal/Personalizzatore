@@ -45,7 +45,7 @@ function parse(dataUrl: string): Parsed {
       if (rawWidth || size < 11) throw new Error('Intestazione JPEG duplicata o troncata');
       const count = bytes[data + 5]!; if (bytes[data] !== 8 || ![1, 3].includes(count)) throw new Error('JPEG supportati: 8 bit grigi/RGB; CMYK e altre codifiche non supportati');
       if (size !== 8 + count * 3) throw new Error('Componenti JPEG non validi'); rawHeight = view.getUint16(data + 1); rawWidth = view.getUint16(data + 3); progressive = marker === 0xc2;
-      if (!rawWidth || !rawHeight || rawWidth > MAX_RASTER_SIDE || rawHeight > MAX_RASTER_SIDE || rawWidth * rawHeight > MAX_RASTER_PIXELS) throw new Error('JPEG oltre il limite TEST: 1.000.000 pixel e lato massimo 4096 pixel');
+      if (!rawWidth || !rawHeight || rawWidth > MAX_RASTER_SIDE || rawHeight > MAX_RASTER_SIDE || rawWidth * rawHeight > MAX_RASTER_PIXELS) throw new Error('JPEG oltre il limite TEST: 4.000.000 pixel e lato massimo 4096 pixel');
       for (let i = 0; i < count; i++) {
         const at = data + 6 + i * 3, id = bytes[at]!, sampling = bytes[at + 1]!, x = sampling >> 4, y = sampling & 15;
         if (components.has(id) || x < 1 || x > 4 || y < 1 || y > 4 || bytes[at + 2]! > 3) throw new Error('Campionamento JPEG non valido'); components.add(id);

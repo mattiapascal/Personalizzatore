@@ -14,8 +14,8 @@ export function changeRasterCrop(object: ImageObject, change: Partial<RasterCrop
   const before = checkedRasterCrop(object.source, object.crop), next = { ...before, ...change };
   if (change.leftPx !== undefined && change.widthPx === undefined) next.widthPx = Math.min(before.widthPx, object.source.pixelWidth - change.leftPx);
   if (change.topPx !== undefined && change.heightPx === undefined) next.heightPx = Math.min(before.heightPx, object.source.pixelHeight - change.topPx);
-  const crop = checkedRasterCrop(object.source, next), mmPerPixel = object.widthMm / before.widthPx;
-  return { ...object, crop, widthMm: crop.widthPx * mmPerPixel, heightMm: crop.heightPx * mmPerPixel };
+  const crop = checkedRasterCrop(object.source, next), mmPerPixelX = object.widthMm / before.widthPx, mmPerPixelY = object.heightMm / before.heightPx;
+  return { ...object, crop, widthMm: crop.widthPx * mmPerPixelX, heightMm: crop.heightPx * mmPerPixelY };
 }
 
 export interface RasterInsets { left: number; right: number; top: number; bottom: number; }

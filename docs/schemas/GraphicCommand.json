@@ -2317,6 +2317,11 @@
                         ],
                         "additionalProperties": false
                       },
+                      "pixelAspectRatio": {
+                        "type": "number",
+                        "minimum": 0.01,
+                        "maximum": 100
+                      },
                       "crop": {
                         "type": "object",
                         "properties": {
@@ -5180,6 +5185,11 @@
                       ],
                       "additionalProperties": false
                     },
+                    "pixelAspectRatio": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 100
+                    },
                     "crop": {
                       "type": "object",
                       "properties": {
@@ -7679,6 +7689,11 @@
                           "whiteTransparent"
                         ],
                         "additionalProperties": false
+                      },
+                      "pixelAspectRatio": {
+                        "type": "number",
+                        "minimum": 0.01,
+                        "maximum": 100
                       },
                       "crop": {
                         "type": "object",
@@ -10241,6 +10256,11 @@
                         "whiteTransparent"
                       ],
                       "additionalProperties": false
+                    },
+                    "pixelAspectRatio": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 100
                     },
                     "crop": {
                       "type": "object",
