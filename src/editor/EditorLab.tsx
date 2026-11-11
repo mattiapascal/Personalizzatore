@@ -100,6 +100,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const [selectionEpoch, setSelectionEpoch] = useState(0), [nodeMode, setNodeMode] = useState(false), [cropMode, setCropMode] = useState(false);
   const [polylineCount, setPolylineCount] = useState(0);
   const [error, setError] = useState('');
+  const [fontRendering, setFontRendering] = useState<{blocked:readonly string[];pending:readonly string[]}>({blocked:[],pending:[]});
   const [eventLog, setEventLog] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectedId = selectedIds.length === 1 ? selectedIds[0]! : null;
@@ -289,6 +290,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       (objectIds, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'deleteObjects', objectId: objectIds[0], expectedRevision, arguments: { objectIds } }, 'manual')),
       (objectIds, args, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'transformObjects', objectId: objectIds[0], expectedRevision, arguments: { ...args, objectIds } }, 'manual')));
     view.setRole(policyRole);adapter.current = view;
+    view.protectTextRendering((blocked,pending)=>setFontRendering(current=>current.blocked.join('\0')===blocked.join('\0')&&current.pending.join('\0')===pending.join('\0')?current:{blocked,pending}));
     view.setNodeDragHandlers((source, index, point, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', objectId: source.id, expectedRevision, arguments: { object: movePathNode(source, index, point, measureFabric) } }, 'manual')), active => { setDrawing(active); onEditingChange(active); });
     view.setTextPathHandler((object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'setTextPath', objectId: object.id, expectedRevision, arguments: { offsetMm: object.textPath!.offsetMm } }, 'manual')));
     view.setRasterCropHandler((object, expectedRevision) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', objectId: object.id, expectedRevision, arguments: objectArguments(object) }, 'manual')));
@@ -403,6 +405,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       <p className="caption">Area utile da confermare. Margine TEST 1 mm, testo ≥ 7 pt e nero/bianco sono vincoli di laboratorio, non specifiche produttive del modello.</p>
     </>}
     stage={<>
+      {!!(fontRendering.blocked.length||fontRendering.pending.length)&&<div className="notice canvas-font-warning" role="status" data-testid="font-render-warning"><p>{fontRendering.blocked.length?'I riquadri con la croce indicano testi con font da correggere. Il contenuto originale è conservato: scegli un font compatibile nell’ispettore o usa «Font del progetto» negli strumenti.':'Controllo dei font in corso. Il testo originale è conservato; comparirà quando il controllo sarà terminato.'}</p>{!!fontRendering.blocked.length&&<button type="button" disabled={assetBusy} onClick={()=>adapter.current?.retryTextRendering()}>Ricontrolla visualizzazione font</button>}</div>}
       <InkPreviewFilter id={inkFilterId} color={doc.inkColor??'black'}/>
       <div className="canvas-scroll" style={{'--editor-imprint-filter':doc.colorMode!=='color'&&doc.inkColor&&doc.inkColor!=='black'?`url(#${inkFilterId})`:'none'}as CSSProperties} inert={conflict || assetBusy || archiveBusy} onPointerDown={event => {
         if (event.button !== 0 || assetBusy || conflict || (event.target instanceof Element && event.target.closest('.canvas-container'))) return;
@@ -502,7 +505,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       {import.meta.env.DEV && (new URLSearchParams(window.location.search).has('configurations') || new URLSearchParams(window.location.search).has('configuration')) && <ConfigurationPanel api={workflowApi}/>}
     </>}
     project={<>
-      {projectFonts.dialog}{mode!=='customer'&&<FontCheckPanel document={doc} busy={editing || drawing || assetBusy || archiveBusy} onOpen={() => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).catch(cause => setError(cause.message)); }} onRepair={(issue, fontId, expectedRevision) => prepareAndAct(async store => {
+      {projectFonts.dialog}{(mode!=='customer'||!!fontRendering.blocked.length)&&<FontCheckPanel document={doc} busy={editing || drawing || assetBusy || archiveBusy} onOpen={() => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).catch(cause => setError(cause.message)); }} onRepair={(issue, fontId, expectedRevision) => prepareAndAct(async store => {
         if (store.document.revision !== expectedRevision) throw new Error('Revisione grafica obsoleta: rileggi la segnalazione.');
         const asset = registeredFontAsset(fontId); if (!asset) throw new Error('File font non caricato dalla libreria.');
         const command = await missingCharacterFontCommand(store.document, issue, asset, measureFabric);

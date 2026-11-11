@@ -24,6 +24,7 @@ import { FreehandDrawingController, type FreehandCallbacks } from './freehand-dr
 import { strokeGeometry } from './path-geometry';
 import { assertFontAvailable, renderFontFamily, canonicalFontFamily, embedSvgFonts, loadFontAssets } from './fonts';
 import { assertOutputFonts } from './font-preflight';
+import { TextRenderGuard } from './text-render-guard';
 import { tintImprintPixels } from './ink';
 import { pathWorldPoints, type PathObject } from './path-nodes';
 import { PathNodeControls, polyNodeScenePoint } from './path-node-controls';
@@ -216,6 +217,39 @@ export class FabricAdapter {
   private readonly cancelDrag: (event: KeyboardEvent) => void;
   private publishSelection: () => void;
   private publishObjectSelection: () => void;
+  private textRenderGuard?: TextRenderGuard;
+  private fontRenderStatus?: (blocked: readonly string[], pending: readonly string[]) => void;
+  /** Interactive scenes opt in; output uses the separate strict preflight. */
+  protectTextRendering(onStatus?: (blocked: readonly string[], pending: readonly string[]) => void): void {
+    this.textRenderGuard?.dispose(); this.fontRenderStatus = onStatus;
+    this.textRenderGuard = new TextRenderGuard(() => {
+      if (this.disposed) return;
+      this.publishFontRenderStatus(); this.canvas.requestRenderAll();
+    });
+  }
+  retryTextRendering(): void { this.textRenderGuard?.retry(); this.publishFontRenderStatus(); this.canvas.requestRenderAll(); }
+  private textFontProbe(target: EditorTextBox, source: TextObject): TextObject {
+    let line = 0, column = 0;
+    const styles = Array.from(target.text, character => {
+      if (character === '\n') { line++; column = 0; return {}; }
+      const style = target.styles[line]?.[column++];
+      return { ...(style?.fontFamily ? { fontFamily: canonicalFontFamily(style.fontFamily) } : {}), ...(style?.fontWeight ? { fontWeight: style.fontWeight as 'normal' | 'bold' } : {}), ...(style?.fontStyle ? { fontStyle: style.fontStyle as 'normal' | 'italic' } : {}) };
+    });
+    return { ...source, text: target.text, fontFamily: canonicalFontFamily(target.fontFamily)!, fontWeight: target.fontWeight as 'normal' | 'bold', fontStyle: target.fontStyle as 'normal' | 'italic', characterStyles: compressStyles(styles) };
+  }
+  private publishFontRenderStatus(): void {
+    if (!this.fontRenderStatus || !this.document || !this.textRenderGuard) return;
+    const blocked: string[] = [], pending: string[] = [];
+    const visit = (objects: readonly FabricObject[]) => { for (const object of objects) {
+      if (object instanceof Group) visit(object.getObjects());
+      else if (object instanceof EditorTextBox) {
+        const source = this.sourceByObject.get(object); if (source?.type !== 'text') continue;
+        const status = this.textRenderGuard!.status(this.textFontProbe(object, source), this.document!.fontAssets);
+        if (status === 'blocked') blocked.push(source.id); else if (status === 'pending') pending.push(source.id);
+      }
+    } };
+    visit(this.canvas.getObjects()); this.fontRenderStatus(blocked, pending);
+  }
   constructor(element: HTMLCanvasElement, revision: () => number, onMove: (id: string, xMm: number, yMm: number, expectedRevision: number) => void, onText?: (id: string, object: TextObject, expectedRevision: number) => void, onEditing?: (editing: boolean) => void, onSelect?: (id: string | null) => void, onTransform?: (id: string, args: TransformArguments, expectedRevision: number) => void, onDeleteDrag?: (id: string, expectedRevision: number) => void, onTrash?: (visible: boolean) => void, onCharacterSelection?: (selection: CharacterSelection | null) => void, onSelection?: (ids: string[]) => void, onMoveSelection?: (ids: string[], deltaXmm: number, deltaYmm: number, revision: number) => void, onDeleteSelection?: (ids: string[], revision: number) => void, onTransformSelection?: (ids: string[], args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => void) {
     this.canvas = new Canvas(element, { selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
     this.canvas.upperCanvasEl.tabIndex = 0; this.canvas.upperCanvasEl.setAttribute('aria-label', 'Area grafica interattiva');
@@ -238,7 +272,7 @@ export class FabricAdapter {
       onCharacterSelection?.(snapshot && active instanceof EditorTextBox ? { ...selectionStyle(snapshot, active.selectionStart, active.selectionEnd), object: snapshot, spacing: textSpacingScope(snapshot, { start: active.selectionStart, end: active.selectionEnd }), line: lineSelection(snapshot, active.visualLineRanges(), active.selectionStart, active.selectionEnd) } : null);
     };
     this.canvas.on('text:selection:changed', this.publishSelection);
-    this.canvas.on('text:changed', this.publishSelection);
+    this.canvas.on('text:changed', () => { this.publishFontRenderStatus(); this.publishSelection(); });
     this.canvas.on('after:render', () => { this.drawGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide(); });
     let gestureRevision = revision(), gestureBounds = { left: 0, top: 0 }, gestureAngle = 0, gestureScale = 1;
     this.canvas.on('before:transform', ({ transform }) => { gestureRevision = revision(); gestureBounds = transform.target.getBoundingRect(); gestureAngle = transform.target.angle; gestureScale = transform.target.scaleX; this.cancelled = false; });
@@ -400,7 +434,9 @@ export class FabricAdapter {
         if (rendered.has(object.id)) continue;
         const group = rootGroupFor(document,object.id);
         const members = group ? document.objects.filter(object => group.objectIds.includes(object.id)) : [object];
-        const children = members.map(object => { const f = renderObject(editing?.pending && object.id === selectedId && object.type === 'text' ? editing.snapshot : object, true); this.idByObject.set(f, object.id); this.sourceByObject.set(f, object); this.membersByObject.set(f, [object.id]); rendered.add(object.id); return f; });
+        const children = members.map(object => { const f = renderObject(editing?.pending && object.id === selectedId && object.type === 'text' ? editing.snapshot : object, true); this.idByObject.set(f, object.id); this.sourceByObject.set(f, object); this.membersByObject.set(f, [object.id]); rendered.add(object.id);
+          if (f instanceof EditorTextBox && object.type === 'text' && this.textRenderGuard) f.textRenderPermission = () => this.textRenderGuard!.status(this.textFontProbe(f, object), document.fontAssets) === 'ready';
+          return f; });
         const root = group ? new Group(children, { originX: 'center', originY: 'center', strokeWidth: 0, objectCaching: false, subTargetCheck: false, interactive: false, perPixelTargetFind: true }) : children[0]!;
         if (group) selectionControls(root);
         this.membersByObject.set(root, members.map(object => object.id)); this.applyLocks(root,members.map(object=>object.id));this.canvas.add(root);
@@ -416,7 +452,8 @@ export class FabricAdapter {
         this.canvas.requestRenderAll();
       }
     } finally { this.rendering = false; }
-    this.configureNodeControls(); this.publishSelection();
+    this.textRenderGuard?.retain(new Set(document.objects.filter(object => object.type === 'text').map(object => object.id)));
+    this.publishFontRenderStatus(); this.configureNodeControls(); this.publishSelection();
   }
   setGuides(settings: GuideSettings): void {
     if (!Number.isFinite(settings.gridMm) || settings.gridMm < 0.1 || settings.gridMm > 10) throw new Error('Passo griglia non valido');
@@ -649,5 +686,5 @@ export class FabricAdapter {
     const active = this.canvas.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
   }
-  dispose(): void { this.disposed = true; this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
+  dispose(): void { this.disposed = true; this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
 }

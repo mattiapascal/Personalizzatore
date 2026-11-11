@@ -41,7 +41,7 @@ it('WOFF compresso usa la stessa cmap e limita l’espansione dichiarata',async(
 it('stile simulato su un font incorporato impedisce la conferma, anche in un solo run',async()=>{
  const doc=documentWith(await iconFont(),'\uea60'),text=doc.objects[0] as Extract<SceneObject,{type:'text'}>;
  text.characterStyles=[{start:0,end:1,style:{fontWeight:'bold'}}];await expect(assertDocumentFonts(doc)).rejects.toThrow('simulato');text.characterStyles=[{start:0,end:1,style:{fontWeight:'normal'}}];doc.fontAssets![0]!.weight=700;expect((await assertDocumentFonts(doc)).issues).toEqual([]);
- text.fontStyle='italic';await expect(assertDocumentFonts(doc)).rejects.toThrow('Variante font');text.characterStyles=[{start:0,end:1,style:{fontStyle:'normal'}}];expect((await assertDocumentFonts(doc)).issues).toEqual([]);
+ text.fontStyle='italic';await expect(assertDocumentFonts(doc)).rejects.toThrow('file dello stile');text.characterStyles=[{start:0,end:1,style:{fontStyle:'normal'}}];expect((await assertDocumentFonts(doc)).issues).toEqual([]);
 });
 
 it('output rigoroso: copertura sconosciuta e caratteri assenti sono bloccanti, senza alterare il documento',async()=>{

@@ -219,6 +219,11 @@
 .font-other-styles{margin:6px 0 10px}.font-other-styles>summary{cursor:pointer;color:#007bb9;font-size:13px}.font-other-styles[open]>summary{margin-bottom:8px}
 
 .editor-workspace[data-view-ready=false] .canvas-container { visibility: hidden; }
+.drawing-stage { position: relative; }
+.canvas-font-warning { position: absolute; z-index: 2; top: 8px; left: 12px; right: 12px; max-width: 640px; margin: 0 auto; padding: 8px 12px; box-shadow: 0 2px 10px #243e3322; }
+.canvas-font-warning p { margin: 0 0 4px; font-size: 12px; }
+.canvas-font-warning button { padding: 4px 8px; font-size: 11px; background: #fff; border-color: #b3d9ef; color: #006b9d; }
+.canvas-font-warning button:hover { background: #eaf6fc; }
 
 .font-repair-row { display: grid; gap: .5rem; margin: .6rem 0 1rem; }
 .font-repair-row .caption { margin: 0; }

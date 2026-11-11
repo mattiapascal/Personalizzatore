@@ -97,8 +97,8 @@ export function fontIssueMessage(issue: FontIssue): string {
     const characters = issue.characters ?? [];
     return `${issue.objectId}: il font «${issue.fontLabel}» non contiene ${characters.slice(0,8).map(describe).join(', ')}${characters.length > 8 ? ` e altri ${characters.length - 8} caratteri` : ''}. Scegli un font che li contenga per tutto il box o per i soli caratteri interessati.`;
   }
-  if (issue.kind === 'synthetic-style') return `${issue.objectId}: il grassetto o corsivo di «${issue.fontLabel}» è simulato. Scegli il file della variante nel menu Variante font.`;
-  return `${issue.objectId}: copertura dei caratteri di «${issue.fontLabel}» non verificabile automaticamente. Controlla l’anteprima; il testo non viene dichiarato verificato.`;
+  if (issue.kind === 'synthetic-style') return `${issue.objectId}: il grassetto o corsivo di «${issue.fontLabel}» è simulato. Scegli il file dello stile dall’ispettore.`;
+  return `${issue.objectId}: copertura dei caratteri di «${issue.fontLabel}» non verificabile automaticamente. Riprova il controllo oppure scegli un file con copertura verificabile.`;
 }
 
 export async function assertDocumentFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>,options:FontInspectionOptions={}): Promise<FontReport> {

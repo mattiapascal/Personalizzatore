@@ -1,5 +1,7 @@
 # Controllo font prima delle anteprime e dei file
 
+Seguito: [disegno dei glifi protetto anche nel canvas](iteration-editor-canvas-font-guard.md). Le note sotto sul canvas descrivono il limite di questo incremento precedente; il percorso delle metriche irrisolte resta ancora aperto.
+
 Incremento locale dell’11 novembre 2026, base `765e39e`.
 
 Piano: un preflight rigoroso condiviso per SVG/PNG/PDF, miniature, anteprime dei template e riepiloghi locali. Rifiutare file non incorporati, caratteri mancanti, stili simulati e copertura sconosciuta prima di produrre l’immagine. Preservare JSON, documento e revisione; la correzione guidata resta esplicita. Considerare soltanto gli elementi produttivi, escludendo i riferimenti.

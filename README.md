@@ -1,8 +1,10 @@
 # Assistente AI e personalizzatore Shopify
 
+**Nuovo incremento locale:** [disegno dei testi protetto nel canvas](docs/iteration-editor-canvas-font-guard.md). Font non verificati rappresentati da riquadri arancioni, anche durante la digitazione; testo originale, correzione e Undo/Redo conservati. 653 unitari, 99 regressioni browser e 8 controlli finali, 23 campioni, build/segreti passati. Metriche dei testi irrisolti ancora da proteggere. Nessuna modifica alle bozze personali o deploy.
+
 **Avvio e zoom ricontrollati:** il primo canvas contiene il progetto richiesto, senza bozza TEST transitoria; vista a tutto schermo centrata con circa 24 px di margine e adattamento a pannelli/formati diversi. Cinque browser mirati e controllo in sola lettura del template reale passati. [Dettagli](docs/iteration-editor-preview-cache-startup.md#ricontrollo-della-segnalazione-su-apertura-e-centratura).
 
-**Ultimo incremento locale:** [font verificati prima di anteprime e output](docs/iteration-editor-output-font-gate.md): SVG/PNG/PDF/miniature rifiutano glifi assenti, stili simulati e copertura sconosciuta; JSON e correzione esplicita restano disponibili. 648 unitari, cinque nuovi browser e 23 campioni passati; build/tipi/segreti verificati. Il canvas interattivo delle bozze errate resta da proteggere. Nessuna modifica ai progetti personali o deploy.
+**Incremento precedente:** [font verificati prima di anteprime e output](docs/iteration-editor-output-font-gate.md): SVG/PNG/PDF/miniature rifiutano glifi assenti, stili simulati e copertura sconosciuta; JSON e correzione esplicita restano disponibili. 648 unitari, cinque nuovi browser e 23 campioni passati; build/tipi/segreti verificati. Il disegno del canvas è stato poi protetto nell’incremento successivo; le metriche irrisolte restano aperte. Nessuna modifica ai progetti personali o deploy.
 
 **Incremento precedente:** [correzione guidata dei caratteri mancanti](docs/iteration-editor-font-repair.md), con file scelto esplicitamente e verificato, stili/centro/storico conservati. 645 unitari, 59 browser più due percorsi desktop/mobile e 23 campioni passati. Nessuna correzione alle bozze personali o deploy.
 

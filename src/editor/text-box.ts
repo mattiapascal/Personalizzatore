@@ -7,6 +7,15 @@ export interface TextFrame { width: number; height: number; autoWidth: boolean; 
 
 /** Vista Fabric del contenitore: testo originale e parametri restano nel documento. */
 export class EditorTextBox extends Textbox {
+  /** Interactive glyph drawing gate. Outputs have their own preflight. */
+  textRenderPermission?: () => boolean;
+  override _render(context: CanvasRenderingContext2D): void {
+    if (!this.textRenderPermission || this.textRenderPermission()) { super._render(context); return; }
+    const width = Math.max(1, this.width), height = Math.max(1, this.height);
+    context.save(); context.strokeStyle = '#a34b00'; context.fillStyle = '#fff0dc'; context.lineWidth = 1;
+    context.fillRect(-width / 2, -height / 2, width, height); context.strokeRect(-width / 2, -height / 2, width, height);
+    context.beginPath(); context.moveTo(-width / 2, -height / 2); context.lineTo(width / 2, height / 2); context.moveTo(width / 2, -height / 2); context.lineTo(-width / 2, height / 2); context.stroke(); context.restore();
+  }
   frame?: TextFrame;
   justificationSettings?: JustificationSettings;
   justificationResults: ReturnType<typeof justifySpacing>[] = [];
