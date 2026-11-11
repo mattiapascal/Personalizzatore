@@ -1,5 +1,8 @@
 # Template esclusi: priorità aggiornate — 11 novembre 2026
 
+> **12 novembre — importazioni locali:** archivio a **137 template**, venti nuove copie fra contorni espansi e [riconoscimento degli sfondi inattivi](iteration-editor-inactive-page-assets.md). Sei candidati che sembravano richiedere sfondi non classificati avevano in realtà descrittori inattivi: ora corretti e importati, compresi tre Attenti al cane. Il benchmark dei soli corpi con sfondi esclusi resta 279/370; il confronto completo è un controllo ulteriore. Altri 135 candidati con ruoli determinabili sono in preparazione, senza salvataggi aggiuntivi; 29 richiedono ancora classificazione/capacità. I fondi vettoriali attivi restano un incremento da implementare.
+
+
 > **Stato successivo — contorni espansi:** [resoconto](iteration-editor-stroke-outlines.md). **279/370 convertibili, 91 bloccati** con colori conservati e sfondi globalmente esclusi; prioritari **278/345 convertibili, 67 bloccati**. Nessuna regressione rispetto ai precedenti 259; recuperati anche i 21 arresti introdotti correttamente dagli assi fisici esatti. Quattordici nuove bozze complete salvate dopo confronto indipendente e backup, archivio a 131 template; Azienda Agricola è una copia derivata autorizzata, il suo sorgente grezzo resta bloccato. Sfondi SVG e ruoli ancora ignoti tengono sospesi sette dei nuovi candidati. Restano soprattutto glifi/font e maschere/opacità; i conteggi sotto sono storici.
 
 

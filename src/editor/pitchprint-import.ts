@@ -32,7 +32,7 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  if(page.canvas.background!==undefined&&page.canvas.background!==null&&page.canvas.background!==''){
   try{const paper=color(page.canvas.background,options.monochrome);if(paper!=='none'&&paper!=='#ffffff')paperColor=paper;}catch(e){if(!options.excludeBackground)throw e;warnings.push('Colore/riempimento del foglio escluso per scelta esplicita.');}
  }
- const pageImages=options.excludeBackground?[]:pitchprintPageImages(page.canvas,data,options.pageImages),pageObjects:SceneObject[]=[];
+ const pageImages=options.excludeBackground?[]:pitchprintPageImages(page.canvas,data,options.pageImages,warnings),pageObjects:SceneObject[]=[];
  if(options.excludeBackground){if(/https?:|data:image/.test(JSON.stringify([data.templateSource,data.foregroundSource,(data.fillData as any)?.assetData,page.canvas.backgroundImage,page.canvas.overlayImage]))||paperColor)warnings.push('Sfondo/materiale o primo piano escluso per scelta esplicita.');paperColor=undefined;}
  else{if(paperColor)warnings.push('Colore del foglio conservato nella grafica e nelle esportazioni.');for(const input of pageImages){const policy=options.pageImages?.[input.role]??'review',object=await convertPageImage(input,policy,{width,height},pageMatrix,options.monochrome,options.image,policy==='exclude'||policy==='review'?undefined:properties(input.native??{},warnings));if(object)pageObjects.push(object);warnings.push(`${input.role==='background'?'Sfondo':'Primo piano'}: ${policy==='print'?'conservato nella grafica produttiva':policy==='reference'?'conservato come riferimento materiale, escluso da esportazioni e miniature produttive':'escluso per scelta esplicita'}.`);}}
 

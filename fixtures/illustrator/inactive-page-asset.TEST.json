@@ -1,0 +1,83 @@
+{
+  "colorMode": "color",
+  "paperColor": "#fffeef",
+  "schemaVersion": 2,
+  "documentId": "a980cab2-792d-405d-bd31-c4838fd511b3",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 100,
+    "height": 60
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "pp-1",
+      "type": "rect",
+      "xMm": 5,
+      "yMm": 10,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 20,
+      "heightMm": 10,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fill": "#000000"
+    },
+    {
+      "id": "pp-foreground",
+      "type": "image",
+      "xMm": 0,
+      "yMm": 0,
+      "editor": {
+        "label": "Primo piano · grafica",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 100,
+      "heightMm": 60,
+      "source": {
+        "id": "pitch-page-8301351e-78b0-44f6-a356-15940b732bf8",
+        "mime": "image/png",
+        "pixelWidth": 20,
+        "pixelHeight": 12,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAYAAABiDJ37AAAAHElEQVR4nGNgaGD4T1UMIagERg0cNXB4G0hFDAAtNFnFVWjb6gAAAABJRU5ErkJggg=="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "pixelAspectRatio": 1,
+      "crop": {
+        "leftPx": 0,
+        "topPx": 0,
+        "widthPx": 20,
+        "heightPx": 12
+      },
+      "flipY": false
+    }
+  ]
+}
