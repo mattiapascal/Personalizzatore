@@ -147,7 +147,7 @@ export async function exportDocumentPng(document: GraphicDocument, dpi: PngDpi, 
       const context = element.getContext('2d'); if (!context) throw new Error('Esportazione PNG non disponibile');
       context.save(); context.setTransform(1, 0, 0, 1, 0, 0); context.globalCompositeOperation = 'destination-over'; context.fillStyle = '#ffffff'; context.fillRect(0, 0, size.width, size.height); context.restore();
     }
-    if(document.inkColor&&document.inkColor!=='black'){const context=element.getContext('2d');if(!context)throw new Error('Anteprima colore non disponibile');const pixels=context.getImageData(0,0,size.width,size.height);tintImprintPixels(pixels.data,document.inkColor);context.putImageData(pixels,0,0);}
+    if(document.colorMode!=='color'&&document.inkColor&&document.inkColor!=='black'){const context=element.getContext('2d');if(!context)throw new Error('Anteprima colore non disponibile');const pixels=context.getImageData(0,0,size.width,size.height);tintImprintPixels(pixels.data,document.inkColor);context.putImageData(pixels,0,0);}
     const blob = await new Promise<Blob>((resolve, reject) => element.toBlob(value => value ? resolve(value) : reject(new Error('Il browser non ha generato il PNG')), 'image/png'));
     return new Blob([pngWithDpi(new Uint8Array(await blob.arrayBuffer()), dpi)], { type: 'image/png' });
   } finally { await output.dispose(); }

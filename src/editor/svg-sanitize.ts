@@ -1,4 +1,4 @@
-import { Color } from 'fabric';
+import {canonicalPaint} from './paint';
 import { expandSvgReferences } from './svg-references';
 import { Parser } from 'htmlparser2';
 export const MAX_SVG_BYTES = 256 * 1024;
@@ -47,7 +47,7 @@ export function sanitizeSvg(source: string, monochrome = false, allowText = fals
         if (key === 'font-weight' && !['normal','bold','400','700'].includes(value) || key === 'font-style' && !['normal','italic'].includes(value) || key === 'text-anchor' && !['start','middle','end'].includes(value)) throw new Error('Stile testo SVG non supportato');
         if (['font-size','letter-spacing'].includes(key) && (!/^[+-]?(?:\d*\.\d+|\d+\.?\d*)(?:px|pt|mm)?$/.test(value) || Math.abs(parseFloat(value)) > 1000 || key === 'font-size' && parseFloat(value) <= 0)) throw new Error('Misura del testo SVG non valida');
         if (key === 'textLength' && (name !== 'text' || !/^(?:\d*\.\d+|\d+\.?\d*)$/.test(value) || Number(value) <= 0 || Number(value) > 10000) || key === 'lengthAdjust' && value !== 'spacingAndGlyphs') throw new Error('Dilatazione del testo SVG non supportata');
-        if (['fill','stroke','color'].includes(key) && value !== 'none') { const color = new Color(value), [r,g,b,a] = color.getSource(); if (color.isUnrecognised || a !== 1) throw new Error('Colore o opacità SVG non supportati'); if (r===g && g===b && (r===0 || r===255)) attrs[key]=r===0?'#000000':'#ffffff'; else if (monochrome) attrs[key]='#000000'; else throw new Error('SVG a colori: attiva la conversione al nero per il profilo timbro'); }
+        if (['fill','stroke','color'].includes(key) && value !== 'none') attrs[key] = canonicalPaint(value, monochrome);
         if (key === 'clipPathUnits' && value !== 'userSpaceOnUse') throw new Error('Ritaglio SVG con unità non supportate');
         if (['opacity', 'fill-opacity', 'stroke-opacity'].includes(key) && Number(value) !== 1) throw new Error('Opacità SVG parziale non ancora supportata');
         if (key === 'stroke-dasharray' && value !== 'none' || key === 'stroke-dashoffset' && Number(value) !== 0) throw new Error('Tratteggio SVG personalizzato non ancora supportato');

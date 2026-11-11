@@ -2,13 +2,24 @@
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.
 
-## Proprietà e gerarchia dei gruppi — ultimo incremento verificato
+## 117 template PitchPrint importati con colori originali
+
+[Comportamento e prove](iteration-editor-pitchprint-colors.md). Dopo l’autorizzazione del titolare sono stati salvati **117 template** nel backend locale: 37 con pitture a colori, 79 vettoriali già B/N e uno con immagine originale. Tutti con tag **Da verificare**, nessun prodotto o variante associati. Sfondo/materiale e primo piano esclusi come indicato nel piano; sorgenti originali conservati. Archivio da revisione 247 a 364, 119 record totali: i due precedenti sono composizioni cliente, entrambe invariate. File font invariati; backup privato verificato prima dell’importazione.
+
+[Apri l’elenco Template](http://127.0.0.1:5173/editor/admin?section=template), scegli una voce e **Apri nell’editor**. Puoi filtrare con il tag «Da verificare». Le miniature vengono preparate progressivamente. L’assenza di associazioni commerciali è voluta in questa fase.
+
+Il documento supporta colori RGB opachi e immagini originali nei progetti a colori; le montature timbro mantengono la validazione monocromatica. Colore modificabile dall’ispettore tramite gli stessi comandi manuali/AI. Nessuna conversione automatica della grafica a colori quando si tenta un’associazione incompatibile. 633 unitari, build/schemi/segreti, 376 casi browser verificati tra esecuzione iniziale e completamento, 13 regressioni pubbliche e 20 campioni passati. Illustrator resta da collaudare; nessun deploy.
+
+Verifica sull’archivio reale in sola lettura: **117/117 riaperti e riesportati in SVG**, zero errori; miniature e apertura dall’elenco controllate. Controllo font distinto: **95 senza segnalazioni automatiche, 20 con simboli assenti nel font dichiarato, due con copertura da verificare**. Nessuna sostituzione dei file; elenco privato con link in `.local/pitchprint-migration/import-plans/template-importati-font-da-verificare.md`. Tutte le bozze richiedono comunque revisione visiva e produttiva.
+
+## Proprietà e gerarchia dei gruppi — incremento precedente
+
 
 [Contratto e prove](iteration-editor-group-properties.md): label, priorità, annidamento e gruppi con un solo elemento conservati nel documento. Ispettore amministrativo del gruppo e sottogruppi; blocchi/riferimenti ereditati, copia/incolla e archivio con rimappatura completa. Il modulo può aggiornare i contenuti testuali dei figli senza separare il gruppo.
 
 **627 unitari / 93 file, build/segreti, 374 browser completi, 13 regressioni pubbliche e 20 artefatti passati.** Corretti anche apertura del pannello fissaggi, recupero JSON con backend offline e controllo di tutti i membri bloccati nei comandi manuali/AI. Analisi reale senza scritture: **112 → 117/370 convertibili**, cinque recuperati e nessun caso perso. I contenitori con label/ordine non sono più un blocco; i 19 casi restanti tra i 24 precedentemente fermati incontrano altri limiti espliciti. Anteprime aggiornate, nessun collaudo Illustrator o deploy.
 
-Le 117 conversioni TEST sono preparate come JSON privati: **79 già vettoriali B/N, 37 a colori convertite in B/N e una con immagine**, con sfondi/materiali esclusi. **Nessun template PitchPrint ancora salvato nell’archivio reale**: attesa la scelta esplicita del titolare fra le opzioni chiarite nel piano. I numeri di convertibilità non indicano template già visibili nel backend.
+La preparazione B/N descritta nell’iterazione precedente è stata sostituita dalla riconversione a colori e dall’importazione effettiva riportata sopra. I numeri storici di convertibilità sotto non indicano ulteriori template già importati.
 
 ## Importazione dei gruppi PitchPrint
 

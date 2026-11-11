@@ -1,17 +1,22 @@
 import { z } from 'zod';
 import { analyzeRasterPixels } from './raster-analysis';
 export const RasterParametersSchema = z.strictObject({
+  mode: z.enum(['binary', 'original']).optional(),
   threshold: z.number().int().min(0).max(255), invert: z.boolean(), whiteTransparent: z.boolean(),
   method: z.enum(['threshold', 'ordered', 'diffusion']).optional(),
   brightness: z.number().finite().min(-100).max(100).optional(), contrast: z.number().finite().min(-100).max(100).optional(),
   backgroundRemoval: z.literal('luminance').optional(),
-});
+}).refine(params => params.mode !== 'original' || !params.backgroundRemoval && !params.invert && !params.whiteTransparent && !params.brightness && !params.contrast && (!params.method || params.method === 'threshold'), 'La modalità originale conserva i pixel senza elaborazioni bianco/nero');
 export type RasterParameters = z.infer<typeof RasterParametersSchema>;
 export const DEFAULT_RASTER: RasterParameters = { threshold: 128, invert: false, whiteTransparent: false };
 const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5] as const;
 /** Black ink with continuous opacity: white disappears, gray keeps proportional coverage. */
 export function rasterPixels(source: Uint8ClampedArray, raw: RasterParameters, width = source.length / 4): Uint8ClampedArray {
   const params = RasterParametersSchema.parse(raw);
+  if (params.mode === 'original') {
+    if (!Number.isInteger(width) || width <= 0 || source.length % 4 || source.length / 4 % width) throw new Error('Dimensioni RGBA non valide');
+    return source.slice();
+  }
   if (!params.backgroundRemoval) return binaryPixels(source, params, width);
   if (!Number.isInteger(width) || width <= 0 || source.length % 4 || source.length / 4 % width) throw new Error('Dimensioni RGBA non valide');
   const kind = analyzeRasterPixels(source).kind;

@@ -51,7 +51,7 @@ export async function prepareRasterSource(raw: RasterSource): Promise<void> {
   try { await promise; } finally { pending.delete(source.id); }
 }
 export function rasterCanvas(source: RasterSource, params: RasterParameters, rawCrop?: RasterCrop): HTMLCanvasElement {
-  assertRasterParameters(source, params); const crop = checkedRasterCrop(source, rawCrop), key = `${source.id}:${params.threshold}:${params.invert}:${params.whiteTransparent}:${params.backgroundRemoval ?? 'none'}:${params.method ?? "threshold"}:${params.brightness ?? 0}:${params.contrast ?? 0}:${crop.leftPx}:${crop.topPx}:${crop.widthPx}:${crop.heightPx}`, cached = derived.get(key);
+  assertRasterParameters(source, params); const crop = checkedRasterCrop(source, rawCrop), key = `${source.id}:${params.mode ?? "binary"}:${params.threshold}:${params.invert}:${params.whiteTransparent}:${params.backgroundRemoval ?? 'none'}:${params.method ?? "threshold"}:${params.brightness ?? 0}:${params.contrast ?? 0}:${crop.leftPx}:${crop.topPx}:${crop.widthPx}:${crop.heightPx}`, cached = derived.get(key);
   if (cached) { derived.delete(key); derived.set(key, cached); return cached; }
   const canvas = document.createElement('canvas'); canvas.width = crop.widthPx; canvas.height = crop.heightPx;
   const context = canvas.getContext('2d', { willReadFrequently: true }); if (!context) throw new Error('Elaborazione raster non disponibile in questo browser');

@@ -75,7 +75,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const pdfImportRef = useRef<HTMLInputElement>(null);
   const svgImportRef = useRef<HTMLInputElement>(null);
   const [importNotice, setImportNotice] = useState('');
-  const [vectorMonochrome, setVectorMonochrome] = useState(true);
+  const [vectorMonochrome, setVectorMonochrome] = useState(initialDocument?.colorMode !== 'color');
   const [importTextMode,setImportTextMode]=useState<'outlines'|'editable'>('outlines');
   const [fontNotice, setFontNotice] = useState('');
   const [archiveTitle, setArchiveTitle] = useState(initialTitle??''), [archiveKind, setArchiveKind] = useState<'composition' | 'template'>(initialKind), [archiveBusy, setArchiveBusy] = useState(false);
@@ -86,6 +86,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const adapter = useRef<FabricAdapter | null>(null);
   const storeRef = useRef<DocumentStore | null>(null);
   const [doc, setDoc] = useState<GraphicDocument>(() => initialDocument?parseGraphicDocument(initialDocument):createEditorDocument(product, catalogVersion));
+  useEffect(() => setVectorMonochrome(doc.colorMode !== 'color'), [doc.colorMode]);
   const firstProductEffect=useRef(true);
   const [sourceRecord,setSourceRecord]=useState<ArchiveRecord|null>(null),[sessionNotice,setSessionNotice]=useState(''),[sessionDialog,setSessionDialog]=useState<'reload'|'close'|null>(null),[savedStamp,setSavedStamp]=useState(()=>sessionDocumentKey(doc)),[savedMetadata,setSavedMetadata]=useState(()=>metadataKey(initialTitle??'',initialKind,initialTags?.join(', ')??''));
   const draftControl=useRef<DraftControl|null>(null),originalDocument=useRef<GraphicDocument>(structuredClone(doc)),leaving=useRef(false),sessionModal=useRef<HTMLDialogElement>(null);
@@ -178,7 +179,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       const source = rasterSourceFromBytes(`asset-${crypto.randomUUID()}`, new Uint8Array(await file.arrayBuffer())); await prepareRasterSource(source);
       const area = store.document.areaMm, scale = Math.min(Math.min(30, area.width - 4) / source.pixelWidth, Math.min(12, area.height - 4) / source.pixelHeight);
       const widthMm = source.pixelWidth * scale, heightMm = source.pixelHeight * scale;
-      const object: SceneObject = { id: objectId, type: 'image', source, raster: { ...DEFAULT_RASTER }, widthMm, heightMm, xMm: (area.width - widthMm) / 2, yMm: (area.height - heightMm) / 2 };
+      const object: SceneObject = { id: objectId, type: 'image', source, raster: { ...DEFAULT_RASTER, ...(store.document.colorMode==='color'?{mode:'original' as const}:{}) }, widthMm, heightMm, xMm: (area.width - widthMm) / 2, yMm: (area.height - heightMm) / 2 };
       const expectedRevision = store.document.revision;
       return () => store.dispatch({ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision, arguments: objectArguments(object) }, 'manual');
     }, objectId);
@@ -411,7 +412,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     </>}
     stage={<>
       <InkPreviewFilter id={inkFilterId} color={doc.inkColor??'black'}/>
-      <div className="canvas-scroll" style={{'--editor-imprint-filter':doc.inkColor&&doc.inkColor!=='black'?`url(#${inkFilterId})`:'none'}as CSSProperties} inert={conflict || assetBusy || archiveBusy} onPointerDown={event => {
+      <div className="canvas-scroll" style={{'--editor-imprint-filter':doc.colorMode!=='color'&&doc.inkColor&&doc.inkColor!=='black'?`url(#${inkFilterId})`:'none'}as CSSProperties} inert={conflict || assetBusy || archiveBusy} onPointerDown={event => {
         if (event.button !== 0 || assetBusy || conflict || (event.target instanceof Element && event.target.closest('.canvas-container'))) return;
         adapter.current?.activateSelectionTool(); setDrawingTool(null); setDrawing(false); setNodeMode(false); select(null); adapter.current?.selectObjects([]);
       }}><canvas ref={canvasRef} aria-label="Canvas grafico del laboratorio"/></div>
@@ -464,7 +465,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         return act(() => store.dispatch({ schemaVersion: 1, tool: 'transformObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { ...args, objectIds: selectedRef.current } }, 'manual')) ? store.document.revision : null;
       }} onAlignArea={alignment => selectionCommand('alignObjectsToArea', { objectIds: selectedRef.current, alignment })} onAlign={alignment => selectionCommand('alignObjects', { objectIds: selectedRef.current, alignment })} onDistribute={axis => selectionCommand('distributeObjects', { objectIds: selectedRef.current, axis })} onStyle={(style, expectedRevision) => act(() => {
         const store = storeRef.current!; store.dispatch({ schemaVersion: 1, tool: 'styleObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, style } }, 'manual');
-      })}/> : selectedObject ? <ObjectInspector key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} revision={doc.revision}
+      })}/> : selectedObject ? <ObjectInspector allowColor={doc.colorMode==='color'} key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} revision={doc.revision}
         onProperties={mode!=='customer'?properties=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setObjectProperties',objectId:selectedObject.id,expectedRevision:storeRef.current!.document.revision,arguments:properties},'manual')):undefined}
         characterSelection={characterSelection}
         onFontMenuOpen={() => { if (import.meta.env.DEV) void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => setFontNotice('')).catch(error => setFontNotice(error.message)); }}

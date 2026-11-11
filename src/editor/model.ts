@@ -1,3 +1,4 @@
+import {ColorSchema,PaintSchema,isMonochromePaint} from './paint';
 import {ObjectPropertiesSchema,GroupPropertiesSchema,effectiveObjectProperties,assertObjectPolicies,type EditorRole} from './object-properties';
 import {cloneSceneGroup} from './scene-groups';
 import {PlaqueMountingSchema,plaqueMountingPoints} from './plaque';
@@ -24,8 +25,8 @@ import { BezierNodeSchema, bezierBounds, flattenBezier, MAX_BEZIER_NODES } from 
 const position = { xMm: z.number().finite().min(-1000).max(1000), yMm: z.number().finite().min(-1000).max(1000) };
 const rotation = z.number().finite().min(-180).max(180);
 const id = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/);
-const color = z.enum(['#000000', '#ffffff']);
-const paint = z.enum(['#000000', '#ffffff', 'none']);
+const color = ColorSchema;
+const paint = PaintSchema;
 const fontFamily = z.union([z.enum(FONT_FAMILIES), FontIdSchema]);
 export const CharacterStyleSchema = z.strictObject({
   fontSizePt: z.number().finite().min(TEST_MIN_FONT_SIZE_PT).max(EDITOR_LIMITS.maxFontSizePt).optional(), fontFamily: fontFamily.optional(), fill: color.optional(),
@@ -66,6 +67,7 @@ export type SceneGroup=z.infer<typeof SceneGroupSchema>;
 const documentFields = z.strictObject({
   plaque:PlaqueMountingSchema.optional(),
   inkColor:InkColorSchema.optional(),
+  colorMode:z.enum(['monochrome','color']).optional(),
   templateOrigin: z.strictObject({id:z.string().uuid(),version:z.number().int().positive()}).optional(),
   fontAssets: FontAssetsSchema.optional(),
   schemaVersion: z.literal(2), documentId: z.string().uuid(), revision: z.number().int().nonnegative(),
@@ -79,6 +81,16 @@ const documentFields = z.strictObject({
   groups: z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups).optional(),
 });
 function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>, ctx: z.RefinementCtx) {
+  // The typed catalog currently contains stamp mounts only. Commercial plaque
+  // associations live in the archive adapter, not in these stamp binding fields.
+  if (d.colorMode === 'color' && d.productId !== null) ctx.addIssue({ code: 'custom', message: 'Le montature timbro richiedono un documento monocromatico; i colori non vengono convertiti automaticamente.' });
+  if (d.colorMode !== 'color') for (const object of d.objects) {
+    const paints = object.type === 'image' ? [] : [
+      ...('fill' in object ? [object.fill] : []), ...('stroke' in object ? [object.stroke] : []),
+      ...(object.type === 'text' ? object.characterStyles?.map(run => run.style.fill) ?? [] : []),
+    ];
+    if (paints.some(paint => !isMonochromePaint(paint)) || object.type === 'image' && object.raster.mode === 'original') ctx.addIssue({ code: 'custom', message: 'Il documento monocromatico ammette soltanto nero/bianco. Per conservare i colori usa un progetto a colori, senza montatura timbro.' });
+  }
   if(d.plaque){if(d.shape!=='rectangle')ctx.addIssue({code:'custom',message:'La targa a misura richiede una sagoma rettangolare'});try{plaqueMountingPoints(d.areaMm,d.plaque);}catch(cause){ctx.addIssue({code:'custom',message:cause instanceof Error?cause.message:'Fissaggi non validi'});}}
   if(d.objects.reduce((count,object)=>count+(object.type==='text'?Array.from(object.text).length:0),0)>EDITOR_LIMITS.documentTextCharacters)ctx.addIssue({code:'custom',message:`Massimo ${EDITOR_LIMITS.documentTextCharacters} caratteri Unicode nell’intero documento`});
   if (new Set(d.objects.map(o => o.id)).size !== d.objects.length) ctx.addIssue({ code: 'custom', message: 'ID duplicati' });
@@ -484,6 +496,7 @@ export class DocumentStore {
       if (next.productId && (next.productId !== this.document.productId || next.variantId !== this.document.variantId || next.catalogVersion !== this.document.catalogVersion || next.catalogProductProfileVersion !== this.document.catalogProductProfileVersion)) throw new Error('JSON associato a un altro prodotto o versione catalogo');
       next = { ...next, productId: this.document.productId, variantId: this.document.variantId, catalogVersion: this.document.catalogVersion, catalogProductProfileVersion: this.document.catalogProductProfileVersion };
     }
+    next = DocumentSchema.parse(next);
     validateLayout(next, this.measure, 'edit');
     this.past.push(cloneGraphicDocument(this.document)); this.future = [];
     // Revisione locale monotona: una risposta AI precedente non diventa valida dopo import/undo.

@@ -45,7 +45,9 @@ Prossimo incremento individuato dai dati: dieci sorgenti si fermano sul limite T
 
 Nessun deploy o modifica a Shopify, tema, PitchPrint, BSS, prezzi, carrello, checkout o chat pubblicata. Nessun template salvato nell’archivio reale per il solo collaudo.
 
-## Stato distinto: preparazione e importazione effettiva
+## Stato al termine di questa iterazione — superato dall’importazione a colori
+
+L’autorizzazione e il salvataggio successivi sono documentati in [Template con colori originali](iteration-editor-pitchprint-colors.md). Le informazioni seguenti descrivono la preparazione precedente al via libera.
 
 Su richiesta del titolare sono stati preparati i JSON completi delle 117 conversioni in `.local/pitchprint-migration/import-plans/prepared-drafts.jsonl` (circa 61 MB, privati e ignorati da Git), senza errori o scritture amministrative. L’archivio reale resta a due record preesistenti e zero template PitchPrint importati. Il salvataggio attende la scelta esplicita richiesta da AGENTS.md per le migrazioni.
 

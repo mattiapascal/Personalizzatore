@@ -1,6 +1,7 @@
+import {canonicalPaint} from './paint';
 import { EDITOR_LIMITS,TEST_MIN_FONT_SIZE_PT } from './limits';
 import { compactVectors } from './vector-compaction';
-import { loadSVGFromString, FabricText, Color, Path, Rect, Circle, Ellipse, Line, Polyline, Polygon, util, type FabricObject, type TMat2D } from 'fabric';
+import { loadSVGFromString, FabricText, Path, Rect, Circle, Ellipse, Line, Polyline, Polygon, util, type FabricObject, type TMat2D } from 'fabric';
 import { importedFontFamily, renderFontFamily, canonicalFontFamily, fontAssetArguments } from './fonts';
 import { measureFabric } from './fabric-adapter';
 import type { FontAsset } from './font-assets';
@@ -33,11 +34,7 @@ function shapeCommands(object: FabricObject | NonNullable<FabricObject['clipPath
   const offset = object instanceof Path ? object.pathOffset : { x: 0, y: 0 }, m = matrix ?? object.calcTransformMatrix();
   return mapVector(cleaned, (x, y) => ({ x: ((x - offset.x) * m[0] + (y - offset.y) * m[2] + m[4]) * PX_TO_MM, y: ((x - offset.x) * m[1] + (y - offset.y) * m[3] + m[5]) * PX_TO_MM }));
 }
-function paint(value: FabricObject['fill']): VectorObject['fill'] {
-  if (value === null || value === undefined || value === '' || value === 'none' || value === 'transparent') return 'none';
-  const [r,g,b,a] = new Color(String(value)).getSource(); if (a === 0) return 'none'; if (a === 1 && r === g && g === b && (r === 0 || r === 255)) return r === 0 ? '#000000' : '#ffffff';
-  throw new Error('Colore SVG non compatibile con il profilo TEST');
-}
+const paint = canonicalPaint;
 
 export type ImportTextMode = 'outlines' | 'editable';
 export interface PreparedSvg { monochrome: boolean; objects: SceneObject[]; fontAssets?: FontAsset[]; widthMm: number; heightMm: number; }

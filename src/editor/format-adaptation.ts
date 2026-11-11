@@ -5,6 +5,7 @@ import { selectionBounds, transformSelection } from './selection';
 export interface TemplateFit {document:GraphicDocument;scale:number;}
 function candidate(source:GraphicDocument,product:ProductProfile,catalogVersion:string,measure:Measure,scale:number):GraphicDocument {
   const document=cloneGraphicDocument(source);
+  document.colorMode='monochrome';
   document.productId=product.productId;document.variantId=product.variantIds[0]!;document.catalogVersion=catalogVersion;document.catalogProductProfileVersion=product.profileVersion;document.areaMm={...product.nominalAreaMm};document.shape=product.shape;
   document.objects=source.objects.length?transformSelection(source.objects,{scale,rotationDeg:0,center:{xMm:document.areaMm.width/2,yMm:document.areaMm.height/2}},measure):[];
   return document;

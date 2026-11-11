@@ -8,7 +8,7 @@ function queued<T>(job:()=>Promise<T>):Promise<T>{const work=queue.then(job);que
 async function renderRecord(record:ArchiveRecord):Promise<Preview>{
  const {FabricAdapter,prepareRasterSource}=await import('../editor/fabric-adapter'),{loadFontAssets}=await import('../editor/fonts');
  await Promise.all([loadFontAssets(record.document.fontAssets),...record.document.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source))]);
- const view=new FabricAdapter(document.createElement('canvas'),()=>0,()=>{});try{return{svg:view.exportSvg(record.document),color:record.document.inkColor??'black'};}finally{view.dispose();}
+ const view=new FabricAdapter(document.createElement('canvas'),()=>0,()=>{});try{return{svg:view.exportSvg(record.document),color:record.document.colorMode==='color'?'black':record.document.inkColor??'black'};}finally{view.dispose();}
 }
 function remember(key:string,preview:Preview){cache.delete(key);cache.set(key,preview);let bytes=[...cache.values()].reduce((sum,value)=>sum+value.svg.length*2,0);while(cache.size>32||bytes>16*1024*1024){const first=cache.keys().next().value;if(!first)break;bytes-=cache.get(first)!.svg.length*2;cache.delete(first);}}
 export function ArchiveThumbnail({id,version,title,record,large=false}:{id:string;version:number;title:string;record?:ArchiveRecord;large?:boolean}){

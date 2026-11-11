@@ -170,6 +170,13 @@
                   "violet"
                 ]
               },
+              "colorMode": {
+                "type": "string",
+                "enum": [
+                  "monochrome",
+                  "color"
+                ]
+              },
               "templateOrigin": {
                 "type": "object",
                 "properties": {
@@ -471,10 +478,7 @@
                         },
                         "fill": {
                           "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff"
-                          ]
+                          "pattern": "^#[0-9a-f]{6}$"
                         },
                         "lineStyles": {
                           "maxItems": 4001,
@@ -1303,10 +1307,7 @@
                                   },
                                   "fill": {
                                     "type": "string",
-                                    "enum": [
-                                      "#000000",
-                                      "#ffffff"
-                                    ]
+                                    "pattern": "^#[0-9a-f]{6}$"
                                   },
                                   "kerningPt": {
                                     "type": "number",
@@ -1451,19 +1452,27 @@
                           "maximum": 2
                         },
                         "stroke": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "fill": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "strokeDash": {
@@ -1576,19 +1585,27 @@
                           "maximum": 2
                         },
                         "stroke": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "fill": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "strokeDash": {
@@ -1697,10 +1714,7 @@
                         },
                         "stroke": {
                           "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff"
-                          ]
+                          "pattern": "^#[0-9a-f]{6}$"
                         },
                         "fill": {
                           "type": "string",
@@ -1816,19 +1830,27 @@
                           "maximum": 2
                         },
                         "stroke": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "fill": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "strokeDash": {
@@ -1971,17 +1993,18 @@
                         },
                         "stroke": {
                           "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff"
-                          ]
+                          "pattern": "^#[0-9a-f]{6}$"
                         },
                         "fill": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "strokeDash": {
@@ -2132,6 +2155,13 @@
                         "raster": {
                           "type": "object",
                           "properties": {
+                            "mode": {
+                              "type": "string",
+                              "enum": [
+                                "binary",
+                                "original"
+                              ]
+                            },
                             "threshold": {
                               "type": "integer",
                               "minimum": 0,
@@ -2463,19 +2493,27 @@
                           ]
                         },
                         "fill": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "stroke": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "strokeMm": {
@@ -2682,17 +2720,18 @@
                         },
                         "stroke": {
                           "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff"
-                          ]
+                          "pattern": "^#[0-9a-f]{6}$"
                         },
                         "fill": {
-                          "type": "string",
-                          "enum": [
-                            "#000000",
-                            "#ffffff",
-                            "none"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
                           ]
                         },
                         "strokeDash": {
