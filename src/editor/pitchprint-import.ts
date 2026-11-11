@@ -1,3 +1,4 @@
+import { emptyPitchprintPrimitive, unstrokedPitchprintPrimitive } from './pitchprint-primitives';
 import { pitchprintImageGeometry, pitchprintImageUrl } from './pitchprint-image';
 import { pitchprintTextStyles } from './pitchprint-text-styles';
 import { assertFontGeometry } from './verified-font-geometry';
@@ -68,13 +69,12 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
    objects.push(placeObjectAtCenter({id,type:'image',xMm:0,yMm:0,...geometry,rotationDeg:rotation,source,raster:{...DEFAULT_RASTER,...(!options.monochrome?{mode:'original' as const}:{})},flipY:determinant<0,editor},center,measureFabric));
   }else{
    const shapeFill=color(item.fill,options.monochrome),shapeStroke=stroke===0?'none':color(item.stroke,options.monochrome);
-   if(type==='rect'&&orthogonal&&numeric(item.rx??0,name)===0&&numeric(item.ry??0,name)===0&&shapeStroke==='none'){
-    if(rawWidth<=0||rawHeight<=0){
-     if(Object.values(editor).some(Boolean)||item.list||item.chain||item.tags||item.hooks&&JSON.stringify(item.hooks)!=='{}'||tree.groups.some(group=>group.leafIds.includes(id)))throw Error(`${name}: rettangolo senza area con proprietà o appartenenza a un gruppo, richiede revisione.`);
-     warnings.push(`${name}: rettangolo senza area e senza contorno, privo di grafica visibile, escluso esplicitamente.`);rememberGroup();continue;
-    }
-    if(shapeFill==='none'&&editor.includeInForm)warnings.push(`${name}: segnaposto trasparente conservato con label/proprietà; l’eventuale campo di caricamento foto PitchPrint richiede associazione esplicita all’immagine.`);
-    objects.push(placeObjectAtCenter({id,type:'rect',xMm:0,yMm:0,widthMm:rawWidth*axisX,heightMm:rawHeight*axisY,rotationDeg:rotation,fill:shapeFill,stroke:'none',strokeMm:.25,editor},center,measureFabric));rememberGroup();continue;
+   const empty=emptyPitchprintPrimitive(item,editor,tree.groups.some(group=>group.leafIds.includes(id)),shapeStroke);
+   if(empty){warnings.push(`${name}: ${empty} senza area e senza contorno, privo di grafica visibile, escluso esplicitamente.`);rememberGroup();continue;}
+   const primitive=orthogonal&&shapeStroke==='none'?unstrokedPitchprintPrimitive(item,id,editor,axisX,axisY,rotation,shapeFill):null;
+   if(primitive){
+    if(type==='rect'&&shapeFill==='none'&&editor.includeInForm)warnings.push(`${name}: segnaposto trasparente conservato con label/proprietà; l’eventuale campo di caricamento foto PitchPrint richiede associazione esplicita all’immagine.`);
+    objects.push(placeObjectAtCenter(primitive,center,measureFabric));rememberGroup();continue;
    }
    const safe:any={originX:item.originX??'left',originY:item.originY??'top',left:item.left,top:item.top,width:rawWidth,height:rawHeight,scaleX,scaleY,angle,flipX:item.flipX===true,flipY:item.flipY===true,fill:shapeFill==='none'?null:shapeFill,stroke:shapeStroke==='none'?null:shapeStroke,strokeWidth:stroke,strokeLineCap:item.strokeLineCap??'butt',strokeLineJoin:item.strokeLineJoin??'miter',strokeMiterLimit:item.strokeMiterLimit??4,fillRule:item.fillRule??'nonzero'};let object:FabricObject;
    if(type==='rect')object=new Rect({...safe,rx:item.rx??0,ry:item.ry??0});else if(type==='circle')object=new Circle({...safe,radius:numeric(item.radius,name)});else if(type==='ellipse')object=new Ellipse({...safe,rx:numeric(item.rx,name),ry:numeric(item.ry,name)});else if(type==='line')object=new Line([numeric(item.x1,name),numeric(item.y1,name),numeric(item.x2,name),numeric(item.y2,name)],safe);else if(type==='path'&&Array.isArray(item.path))object=new Path(item.path as any,safe);else if((type==='polygon'||type==='polyline')&&Array.isArray(item.points))object=type==='polygon'?new Polygon(item.points as any,safe):new Polyline(item.points as any,safe);else throw new Error(`${name}: tipo «${String(type)}» non supportato. Nessun elemento viene scartato.`);

@@ -21,7 +21,9 @@ export async function pitchprintReferenceSvg(source:any,asset:FontAsset|FontAsse
    const textOptions={...options,styles,fontFamily:renderFontFamily(font(raw).id),fontWeight:'normal',fontStyle:'normal' as const,stroke:null,strokeWidth:0};return type==='textbox'?new Textbox(raw.text,textOptions):new IText(raw.text,textOptions);
   }
   if(type==='image')return FabricImage.fromURL(raw.src,{},options);
-  if(type==='rect')return new Rect(options);if(type==='circle')return new Circle(options);if(type==='ellipse')return new Ellipse(options);if(type==='line')return new Line([raw.x1,raw.y1,raw.x2,raw.y2],options);if(type==='path')return new Path(raw.path,options);if(type==='polygon')return new Polygon(raw.points,options);if(type==='polyline')return new Polyline(raw.points,options);throw new Error('Tipo di riferimento TEST non previsto');
+  // Legacy full circles store radians; Fabric 7 expects degrees. Keep the
+  // independent reference faithful to the original full circle, not a 6° arc.
+  if(type==='rect')return new Rect(options);if(type==='circle')return new Circle({...options,...((raw.startAngle??0)===0&&Math.abs(raw.endAngle-2*Math.PI)<1e-9?{endAngle:360}:{})});if(type==='ellipse')return new Ellipse(options);if(type==='line')return new Line([raw.x1,raw.y1,raw.x2,raw.y2],options);if(type==='path')return new Path(raw.path,options);if(type==='polygon')return new Polygon(raw.points,options);if(type==='polyline')return new Polyline(raw.points,options);throw new Error('Tipo di riferimento TEST non previsto');
  };
  const page=source.pages[0],clip=page.canvas.clipPath,canvas=new StaticCanvas(document.createElement('canvas'),{width:clip.width,height:clip.height,renderOnAddRemove:false});
  try{canvas.add(...await Promise.all(page.canvas.objects.map(build)));return embedSvgFonts(canvas.toSVG({viewBox:{x:clip.left??0,y:clip.top??0,width:clip.width,height:clip.height},width:`${page.pageData.fWidth}mm`,height:`${page.pageData.fHeight}mm`}),assets);}finally{canvas.dispose();}

@@ -1,5 +1,7 @@
 # Recupero dei font originali da PitchPrint — 11 novembre 2026
 
+**Aggiornamento successivo:** [cinque associazioni CSS originali risolte e Kuenstler recuperato](iteration-editor-pitchprint-css-fonts.md). La libreria è ora a 219 file e 82/83 combinazioni risolte; resta Gloria Hallelujah 700. I conteggi 218/77 e i sei casi qui sotto descrivono la prima operazione, conservata come evidenza storica.
+
 Il titolare chiede di recuperare i font dai file effettivamente serviti da PitchPrint, prima Alida e poi gli altri mancanti. Il recupero è locale: nessuna modifica a font, template o account PitchPrint e nessuna pubblicazione dei file tipografici nel repository.
 
 ## Risultato nell’archivio reale
