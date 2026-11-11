@@ -1,3 +1,5 @@
+**11 novembre — priorità dei template:** [analisi aggiornata degli esclusi](editor-template-blockers-priority-2026-11-11.md). Biglietti da Visita e Templates PitchPrint in coda. Nelle altre categorie: **258/357 convertibili, 99 bloccati**, più otto sorgenti multipagina da valutare solo per estrazione di pagine autonome. Principali blocchi: font/simboli, contorni deformati, maschere e testo curvo. Archivio invariato; nessuna importazione aggiuntiva.
+
 # Configuratore grafico locale — percorso incrementale
 
 **Aggiornamento locale del 10 novembre:** [proprietà e modulo](iteration-editor-object-properties.md), [importazione nativa PitchPrint e font](iteration-editor-pitchprint-import.md). Acquisiti 473 design; installate 39 varianti Google esatte, 57 combinazioni manuali. Prima del riuso in produzione occorrono controllo delle conversioni, completamento dei file font mancanti e collegamento dei profili al canvas. Nessuna estensione commerciale o deploy autorizzato.
