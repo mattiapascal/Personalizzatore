@@ -14,3 +14,23 @@ export function dragRasterCrop(object: ImageObject, horizontal: number, vertical
   if (vertical * sy < 0) top = Math.max(0, Math.min(bottom - 1, top + dy)); else if (vertical * sy > 0) bottom = Math.min(object.source.pixelHeight, Math.max(top + 1, bottom + dy));
   return cropRasterInPlace(object, { leftPx: left, topPx: top, widthPx: Math.max(1,right-left), heightPx: Math.max(1,bottom-top) }, measure);
 }
+
+/** Visible photo offset from the centered source window, along the frame axes. */
+export function rasterContentOffsetMm(object:ImageObject):{x:number;y:number} {
+  const crop=checkedRasterCrop(object.source,object.crop),sx=object.widthMm/crop.widthPx,sy=object.heightMm/crop.heightPx;
+  return {x:((object.source.pixelWidth-crop.widthPx)/2-crop.leftPx)*sx*(object.flipX?-1:1),y:((object.source.pixelHeight-crop.heightPx)/2-crop.topPx)*sy*(object.flipY?-1:1)};
+}
+/** Move pixels within a fixed viewport, never exposing pixels outside the original. */
+export function positionRasterContents(object:ImageObject,offset:Partial<{x:number;y:number}>):ImageObject {
+  const before=checkedRasterCrop(object.source,object.crop),current=rasterContentOffsetMm(object),next={...current,...offset};
+  if(!Number.isFinite(next.x)||!Number.isFinite(next.y))throw new Error('Posizione della foto non valida');
+  const sx=object.widthMm/before.widthPx,sy=object.heightMm/before.heightPx,gapX=Math.max(0,object.source.pixelWidth-before.widthPx),gapY=Math.max(0,object.source.pixelHeight-before.heightPx);
+  const crop=checkedRasterCrop(object.source,{...before,leftPx:next.x===current.x?before.leftPx:Math.max(0,Math.min(gapX,gapX/2-next.x/sx*(object.flipX?-1:1))),topPx:next.y===current.y?before.topPx:Math.max(0,Math.min(gapY,gapY/2-next.y/sy*(object.flipY?-1:1)))});
+  return crop.leftPx===before.leftPx&&crop.topPx===before.topPx?object:{...object,crop};
+}
+export function panRasterContents(object:ImageObject,deltaXmm:number,deltaYmm:number):ImageObject {
+  if(!Number.isFinite(deltaXmm)||!Number.isFinite(deltaYmm))throw new Error('Spostamento della foto non valido');
+  if(deltaXmm===0&&deltaYmm===0)return object;
+  const angle=(object.rotationDeg??0)*Math.PI/180,offset=rasterContentOffsetMm(object);
+  return positionRasterContents(object,{x:offset.x+deltaXmm*Math.cos(angle)+deltaYmm*Math.sin(angle),y:offset.y-deltaXmm*Math.sin(angle)+deltaYmm*Math.cos(angle)});
+}

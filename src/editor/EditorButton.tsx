@@ -14,6 +14,7 @@ const icons = {
   image: <><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8" cy="8" r="2"/><path d="M3 17l5-5 4 4 4-6 5 7"/></>,
   replaceImage: <><path d="M15 3H3v18h18V9M3 17l5-5 4 4 3-4M16 4h6l-2-2M22 4v5l-2-2"/><circle cx="8" cy="8" r="1"/></>,
   importImage: <><path d="M12 3H3v18h18v-8M3 17l5-5 4 4 3-4M18 3v7M15 6h6"/><circle cx="8" cy="8" r="1"/></>,
+  panImage: <><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5M7 12h10M12 7v10M9 10l-2 2 2 2M15 10l2 2-2 2M10 9l2-2 2 2M10 15l2 2 2-2"/></>,
   crop: <path d="M7 2v15h15M2 7h15v15M10 4h10v10"/>,
   copy: <><rect x="8" y="8" width="13" height="13" rx="1"/><path d="M16 4V2H2v14h2"/></>,
   cut: <><circle cx="5" cy="6" r="3"/><circle cx="5" cy="18" r="3"/><path d="M8 7l13 14M8 17L21 3"/></>,

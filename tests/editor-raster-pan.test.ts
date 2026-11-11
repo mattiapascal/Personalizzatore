@@ -1,0 +1,34 @@
+import {expect,it} from 'vitest';
+import {panRasterContents,positionRasterContents,rasterContentOffsetMm} from '../src/editor/raster-crop-edit';
+import {checkedRasterCrop,fullRasterCrop,type ImageObject} from '../src/editor/raster-geometry';
+import {createDocument,DocumentStore,objectCenter,parseGraphicDocument,type Measure} from '../src/editor/model';
+import {rasterSourceFromBytes} from '../src/editor/raster-source';
+import {testPng} from './helpers/png';
+const source=rasterSourceFromBytes('pan-original',testPng(160,120));
+const image=():ImageObject=>({id:'photo',type:'image',xMm:8,yMm:10,widthMm:40.2,heightMm:21.075,pixelAspectRatio:4/3,rotationDeg:30,source,crop:{leftPx:20.25,topPx:10.5,widthPx:100.5,heightPx:70.25},raster:{mode:'original',threshold:128,invert:false,whiteTransparent:false},editor:{label:'Foto',transformLocked:true}});
+const measure:Measure=o=>o.type==='image'?{widthMm:o.widthMm,heightMm:o.heightMm}:{widthMm:1,heightMm:1};
+const world=(o:ImageObject,x:number,y:number)=>{const crop=checkedRasterCrop(o.source,o.crop),c=objectCenter(o,measure),a=(o.rotationDeg??0)*Math.PI/180,dx=(x-crop.leftPx-crop.widthPx/2)*o.widthMm/crop.widthPx*(o.flipX?-1:1),dy=(y-crop.topPx-crop.heightPx/2)*o.heightMm/crop.heightPx*(o.flipY?-1:1);return{x:c.xMm+dx*Math.cos(a)-dy*Math.sin(a),y:c.yMm+dx*Math.sin(a)+dy*Math.cos(a)};};
+it('offset in mm riferiti al centro della foto, assi indipendenti e riflessioni',()=>{
+ const object=image(),before=structuredClone(object);expect(rasterContentOffsetMm(object).x).toBeCloseTo(3.8,12);expect(rasterContentOffsetMm(object).y).toBeCloseTo(4.3125,12);
+ for(const flipX of[false,true])for(const flipY of[false,true]){const next=positionRasterContents({...object,flipX,flipY},{x:2,y:-1.5});expect(next.crop!.leftPx).toBeCloseTo(flipX?34.75:24.75,12);expect(next.crop!.topPx).toBeCloseTo(flipY?19.875:29.875,12);expect(rasterContentOffsetMm(next).x).toBeCloseTo(2,12);expect(rasterContentOffsetMm(next).y).toBeCloseTo(-1.5,12);}
+ expect(positionRasterContents(object,{x:2}).crop!.topPx).toBe(object.crop!.topPx);expect(positionRasterContents(object,{y:2}).crop!.leftPx).toBe(object.crop!.leftPx);
+ expect(positionRasterContents(object,{x:0,y:0}).crop).toEqual({leftPx:29.75,topPx:24.875,widthPx:100.5,heightPx:70.25});expect(object).toEqual(before);
+});
+it('trascinamento continuo: il dettaglio segue il puntatore, cornice ferma con rotazioni e scale non uniformi',()=>{
+ for(const rotationDeg of[0,30,-90,155])for(const flipX of[false,true])for(const flipY of[false,true]){const original={...image(),rotationDeg,flipX,flipY},next=panRasterContents(original,1.2,-.7),a=world(original,60,50),b=world(next,60,50);expect(b.x-a.x).toBeCloseTo(1.2,10);expect(b.y-a.y).toBeCloseTo(-.7,10);const{crop:_a,...frame}=original,{crop:_b,...after}=next;expect(after).toEqual(frame);expect(next.crop!.widthPx).toBe(original.crop!.widthPx);expect(next.crop!.heightPx).toBe(original.crop!.heightPx);}
+});
+it('limiti dell’originale senza zone vuote e nessuna modifica se il gesto torna al punto iniziale',()=>{
+ for(const flipX of[false,true])for(const flipY of[false,true]){const object={...image(),rotationDeg:0,flipX,flipY},right=positionRasterContents(object,{x:999,y:999}),left=positionRasterContents(object,{x:-999,y:-999});expect(right.crop!.leftPx).toBe(flipX?59.5:0);expect(right.crop!.topPx).toBe(flipY?49.75:0);expect(left.crop!.leftPx).toBe(flipX?0:59.5);expect(left.crop!.topPx).toBe(flipY?0:49.75);expect(panRasterContents(right,999,999)).toBe(right);}
+ const full={...image(),widthMm:64,heightMm:48,pixelAspectRatio:1,crop:undefined};expect(panRasterContents(full,900,-900)).toBe(full);expect(panRasterContents(image(),0,0)).toMatchObject(image());expect(checkedRasterCrop(full.source,full.crop)).toEqual(fullRasterCrop(source));
+});
+it('comandi manuali/AI, JSON e storico conservano cornice, byte, filtri e valori frazionari',()=>{
+ const doc=createDocument();doc.colorMode='color';doc.areaMm={width:100,height:80};doc.objects=[image()];const store=new DocumentStore(doc,measure),first=panRasterContents(image(),.1,.2);store.dispatch({schemaVersion:1,tool:'updateObject',objectId:'photo',expectedRevision:0,arguments:{object:first}},'manual');const second=positionRasterContents(first,{x:1.5,y:-2.2});store.dispatch({schemaVersion:1,tool:'updateObject',objectId:'photo',expectedRevision:1,arguments:{object:second}},'ai-simulation');expect(store.document.objects[0]).toEqual(second);expect(parseGraphicDocument(JSON.parse(JSON.stringify(store.document)))).toEqual(store.document);store.undo();expect(store.document.objects[0]).toEqual(first);store.undo();expect(store.document.objects[0]).toEqual(image());store.redo();store.redo();expect(store.document.objects[0]).toEqual(second);
+});
+it('errori finiti/crop esterno e comandi obsoleti non mutano il progetto né cancellano il redo',()=>{
+ for(const value of[NaN,Infinity,-Infinity]){expect(()=>positionRasterContents(image(),{x:value})).toThrow();expect(()=>panRasterContents(image(),value,0)).toThrow();}
+ const doc=createDocument();doc.colorMode='color';doc.areaMm={width:100,height:80};doc.objects=[image()];const store=new DocumentStore(doc,measure),next=panRasterContents(image(),.1,0);store.dispatch({schemaVersion:1,tool:'updateObject',objectId:'photo',expectedRevision:0,arguments:{object:next}},'manual');store.undo();const before=structuredClone(store.document);expect(()=>store.dispatch({schemaVersion:1,tool:'updateObject',objectId:'photo',expectedRevision:2,arguments:{object:{...next,crop:{...next.crop!,leftPx:150}}}},'ai-simulation')).toThrow();expect(()=>store.dispatch({schemaVersion:1,tool:'updateObject',objectId:'photo',expectedRevision:0,arguments:{object:next}},'manual')).toThrow('obsoleta');expect(store.document).toEqual(before);store.redo();expect(store.document.objects[0]).toEqual(next);
+});
+it('blocco trasformazioni conserva la cornice e permette contenuti; il blocco selezione continua a valere',()=>{
+ const doc=createDocument();doc.colorMode='color';doc.areaMm={width:100,height:80};doc.objects=[image()];const store=new DocumentStore(doc,measure),next=panRasterContents(image(),.1,0);store.dispatch({schemaVersion:1,tool:'updateObject',objectId:'photo',expectedRevision:0,arguments:{object:next}},'manual');expect(()=>store.dispatch({schemaVersion:1,tool:'updateObject',objectId:'photo',expectedRevision:1,arguments:{object:{...next,xMm:9}}},'ai-simulation')).toThrow('Trasformazioni bloccate');
+ doc.objects[0]!.editor!.selectionLocked=true;doc.objects[0]!.editor!.includeInForm=true;const locked=new DocumentStore(doc,measure);expect(()=>locked.dispatch({schemaVersion:1,tool:'updateObject',objectId:'photo',expectedRevision:0,arguments:{object:{...next,editor:doc.objects[0]!.editor}}},'manual')).toThrow('Selezione bloccata');expect(locked.document.objects).toEqual(doc.objects);
+});

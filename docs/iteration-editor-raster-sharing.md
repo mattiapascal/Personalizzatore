@@ -35,6 +35,8 @@ I log intermedi sono conservati. Le verifiche che importavano il modulo senza il
 
 Log: `.local/raster-sharing-{all-unit,regressions-final,color,check,build-verified,secrets-verified,public-build,public-browser,public-secrets,artifacts,capture-final}.log`. Il campione resta da collaudare in Illustrator per dimensioni, ritagli, riflessioni e resa B/N. Nessun nuovo record nell’archivio personale o importazione di template, deploy o modifica a Shopify, tema, PitchPrint, BSS, prezzi, carrello/checkout o chat pubblicata.
 
-## Prossimo incremento manuale
+## Prossimo incremento manuale — completato successivamente
+
+[Implementazione e prove dello spostamento interno](iteration-editor-raster-pan.md). Il piano originale qui sotto è stato realizzato.
 
 Il ritaglio conserva già la finestra in coordinate sorgente e la cornice fisica. Rendere possibile spostare la fotografia dentro quella finestra senza muovere/ridimensionare la cornice: gesto esplicito distinto dal PAN del foglio, limiti dell’originale, rotazioni/riflessioni, Esc, un comando validato al rilascio e Undo/Redo. È un completamento del ritaglio e della sostituzione centrale; non richiede immagini AI, multipagina o integrazioni commerciali.

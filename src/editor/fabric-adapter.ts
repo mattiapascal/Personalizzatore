@@ -223,6 +223,7 @@ export class FabricAdapter {
   private onTextPathChange?: (object: TextObject, revision: number) => void;
   private cropControls = new RasterCropControls();
   private cropFocus: string | null = null;
+  private moveCropContents = false;
   private onCropChange?: (object: ImageObject, revision: number) => void;
   private bezierControls = new BezierNodeControls();
   private onBezierChange?: (object: BezierObject, revision: number) => void;
@@ -367,8 +368,9 @@ export class FabricAdapter {
       if (id && source?.type === 'text' && source.textPath && event.action === 'slideTextPath') {
         const next = this.textPathControls.preview; queueMicrotask(() => { if (!this.disposed) { if (next && this.onTextPathChange) this.onTextPathChange(next, expectedRevision); else if (this.document) this.render(this.document); } }); return;
       }
-      if (id && source?.type === 'image' && event.action === 'cropRaster') {
-        const next = this.cropControls.preview;
+      if (id && source?.type === 'image' && (event.action === 'cropRaster'||event.action === 'panRasterContents')) {
+        const preview = this.cropControls.preview,before=checkedRasterCrop(source.source,source.crop),after=preview?checkedRasterCrop(preview.source,preview.crop):null;
+        const next=after&&(['leftPx','topPx','widthPx','heightPx']as const).some(key=>after[key]!==before[key])?preview:null;
         queueMicrotask(() => { if (!this.disposed) { if (next && this.onCropChange) this.onCropChange(next, expectedRevision); else if (this.document) this.render(this.document); } }); return;
       }
       if (id && source?.type === 'bezier' && event.action === 'modifyBezier') {
@@ -525,7 +527,7 @@ export class FabricAdapter {
   cancelBezier(): void { this.bezierDrawing?.cancel(); }
   setTextPathHandler(onChange: (object: TextObject, revision: number) => void): void { this.onTextPathChange = onChange; }
   setRasterCropHandler(onChange: (object: ImageObject, revision: number) => void): void { this.onCropChange = onChange; }
-  setRasterCropFocus(id: string | null): void { this.cropFocus = id; this.configureNodeControls(); this.canvas.requestRenderAll(); }
+  setRasterCropFocus(id: string | null, moveContents=false): void { this.cropFocus = id;this.moveCropContents=moveContents; this.configureNodeControls(); this.canvas.requestRenderAll(); }
   setNodeDragHandlers(onMove: (object: PathObject, index: number, point: PointMm, revision: number) => void, onActive: (active: boolean) => void): void { this.onNodeMove = onMove; this.onNodeActive = onActive; }
   setBezierDragHandler(onChange: (object: BezierObject, revision: number) => void): void { this.onBezierChange = onChange; }
   setNodeFocus(focus: { objectId: string; index: number } | null): void { this.nodeFocus = focus; this.configureNodeControls(); this.canvas.requestRenderAll(); }
@@ -537,7 +539,7 @@ export class FabricAdapter {
     const source = focus ? this.document?.objects.find(item => item.id === focus.objectId) : null;
     this.bezierControls.configure(object instanceof FabricPath && focus && this.idByObject.get(object) === focus.objectId ? object : null, source?.type === 'bezier' ? source : null, focus?.index ?? -1, measureFabric, renderObject, () => { this.dragging = true; if (!this.nodeDragging) { this.nodeDragging = true; this.onNodeActive?.(true); } }, PX_PER_MM);
     const cropSource = this.cropFocus ? this.document?.objects.find(item => item.id === this.cropFocus) : null;
-    this.cropControls.configure(object instanceof FabricImage && this.idByObject.get(object) === this.cropFocus ? object : null, cropSource?.type === 'image' ? cropSource : null, measureFabric, renderObject, () => { this.dragging = true; if (!this.nodeDragging) { this.nodeDragging = true; this.onNodeActive?.(true); } });
+    this.cropControls.configure(object instanceof FabricImage && this.idByObject.get(object) === this.cropFocus ? object : null, cropSource?.type === 'image' ? cropSource : null, measureFabric, renderObject, () => { this.dragging = true; if (!this.nodeDragging) { this.nodeDragging = true; this.onNodeActive?.(true); } }, this.moveCropContents,this.zoom);
 
   }
   private drawTextPathGuide(): void {

@@ -476,7 +476,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         characterSelection={characterSelection}
         onFontMenuOpen={() => { if (import.meta.env.DEV) void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => setFontNotice('')).catch(error => setFontNotice(error.message)); }}
         onDetachText={() => { if (selectedObject.type !== 'text' || !selectedObject.textPath) return; const preferred = selectedObject.textPath.originalPathId, pathObjectId = doc.objects.some(object => object.id === preferred) || doc.groups?.some(group => group.id === preferred) ? `path-${crypto.randomUUID()}` : preferred; act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'detachTextFromPath', objectId: selectedObject.id, expectedRevision: doc.revision, arguments: { pathObjectId } }, 'manual'), selectedObject.id); }}
-        onCropFocus={id => { adapter.current?.setRasterCropFocus(id); setCropMode(!!id); }}
+        onCropFocus={(id,moveContents) => { adapter.current?.setRasterCropFocus(id,moveContents); setCropMode(!!id); }}
         onNodeFocus={focus => { adapter.current?.setNodeFocus(focus); setNodeMode(!!focus); }}
         onKerning={value => act(() => {
           const update = adapter.current?.kernedText(value); if (update) storeRef.current!.dispatch({ schemaVersion: 1, tool: 'updateObject', expectedRevision: update.revision, objectId: update.object.id, arguments: objectArguments(update.object) }, 'manual');
