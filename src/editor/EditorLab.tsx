@@ -466,6 +466,12 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       }} onAlignArea={alignment => selectionCommand('alignObjectsToArea', { objectIds: selectedRef.current, alignment })} onAlign={alignment => selectionCommand('alignObjects', { objectIds: selectedRef.current, alignment })} onDistribute={axis => selectionCommand('distributeObjects', { objectIds: selectedRef.current, axis })} onStyle={(style, expectedRevision) => act(() => {
         const store = storeRef.current!; store.dispatch({ schemaVersion: 1, tool: 'styleObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, style } }, 'manual');
       })}/> : selectedObject ? <ObjectInspector minimumFontPt={effectiveObjectProperties(doc,selectedObject.id).reference?null:minimumFontForDocument(doc,graphicCatalog)} allowColor={doc.colorMode==='color'} key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} revision={doc.revision}
+        onReplaceImage={(file,expectedRevision)=>{const objectId=selectedObject.id,documentId=doc.documentId;void prepareAndAct(async store=>{
+          if(store.document.documentId!==documentId||store.document.revision!==expectedRevision)throw new Error('Documento cambiato durante la scelta del file: sostituzione annullata.');
+          if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');
+          const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);
+          return()=>store.dispatch({schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision,arguments:{source,fit:'cover'}},'manual');
+        },objectId);}}
         onProperties={mode!=='customer'?properties=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setObjectProperties',objectId:selectedObject.id,expectedRevision:storeRef.current!.document.revision,arguments:properties},'manual')):undefined}
         characterSelection={characterSelection}
         onFontMenuOpen={() => { if (import.meta.env.DEV) void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => setFontNotice('')).catch(error => setFontNotice(error.message)); }}

@@ -1,3 +1,4 @@
+import {coverRasterReplacement} from './raster-replacement';
 import { UnverifiedTextGeometryError } from './unverified-text-geometry';
 import { StrokeWidthSchema } from './stroke';
 import {ColorSchema,PaintSchema,isMonochromePaint} from './paint';
@@ -207,7 +208,7 @@ export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
-  z.strictObject({...base,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema})}),
+  z.strictObject({...base,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema,fit:z.enum(['contain','cover']).optional()})}),
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
   z.strictObject({...base,tool:z.literal('changeFormat'),arguments:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1),allowShrink:z.boolean()})}),
@@ -373,6 +374,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
       case 'setObjectProperties': if(role!=='admin')throw new Error('Le proprietà del template si configurano in modalità amministrativa.'); object.editor={...command.arguments};break;
       case 'replaceImageSource': {
         if(object.type!=='image')throw new Error('Scegli un’immagine da sostituire.');
+        if(command.arguments.fit==='cover'){Object.assign(object,coverRasterReplacement(object,command.arguments.source));delete object.pixelAspectRatio;break;}
         const source=command.arguments.source,center=objectCenter(object,measure),scale=Math.min(object.widthMm/source.pixelWidth,object.heightMm/source.pixelHeight);object.source={...source};object.widthMm=source.pixelWidth*scale;object.heightMm=source.pixelHeight*scale;delete object.pixelAspectRatio;delete object.crop;delete object.flipX;delete object.flipY;Object.assign(object,placeObjectAtCenter(object,center,measure));break;
       }
       case 'attachTextToPath': next.objects = attachTextPath(next, command.objectId, command.arguments.pathObjectId, measure); break;

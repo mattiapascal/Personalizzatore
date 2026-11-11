@@ -1,3 +1,4 @@
+import {ImageReplacementControl} from './ImageReplacementControl';
 import { textGeometryVerified } from './font-measurement';
 import { fontCoverageVersion, subscribeFontCoverage } from './font-coverage-cache';
 import { UnverifiedTextInspector } from './UnverifiedTextInspector';
@@ -31,7 +32,7 @@ import { SelectedTextFontNotice } from './SelectedTextFontNotice';
 
 type Section = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'arrange' | 'template';
 
-function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, object, revision, arrangement, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen }: { minimumFontPt?:number|null;allowColor?:boolean; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; arrangement: ReactNode; onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
+function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, object, revision, arrangement, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { minimumFontPt?:number|null;allowColor?:boolean; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; arrangement: ReactNode; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
   const form = useRef<HTMLFormElement>(null);
   const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
   const [section, setSection] = useState<Section>('geometry');
@@ -195,6 +196,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
         <label>Tipo di contorno<select disabled={current.stroke === 'none'} value={current.strokeDash ?? 'solid'} onChange={event => patch({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' }, true)}><option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>
       </>}
       {section === 'image' && current.type === 'image' && <>
+        {onReplaceImage&&<ImageReplacementControl revision={draft.revision} disabled={dirty} onReplace={onReplaceImage}/>}
         <p className="caption" data-testid="raster-analysis">{analysis?.kind === 'grayscale' ? 'Riconosciuta automaticamente: scala di grigi (canali R, G e B uguali).' : analysis?.kind === 'near-grayscale' ? 'Canali quasi uguali: possibile grigio con artefatti JPEG. Conversione automatica sospesa per non eliminare tinte reali.' : analysis?.kind === 'empty' ? 'Immagine completamente trasparente.' : 'Immagine a colori: rimozione automatica dello sfondo da valutare separatamente.'}</p>
         {allowColor && <label className="ratio-toggle"><input type="checkbox" checked={current.raster.mode === 'original'} onChange={event => patch({ raster: { ...DEFAULT_RASTER, ...(event.target.checked ? { mode: 'original' as const } : {}) } }, true)}/> Mantieni colori originali</label>}
         {current.raster.mode === 'original' ? <p className="caption">Pixel e trasparenza originali conservati. Disattiva per elaborare in bianco/nero.</p> : <>

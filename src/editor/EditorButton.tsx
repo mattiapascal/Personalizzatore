@@ -12,6 +12,7 @@ const icons = {
   vector: <><path d="M3 18L12 3l9 15zM8 15l4-7 4 7z"/></>,
   importSvg: <><path d="M3 18L10 5l7 13zM17 2v8M13 6h8"/></>,
   image: <><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8" cy="8" r="2"/><path d="M3 17l5-5 4 4 4-6 5 7"/></>,
+  replaceImage: <><path d="M15 3H3v18h18V9M3 17l5-5 4 4 3-4M16 4h6l-2-2M22 4v5l-2-2"/><circle cx="8" cy="8" r="1"/></>,
   importImage: <><path d="M12 3H3v18h18v-8M3 17l5-5 4 4 3-4M18 3v7M15 6h6"/><circle cx="8" cy="8" r="1"/></>,
   crop: <path d="M7 2v15h15M2 7h15v15M10 4h10v10"/>,
   copy: <><rect x="8" y="8" width="13" height="13" rx="1"/><path d="M16 4V2H2v14h2"/></>,
