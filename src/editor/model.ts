@@ -1,4 +1,5 @@
-import {ObjectPropertiesSchema,assertObjectPolicies,type EditorRole} from './object-properties';
+import {ObjectPropertiesSchema,GroupPropertiesSchema,effectiveObjectProperties,assertObjectPolicies,type EditorRole} from './object-properties';
+import {cloneSceneGroup} from './scene-groups';
 import {PlaqueMountingSchema,plaqueMountingPoints} from './plaque';
 import { FontAssetsSchema, FontIdSchema } from './font-assets';
 import { fitComposition } from './format-adaptation';
@@ -60,7 +61,8 @@ export const SceneObjectSchema = z.discriminatedUnion('type', [
   z.strictObject({ id, type: z.literal('bezier'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: z.number().finite().positive().max(2), stroke: color, ...shapeAppearance }),
 ]);
 export type SceneObject = z.infer<typeof SceneObjectSchema>;
-export const SceneGroupSchema = z.strictObject({ id, objectIds: z.array(id).min(2).max(EDITOR_LIMITS.objects) });
+export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
+export type SceneGroup=z.infer<typeof SceneGroupSchema>;
 const documentFields = z.strictObject({
   plaque:PlaqueMountingSchema.optional(),
   inkColor:InkColorSchema.optional(),
@@ -80,14 +82,15 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
   if(d.plaque){if(d.shape!=='rectangle')ctx.addIssue({code:'custom',message:'La targa a misura richiede una sagoma rettangolare'});try{plaqueMountingPoints(d.areaMm,d.plaque);}catch(cause){ctx.addIssue({code:'custom',message:cause instanceof Error?cause.message:'Fissaggi non validi'});}}
   if(d.objects.reduce((count,object)=>count+(object.type==='text'?Array.from(object.text).length:0),0)>EDITOR_LIMITS.documentTextCharacters)ctx.addIssue({code:'custom',message:`Massimo ${EDITOR_LIMITS.documentTextCharacters} caratteri Unicode nell’intero documento`});
   if (new Set(d.objects.map(o => o.id)).size !== d.objects.length) ctx.addIssue({ code: 'custom', message: 'ID duplicati' });
-  const grouped = new Set<string>(), groupIds = new Set<string>();
+  const grouped = new Map<string,Set<string>>(), groupIds = new Set<string>();
   for (const group of d.groups ?? []) {
     const indices = group.objectIds.map(id => d.objects.findIndex(o => o.id === id)).sort((a, b) => a - b);
     if (groupIds.has(group.id) || d.objects.some(o => o.id === group.id) || indices.some((value, index) => value < 0 || index > 0 && value !== indices[index - 1]! + 1)) ctx.addIssue({ code: 'custom', message: 'Gruppo non valido: ID, membri o ordine dei livelli' });
-    groupIds.add(group.id);
+    if(group.parentId){const parent=d.groups?.find(item=>item.id===group.parentId);if(!groupIds.has(group.parentId)||!parent||group.objectIds.some(id=>!parent.objectIds.includes(id)))ctx.addIssue({code:'custom',message:'Gerarchia dei gruppi non valida: il padre deve precedere i figli e contenerne tutti i membri'});}
+    groupIds.add(group.id);const siblings=grouped.get(group.parentId??'')??new Set<string>();grouped.set(group.parentId??'',siblings);
     for (const id of group.objectIds) {
-      if (grouped.has(id)) ctx.addIssue({ code: 'custom', message: 'Oggetto presente in più gruppi' });
-      grouped.add(id);
+      if (siblings.has(id)) ctx.addIssue({ code: 'custom', message: 'Oggetto presente in più gruppi indipendenti' });
+      siblings.add(id);
     }
   }
   const binding = [d.productId, d.variantId, d.catalogVersion, d.catalogProductProfileVersion];
@@ -164,7 +167,7 @@ export function cloneSceneObject<T extends SceneObject>(object: T): T {
   return object.type === 'image' ? { ...object, ...(object.editor?{editor:{...object.editor}}:{}), source: { ...object.source }, raster: { ...object.raster }, ...(object.crop ? { crop: { ...object.crop } } : {}) } : structuredClone(object);
 }
 export function cloneGraphicDocument(document: GraphicDocument): GraphicDocument {
-  return { ...document, ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(group => ({ ...group, objectIds: [...group.objectIds] })) } : {}) };
+  return { ...document, ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
 }
 export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('vector'), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000) }),
@@ -188,6 +191,7 @@ export const SelectionStyleSchema = z.strictObject({ fill: paint.optional(), str
 export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
+  z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema})}),
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
@@ -320,11 +324,15 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   else if (command.tool === 'applyTemplate') {
     if(command.objectId!==command.arguments.objects[0]!.id)throw new Error('ID del comando diverso dal primo oggetto del template');
     next.objects=command.arguments.objects.map(cloneSceneObject);
-    if(command.arguments.groups.length)next.groups=command.arguments.groups.map(group=>({...group,objectIds:[...group.objectIds]}));else delete next.groups;
+    if(command.arguments.groups.length)next.groups=command.arguments.groups.map(cloneSceneGroup);else delete next.groups;
     if(command.arguments.fontAssets?.length)next.fontAssets=command.arguments.fontAssets.map(asset=>({...asset}));else delete next.fontAssets;
     next.templateOrigin={id:command.arguments.templateId,version:command.arguments.templateVersion};
     if(command.arguments.inkColor)next.inkColor=command.arguments.inkColor;
     validateLayout(next,measure);
+  }
+  else if(command.tool==='setGroupProperties'){
+    if(role!=='admin')throw new Error('Le proprietà del template si configurano in modalità amministrativa.');
+    const group=next.groups?.find(group=>group.id===command.objectId);if(!group)throw new Error('ID gruppo sconosciuto');group.editor={...command.arguments};
   }
   else if (isSelectionCommand(command)) applySelectionCommand(next, command, measure);
   else if (command.tool === 'insertObjects') {
@@ -333,12 +341,13 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     const inserted = new Set(objects.map(object => object.id));
     if (groups.some(group => group.objectIds.some(id => !inserted.has(id)))) throw new Error('Un nuovo gruppo può comprendere solo gli oggetti inseriti');
     next.objects.push(...objects.map(cloneSceneObject));
-    if (groups.length) next.groups = [...next.groups ?? [], ...groups.map(group => ({ id: group.id, objectIds: [...group.objectIds] }))];
+    if(groups.some(group=>group.parentId&&!groups.some(parent=>parent.id===group.parentId)))throw new Error('Un nuovo gruppo può dipendere solo dai gruppi inseriti');
+    if (groups.length) next.groups = [...next.groups ?? [], ...groups.map(cloneSceneGroup)];
   } else if (command.tool === 'addObject') {
     if (command.objectId !== command.arguments.object.id) throw new Error('ID del comando e del nuovo oggetto diversi');
     next.objects.push(cloneSceneObject(command.arguments.object));
   } else {
-    if (next.groups?.some(group => group.objectIds.includes(command.objectId))) throw new Error('Separa il gruppo prima di modificare un singolo elemento');
+    if (!['setText','replaceImageSource','setObjectProperties'].includes(command.tool)&&next.groups?.some(group => group.objectIds.includes(command.objectId))) throw new Error('Separa il gruppo prima di modificare un singolo elemento');
     const object = next.objects.find(o => o.id === command.objectId);
     if (!object) throw new Error('ID oggetto sconosciuto');
     switch (command.tool) {
@@ -357,7 +366,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
         const before = cloneSceneObject(object);
         if (object.type !== 'text') throw new Error('Il comando richiede un testo');
         object.text = object.textPath ? command.arguments.text.replace(/\n/g, ' ') : command.arguments.text; delete object.characterStyles; delete object.lineStyles;
-        if (object.textPath && before.type === 'text') Object.assign(object, preserveTextPathGuide(before, object, measure)); else if(role==='customer'&&before.editor?.transformLocked)Object.assign(object,placeObjectAtCenter(object,objectCenter(before,measure),measure)); break;
+        if (object.textPath && before.type === 'text') Object.assign(object, preserveTextPathGuide(before, object, measure)); else if(role==='customer'&&effectiveObjectProperties(doc,before.id).transformLocked)Object.assign(object,placeObjectAtCenter(object,objectCenter(before,measure),measure)); break;
       }
       case 'setObjectStyle': {
         const before = cloneSceneObject(object);

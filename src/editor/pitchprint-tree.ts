@@ -25,23 +25,22 @@ export function checkedPitchprintEffects(item:Record<string,unknown>,name:string
 const inheritedKeys=['transformLocked','selectionLocked','deleteLocked','hideMenus','reference'] as const;
 export function inheritedPitchprintProperties(own:ObjectProperties,parent:ObjectProperties):ObjectProperties{const result={...own};for(const key of inheritedKeys)if(parent[key])result[key]=true;return result;}
 export interface PitchprintLeaf{item:Record<string,unknown>;id:string;name:string;parent:PitchprintMatrix;inherited:ObjectProperties;rootGroup?:string;}
-export interface PitchprintTree{leaves:PitchprintLeaf[];warnings:string[];}
-/** Preflight the whole tree before fonts/assets are fetched. Nested visual groups
- * use the outer selection unit. Semantic group labels require a future group form
- * contract and are rejected rather than assigned to an arbitrary child. */
+export interface PitchprintTree{leaves:PitchprintLeaf[];groups:{id:string;parentId?:string;editor:ObjectProperties;leafIds:string[]}[];warnings:string[];}
+/** Preflight the whole tree before fonts/assets are fetched. Hierarchy and own
+ * properties remain canonical; selection still uses the outer group. */
 export function pitchprintTree(roots:Record<string,unknown>[],properties:(item:Record<string,unknown>,warnings:string[])=>ObjectProperties):PitchprintTree{
- const leaves:PitchprintLeaf[]=[],warnings:string[]=[];let count=0;
- const walk=(items:Record<string,unknown>[],parent:PitchprintMatrix,ancestry:string,inherited:ObjectProperties,rootGroup?:string,depth=0)=>{
+ const leaves:PitchprintLeaf[]=[],groups:PitchprintTree['groups']=[],warnings:string[]=[];let count=0;
+ const walk=(items:Record<string,unknown>[],parent:PitchprintMatrix,ancestry:string,inherited:ObjectProperties,rootGroup?:string,depth=0,parentGroup?:string)=>{
   if(depth>12)throw new Error('Gruppi PitchPrint oltre il limite di 12 livelli.');
   items.forEach((item,index)=>{
    if(++count>1000)throw new Error('Template PitchPrint oltre 1000 elementi sorgente, inclusi i gruppi.');
    const id=`${ancestry}-${index+1}`,name=`Elemento ${id.slice(3).replaceAll('-',' · ')}`;checkedPitchprintEffects(item,name);
    if(item.type!=='group'){if(leaves.length>=200)throw new Error('Template PitchPrint oltre 200 elementi grafici.');leaves.push({item,id,name,parent,inherited,rootGroup});return;}
    if(!Array.isArray(item.objects)||!item.objects.length||item.objects.some(child=>!child||typeof child!=='object'||Array.isArray(child)))throw new Error(`${name}: gruppo privo di elementi validi.`);
-   const own=properties(item,warnings);if(own.label?.trim()||own.order)throw new Error(`${name}: il gruppo ha label o ordine propri. Occorre separarli o assegnare i campi ai singoli elementi prima dell’importazione; nessuna proprietà viene scartata.`);
-   if(depth)warnings.push('Gruppi annidati ricondotti al gruppo esterno: geometrie e ordine conservati; nell’editor la selezione è un gruppo unico.');
-   if(inheritedKeys.some(key=>own[key]))warnings.push('Blocchi o riferimenti del gruppo applicati anche ai suoi elementi: controllare le proprietà dopo l’importazione.');
-   walk(item.objects as Record<string,unknown>[],multiplyPitchprintMatrices(parent,pitchprintTransform(item,name)),id,inheritedPitchprintProperties(own,inherited),rootGroup??`${id}-group`,depth+1);
+   const own=properties(item,warnings),groupId=`${id}-group`,firstLeaf=leaves.length,group={id:groupId,...(parentGroup?{parentId:parentGroup}:{}),editor:own,leafIds:[] as string[]};groups.push(group);
+   if(depth)warnings.push('Gerarchia dei gruppi conservata; la selezione grafica agisce sul gruppo esterno.');
+   if(inheritedKeys.some(key=>own[key]))warnings.push('Blocchi o riferimenti del gruppo ereditati dai suoi elementi: controllare le proprietà dopo l’importazione.');
+   walk(item.objects as Record<string,unknown>[],multiplyPitchprintMatrices(parent,pitchprintTransform(item,name)),id,inheritedPitchprintProperties(own,inherited),rootGroup??groupId,depth+1,groupId);group.leafIds=leaves.slice(firstLeaf).map(leaf=>leaf.id);
   });
- };walk(roots,PITCHPRINT_IDENTITY,'pp',{});return{leaves,warnings:[...new Set(warnings)]};
+ };walk(roots,PITCHPRINT_IDENTITY,'pp',{});return{leaves,groups,warnings:[...new Set(warnings)]};
 }

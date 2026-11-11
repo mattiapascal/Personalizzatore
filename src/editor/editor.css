@@ -102,6 +102,9 @@
 .layer-name:has(+ .layer-preview) { flex: 0 1 auto; max-width: 45%; }
 .layer-preview { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .layer-group > svg { width: 14px; height: 14px; }
+.layer-group { display: inline-flex; align-items: center; gap: 3px; min-width: 14px; max-width: 90px; }
+.layer-group > svg { flex-shrink: 0; }
+.layer-group-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
 .layer-grip { flex: none; width: 28px; padding: 4px; border: 0; border-left: 1px solid #c8dce955; background: transparent; color: inherit; cursor: grab; touch-action: none; }
 .layer-grip:active { cursor: grabbing; }
 

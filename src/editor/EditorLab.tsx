@@ -1,7 +1,8 @@
 import {useProjectFontPreparation} from './LegacyFontDialog';
 import {legacyFontRequests} from './legacy-fonts';
 import {CustomerFieldsPanel} from './CustomerFieldsPanel';
-import {formObjects,selectableObjectIds,validateObjectInputs} from './object-properties';
+import {formEntries,selectableObjectIds,validateObjectInputs,effectiveObjectProperties,selectedRootGroups} from './object-properties';
+import {rootGroupFor} from './scene-groups';
 import {PlaqueConfigurationPanel} from './PlaqueConfigurationPanel';
 import { copyArchiveTitle,editorMode,editorReturnUrl,metadataKey,sessionDocumentKey } from './design-session';
 import type { ArchiveRecord } from '../editor-admin/schema';
@@ -85,6 +86,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const adapter = useRef<FabricAdapter | null>(null);
   const storeRef = useRef<DocumentStore | null>(null);
   const [doc, setDoc] = useState<GraphicDocument>(() => initialDocument?parseGraphicDocument(initialDocument):createEditorDocument(product, catalogVersion));
+  const firstProductEffect=useRef(true);
   const [sourceRecord,setSourceRecord]=useState<ArchiveRecord|null>(null),[sessionNotice,setSessionNotice]=useState(''),[sessionDialog,setSessionDialog]=useState<'reload'|'close'|null>(null),[savedStamp,setSavedStamp]=useState(()=>sessionDocumentKey(doc)),[savedMetadata,setSavedMetadata]=useState(()=>metadataKey(initialTitle??'',initialKind,initialTags?.join(', ')??''));
   const draftControl=useRef<DraftControl|null>(null),originalDocument=useRef<GraphicDocument>(structuredClone(doc)),leaving=useRef(false),sessionModal=useRef<HTMLDialogElement>(null);
   const dirty=sessionDocumentKey(doc)!==savedStamp||metadataKey(archiveTitle,archiveKind,archiveTags)!==savedMetadata;
@@ -228,7 +230,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   };
   const duplicate = () => {
     const selected = selectedRef.current, store = storeRef.current!;
-    if (selected.length === 1) {
+    if (selected.length === 1&&!rootGroupFor(store.document,selected[0]!)) {
       const object = store.document.objects.find(object => object.id === selected[0])!, newObjectId = `object-${crypto.randomUUID()}`;
       act(() => store.dispatch({ schemaVersion: 1, tool: 'duplicateObject', expectedRevision: store.document.revision, objectId: object.id, arguments: { newObjectId, xMm: object.xMm, yMm: object.yMm } }, 'manual'), newObjectId);
     } else if (selected.length) {
@@ -239,7 +241,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   };
   const deleteSelection = () => act(() => {
     const store = storeRef.current!, ids = selectedRef.current;
-    store.dispatch({ schemaVersion: 1, tool: ids.length === 1 ? 'deleteObject' : 'deleteObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: ids.length === 1 ? {} : { objectIds: ids } }, 'manual');
+    const single=ids.length===1&&!rootGroupFor(store.document,ids[0]!);store.dispatch({ schemaVersion: 1, tool: single ? 'deleteObject' : 'deleteObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: single ? {} : { objectIds: ids } }, 'manual');
   });
   const copySelection = (cut = false) => {
     try {
@@ -294,6 +296,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     return () => { view.dispose(); adapter.current = null; storeRef.current = null; };
   }, []);
   useEffect(() => {
+    const initial=firstProductEffect.current;firstProductEffect.current=false;if(initial&&initialDocument)return;
     const store = storeRef.current;
     if (!product||!store || (store.document.productId === product.productId && store.document.variantId === product.variantIds[0] && store.document.catalogVersion === catalogVersion)) return;
     try { store.changeProduct(product, catalogVersion); setError(''); refresh(); }
@@ -341,7 +344,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const displayedProduct=availableProducts?.find(item=>item.productId===doc.productId&&item.variantIds.includes(doc.variantId??''))??(product&&doc.productId===product.productId&&doc.variantId===product.variantIds[0]?product:null);
   const conflict = !!product && !portable && (doc.productId !== product.productId || doc.variantId !== product.variantIds[0] || doc.catalogVersion !== catalogVersion);
   const selectedObject = doc.objects.find(o => o.id === selectedId);
-  const selectedGroups = (doc.groups ?? []).filter(group => group.objectIds.every(id => selectedIds.includes(id)));
+  const selectedGroups = selectedRootGroups(doc,selectedIds);
   const keyboard = useRef<(event: KeyboardEvent) => void>(() => {});
   keyboard.current = event => {
     const target = event.target, root = canvasRef.current?.closest('[data-testid="editor-workspace"]');
@@ -367,13 +370,13 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     const step = event.altKey ? 0.01 : event.shiftKey ? 1 : 0.1, deltaXmm = direction[0] * step, deltaYmm = direction[1] * step;
     run(() => act(() => {
       const store = storeRef.current!, object = store.document.objects.find(object => object.id === ids[0])!;
-      store.dispatch({ schemaVersion: 1, tool: ids.length === 1 ? 'moveObject' : 'moveObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: ids.length === 1 ? { xMm: object.xMm + deltaXmm, yMm: object.yMm + deltaYmm } : { objectIds: ids, deltaXmm, deltaYmm } }, 'manual');
+      const single=ids.length===1&&!rootGroupFor(store.document,ids[0]!);store.dispatch({ schemaVersion: 1, tool: single ? 'moveObject' : 'moveObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: single ? { xMm: object.xMm + deltaXmm, yMm: object.yMm + deltaYmm } : { objectIds: ids, deltaXmm, deltaYmm } }, 'manual');
     }));
   };
   useEffect(() => { const handle = (event: KeyboardEvent) => keyboard.current(event); window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, []);
   const arrange = (tool: 'alignObject', args: unknown) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool, objectId: selectedId, expectedRevision: doc.revision, arguments: args }, 'manual'));
   const workflowApi: WorkflowEditorApi = { document: doc, peek: () => cloneGraphicDocument(storeRef.current?.document ?? doc), busy: editing || drawing || assetBusy || conflict || catalogOutdated, busyReason: editing ? 'Termina la scrittura con Esc o con il pulsante di conferma sul foglio.' : drawing ? 'Termina il disegno prima di controllare il progetto.' : assetBusy ? 'Attendi il caricamento della risorsa.' : 'Risolvi il cambio di formato prima di continuare.', capture: () => { const store = storeRef.current; if (!store || !adapter.current) throw new Error('Editor non ancora disponibile'); return { document: cloneGraphicDocument(store.document), svg: adapter.current.exportSvg(store.document) }; }, open: next => prepareAndAct(async store => { if(autosave)await preserveDraftSnapshot(store.document); next=await projectFonts.prepare(next);await Promise.all([...next.objects.filter(o => o.type === 'image').map(o => prepareRasterSource(o.source))]); return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);}; }) };
-  return <WorkspaceFrame showForm={formObjects(doc).length>0} mode={mode} actions={<>
+  return <WorkspaceFrame showForm={formEntries(doc).length>0} mode={mode} actions={<>
       <span className="design-session-status" role="status">{sessionNotice||sourceRecord?.title||archiveTitle||'Nuovo design'} · {dirty?'Modifiche da confermare':'Nessuna modifica da salvare'}</span>
       {(mode!=='customer'||customerPdfEnabled)&&<EditorButton icon="download" badge="PDF" label="Scarica PDF" disabled={pdfBusy||editing||drawing||assetBusy} onClick={()=>void exportPdf()}/>}
       <EditorButton icon="refresh" label="Ricarica design originale" disabled={archiveBusy||editing||drawing||assetBusy} onClick={()=>setSessionDialog('reload')}/>
@@ -393,7 +396,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         setDrawingTool(null); const unit = expandSelection(doc, [id]);
         const next = additive ? unit.every(id => selectedIds.includes(id)) ? selectedIds.filter(id => !unit.includes(id)) : [...selectedIds, ...unit] : unit;
         select([...new Set(next)]); adapter.current?.selectObjects(selectedRef.current);
-      }} onReorder={position => selectedIds.length > 1 ? selectionCommand('reorderObjects', { objectIds: selectedRef.current, position }) : act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'reorderObject', objectId: selectedId, expectedRevision: doc.revision, arguments: { position } }, 'manual'))}
+      }} onReorder={position => selectedIds.length > 1||selectedGroups.length ? selectionCommand('reorderObjects', { objectIds: selectedRef.current, position }) : act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'reorderObject', objectId: selectedId, expectedRevision: doc.revision, arguments: { position } }, 'manual'))}
       onPlace={(ids, targetObjectId, side, expectedRevision) => {
         const current = storeRef.current!.document, target = expandSelection(current, [targetObjectId]), ordered = current.objects.map(object => object.id), moving = ordered.filter(id => ids.includes(id)), remaining = ordered.filter(id => !ids.includes(id)), at = side === 'above' ? Math.max(...target.map(id => remaining.indexOf(id))) + 1 : Math.min(...target.map(id => remaining.indexOf(id)));
         const next = [...remaining.slice(0, at), ...moving, ...remaining.slice(at)];
@@ -453,7 +456,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       <details><summary>Scorciatoie da tastiera</summary><p className="caption">Frecce: 0,1 mm · Maiusc: 1 mm · Alt: 0,01 mm. Cmd/Ctrl+A seleziona tutto, C copia, X taglia, V incolla dagli appunti dell’editor, D duplica, G raggruppa, Maiusc+G separa, Z annulla, Maiusc+Z ripristina. Canc o Backspace elimina. I campi e la scrittura del testo conservano i propri tasti.</p></details>
     </fieldset></>}
     properties={<fieldset className="editor-actions" disabled={assetBusy || drawing || archiveBusy || conflict || catalogOutdated}><legend>Ispettore</legend>
-      {mode==='customer'&&doc.objects.some(object=>selectedIds.includes(object.id)&&object.editor?.hideMenus)?<p className="caption">I menu di questo elemento sono nascosti nel template.</p>:selectedIds.length > 1 ? <SelectionInspector document={doc} ids={selectedIds} onAttachText={(textId, pathObjectId) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'attachTextToPath', objectId: textId, expectedRevision: doc.revision, arguments: { pathObjectId } }, 'manual'), textId)} onMove={(deltaXmm, deltaYmm, expectedRevision) => {
+      {mode==='customer'&&doc.objects.some(object=>selectedIds.includes(object.id)&&effectiveObjectProperties(doc,object.id).hideMenus)?<p className="caption">I menu di questo elemento sono nascosti nel template.</p>:selectedIds.length > 1||selectedGroups.length ? <SelectionInspector document={doc} ids={selectedIds} onGroupProperties={mode!=='customer'?(id,properties)=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setGroupProperties',objectId:id,expectedRevision:storeRef.current!.document.revision,arguments:properties},'manual')):undefined} onAttachText={(textId, pathObjectId) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool: 'attachTextToPath', objectId: textId, expectedRevision: doc.revision, arguments: { pathObjectId } }, 'manual'), textId)} onMove={(deltaXmm, deltaYmm, expectedRevision) => {
         const store = storeRef.current!;
         return act(() => store.dispatch({ schemaVersion: 1, tool: 'moveObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, deltaXmm, deltaYmm } }, 'manual')) ? store.document.revision : null;
       }} onTransform={(args, expectedRevision) => {
@@ -540,6 +543,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
 /** Wait for file-backed fonts before creating or measuring the first composition. */
 export function EditorLab(props:Parameters<typeof EditorLabSession>[0]){
  const projectFonts=useProjectFontPreparation(),[prepared,setPrepared]=useState<GraphicDocument|undefined>(undefined);
+ const recoveryInput=useRef<HTMLInputElement>(null),[recoveryTitle,setRecoveryTitle]=useState<string|undefined>(),[openingFile,setOpeningFile]=useState(false);
  const [ready,setReady]=useState(false),[message,setMessage]=useState(''),[failed,setFailed]=useState(false);
  const [attempt,setAttempt]=useState(0);
  useEffect(()=>{let active=true;const controller=new AbortController();setReady(false);setFailed(false);setMessage('');
@@ -556,6 +560,11 @@ export function EditorLab(props:Parameters<typeof EditorLabSession>[0]){
   })().catch(cause=>{if(active){setMessage(cause instanceof Error?cause.message:'Font del progetto non caricabili');setFailed(true);}});
   return()=>{active=false;controller.abort();};
  },[attempt]);
- if(!ready)return <><section className="editor-lab" aria-label="Caricamento editor"><p role={failed?'alert':'status'}>{message||'Caricamento dei font della libreria…'}</p>{failed&&<><button onClick={()=>setAttempt(value=>value+1)}>Riprova</button>{props.initialDocument&&<button onClick={()=>download('progetto-originale.json',JSON.stringify(props.initialDocument,null,2),'application/json')}>Scarica progetto originale</button>}<a href="/editor/admin?section=fonts">Apri libreria font</a></>}</section>{projectFonts.dialog}</>;
- return <>{message&&<p role="status">{message}</p>}<EditorLabSession {...props} initialDocument={prepared??props.initialDocument}/></>;
+ if(!ready)return <><section className="editor-lab" aria-label="Caricamento editor"><p role={failed&&!openingFile?'alert':'status'}>{message||'Caricamento dei font della libreria…'}</p>{failed&&<><button disabled={openingFile} onClick={()=>setAttempt(value=>value+1)}>Riprova</button><button disabled={openingFile} onClick={()=>recoveryInput.current?.click()}>Apri progetto JSON</button><label className="sr-only">Riapri progetto JSON (max 10 MB)<input ref={recoveryInput} type="file" accept=".json,application/json" disabled={openingFile} onChange={event=>{
+  const file=event.currentTarget.files?.[0];event.currentTarget.value='';if(!file)return;setOpeningFile(true);setMessage('Apertura progetto…');void(async()=>{
+   try{if(file.size>10_000_000)throw new Error('File oltre 10 MB');const next=await projectFonts.prepare(parseGraphicDocument(JSON.parse(await file.text())));await Promise.all(next.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source)));showProjectFontChoices(next.fontAssets);setPrepared(next);setRecoveryTitle(file.name.replace(/\.json$/i,'').slice(0,120));setFailed(false);setMessage('');setReady(true);}
+   catch(cause){setMessage(cause instanceof Error?cause.message:'Progetto non caricabile');setFailed(true);}finally{setOpeningFile(false);}
+  })();
+ }}/></label>{props.initialDocument&&<button onClick={()=>download('progetto-originale.json',JSON.stringify(props.initialDocument,null,2),'application/json')}>Scarica progetto originale</button>}<a href="/editor/admin?section=fonts">Apri libreria font</a></>}</section>{projectFonts.dialog}</>;
+ return <>{message&&<p role="status">{message}</p>}<EditorLabSession {...props} initialDocument={prepared??props.initialDocument} initialTitle={recoveryTitle??props.initialTitle}/></>;
 }

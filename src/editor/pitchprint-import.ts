@@ -1,7 +1,7 @@
 import {checkedPitchprintFont,type PitchprintFontResult} from './pitchprint-font-resolution';
 import {pitchprintNumber as numeric,pitchprintUnitMm} from './pitchprint-units';
 import {pitchprintFontRequest} from './pitchprint-fonts';
-import {pitchprintTree,pitchprintTransform,pitchprintPoint,pitchprintOrigin,inheritedPitchprintProperties,multiplyPitchprintMatrices,type PitchprintMatrix} from './pitchprint-tree';
+import {pitchprintTree,pitchprintTransform,pitchprintPoint,pitchprintOrigin,multiplyPitchprintMatrices,type PitchprintMatrix} from './pitchprint-tree';
 import {z} from 'zod';import {IText,Rect,Circle,Ellipse,Line,Path,Polygon,Polyline,Color,type FabricObject} from 'fabric';
 import {createDocument,DocumentSchema,placeObjectAtCenter,type GraphicDocument,type SceneObject} from './model';import {loadFontAssets,renderFontFamily} from './fonts';import type {FontAsset} from './font-assets';import {measureFabric} from './fabric-adapter';import {prepareSvg} from './svg-import';import {rasterSourceFromBytes} from './raster-source';import {prepareRasterSource,rasterAnalysis} from './raster-cache';import {DEFAULT_RASTER} from './raster-processing';import {defaultMountingFor} from './plaque';import type {ObjectProperties} from './object-properties';
 const record=z.record(z.string(),z.unknown()),sourceSchema=z.object({title:z.string().max(1000).optional(),unit:z.string(),pages:z.array(z.object({canvas:z.object({objects:z.array(record).max(200),clipPath:record}).passthrough(),pageData:record}).passthrough()).length(1)}).passthrough();
@@ -22,10 +22,10 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  const pageMatrix:PitchprintMatrix=[sx,0,0,sy,-left*sx,-top*sy];
  let paperGraphics=false;if(page.canvas.background!==undefined&&page.canvas.background!==null&&page.canvas.background!==''){try{const paper=color(page.canvas.background,false);paperGraphics=paper!=='none'&&paper!=='#ffffff';}catch{paperGraphics=true;}}const background=/https?:|data:image/.test(JSON.stringify([data.templateSource,data.foregroundSource,(data.fillData as any)?.assetData]))||paperGraphics;
  if(background&&!options.excludeBackground)throw new Error('Lo sfondo/materiale o il primo piano richiede revisione. Abilita la sua esclusione soltanto se non fa parte della grafica da produrre.');if(background)warnings.push('Sfondo/materiale o primo piano escluso per scelta esplicita.');
- for(const {item,name,id,parent,inherited,rootGroup} of tree.leaves){
-  const type=item.type,editor=inheritedPitchprintProperties(properties(item,warnings),inherited),firstObject=objects.length;
+ for(const {item,name,id,parent} of tree.leaves){
+  const type=item.type,editor=properties(item,warnings),firstObject=objects.length;
   // Text has an early continue after conversion; collect its membership there.
-  const rememberGroup=()=>{if(rootGroup){const ids=groupMembers.get(rootGroup)??[];ids.push(...objects.slice(firstObject).map(object=>object.id));groupMembers.set(rootGroup,ids);}};
+  const rememberGroup=()=>{groupMembers.set(id,objects.slice(firstObject).map(object=>object.id));};
   const scaleX=numeric(item.scaleX??1,name),scaleY=numeric(item.scaleY??1,name),angle=numeric(item.angle??0,name);if(scaleX<=0||scaleY<=0)throw new Error(`${name}: scala negativa o nulla non supportata.`);
   const rawWidth=numeric(item.width,name),rawHeight=numeric(item.height,name),stroke=numeric(item.strokeWidth??0,name);
   // mtx is a cached PitchPrint/Fabric value and may be stale after an offline edit.
@@ -53,7 +53,7 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
   rememberGroup();
  }
  if(unitMm!==1)warnings.push(`Misure convertite da ${source.unit} a millimetri senza ridimensionare il formato fisico.`);if(options.monochrome)warnings.push('Colori della grafica convertiti nella palette nero/bianco per scelta esplicita.');if(!objects.length)throw new Error('Il template non contiene elementi convertibili.');
- const groups=[...groupMembers].filter(([,ids])=>ids.length>=2).map(([id,objectIds])=>({id,objectIds}));
+ const groups=tree.groups.map(({id,parentId,editor,leafIds})=>({id,...(parentId?{parentId}:{}),editor,objectIds:leafIds.flatMap(id=>groupMembers.get(id)??[])}));
  if(groups.length)warnings.push(`${groups.length} gruppi grafici conservati come unità di selezione e trasformazione.`);
  const document=DocumentSchema.parse({...createDocument(),areaMm:{width,height},objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
 }

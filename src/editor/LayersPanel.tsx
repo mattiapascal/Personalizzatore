@@ -1,9 +1,10 @@
-import {selectableObjectIds} from './object-properties';
+import {selectableObjectIds,effectiveObjectProperties} from './object-properties';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GraphicDocument, SceneObject } from './model';
 import { expandSelection, canReorderSelection } from './selection';
 import { EditorButton, EditorIcon } from './EditorButton';
 import { ObjectIdentity, objectTypeLabel } from './ObjectIdentity';
+import {rootGroupFor} from './scene-groups';
 interface Drag { ids: string[]; revision: number; documentId: string; }
 interface Drop { id: string; side: 'above' | 'below'; }
 export function LayersPanel({ customer=false,document: doc, selectedIds, disabled, multiple, onSelect, onPlace, onReorder, actions }: {
@@ -39,14 +40,14 @@ export function LayersPanel({ customer=false,document: doc, selectedIds, disable
     <div ref={list} className="layer-list" role="group" aria-label="Oggetti del progetto" data-dragging={dragging}>
       {[...doc.objects].reverse().map(object => {
         const locked=customer&&!selectableObjectIds(doc,[object.id],'customer').length;
-        const selected = selectedIds.includes(object.id), group = doc.groups?.find(group => group.objectIds.includes(object.id));
+        const selected = selectedIds.includes(object.id), group = rootGroupFor(doc,object.id);
         const preview = object.type === 'text' ? object.text.replace(/\s+/gu, ' ').trim() : '';
         return <div key={object.id} className="layer-row" data-layer-id={object.id} data-selected={selected} data-grouped={!!group} data-drop={hover?.id === object.id ? hover.side : undefined} draggable={!disabled&&!locked}
           onDragStart={event => { if (disabled || locked || pointer.current) { event.preventDefault(); return; } begin(object); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-editor-layers', object.id); }} onDragEnd={clear}
           onDragOver={event => { if (!drag.current || disabled) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; locate(event.currentTarget, event.clientY); }}
           onDrop={event => { if (!drag.current || disabled) return; event.preventDefault(); locate(event.currentTarget, event.clientY); commit(); }}>
           <button type="button" className="layer-select" disabled={locked} aria-label={`${objectTypeLabel(object)} · ${object.id}`} aria-pressed={selected} title={`${object.id}${preview ? ` - ${preview}` : ''}${group ? ` · Gruppo ${group.id}` : ''}`} onClick={event => onSelect(object.id, multiple || event.shiftKey || event.metaKey || event.ctrlKey)}>
-            <ObjectIdentity object={object}/>{group && <span className="layer-group" title={`Gruppo ${group.id}`}><EditorIcon name="group"/></span>}
+            <ObjectIdentity object={{...object,editor:effectiveObjectProperties(doc,object.id)}}/>{group && <span className="layer-group" title={`Gruppo ${group.editor?.label||group.id}`}><EditorIcon name="group"/>{group.editor?.label&&<span className="layer-group-label">{group.editor.label}</span>}</span>}
           </button>
           <button type="button" className="layer-grip" disabled={locked} aria-label={`Sposta livello ${object.id}`} title="Trascina per cambiare livello" onPointerDown={event => {
             if (disabled || locked || event.button !== 0) return; event.preventDefault(); begin(object); pointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false }; event.currentTarget.setPointerCapture(event.pointerId);

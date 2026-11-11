@@ -1,4 +1,5 @@
-import {productionDocument,selectableObjectIds,type EditorRole} from './object-properties';
+import {productionDocument,selectableObjectIds,effectiveObjectProperties,type EditorRole} from './object-properties';
+import {rootGroupFor} from './scene-groups';
 import {plaqueMountingPoints} from './plaque';
 import { mapVector } from './vector-geometry';
 import { TextPathControls } from './text-path-controls';
@@ -220,7 +221,7 @@ export class FabricAdapter {
     };
     const outside = (object: FabricObject) => {
       const ids = this.objectIds(object);
-      if (ids.length > 1 && this.document) {
+      if (this.document&&(ids.length>1||rootGroupFor(this.document,ids[0]!))) {
         const offset = delta(object), document = this.document;
         return ids.every(id => { const source = document.objects.find(object => object.id === id)!; return !objectIntersectsArea(document, { ...source, xMm: source.xMm + offset.x, yMm: source.yMm + offset.y }, measureFabric); });
       }
@@ -263,11 +264,12 @@ export class FabricAdapter {
       const yMm = bounds.top / PX_PER_MM;
       const expectedRevision = gestureRevision;
       const ids = this.objectIds(object);
-      if (ids.length > 1 && event.action === 'drag') {
+      const grouped=!!this.document&&!!rootGroupFor(this.document,ids[0]!);
+      if ((ids.length > 1||grouped) && event.action === 'drag') {
         const offset = delta(object), remove = outside(object);
         queueMicrotask(() => { if (!this.disposed) { if (remove) onDeleteSelection?.(ids, expectedRevision); else onMoveSelection?.(ids, offset.x, offset.y, expectedRevision); } }); return;
       }
-      if (ids.length > 1 && event.action) {
+      if ((ids.length > 1||grouped) && event.action) {
         const point = object.getCenterPoint(), scale = object.scaleX / gestureScale;
         const rotationDeg = ((object.angle - gestureAngle + 180) % 360 + 360) % 360 - 180;
         const args = { scale, rotationDeg, center: { xMm: point.x / PX_PER_MM, yMm: point.y / PX_PER_MM } };
@@ -345,8 +347,8 @@ export class FabricAdapter {
   setRole(role:EditorRole):void{this.role=role;}
   private applyLocks(target:FabricObject,ids:readonly string[]):void{
     if(this.role==='admin'||!this.document)return;const sources=this.document.objects.filter(object=>ids.includes(object.id));
-    if(sources.some(object=>object.editor?.selectionLocked))target.set({selectable:false,evented:false});
-    if(sources.some(object=>object.editor?.transformLocked))target.set({lockMovementX:true,lockMovementY:true,lockScalingX:true,lockScalingY:true,lockRotation:true,hasControls:false});
+    if(sources.some(object=>effectiveObjectProperties(this.document!,object.id).selectionLocked))target.set({selectable:false,evented:false});
+    if(sources.some(object=>effectiveObjectProperties(this.document!,object.id).transformLocked))target.set({lockMovementX:true,lockMovementY:true,lockScalingX:true,lockScalingY:true,lockRotation:true,hasControls:false});
   }
   render(document: GraphicDocument, selection: string | null | readonly string[] = this.selectedIds): void {
     for(const object of document.objects)if(object.type==='text')for(const font of [object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])assertFontAvailable(font);
@@ -369,7 +371,7 @@ export class FabricAdapter {
       const rendered = new Set<string>();
       for (const object of document.objects) {
         if (rendered.has(object.id)) continue;
-        const group = document.groups?.find(group => group.objectIds.includes(object.id));
+        const group = rootGroupFor(document,object.id);
         const members = group ? document.objects.filter(object => group.objectIds.includes(object.id)) : [object];
         const children = members.map(object => { const f = renderObject(editing?.pending && object.id === selectedId && object.type === 'text' ? editing.snapshot : object, true); this.idByObject.set(f, object.id); this.sourceByObject.set(f, object); this.membersByObject.set(f, [object.id]); rendered.add(object.id); return f; });
         const root = group ? new Group(children, { originX: 'center', originY: 'center', strokeWidth: 0, objectCaching: false, subTargetCheck: false, interactive: false, perPixelTargetFind: true }) : children[0]!;

@@ -3,6 +3,7 @@ import { TEST_MARGIN_MM, cloneSceneObject, objectGeometry, objectCenter, placeOb
 
 import { objectWithAppearance } from './object-appearance';
 import { areaAlignmentDelta } from './align-area';
+import {rootGroupFor,cloneSceneGroup,remapSceneGroups} from './scene-groups';
 
 type SelectionTool = 'placeObjects' | 'alignObjectsToArea' | 'reorderObjects' | 'styleObjects' | 'groupObjects' | 'ungroupObjects' | 'moveObjects' | 'transformObjects' | 'deleteObjects' | 'duplicateObjects' | 'alignObjects' | 'distributeObjects';
 type SelectionCommand = Extract<GraphicCommand, { tool: SelectionTool }>;
@@ -11,7 +12,7 @@ export function isSelectionCommand(command: GraphicCommand): command is Selectio
 }
 export function expandSelection(doc: GraphicDocument, ids: readonly string[]): string[] {
   const selected = new Set(ids);
-  for (const group of doc.groups ?? []) if (group.objectIds.some(id => selected.has(id))) group.objectIds.forEach(id => selected.add(id));
+  for (const group of doc.groups ?? []) if (!group.parentId&&group.objectIds.some(id => selected.has(id))) group.objectIds.forEach(id => selected.add(id));
   return doc.objects.filter(object => selected.has(object.id)).map(object => object.id);
 }
 export function selectionBounds(objects: readonly SceneObject[], measure: Measure) {
@@ -29,7 +30,7 @@ export function selectionUnits(doc: GraphicDocument, ids: readonly string[]): Sc
   const remaining = new Set(ids), units: SceneObject[][] = [];
   for (const object of doc.objects) {
     if (!remaining.has(object.id)) continue;
-    const members = doc.groups?.find(group => group.objectIds.includes(object.id))?.objectIds ?? [object.id];
+    const members = rootGroupFor(doc,object.id)?.objectIds ?? [object.id];
     const unit = doc.objects.filter(object => members.includes(object.id));
     unit.forEach(object => remaining.delete(object.id)); units.push(unit);
   }
@@ -80,7 +81,7 @@ export function applySelectionCommand(doc: GraphicDocument, command: SelectionCo
   if (command.tool === 'ungroupObjects') {
     const ids = command.arguments.groupIds, groups = doc.groups?.filter(group => ids.includes(group.id)) ?? [];
     if (new Set(ids).size !== ids.length || groups.length !== ids.length || !groups.some(group => group.objectIds.includes(command.objectId))) throw new Error('Gruppi da separare non validi');
-    doc.groups = doc.groups?.filter(group => !ids.includes(group.id)); cleanGroups(doc); return;
+    doc.groups = doc.groups?.filter(group => !ids.includes(group.id)).map(source=>{const group=cloneSceneGroup(source);let parent=group.parentId;while(parent&&ids.includes(parent))parent=groups.find(item=>item.id===parent)?.parentId;if(parent)group.parentId=parent;else delete group.parentId;return group;}); cleanGroups(doc); return;
   }
   const ids = command.tool === 'duplicateObjects' ? command.arguments.copies.map(copy => copy.objectId) : command.arguments.objectIds;
   const objects = selectedObjects(doc, ids, command.objectId);
@@ -95,7 +96,7 @@ export function applySelectionCommand(doc: GraphicDocument, command: SelectionCo
     }
     case 'groupObjects': {
       const { groupId } = command.arguments;
-      if (selectedGroups.length) throw new Error('Gruppi annidati non ancora disponibili: separa i gruppi prima di raggruppare');
+      if (selectedGroups.length) throw new Error('Separa i gruppi prima di creare un nuovo gruppo');
       if (doc.objects.some(object => object.id === groupId) || doc.groups?.some(group => group.id === groupId)) throw new Error('ID gruppo già presente');
       // Il gruppo occupa il livello dell'elemento selezionato più alto.
       const highest = Math.max(...objects.map(object => doc.objects.indexOf(object)));
@@ -131,7 +132,7 @@ export function applySelectionCommand(doc: GraphicDocument, command: SelectionCo
       if (new Set(mappings.map(group => group.groupId)).size !== mappings.length || mappings.length !== selectedGroups.length || mappings.some(mapping => !selectedGroups.some(group => group.id === mapping.groupId))) throw new Error('Associazione delle copie dei gruppi non valida');
       const copies = objects.map(object => ({ ...cloneSceneObject(object), id: command.arguments.copies.find(copy => copy.objectId === object.id)!.newObjectId }));
       doc.objects.push(...copies);
-      for (const group of selectedGroups) (doc.groups ??= []).push({ id: mappings.find(mapping => mapping.groupId === group.id)!.newGroupId, objectIds: group.objectIds.map(id => command.arguments.copies.find(copy => copy.objectId === id)!.newObjectId) });
+      (doc.groups??=[]).push(...remapSceneGroups(selectedGroups,new Map(command.arguments.copies.map(copy=>[copy.objectId,copy.newObjectId])),new Map(mappings.map(mapping=>[mapping.groupId,mapping.newGroupId]))));
       break;
     }
     case 'alignObjectsToArea': {

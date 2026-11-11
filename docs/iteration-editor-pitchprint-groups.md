@@ -1,5 +1,7 @@
 # Importazione dei gruppi PitchPrint — 10 novembre 2026
 
+**Seguito:** [proprietà e gerarchia dei gruppi](iteration-editor-group-properties.md). Conserva label/priorità dei contenitori e annidamento; supera i blocchi descritti sotto. Questo documento conserva il resoconto dell’incremento geometrico precedente.
+
 ## Problema e incremento
 
 82 dei 370 sorgenti locali a pagina singola contengono gruppi. Il convertitore precedente li rifiutava tutti. L’editor conserva già gruppi semplici nel documento canonico: questo incremento riutilizza quei gruppi e gli stessi comandi manuali/AI, senza introdurre un nuovo strumento avanzato.

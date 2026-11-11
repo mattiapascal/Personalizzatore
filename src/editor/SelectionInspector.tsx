@@ -5,11 +5,15 @@ import { selectionBounds, selectionUnits } from './selection';
 import { measureFabric } from './fabric-adapter';
 import { EditorButton, EditorIcon } from './EditorButton';
 import { SelectionStyleInspector } from './SelectionStyleInspector';
+import {GroupPropertiesPanel} from './GroupPropertiesPanel';
+import type {GroupProperties} from './object-properties';
+import {selectedRootGroups} from './object-properties';
 
 type Field = 'x' | 'y' | 'width' | 'height' | 'rotation';
 const format = (value: number) => String(Math.round(value * 1000) / 1000);
-export function SelectionInspector({ document, ids, onMove, onTransform, onAlign, onDistribute, onStyle, onAlignArea, onAttachText }: {
+export function SelectionInspector({ document, ids, onMove, onTransform, onAlign, onDistribute, onStyle, onAlignArea, onAttachText,onGroupProperties }: {
   document: GraphicDocument; ids: string[]; onAttachText: (textId: string, pathId: string) => void;
+  onGroupProperties?:(id:string,properties:GroupProperties)=>void;
   onMove: (x: number, y: number, revision: number) => number | null;
   onTransform: (args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => number | null;
   onAlign: (alignment: 'left' | 'centerX' | 'right' | 'top' | 'centerY' | 'bottom') => void;
@@ -63,10 +67,11 @@ export function SelectionInspector({ document, ids, onMove, onTransform, onAlign
   useEffect(() => cancel, []);
   const reset = () => { cancel(); clearChanges(); current.current = initial; setValues(initial); setStatus('Ripristinata la bozza'); };
   const text = objects.find(object => object.type === 'text' && !object.textPath), guide = objects.find(isTextPathGuide), canAttach = objects.length === 2 && text && guide && !document.groups?.some(group => group.objectIds.some(id => ids.includes(id)));
-  const units = selectionUnits(document, ids), grouped = units.length === 1;
+  const units = selectionUnits(document, ids), grouped = units.length === 1,root=grouped?selectedRootGroups(document,ids)[0]:undefined;
   const input = (field: Field, label: string, min: number, max: number) => <label key={field}>{label}<input aria-label={label} type="number" required min={min} max={max} step="any" value={values[field]} onFocus={() => { focused.current = field; }} onBlur={() => { focused.current = null; }} onChange={event => change(field, event.target.value)}/></label>;
   return <form className="object-inspector inspector-content" aria-label="Proprietà selezione" onSubmit={event => { event.preventDefault(); flush(); }} onBlur={flush} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); reset(); } }}>
-    <div className="inspector-selection"><EditorIcon name={grouped ? 'group' : 'multiSelect'}/><strong>{grouped ? 'Gruppo' : 'Selezione'} · {ids.length} elementi</strong></div>
+    <div className="inspector-selection"><EditorIcon name={grouped ? 'group' : 'multiSelect'}/><div><strong>{root?.editor?.label||(grouped ? 'Gruppo' : 'Selezione')}{root?.editor?.reference?' · Guida':''} · {ids.length} elementi</strong>{root&&<span>{root.id}</span>}</div></div>
+    {root&&onGroupProperties&&<GroupPropertiesPanel document={document} group={root} onChange={onGroupProperties}/>}
     {canAttach && <div className="button-row"><EditorButton icon="textPath" label="Applica testo al tracciato" onClick={() => onAttachText(text.id, guide.id)}/></div>}
     <h3>Geometria</h3>
     <div className="property-grid">{input('x', 'X selezione (mm)', -1000, 1000)}{input('y', 'Y selezione (mm)', -1000, 1000)}{input('width', 'Larghezza selezione (mm)', 0.01, 4000)}{input('height', 'Altezza selezione (mm)', 0.01, 4000)}{input('rotation', 'Ruota selezione di (°)', -180, 180)}</div>

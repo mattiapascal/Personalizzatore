@@ -1,8 +1,16 @@
-# Editor grafico — stato locale del 10 novembre 2026
+# Editor grafico — stato locale dell’11 novembre 2026
 
 Ingresso diretto: `http://127.0.0.1:5173/editor`; ambiente a tutto schermo con pannelli: `http://127.0.0.1:5173/editor?workspace=1`. Avviare con Node della `.nvmrc` e `npm run dev` se il laboratorio è spento.
 
-## Importazione dei gruppi PitchPrint — ultimo incremento
+## Proprietà e gerarchia dei gruppi — ultimo incremento verificato
+
+[Contratto e prove](iteration-editor-group-properties.md): label, priorità, annidamento e gruppi con un solo elemento conservati nel documento. Ispettore amministrativo del gruppo e sottogruppi; blocchi/riferimenti ereditati, copia/incolla e archivio con rimappatura completa. Il modulo può aggiornare i contenuti testuali dei figli senza separare il gruppo.
+
+**627 unitari / 93 file, build/segreti, 374 browser completi, 13 regressioni pubbliche e 20 artefatti passati.** Corretti anche apertura del pannello fissaggi, recupero JSON con backend offline e controllo di tutti i membri bloccati nei comandi manuali/AI. Analisi reale senza scritture: **112 → 117/370 convertibili**, cinque recuperati e nessun caso perso. I contenitori con label/ordine non sono più un blocco; i 19 casi restanti tra i 24 precedentemente fermati incontrano altri limiti espliciti. Anteprime aggiornate, nessun collaudo Illustrator o deploy.
+
+Le 117 conversioni TEST sono preparate come JSON privati: **79 già vettoriali B/N, 37 a colori convertite in B/N e una con immagine**, con sfondi/materiali esclusi. **Nessun template PitchPrint ancora salvato nell’archivio reale**: attesa la scelta esplicita del titolare fra le opzioni chiarite nel piano. I numeri di convertibilità non indicano template già visibili nel backend.
+
+## Importazione dei gruppi PitchPrint
 
 [Comportamento e limiti](iteration-editor-pitchprint-groups.md): gruppi grafici con trasformazioni concatenate, testo editabile, vettori anche riflessi e immagini raggruppate; blocchi ereditati validati dagli stessi comandi manuali/AI. Annidamento ricondotto al gruppo esterno con avviso. Contenitori con label/ordine propri restano bloccati, così come deformazioni non rappresentabili: non si perdono proprietà per far riuscire la conversione.
 

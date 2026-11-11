@@ -1,5 +1,7 @@
 # Assistente AI e personalizzatore Shopify
 
+**Ultimo collaudo locale — 11 novembre:** [proprietà e gerarchia dei gruppi](docs/iteration-editor-group-properties.md), recupero JSON offline e comandi condivisi validati. **627 unitari, 374 browser**, build/segreti, 13 regressioni pubbliche e 20 campioni passati. Le conversioni dei template sono preparate; il salvataggio reale attende la scelta del titolare sulle differenze di colore/sfondo.
+
 **Font dell’editor: solo file incorporati.** [Stili misti, scelta delle famiglie e collaudi portabili](docs/iteration-editor-font-regressions.md): B/I preservano le porzioni del testo, il menu segue libreria e documento corrente, i vecchi progetti richiedono una scelta esplicita dei file. Controllo completo: **616 unitari e 363 browser**, più 13 regressioni pubbliche e 19 campioni. [Editor locale](http://127.0.0.1:5173/editor?workspace=1).
 
 **Nuovo incremento locale:** [importazione PitchPrint](docs/iteration-editor-pitchprint-import.md) da copie native, 473 sorgenti acquisiti in sola lettura; 39 varianti Google installate esatte e [font manuali](.local/pitchprint-migration/font-audit/font-da-installare.md), senza fallback. [Proprietà degli oggetti](docs/iteration-editor-object-properties.md) e modulo cliente con ordine crescente. [Apri importatore](http://127.0.0.1:5173/editor/import-pitchprint?workspace=1&mode=admin).
