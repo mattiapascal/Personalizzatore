@@ -14,3 +14,7 @@ it('snapshot amministrativo invia la stessa chiave SHA del browser senza trasmet
  const snapshot=adminSnapshot(state);expect(snapshot.records[0]!.previewKey).toBe(await archivePreviewKey(document));expect(snapshot.records[0]).not.toHaveProperty('document');
  expect(adminSnapshot({...state,records:[{...record,title:'Nuovo titolo',tags:['Tag TEST'],version:2}]}).records[0]!.previewKey).toBe(snapshot.records[0]!.previewKey);
 });
+it('politica font invalida le immagini con testo precedenti al controllo rigoroso, senza cambiare le miniature di sole forme',async()=>{
+ const{archivePreviewContent,ARCHIVE_PREVIEW_FONT_POLICY}=await import('../src/editor-admin/preview-key'),doc=createTestDocument();expect(JSON.parse(archivePreviewContent(doc)).fontPolicy).toBe(ARCHIVE_PREVIEW_FONT_POLICY);
+ doc.objects=doc.objects.filter(object=>object.type!=='text');expect(JSON.parse(archivePreviewContent(doc))).not.toHaveProperty('fontPolicy');
+});

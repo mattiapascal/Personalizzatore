@@ -6,15 +6,15 @@ import { readPreviewImage, writePreviewImage } from './preview-cache';
 const cache=new Map<string,Blob>();let queue=Promise.resolve();
 function queued<T>(job:()=>Promise<T>):Promise<T>{const work=queue.then(job);queue=work.then(()=>{},()=>{});return work;}
 async function renderRecord(record:ArchiveRecord):Promise<Blob>{
- const {exportDocumentThumbnail,prepareRasterSource}=await import('../editor/fabric-adapter'),{loadFontAssets}=await import('../editor/fonts');
- await Promise.all([loadFontAssets(record.document.fontAssets),...record.document.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source))]);
+ const {exportDocumentThumbnail}=await import('../editor/fabric-adapter');
  return exportDocumentThumbnail(record.document, ARCHIVE_PREVIEW_SIDE);
 }
 function remember(key:string,preview:Blob){cache.delete(key);cache.set(key,preview);let bytes=[...cache.values()].reduce((sum,value)=>sum+value.size,0);while(cache.size>128||bytes>16*1024*1024){const first=cache.keys().next().value;if(!first)break;bytes-=cache.get(first)!.size;cache.delete(first);}}
 export function ArchiveThumbnail({id,version,title,previewKey,record,large=false}:{id:string;version:number;title:string;previewKey?:string;record?:ArchiveRecord;large?:boolean}){
- const ref=useRef<HTMLSpanElement>(null),[active,setActive]=useState(large),[url,setUrl]=useState(''),[error,setError]=useState('');
+ const ref=useRef<HTMLSpanElement>(null),[active,setActive]=useState(large),[result,setResult]=useState<{key:unknown;url?:string;error?:string}|null>(null);
+ const viewKey=previewKey??record?.document??`${id}:${version}`,current=result?.key===viewKey?result:null,url=current?.url,error=current?.error;
  useEffect(()=>{if(large){setActive(true);return;}const element=ref.current;if(!element)return;if(typeof IntersectionObserver==='undefined'){setActive(true);return;}const observer=new IntersectionObserver(entries=>setActive(entries.some(entry=>entry.isIntersecting)),{rootMargin:'120px'});observer.observe(element);return()=>observer.disconnect();},[large]);
- useEffect(()=>{let current=true,uri='';setUrl('');setError('');if(!active)return;
+ useEffect(()=>{let current=true,uri='';setResult(null);if(!active)return;
  void queued(async()=>{
    if(!current)return;
    // A server content fingerprint lets a hit skip both source/font downloads and rendering.
@@ -29,7 +29,7 @@ export function ArchiveThumbnail({id,version,title,previewKey,record,large=false
    const cached=cache.get(key)??await readPreviewImage(key);if(cached){remember(key,cached);return cached;}
    if(!current)return;
    const preview=await renderRecord(source);remember(key,preview);await writePreviewImage(key,preview);return preview;
- }).then(preview=>{if(!current||!preview)return;uri=URL.createObjectURL(preview);setUrl(uri);}).catch(cause=>{if(current)setError(cause instanceof Error?cause.message:'Miniatura non disponibile');});
- return()=>{current=false;if(uri)URL.revokeObjectURL(uri);};},[active,id,version,previewKey,record]);
- return <span ref={ref} className={large?'archive-large-image':'archive-thumbnail'}>{url?<img src={url} alt={`${large?'Anteprima':'Miniatura'} ${title}`}/>:<span className="caption">{error||(!active?'Anteprima':'Preparazione…')}</span>}</span>;
+ }).then(preview=>{if(!current||!preview)return;uri=URL.createObjectURL(preview);setResult({key:viewKey,url:uri});}).catch(cause=>{if(current)setResult({key:viewKey,error:cause instanceof Error?cause.message:'Miniatura non disponibile'});});
+ return()=>{current=false;if(uri)URL.revokeObjectURL(uri);};},[active,id,version,previewKey,record,viewKey]);
+ return <span ref={ref} className={large?'archive-large-image':'archive-thumbnail'}>{url?<img src={url} alt={`${large?'Anteprima':'Miniatura'} ${title}`}/>:<span className="caption" title={error}>{error&&!large&&error.startsWith('Correggi i font')?'Font da correggere':error||(!active?'Anteprima':'Preparazione…')}</span>}</span>;
 }

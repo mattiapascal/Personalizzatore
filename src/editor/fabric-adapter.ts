@@ -6,6 +6,7 @@ import { TextPathControls } from './text-path-controls';
 import { EditorPathText } from './text-path-view';
 import { preserveTextPathGuide, textPathStyleChanged } from './text-path-model';
 import { scaledTextPath } from './text-path-spec';
+import { prepareRasterSource } from './raster-cache';
 export { prepareRasterSource } from './raster-cache';
 import { RasterCropControls } from './raster-crop-controls';
 import { checkedRasterCrop, type ImageObject } from './raster-geometry';
@@ -21,7 +22,8 @@ import { PrimitiveDrawingController, type PrimitiveDrawingCallbacks } from './pr
 import { primitiveFromEndpoints, type DrawingPrimitive } from './primitive-geometry';
 import { FreehandDrawingController, type FreehandCallbacks } from './freehand-drawing';
 import { strokeGeometry } from './path-geometry';
-import { assertFontAvailable, renderFontFamily, canonicalFontFamily, embedSvgFonts } from './fonts';
+import { assertFontAvailable, renderFontFamily, canonicalFontFamily, embedSvgFonts, loadFontAssets } from './fonts';
+import { assertOutputFonts } from './font-preflight';
 import { tintImprintPixels } from './ink';
 import { pathWorldPoints, type PathObject } from './path-nodes';
 import { PathNodeControls, polyNodeScenePoint } from './path-node-controls';
@@ -131,6 +133,22 @@ export function measureTextFrame(object: TextObject) {
   const box = renderObject(object) as EditorTextBox;
   return { widthMm: box.getScaledWidth() / PX_PER_MM, heightMm: box.getScaledHeight() / PX_PER_MM, overflow: box.overflow, justificationLimited: box.justificationResults.some(line => line.underfull || line.overfull), lines: box.textLines.length };
 }
+/** The canonical project stays untouched. Only its productive objects and used
+ * files are prepared, after the nominal glyph check and before Fabric renders. */
+async function prepareGraphicOutput(document: GraphicDocument): Promise<GraphicDocument> {
+  DocumentSchema.parse(document);
+  const visible = productionDocument(document), ids = new Set(visible.objects.flatMap(object => object.type === 'text' ? [object.fontFamily, ...object.characterStyles?.flatMap(run => run.style.fontFamily ? [run.style.fontFamily] : []) ?? []] : []));
+  const output = { ...visible, ...(visible.fontAssets ? { fontAssets: visible.fontAssets.filter(asset => ids.has(asset.id)) } : {}) };
+  await assertOutputFonts(output);
+  await Promise.all([loadFontAssets(output.fontAssets), ...output.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]);
+  return output;
+}
+/** Checked public SVG output. The adapter's synchronous serializer is only for
+ * already prepared scenes and internal geometry/reference tests. */
+export async function exportDocumentSvg(document: GraphicDocument): Promise<string> {
+  const output = await prepareGraphicOutput(structuredClone(document)), adapter = new FabricAdapter(window.document.createElement('canvas'), () => 0, () => {});
+  try { return adapter.exportSvg(output); } finally { adapter.dispose(); }
+}
 /** Canvas temporaneo: né overlay della vista né selezione entrano nel PNG. */
 export async function exportDocumentPng(document: GraphicDocument, dpi: PngDpi, transparent: boolean): Promise<Blob> {
   const size = pngExportSize(document.areaMm, dpi), blob = await renderDocumentPng(document, size, transparent);
@@ -143,7 +161,7 @@ export async function exportDocumentThumbnail(document: GraphicDocument, side = 
   return renderDocumentPng(document, { width: Math.max(1, Math.round(document.areaMm.width * pixelsPerMm)), height: Math.max(1, Math.round(document.areaMm.height * pixelsPerMm)), pixelsPerMm }, true);
 }
 async function renderDocumentPng(document: GraphicDocument, size: {width:number;height:number;pixelsPerMm:number}, transparent: boolean): Promise<Blob> {
-  DocumentSchema.parse(document); validateLayout(document, measureFabric, 'edit');
+  document = await prepareGraphicOutput(structuredClone(document)); validateLayout(document, measureFabric, 'edit');
   const element = window.document.createElement('canvas');
   const output = new StaticCanvas(element, { width: size.width, height: size.height, enableRetinaScaling: false, renderOnAddRemove: false });
   try {
@@ -609,6 +627,7 @@ export class FabricAdapter {
     } finally { this.rendering = previous; }
     this.publishObjectSelection();
   }
+  /** Low-level serialization; runtime output callers use exportDocumentSvg. */
   exportSvg(document: GraphicDocument): string {
     const zoom = this.zoom;
     const selected = [...this.selectedIds];

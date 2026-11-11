@@ -50,7 +50,11 @@ async function coverage(asset: FontAsset,options:FontInspectionOptions): Promise
     } catch { return; }
   })();
   if (cache.size >= 32) cache.delete(cache.keys().next().value!);
-  cache.set(key, pending); return pending;
+  cache.set(key, pending);
+  // A failed service/read must be retryable; it is not a permanent property of
+  // the embedded file. Concurrent inspections still share the pending request.
+  void pending.then(ranges => { if (!ranges && cache.get(key) === pending) cache.delete(key); });
+  return pending;
 }
 
 /** Derives checks from exact embedded bytes, never client-supplied coverage metadata. */
@@ -100,5 +104,13 @@ export function fontIssueMessage(issue: FontIssue): string {
 export async function assertDocumentFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>,options:FontInspectionOptions={}): Promise<FontReport> {
   const report = await inspectDocumentFonts(doc,options), blocking = report.issues.filter(issue => issue.kind !== 'unknown-coverage');
   if (blocking.length) throw new Error(fontIssueMessage(blocking[0]!));
+  return report;
+}
+
+/** Output is stricter than an editable draft: unknown coverage is not proof
+ * that the browser will use only the requested file. */
+export async function assertOutputFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>, options: FontInspectionOptions = {}): Promise<FontReport> {
+  const report = await inspectDocumentFonts(doc, options);
+  if (report.issues.length) throw new Error(`Correggi i font prima di generare la grafica. ${fontIssueMessage(report.issues[0]!)}`);
   return report;
 }

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { EditorButton } from './EditorButton';
 import { exportDocumentPng } from './fabric-adapter';
 import type { GraphicDocument } from './model';
 import { PNG_EXPORT_DPI, pngExportSize, type PngDpi } from './png-export';
 export function PngExportPanel({ document }: { document: GraphicDocument }) {
+  const current=useRef(document);current.current=document;
   const [dpi, setDpi] = useState<PngDpi>(300), [transparent, setTransparent] = useState(false), [busy, setBusy] = useState(false), [status, setStatus] = useState('');
   let size: ReturnType<typeof pngExportSize> | null = null, sizeError = '';
   try { size = pngExportSize(document.areaMm, dpi); } catch (error) { sizeError = error instanceof Error ? error.message : 'Formato non disponibile'; }
@@ -11,7 +12,9 @@ export function PngExportPanel({ document }: { document: GraphicDocument }) {
     if (busy || !size) return;
     const snapshot = document; setBusy(true); setStatus('Preparazione PNG…');
     try {
-      const blob = await exportDocumentPng(snapshot, dpi, transparent), url = URL.createObjectURL(blob);
+      const blob = await exportDocumentPng(snapshot, dpi, transparent);
+      if(current.current.documentId!==snapshot.documentId||current.current.revision!==snapshot.revision)throw new Error('Il progetto è cambiato durante l’esportazione: ripeti il PNG.');
+      const url = URL.createObjectURL(blob);
       try { const anchor = window.document.createElement('a'); anchor.href = url; anchor.download = `bozza-r${snapshot.revision}-${size.width}x${size.height}-${dpi}dpi.TEST.png`; anchor.click(); }
       finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
       setStatus(`PNG della revisione ${snapshot.revision} pronto.`);

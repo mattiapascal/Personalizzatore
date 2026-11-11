@@ -21,6 +21,7 @@ function FontRepairRow({ issue, revision, busy, onOpen, onRepair }: { issue: Fon
 }
 
 export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {}, onRepair }: { document: GraphicDocument; busy?: boolean; onOpen?: () => void; onRepair?: Repair }) {
+  const [retry,setRetry]=useState(0);
   const [result, setResult] = useState<{ document: GraphicDocument; report: FontReport } | null>(null);
   const relevant = doc.objects.some(object => object.type === 'text');
   useEffect(() => {
@@ -28,11 +29,12 @@ export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {},
     let active = true;
     void inspectDocumentFonts(doc).then(report => { if (active) setResult({ document: doc, report }); });
     return () => { active = false; };
-  }, [doc, relevant]);
+  }, [doc, relevant, retry]);
   if (!relevant) return null;
   const report = result?.document === doc ? result.report : null;
   return <section aria-label="Controllo font del progetto" className="font-check-panel">
     <strong>Font del progetto</strong>
     {!report ? <p className="caption">Controllo dei caratteri…</p> : report.issues.length ? <div><p className="caption" role="status">Controlla questi testi prima di confermare la grafica.</p><ul>{report.issues.map(issue=><li key={`${issue.objectId}:${issue.fontId}:${issue.kind}`}>{fontIssueMessage(issue)}{issue.kind === 'missing-characters' && onRepair && <FontRepairRow issue={issue} revision={doc.revision} busy={busy} onOpen={onOpen} onRepair={onRepair}/>}</li>)}</ul></div> : <p className="caption">I caratteri usati sono presenti nei {report.checkedFonts} file font controllati. Verifica comunque la resa nell’anteprima.</p>}
+    {report?.issues.some(issue=>issue.kind==='unknown-coverage')&&<button type="button" disabled={busy} onClick={()=>{setResult(null);setRetry(value=>value+1);}}>Ricontrolla i font</button>}
   </section>;
 }

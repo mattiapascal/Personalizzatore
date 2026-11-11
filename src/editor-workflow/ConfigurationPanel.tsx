@@ -1,3 +1,5 @@
+import {assertOutputFonts} from '../editor/font-preflight';
+import {productionDocument} from '../editor/object-properties';
 import {validateObjectInputs} from '../editor/object-properties';
 import { useEffect, useId, useRef, useState } from 'react';
 import { InkPreviewFilter } from '../editor/InkPreviewFilter';
@@ -10,26 +12,26 @@ import type { CartSummary, ConfigurationCommand, FrozenConfiguration } from './s
 export interface WorkflowEditorApi {
   document: GraphicDocument; busy: boolean; busyReason?: string;
   peek: () => GraphicDocument;
-  capture: () => { document: GraphicDocument; svg: string };
+  capture: () => Promise<{ document: GraphicDocument; svg: string }>;
   open: (document: GraphicDocument) => Promise<boolean>;
 }
 async function request<T>(path = '', body?: ConfigurationCommand): Promise<T> {
   const response = await fetch(`/__editor-local/configurations/${path}`, { method: body ? 'POST' : 'GET', headers: { 'X-Editor-Local': '1', ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
   const data = await response.json(); if (!response.ok) throw new Error(data.error ?? 'Il carrello di prova non è disponibile'); return data;
 }
-function SvgPreview({ svg, label, color='black' }: { svg: string; label: string; color?:InkColor }) {
-  const [url, setUrl] = useState('');
+function SvgPreview({ svg, document, label, color='black' }: { svg: string; document:GraphicDocument; label: string; color?:InkColor }) {
+  const [state,setState]=useState<{svg:string;document:GraphicDocument;url?:string;error?:string}|null>(null),current=state?.svg===svg&&state.document===document?state:null,url=current?.url;
   const filterId=`configuration-ink-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
-  useEffect(() => { const uri = URL.createObjectURL(new Blob([svg.replace(/<!DOCTYPE[^>]*>/g, '')], { type: 'image/svg+xml' })); setUrl(uri); return () => URL.revokeObjectURL(uri); }, [svg]);
-  return url ? <><InkPreviewFilter id={filterId} color={color}/><img src={url} alt={label} className="configuration-preview" style={{filter:color==='black'?'none':`url(#${filterId})`}}/></> : <span>Preparazione anteprima…</span>;
+  useEffect(() => { let active=true,uri='';setState(null);void assertOutputFonts(productionDocument(document)).then(()=>{if(!active)return;uri=URL.createObjectURL(new Blob([svg.replace(/<!DOCTYPE[^>]*>/g,'' )],{type:'image/svg+xml'}));setState({svg,document,url:uri});}).catch(cause=>{if(active)setState({svg,document,error:cause instanceof Error?cause.message:'Anteprima non disponibile'});});return()=>{active=false;if(uri)URL.revokeObjectURL(uri);};},[svg,document]);
+  return current?.error?<span role="alert">{current.error}</span>:url ? <><InkPreviewFilter id={filterId} color={color}/><img src={url} alt={label} className="configuration-preview" style={{filter:color==='black'?'none':`url(#${filterId})`}}/></> : <span>Preparazione anteprima…</span>;
 }
 function SavedPreview({ id, title }: { id: string; title: string }) {
   const [config, setConfig] = useState<FrozenConfiguration | null>(null), [error, setError] = useState(false);
   useEffect(() => { let active = true; setConfig(null); setError(false); void request<FrozenConfiguration>(id).then(value => { if (active) setConfig(value); }).catch(() => { if (active) setError(true); }); return () => { active = false; }; }, [id]);
-  return config ? <SvgPreview svg={config.svg} color={config.document.inkColor??config.options.inkColor} label={`Grafica salvata: ${title}`}/> : <span>{error ? 'Anteprima non disponibile' : 'Preparazione anteprima…'}</span>;
+  return config ? <SvgPreview svg={config.svg} document={config.document} color={config.document.inkColor??config.options.inkColor} label={`Grafica salvata: ${title}`}/> : <span>{error ? 'Anteprima non disponibile' : 'Preparazione anteprima…'}</span>;
 }
 type Line = CartSummary['lines'][number];
-type Capture = ReturnType<WorkflowEditorApi['capture']>;
+type Capture = Awaited<ReturnType<WorkflowEditorApi['capture']>>;
 export function ConfigurationPanel({ api }: { api: WorkflowEditorApi }) {
   const [state, setState] = useState<CartSummary | null>(null), [title, setTitle] = useState(''), [quantity, setQuantity] = useState(1);
   const [target, setTarget] = useState<Line | null>(null), [working, setWorking] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
@@ -73,7 +75,7 @@ export function ConfigurationPanel({ api }: { api: WorkflowEditorApi }) {
   }, []);
   const startReview = async () => {
     setNotice('');
-    const captured = api.capture();validateObjectInputs(captured.document);const report = await assertDocumentFonts(captured.document);
+    const captured = await api.capture();validateObjectInputs(captured.document);const report = await assertDocumentFonts(captured.document);
     setReview(captured); setFontReport(report);
     setTitle(captured.document.objects.filter(o => o.type === 'text').map(o => o.text.replace(/\s+/g, ' ')).join(' · ').trim().slice(0,120) || 'Composizione grafica');
     setView('review');
@@ -112,7 +114,7 @@ export function ConfigurationPanel({ api }: { api: WorkflowEditorApi }) {
         {!!fontReport?.issues.length && <div className="font-check-panel" role="status">{fontReport.issues.map(issue=><p key={`${issue.objectId}:${issue.fontId}:${issue.kind}`}>{fontIssueMessage(issue)}</p>)}</div>}
         <div className={`configuration-review${target ? ' has-previous' : ''}`}>
           {target && <div><h3>Adesso nel carrello</h3><SavedPreview id={target.configurationId} title={target.title}/><p className="configuration-text">{target.text}</p></div>}
-          <div><h3>{target ? 'Dopo la conferma' : 'Grafica da aggiungere'}</h3><SvgPreview svg={review.svg} color={review.document.inkColor??'black'} label="Anteprima della grafica da confermare"/><p className="configuration-text">{review.document.objects.filter(o=>o.type==='text').map(o=>o.text).join(' · ')}</p></div>
+          <div><h3>{target ? 'Dopo la conferma' : 'Grafica da aggiungere'}</h3><SvgPreview svg={review.svg} document={review.document} color={review.document.inkColor??'black'} label="Anteprima della grafica da confermare"/><p className="configuration-text">{review.document.objects.filter(o=>o.type==='text').map(o=>o.text).join(' · ')}</p></div>
         </div>
         <div className="configuration-fields"><label>Nome articolo<input aria-label="Nome configurazione" value={title} maxLength={120} onChange={event=>setTitle(event.target.value)} disabled={working}/></label>{target ? <p>Quantità: <strong>{target.quantity}</strong></p> : <label>Quantità<input aria-label="Quantità configurazione" type="number" min={1} max={999} value={quantity} onChange={event=>setQuantity(Number(event.target.value))} disabled={working}/></label>}</div>
         <div className="configuration-dialog-actions"><button type="button" disabled={working} onClick={()=>setView(null)}>Continua a modificare</button><button type="button" className="configuration-primary" disabled={working || !title.trim() || !Number.isInteger(quantity) || quantity<1 || quantity>999} onClick={()=>void run(confirm)}>{working ? 'Conferma in corso…' : target ? 'Sostituisci questo articolo' : 'Aggiungi al carrello di prova'}</button></div>

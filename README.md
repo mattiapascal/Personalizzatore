@@ -1,6 +1,10 @@
 # Assistente AI e personalizzatore Shopify
 
-**Ultimo incremento locale:** [correzione guidata dei caratteri mancanti](docs/iteration-editor-font-repair.md), con file scelto esplicitamente e verificato, stili/centro/storico conservati. 645 unitari, 59 browser più due percorsi desktop/mobile e 23 campioni passati. Nessuna correzione alle bozze personali o deploy.
+**Avvio e zoom ricontrollati:** il primo canvas contiene il progetto richiesto, senza bozza TEST transitoria; vista a tutto schermo centrata con circa 24 px di margine e adattamento a pannelli/formati diversi. Cinque browser mirati e controllo in sola lettura del template reale passati. [Dettagli](docs/iteration-editor-preview-cache-startup.md#ricontrollo-della-segnalazione-su-apertura-e-centratura).
+
+**Ultimo incremento locale:** [font verificati prima di anteprime e output](docs/iteration-editor-output-font-gate.md): SVG/PNG/PDF/miniature rifiutano glifi assenti, stili simulati e copertura sconosciuta; JSON e correzione esplicita restano disponibili. 648 unitari, cinque nuovi browser e 23 campioni passati; build/tipi/segreti verificati. Il canvas interattivo delle bozze errate resta da proteggere. Nessuna modifica ai progetti personali o deploy.
+
+**Incremento precedente:** [correzione guidata dei caratteri mancanti](docs/iteration-editor-font-repair.md), con file scelto esplicitamente e verificato, stili/centro/storico conservati. 645 unitari, 59 browser più due percorsi desktop/mobile e 23 campioni passati. Nessuna correzione alle bozze personali o deploy.
 
 **Incremento precedente:** [testi PitchPrint e interlinea](docs/iteration-editor-pitchprint-text-styles.md): stili per carattere con file font esatti, interlinea compatta e altezza automatica. 642 unitari, 183 browser pertinenti e 22 campioni passati. 144 sorgenti tecnicamente convertibili, 21 in più; nessuna nuova importazione nell’archivio. Nessun deploy.
 

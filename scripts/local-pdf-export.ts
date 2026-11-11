@@ -1,9 +1,13 @@
+import { assertOutputFonts } from '../src/editor/font-preflight';
+import { productionDocument } from '../src/editor/object-properties';
+import { fontCoverage } from './font-coverage';
 import {exactPdfPageSize} from './pdf-page-size';
 import type {Plugin} from 'vite';
 import {chromium} from '@playwright/test';
 import {parseGraphicDocument,type GraphicDocument} from '../src/editor/model';
 export async function renderLocalDesignPdf(raw:unknown,origin:string):Promise<Buffer>{
  const doc=parseGraphicDocument(raw),url=new URL(origin);if(url.protocol!=='http:'||url.hostname!=='127.0.0.1')throw new Error('Renderer PDF disponibile solo su loopback.');
+ await assertOutputFonts(productionDocument(doc), {resolveWoff2:async asset=>fontCoverage(Buffer.from(asset.dataBase64,'base64'),'woff2')});
  const browser=await chromium.launch({timeout:15000}),deadline=setTimeout(()=>void browser.close(),45000);
  try{
   const context=await browser.newContext({extraHTTPHeaders:{'X-Editor-Local':'1'}});await context.route('**/*',route=>{const request=route.request();return new URL(request.url()).origin===origin&&request.method()==='GET'&&!new URL(request.url()).pathname.startsWith('/api/')?route.continue():route.abort();});

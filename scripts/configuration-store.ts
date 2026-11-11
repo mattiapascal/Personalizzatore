@@ -3,7 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Parser } from 'htmlparser2';
-import { assertDocumentFonts } from '../src/editor/font-preflight';
+import { assertOutputFonts } from '../src/editor/font-preflight';
 import { fontCoverage } from './font-coverage';
 import { ConfigurationStateSchema, ConfigurationCommandSchema, cartSummary, type ConfigurationState, type CartSummary } from '../src/editor-workflow/schema';
 /** Passive SVG only. Stored as data and displayed as an image, never injected into HTML. */
@@ -52,7 +52,7 @@ export class ConfigurationStore {
       if (command.tool === 'add' || command.tool === 'replace') {
         const { title, document, options, svg } = command.arguments; const preview = checkConfigurationSvg(svg);
         validateObjectInputs(document);
-        await assertDocumentFonts(document,{resolveWoff2:async asset=>fontCoverage(Buffer.from(asset.dataBase64,'base64'),'woff2')});
+        await assertOutputFonts(document,{resolveWoff2:async asset=>fontCoverage(Buffer.from(asset.dataBase64,'base64'),'woff2')});
         const configurationId = randomUUID();
         // Zod parses/clones every nested object; no reference to the mutable editor survives.
         state.configurations.push({ id: configurationId, createdAt: new Date().toISOString(), title, document, options, svg: preview });

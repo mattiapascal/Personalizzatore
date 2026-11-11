@@ -43,3 +43,12 @@ it('stile simulato su un font incorporato impedisce la conferma, anche in un sol
  text.characterStyles=[{start:0,end:1,style:{fontWeight:'bold'}}];await expect(assertDocumentFonts(doc)).rejects.toThrow('simulato');text.characterStyles=[{start:0,end:1,style:{fontWeight:'normal'}}];doc.fontAssets![0]!.weight=700;expect((await assertDocumentFonts(doc)).issues).toEqual([]);
  text.fontStyle='italic';await expect(assertDocumentFonts(doc)).rejects.toThrow('Variante font');text.characterStyles=[{start:0,end:1,style:{fontStyle:'normal'}}];expect((await assertDocumentFonts(doc)).issues).toEqual([]);
 });
+
+it('output rigoroso: copertura sconosciuta e caratteri assenti sono bloccanti, senza alterare il documento',async()=>{
+ const {assertOutputFonts}=await import('../src/editor/font-preflight');const doc=documentWith(await iconFont(),'A'),before=structuredClone(doc);await expect(assertOutputFonts(doc)).rejects.toThrow('Correggi i font');expect(doc).toEqual(before);
+ const bytes=Buffer.alloc(20);bytes.write('wOF2');const unknown=documentWith({...await iconFont(),format:'woff2',dataBase64:bytes.toString('base64')},'ABC');await expect(assertOutputFonts(unknown,{resolveWoff2:async()=>undefined})).rejects.toThrow('non verificabile');
+});
+it('analisi font temporaneamente indisponibile: una seconda richiesta può verificare lo stesso file',async()=>{
+ const {assertOutputFonts}=await import('../src/editor/font-preflight');const bytes=Buffer.alloc(24);bytes.write('wOF2');const doc=documentWith({...await iconFont(),format:'woff2',dataBase64:bytes.toString('base64')},'ABC');let calls=0;const options={resolveWoff2:async()=>++calls===1?undefined:[[65,67] as const]};
+ await expect(assertOutputFonts(doc,options)).rejects.toThrow('non verificabile');await expect(assertOutputFonts(doc,options)).resolves.toMatchObject({checkedFonts:1,issues:[]});expect(calls).toBe(2);
+});
