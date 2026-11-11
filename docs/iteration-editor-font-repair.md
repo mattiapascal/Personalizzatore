@@ -1,5 +1,7 @@
 # Correzione guidata dei caratteri mancanti
 
+Aggiornamento successivo: [font prima delle misure e recupero con X/Y originali](iteration-editor-verified-adaptation.md). La conservazione del centro descritta sotto è storica e superata: il vecchio testo irrisolto non ha un ingombro verificabile. Il campione e il generatore sono stati aggiornati alle coordinate 10/10 mm.
+
 Incremento locale dell’11 novembre 2026, base `f0856a5`. L’audit delle 117 bozze segnala 20 composizioni con simboli assenti nei file font dichiarati e due con copertura non verificabile. Nessun font di questi progetti è stato sostituito automaticamente.
 
 ## Percorso manuale

@@ -12,7 +12,7 @@ function FontRepairRow({ issue, revision, busy, onOpen, onRepair }: { issue: Fon
   const variants = fontVariantChoices(choice);
   useEffect(() => { setChoice(''); setError(''); }, [revision]);
   return <div className="font-repair-row" role="group" aria-label={`Correggi caratteri di ${issue.objectId}`}>
-    <p className="caption">Scegli esplicitamente il file per i soli caratteri mancanti di questo testo. Gli altri caratteri mantengono il loro font.</p>
+    <p className="caption">Scegli esplicitamente il file per i soli caratteri mancanti di questo testo. Gli altri caratteri mantengono il loro font. Le coordinate originali X/Y vengono conservate; controlla l’ingombro dopo la correzione.</p>
     <FontPicker label="Font per i caratteri mancanti" value={choice} emptyLabel="Scegli il font dei caratteri mancanti" disabled={busy || pending} onOpen={onOpen} onChange={id => { setChoice(id); setError(''); }}/>
     {variants.length > 1 && <label>File dello stile<select aria-label="File dello stile per i caratteri mancanti" disabled={busy || pending} value={choice} onChange={event => setChoice(event.target.value)}>{variants.map(face => <option key={face.id} value={face.id}>{fontVariantLabel(face.id)}</option>)}</select></label>}
     <button disabled={!choice || busy || pending} onClick={async () => { setPending(true); setError(''); try { if (!await onRepair(issue, choice, revision)) setError('Correzione non applicata: controlla il messaggio dell’editor.'); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Correzione non applicata.'); } finally { setPending(false); } }}>Applica ai soli caratteri mancanti</button>

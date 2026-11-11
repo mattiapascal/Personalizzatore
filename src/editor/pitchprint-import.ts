@@ -1,4 +1,5 @@
 import { pitchprintTextStyles } from './pitchprint-text-styles';
+import { assertFontGeometry } from './verified-font-geometry';
 import { preciseIntermediateSvg } from './svg-precision';
 import {canonicalPaint} from './paint';
 import {checkedPitchprintFont,type PitchprintFontResult} from './pitchprint-font-resolution';
@@ -47,9 +48,10 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
    const {nativeStyles,characterStyles}=await pitchprintTextStyles(item,axisY,options.monochrome,resolveFont);
    const fill=color(item.fill,options.monochrome);if(fill==='none')throw new Error(`${name}: testo senza riempimento non convertibile.`);
    const nativeOptions={left:numeric(item.left,name),top:numeric(item.top,name),originX:(item.originX??'left') as 'left'|'center'|'right',originY:(item.originY??'top') as 'top'|'center'|'bottom',scaleX,scaleY,angle,flipX:item.flipX===true,flipY:item.flipY===true,fontSize,fontFamily:renderFontFamily(fontFamily),fontWeight:'normal' as const,fontStyle:'normal' as const,lineHeight:numeric(item.lineHeight??1,name),charSpacing:numeric(item.charSpacing??0,name),textAlign:(item.textAlign??'left') as 'left'|'center'|'right',fill,stroke:null,strokeWidth:0,underline:item.underline===true,linethrough:item.linethrough===true,overline:item.overline===true,styles:nativeStyles};
+   const object:Extract<SceneObject,{type:'text'}>={id,type:'text',xMm:0,yMm:0,text:item.text,fontFamily,fontSizePt,fill,rotationDeg:rotation,fontWeight:'normal',fontStyle:'normal',textAlign:nativeOptions.textAlign,lineHeight:nativeOptions.lineHeight,textScaleX:axisX/axisY,letterSpacingPt:nativeOptions.charSpacing/1000*fontSizePt,underline:nativeOptions.underline,linethrough:nativeOptions.linethrough,overline:nativeOptions.overline,editor,...(characterStyles.length?{characterStyles}:{}),...(type==='textbox'?{textBox:{widthMm:rawWidth*axisX,heightMm:rawHeight*axisY,autoWidth:false,autoHeight:true}}:{})};
+   await assertFontGeometry({objects:[object],fontAssets:assets});
    const native=type==='textbox'?new Textbox(item.text,{...nativeOptions,width:rawWidth,minWidth:.001}):new IText(item.text,nativeOptions);
    try{
-    const object:Extract<SceneObject,{type:'text'}>={id,type:'text',xMm:0,yMm:0,text:item.text,fontFamily,fontSizePt,fill,rotationDeg:rotation,fontWeight:'normal',fontStyle:'normal',textAlign:nativeOptions.textAlign,lineHeight:nativeOptions.lineHeight,textScaleX:axisX/axisY,letterSpacingPt:nativeOptions.charSpacing/1000*fontSizePt,underline:nativeOptions.underline,linethrough:nativeOptions.linethrough,overline:nativeOptions.overline,editor,...(characterStyles.length?{characterStyles}:{}),...(type==='textbox'?{textBox:{widthMm:rawWidth*axisX,heightMm:rawHeight*axisY,autoWidth:false,autoHeight:true}}:{})};
     const measured=measureFabric({...object,rotationDeg:0});object.textBox={widthMm:measured.widthMm,heightMm:measured.heightMm,autoWidth:type!=='textbox',autoHeight:true};
     const nativeCenter=native.getCenterPoint(),point=pitchprintPoint(space,nativeCenter.x,nativeCenter.y),dx=(measured.widthMm-native.width*axisX)/2,dy=(measured.heightMm-native.height*axisY)/2,a=rotation*Math.PI/180;
     objects.push(placeObjectAtCenter(object,{xMm:point.x+dx*Math.cos(a)-dy*Math.sin(a),yMm:point.y+dx*Math.sin(a)+dy*Math.cos(a)},measureFabric));

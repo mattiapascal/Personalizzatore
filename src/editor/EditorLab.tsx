@@ -1,3 +1,4 @@
+import { assertFontGeometry } from './verified-font-geometry';
 import { exportDocumentSvg } from './fabric-adapter';
 import { missingCharacterFontCommand } from './font-repair';
 import {useProjectFontPreparation} from './LegacyFontDialog';
@@ -193,8 +194,8 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       const images = (parsed.tool === 'insertObjects' ? parsed.arguments.objects : parsed.tool === 'addObject' || parsed.tool === 'updateObject' ? [parsed.arguments.object] : []).filter(object => object.type === 'image');
       const sources=[...images.map(image=>image.source),...(parsed.tool==='replaceImageSource'?[parsed.arguments.source]:[])];
       const fontAssets = 'fontAssets' in parsed.arguments ? parsed.arguments.fontAssets ?? [] : [];
-      if (sources.length || fontAssets.length) {
-        void prepareAndAct(async store => { await Promise.all([loadFontAssets(fontAssets), ...sources.map(source => prepareRasterSource(source))]); return () => store.dispatch(parsed, 'ai-simulation'); });
+      if (sources.length || fontAssets.length || parsed.tool==='changeFormat' || parsed.tool==='applyTemplate') {
+        void prepareAndAct(async store => { await Promise.all([loadFontAssets(fontAssets), ...sources.map(source => prepareRasterSource(source))]); if(parsed.tool==='changeFormat')await assertFontGeometry(store.document);if(parsed.tool==='applyTemplate')await assertFontGeometry({objects:parsed.arguments.objects,fontAssets:parsed.arguments.fontAssets}); return () => store.dispatch(parsed, 'ai-simulation'); });
       } else act(() => storeRef.current!.dispatch(parsed, 'ai-simulation'));
     } catch (e) { setError(e instanceof Error ? e.message : 'Comando non valido'); }
   };
@@ -508,7 +509,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       {projectFonts.dialog}{(mode!=='customer'||!!fontRendering.blocked.length)&&<FontCheckPanel document={doc} busy={editing || drawing || assetBusy || archiveBusy} onOpen={() => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).catch(cause => setError(cause.message)); }} onRepair={(issue, fontId, expectedRevision) => prepareAndAct(async store => {
         if (store.document.revision !== expectedRevision) throw new Error('Revisione grafica obsoleta: rileggi la segnalazione.');
         const asset = registeredFontAsset(fontId); if (!asset) throw new Error('File font non caricato dalla libreria.');
-        const command = await missingCharacterFontCommand(store.document, issue, asset, measureFabric);
+        const command = await missingCharacterFontCommand(store.document, issue, asset);
         return () => store.dispatch(command, 'manual');
       }, issue.objectId)}/>}
       {mode!=='customer'&&<EditorButton disabled={editing || drawing || assetBusy} onClick={() => download('progetto.TEST.json', JSON.stringify(storeRef.current!.document, null, 2), 'application/json')} icon="download" label="Esporta JSON" badge="JSON"/>}
@@ -569,6 +570,7 @@ export function EditorLab(props:Parameters<typeof EditorLabSession>[0]){
    if(loaded?.mode==='template'&&next){
     const record=loaded.record,product=props.product;
     if(!product||record.kind!=='template'||record.archived||record.version!==Number(parameters.get('templateVersion'))||!record.templateProducts?.profileKeys.includes(profileKey(product)))throw new Error('Template o associazioni cambiati: torna alla galleria e controlla nuovamente l’anteprima.');
+    await assertFontGeometry(next);
     const fit=fitTemplate(next,product,props.catalogVersion,measureFabric,parameters.get('shrink')==='1'),store=new DocumentStore(createEditorDocument(product,props.catalogVersion),measureFabric,undefined,editorMode()==='customer'?'customer':'admin');
     store.dispatch(templateCommand(fit,record.id,record.version,store.document.revision),'manual');next=store.document;
    }

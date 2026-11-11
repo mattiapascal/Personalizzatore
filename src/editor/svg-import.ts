@@ -5,6 +5,7 @@ import { compactVectors } from './vector-compaction';
 import { loadSVGFromString, FabricText, Path, Rect, Circle, Ellipse, Line, Polyline, Polygon, util, type FabricObject, type TMat2D } from 'fabric';
 import { importedFontFamily, renderFontFamily, canonicalFontFamily, fontAssetArguments } from './fonts';
 import { measureFabric } from './fabric-adapter';
+import { assertFontGeometry } from './verified-font-geometry';
 import type { FontAsset } from './font-assets';
 import { sanitizeSvg } from './svg-sanitize';
 import { mapVector, vectorBounds, VectorCommandsSchema, type VectorCommand } from './vector-geometry';
@@ -42,7 +43,7 @@ export interface PreparedSvg { monochrome: boolean; objects: SceneObject[]; font
 export async function prepareSvg(source: string, monochrome = false, textMode: ImportTextMode = 'outlines'): Promise<PreparedSvg> {
   let safe = sanitizeSvg(source, monochrome, true);
   const xml = new DOMParser().parseFromString(safe, 'image/svg+xml'), hasText = !!xml.querySelector('text');
-  const fontAssets: FontAsset[] = [];
+  const fontAssets: FontAsset[] = [],fontProbes: SceneObject[] = [];
   if (hasText) {
     for (const element of xml.querySelectorAll('text')) {
       const inherited=(name:string)=>{for(let node:Element|null=element;node;node=node.parentElement){const value=node.getAttribute(name);if(value)return value;}return null;};
@@ -51,7 +52,10 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
       const family = importedFontFamily(declared,weight==='bold'?700:weight&&weight!=='normal'?Number(weight):400,italic); element.setAttribute('font-family',renderFontFamily(family));element.setAttribute('font-weight','normal');element.setAttribute('font-style','normal');
       const asset = fontAssetArguments({ id:'font-probe',type:'text',xMm:0,yMm:0,text:'A',fontFamily:family,fontSizePt:9,fill:'#000000' }).fontAssets?.[0];
       if (asset && !fontAssets.some(a=>a.id===asset.id)) fontAssets.push(asset);
+      fontProbes.push({id:`font-probe-${fontProbes.length}`,type:'text',xMm:0,yMm:0,text:element.textContent??'',fontFamily:family,fontSizePt:9,fill:'#000000'});
     }
+    // Fabric and the outline converter must not measure substituted glyphs.
+    await assertFontGeometry({objects:fontProbes,fontAssets});
     safe = new XMLSerializer().serializeToString(xml);
     if (textMode === 'outlines') {
       const response = await fetch('/__editor-local/svg-outlines', { method:'POST',headers:{'Content-Type':'application/json','X-Editor-Local':'1'},body:JSON.stringify({svg:safe,fontAssets}) });

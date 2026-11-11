@@ -1,5 +1,7 @@
 # Assistente AI e personalizzatore Shopify
 
+**Nuovo incremento locale:** [font prima delle misure di importazione e adattamento](docs/iteration-editor-verified-adaptation.md), recupero dei glifi con X/Y originali. 657 unitari, 112 browser verificati in regressione/ricontrollo, 23 campioni, build/segreti passati. Analisi reale 116/370 con verifica nominale; 28 sorgenti prima pronti ora segnalati per problemi di font, archivio invariato. Prossima priorità: i 23 cartelli «Attenti al Cane» esclusi dall’importazione iniziale. Nessuna nuova importazione o pubblicazione.
+
 **Nuovo incremento locale:** [disegno dei testi protetto nel canvas](docs/iteration-editor-canvas-font-guard.md). Font non verificati rappresentati da riquadri arancioni, anche durante la digitazione; testo originale, correzione e Undo/Redo conservati. 653 unitari, 99 regressioni browser e 8 controlli finali, 23 campioni, build/segreti passati. Metriche dei testi irrisolti ancora da proteggere. Nessuna modifica alle bozze personali o deploy.
 
 **Avvio e zoom ricontrollati:** il primo canvas contiene il progetto richiesto, senza bozza TEST transitoria; vista a tutto schermo centrata con circa 24 px di margine e adattamento a pannelli/formati diversi. Cinque browser mirati e controllo in sola lettura del template reale passati. [Dettagli](docs/iteration-editor-preview-cache-startup.md#ricontrollo-della-segnalazione-su-apertura-e-centratura).
