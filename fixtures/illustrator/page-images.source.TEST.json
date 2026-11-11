@@ -1,0 +1,74 @@
+{
+  "title": "Sfondi e primo piano TEST",
+  "unit": "mm",
+  "pages": [
+    {
+      "pageData": {
+        "fWidth": 100,
+        "fHeight": 60,
+        "fillData": {
+          "type": "image",
+          "assetData": {
+            "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAECAYAAACzzX7wAAAAFklEQVR4nGM4o8TwHxkzdJxBxbRXAAA4w0QBcPBkGQAAAABJRU5ErkJggg==",
+            "lowres": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAAFUlEQVR4nGM4o8TwH4QZOs5AMLoAABNhEQF4X+AnAAAAAElFTkSuQmCC",
+            "fillMode": "fill"
+          }
+        },
+        "foregroundSource": {
+          "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAYAAABiDJ37AAAAHElEQVR4nGNgaGD4T1UMIagERg0cNXB4G0hFDAAtNFnFVWjb6gAAAABJRU5ErkJggg==",
+          "lowres": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAAAF0lEQVR4nGNgaGD4TxSGEATAYFBIBAYA/8kp5fd6o9gAAAAASUVORK5CYII=",
+          "width": 20,
+          "height": 12,
+          "fillMode": "stretch"
+        }
+      },
+      "canvas": {
+        "background": "rgba(255,254,239,1)",
+        "clipPath": {
+          "width": 1000,
+          "height": 600
+        },
+        "backgroundImage": {
+          "type": "image",
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAAFUlEQVR4nGM4o8TwH4QZOs5AMLoAABNhEQF4X+AnAAAAAElFTkSuQmCC",
+          "left": -100,
+          "top": -50,
+          "width": 4,
+          "height": 2,
+          "scaleX": 350,
+          "scaleY": 450,
+          "cropX": 0,
+          "cropY": 0,
+          "strokeWidth": 0,
+          "opacity": 1
+        },
+        "overlayImage": {
+          "type": "image",
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAAAF0lEQVR4nGNgaGD4TxSGEATAYFBIBAYA/8kp5fd6o9gAAAAASUVORK5CYII=",
+          "left": 0,
+          "top": 0,
+          "width": 10,
+          "height": 6,
+          "scaleX": 100,
+          "scaleY": 100,
+          "cropX": 0,
+          "cropY": 0,
+          "strokeWidth": 0,
+          "opacity": 1
+        },
+        "objects": [
+          {
+            "type": "rect",
+            "left": 50,
+            "top": 100,
+            "width": 200,
+            "height": 100,
+            "fill": "#000000",
+            "stroke": null,
+            "strokeWidth": 0
+          }
+        ]
+      }
+    }
+  ]
+}

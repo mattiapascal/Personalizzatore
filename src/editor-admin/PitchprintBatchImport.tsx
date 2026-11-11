@@ -1,13 +1,13 @@
 import {pitchprintImportError} from './pitchprint-errors';
 import {useEffect,useRef,useState} from 'react';
-import {importPitchPrint,type PitchImportResult,type PitchImportOptions} from '../editor/pitchprint-import';
+import {importPitchPrint,type PitchImportResult,type PitchprintConversionOptions} from '../editor/pitchprint-import';
 import {DocumentPreview} from '../editor-workflow/DocumentPreview';import {readAdminSnapshot,localAdminRequest} from './api';import type {AdminSnapshot} from './schema';
 import {pitchprintJson,pitchprintOptions,downloadBatchReport,type PitchprintSource} from './pitchprint-client';
 type Row={status:'Analisi…'|'Pronto'|'Bloccato'|'Importato'|'Già importato';result?:PitchImportResult;error?:string;recordId?:string};
-export function PitchprintBatchImport({sources,options,disabled,onBusy}:{sources:PitchprintSource[];options:Pick<PitchImportOptions,'monochrome'|'excludeBackground'|'family'>;disabled:boolean;onBusy:(busy:boolean)=>void}){
+export function PitchprintBatchImport({sources,options,disabled,onBusy}:{sources:PitchprintSource[];options:PitchprintConversionOptions;disabled:boolean;onBusy:(busy:boolean)=>void}){
  const [sourceKind,setSourceKind]=useState('all'),[query,setQuery]=useState(''),[category,setCategory]=useState(''),[checked,setChecked]=useState<string[]>([]),[rows,setRows]=useState<Record<string,Row>>({}),[phase,setPhase]=useState<'analyze'|'save'|null>(null),[error,setError]=useState(''),[page,setPage]=useState(0),[imports,setImports]=useState<AdminSnapshot['records']>([]);const stop=useRef(false),alive=useRef(true),working=useRef(false);
  useEffect(()=>{alive.current=true;void readAdminSnapshot().then(state=>{if(alive.current)setImports(state.records);}).catch(cause=>{if(alive.current)setError(cause.message);});return()=>{alive.current=false;stop.current=true;};},[]);
- useEffect(()=>{setRows({});},[options.monochrome,options.excludeBackground,options.family]);
+ useEffect(()=>{setRows({});},[options.monochrome,options.excludeBackground,options.family,options.pageImages?.background,options.pageImages?.foreground]);
  useEffect(()=>{if(sources.length)setSourceKind(sources.some(source=>source.kind?.includes('account'))?'online':'all');},[sources]);
  useEffect(()=>{setPage(0);setChecked([]);},[query,category,sourceKind]);
  useEffect(()=>{if(!phase)return;const warn=(event:BeforeUnloadEvent)=>event.preventDefault();window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[phase]);

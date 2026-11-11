@@ -1,5 +1,7 @@
 # Template esclusi: priorità aggiornate — 11 novembre 2026
 
+> **Aggiornamento successivo — assi fisici esatti e immagini di pagina:** [dettagli](iteration-editor-page-images.md). La nuova analisi degli stessi 370 sorgenti, sempre con sfondi esclusi, rileva **238 convertibili / 132 bloccati**: **238/345 prioritari convertibili e 107 bloccati**, 25/25 a bassa priorità bloccati. Ventuno sorgenti prima accettati vengono ora fermati per contorni non uniformi, dopo aver eliminato i margini impliciti del passaggio SVG. Una sola delle 117 bozze già importate è fra questi 21: «Retro bottiglia classico», lasciata invariata. Al primo errore i contorni prioritari sono ora 42. I conteggi e le tabelle seguenti documentano la precedente analisi; non descrivono più il convertitore corrente. Nessun salvataggio reale. Un prototipo privato di espansione dei due contorni di Azienda Agricola ha superato il confronto pixel completo, ma non è ancora una funzione generale collaudata dell’importatore.
+
 Il titolare assegna la **minima priorità** alle categorie **Biglietti da Visita**, **Templates PitchPrint** e a **tutti i template contenenti testo curvo**. Questa scelta cambia l’ordine del lavoro, non autorizza a scartare elementi o sostituire font nelle conversioni.
 
 ## Ricontrollo

@@ -6,9 +6,9 @@ import type {FontAsset} from '../../src/editor/font-assets';
 /** Independent reference: let Fabric render the original relative coordinates.
  * Disable group relayout by installing the serialized child plane explicitly;
  * Fabric 7's automatic layout otherwise recentres legacy Fabric 3 groups. */
-export async function pitchprintReferenceSvg(source:any,asset:FontAsset|FontAsset[]):Promise<string>{
+export async function pitchprintReferenceSvg(source:any,asset:FontAsset|FontAsset[],fontFor?:(raw:any)=>FontAsset):Promise<string>{
  const assets=Array.isArray(asset)?asset:[asset];await loadFontAssets(assets);
- const font=(raw:any)=>{if(!Array.isArray(asset))return asset;const request=pitchprintFontRequest(raw),found=assets.find(item=>fontNameKey(item.familyGroup??item.family)===fontNameKey(request.family)&&item.weight===request.weight&&item.italic===request.italic);if(!found)throw Error('File esatto del riferimento TEST mancante');return found;};
+ const font=(raw:any)=>{if(fontFor)return fontFor(raw);if(!Array.isArray(asset))return asset;const request=pitchprintFontRequest(raw),found=assets.find(item=>fontNameKey(item.familyGroup??item.family)===fontNameKey(request.family)&&item.weight===request.weight&&item.italic===request.italic);if(!found)throw Error('File esatto del riferimento TEST mancante');return found;};
  const build=async(raw:any):Promise<FabricObject>=>{
   const {type,objects,...serialized}=raw;
   // Legacy Fabric 3/PitchPrint defaults differ from Fabric 7's centered origin.

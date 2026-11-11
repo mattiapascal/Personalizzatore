@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100mm" height="60mm" viewBox="0 0 800 480" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+<clipPath id="CLIPPATH_12" >
+	<rect transform="matrix(1 0 0 1 400 240)" x="-400" y="-240" rx="0" ry="0" width="800" height="480" />
+</clipPath>
+</defs>
+<g clip-path="url(#CLIPPATH_12)" >
+<rect x="0" y="0" width="100%" height="100%" fill="#fffeef"></rect>
+<g transform="matrix(140 0 0 180 480 320)"  >
+	<svg x="-4" y="-2" width="8" height="4" viewBox="0 0 8 4" preserveAspectRatio="none" overflow="hidden"><g><image x="0" y="0" width="8" height="4" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAECAYAAACzzX7wAAAAFklEQVR4nGM4o8TwHxkzdJxBxbRXAAA4w0QBcPBkGQAAAABJRU5ErkJggg==" /></g></svg>
+</g>
+<g transform="matrix(1 0 0 1 120 120)"  >
+<rect style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  x="-80" y="-40" rx="0" ry="0" width="160" height="80" />
+</g>
+<g transform="matrix(40 0 0 40 400 240)"  >
+	<svg x="-10" y="-6" width="20" height="12" viewBox="0 0 20 12" preserveAspectRatio="none" overflow="hidden"><g><image x="0" y="0" width="20" height="12" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAYAAABiDJ37AAAAHElEQVR4nGNgaGD4T1UMIagERg0cNXB4G0hFDAAtNFnFVWjb6gAAAABJRU5ErkJggg==" /></g></svg>
+</g>
+</g>
+</svg>
