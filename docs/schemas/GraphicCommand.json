@@ -1338,7 +1338,7 @@
                       },
                       "lineHeight": {
                         "type": "number",
-                        "minimum": 1,
+                        "minimum": 0.1,
                         "maximum": 3
                       },
                       "letterSpacingPt": {
@@ -4201,7 +4201,7 @@
                     },
                     "lineHeight": {
                       "type": "number",
-                      "minimum": 1,
+                      "minimum": 0.1,
                       "maximum": 3
                     },
                     "letterSpacingPt": {
@@ -6701,7 +6701,7 @@
                       },
                       "lineHeight": {
                         "type": "number",
-                        "minimum": 1,
+                        "minimum": 0.1,
                         "maximum": 3
                       },
                       "letterSpacingPt": {
@@ -9263,7 +9263,7 @@
                     },
                     "lineHeight": {
                       "type": "number",
-                      "minimum": 1,
+                      "minimum": 0.1,
                       "maximum": 3
                     },
                     "letterSpacingPt": {

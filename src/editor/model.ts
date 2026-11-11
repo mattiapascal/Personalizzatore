@@ -45,7 +45,7 @@ const textAppearance = {
   textScaleX: textScale.optional(),
   textScaleY: textScale.optional(),
   fontWeight: z.enum(['normal', 'bold']).optional(), fontStyle: z.enum(['normal', 'italic']).optional(), underline: z.boolean().optional(), linethrough: z.boolean().optional(), overline: z.boolean().optional(),
-  textAlign: TextAlignmentSchema.optional(), lineHeight: z.number().finite().min(1).max(3).optional(),
+  textAlign: TextAlignmentSchema.optional(), lineHeight: z.number().finite().min(EDITOR_LIMITS.minLineHeight).max(EDITOR_LIMITS.maxLineHeight).optional(),
   letterSpacingPt: z.number().finite().min(EDITOR_LIMITS.minTrackingPt).max(EDITOR_LIMITS.maxTrackingPt).optional(),
 };
 const shapeAppearance = { fill: paint.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() };

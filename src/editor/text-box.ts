@@ -126,6 +126,18 @@ export class EditorTextBox extends Textbox {
     const wrapped = data.wordsData.flatMap((_, index) => this._wrapLine(index, desiredWidth, data));
     this.isWrapping = false; return wrapped;
   }
+  override calcTextHeight(): number {
+    if (this.lineHeight >= 1) return super.calcTextHeight();
+    // A tall earlier line may extend below the last short line when baselines
+    // overlap. Auto height must enclose every line, without changing advances.
+    let advance = 0, height = 0;
+    for (let index = 0; index < this._textLines.length; index++) {
+      const line = this.getHeightOfLine(index);
+      height = Math.max(height, advance + line / this.lineHeight);
+      advance += line;
+    }
+    return height;
+  }
   override initDimensions(): void {
     if (!this.initialized) return;
     this.justificationResults = [];

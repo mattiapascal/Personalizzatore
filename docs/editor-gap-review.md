@@ -1,3 +1,5 @@
+**Aggiornamento 11 novembre — testi:** [stili dei caratteri importati e interlinee compatte](iteration-editor-pitchprint-text-styles.md), con file font esatti e altezza automatica. 144/370 sorgenti convertibili; nessuna ulteriore importazione nell’archivio. Effetti senza equivalenza, indici ambigui e varianti assenti restano errori espliciti.
+
 **Aggiornamento 11 novembre:** [contorni reali e nuova analisi](iteration-editor-wide-strokes.md): 123/370 sorgenti convertibili, sei in più senza ulteriori importazioni nell’archivio. Le 117 bozze già importate conservano colori e stato «Da verificare»; [fori, anteprime persistenti e avvio adattato](iteration-editor-preview-cache-startup.md) completati. I riferimenti sotto alle sole palette B/N o a font del computer sono storici: la politica attuale usa esclusivamente file incorporati e ammette RGB nei progetti senza montatura timbro.
 
 # Punto della situazione — funzioni mancanti al 10 novembre 2026

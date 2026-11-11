@@ -1,0 +1,8 @@
+{
+  "title":"Stili e interlinea TEST",
+  "unit":"mm",
+  "pages":[{"pageData":{"fWidth":200,"fHeight":100},"canvas":{"clipPath":{"left":0,"top":0,"width":2000,"height":1000},"objects":[
+    {"type":"i-text","left":200,"top":150,"width":1,"height":1,"originX":"left","originY":"top","scaleX":1,"scaleY":1,"angle":12,"fontFamily":"Arimo","fontWeight":"normal","fontStyle":"normal","fontSize":40,"lineHeight":0.8,"charSpacing":20,"textAlign":"center","fill":"#000000","stroke":null,"strokeWidth":0,"underline":true,"text":"TEST · Città\nBold e corsivo","styles":{"0":{"0":{"fontSize":80,"fontWeight":"bold","underline":false},"1":{"fontWeight":"bold","fill":"#0088cc"},"2":{"fontWeight":"bold","fontStyle":"italic"}},"1":{"7":{"fontStyle":"italic","overline":true},"8":{"fontStyle":"italic","overline":true}}},"title":"Testo misto compatto"},
+    {"type":"textbox","left":1100,"top":500,"width":600,"height":1,"originX":"left","originY":"top","fontFamily":"Arimo","fontWeight":"normal","fontStyle":"normal","fontSize":40,"lineHeight":0.9,"textAlign":"left","fill":"#000000","stroke":null,"strokeWidth":0,"text":"Testo con parole\nCittà seconda riga","styles":{"1":{"0":{"fontFamily":"Cousine","fontStyle":"italic","fontSize":50,"linethrough":true}}},"title":"Box con font locale"}
+  ]}}]
+}

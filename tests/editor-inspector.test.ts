@@ -34,7 +34,7 @@ describe('ispettore atomico sul documento comune', () => {
     const invalid = [
       update(0, text()), update(2, { ...text(), id: 'other' }, 'text-1'), update(2, text(), 'frame-1'),
       update(2, { ...text(), fill: '#888888' } as unknown as SceneObject), update(2, { ...text(), fontFamily: 'Unknown' } as unknown as SceneObject),
-      update(2, { ...text(), lineHeight: 0.1 } as SceneObject), update(2, { ...text(), letterSpacingPt: 101 } as SceneObject),
+      update(2, { ...text(), lineHeight: 0 } as SceneObject), update(2, { ...text(), letterSpacingPt: 101 } as SceneObject),
       update(2, { ...text(), script: 'fetch()' } as SceneObject), update(2, { ...text(), text: 'x\n'.repeat(100) } as SceneObject),
       update(2, { ...originalRect, cornerRadiusMm: 30 } as SceneObject),
     ];
