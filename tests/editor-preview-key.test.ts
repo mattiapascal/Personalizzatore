@@ -18,3 +18,12 @@ it('politica font invalida le immagini con testo precedenti al controllo rigoros
  const{archivePreviewContent,ARCHIVE_PREVIEW_FONT_POLICY}=await import('../src/editor-admin/preview-key'),doc=createTestDocument();expect(JSON.parse(archivePreviewContent(doc)).fontPolicy).toBe(ARCHIVE_PREVIEW_FONT_POLICY);
  doc.objects=doc.objects.filter(object=>object.type!=='text');expect(JSON.parse(archivePreviewContent(doc))).not.toHaveProperty('fontPolicy');
 });
+it('invalida una volta soltanto le miniature con raster originale quando cambia il campionamento, conservando quelle senza foto',async()=>{const{archivePreviewContent,ARCHIVE_PREVIEW_ORIGINAL_RASTER_POLICY}=await import('../src/editor-admin/preview-key'),{rasterSourceFromBytes}=await import('../src/editor/raster-source'),{testPng}=await import('./helpers/png'),doc=createTestDocument();expect(JSON.parse(archivePreviewContent(doc))).not.toHaveProperty('rasterPolicy');doc.colorMode='color';doc.objects=[{id:'photo',type:'image',xMm:5,yMm:5,widthMm:2,heightMm:2,source:rasterSourceFromBytes('photo-cache',testPng()),raster:{mode:'original',threshold:128,invert:false,whiteTransparent:false}}];expect(JSON.parse(archivePreviewContent(doc)).rasterPolicy).toBe(ARCHIVE_PREVIEW_ORIGINAL_RASTER_POLICY);const binary=structuredClone(doc);if(binary.objects[0]?.type!=='image')throw Error('Fixture');delete binary.objects[0].raster.mode;expect(JSON.parse(archivePreviewContent(binary))).not.toHaveProperty('rasterPolicy');});
+
+it('la griglia filtri originale invalida soltanto le miniature con immagini elaborate produttive',async()=>{
+ const{archivePreviewContent,ARCHIVE_PREVIEW_PROCESSED_RASTER_POLICY}=await import('../src/editor-admin/preview-key'),{rasterSourceFromBytes}=await import('../src/editor/raster-source'),{testPng}=await import('./helpers/png'),doc=createTestDocument();
+ expect(JSON.parse(archivePreviewContent(doc))).not.toHaveProperty('processedRasterPolicy');
+ doc.objects=[{id:'binary',type:'image',xMm:5,yMm:5,widthMm:2,heightMm:2,source:rasterSourceFromBytes('binary-cache',testPng()),raster:{threshold:128,invert:false,whiteTransparent:false}}];
+ expect(JSON.parse(archivePreviewContent(doc)).processedRasterPolicy).toBe(ARCHIVE_PREVIEW_PROCESSED_RASTER_POLICY);
+ doc.objects[0]!.editor={reference:true};expect(JSON.parse(archivePreviewContent(doc))).not.toHaveProperty('processedRasterPolicy');
+});

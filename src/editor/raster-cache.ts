@@ -1,7 +1,6 @@
 import { RasterSourceSchema, validatePngData, type RasterSource } from './raster-source';
 import { rasterPixels, type RasterParameters } from './raster-processing';
 import { analyzeRasterPixels, type RasterAnalysis } from './raster-analysis';
-import { checkedRasterCrop, type RasterCrop } from './raster-geometry';
 import { jpegInfo, jpegWithoutApp1, jpegOrientationMatrix } from './jpeg-source';
 interface Prepared { source: RasterSource; image: HTMLImageElement | HTMLCanvasElement; analysis: RasterAnalysis; }
 const prepared = new Map<string, Prepared>(), pending = new Map<string, { data: string; promise: Promise<void> }>();
@@ -13,6 +12,8 @@ export function assertRasterPrepared(source: RasterSource): void {
   const existing = prepared.get(source.id);
   if (!existing || !sameSource(source, existing.source)) throw new Error('Sorgente raster non preparata o ID risorsa in conflitto');
 }
+/** Prepared immutable source, reused by original-mode views without a cropped bitmap. */
+export function originalRasterImage(source: RasterSource): HTMLImageElement | HTMLCanvasElement { assertRasterPrepared(source); return prepared.get(source.id)!.image; }
 export function rasterAnalysis(source: RasterSource): RasterAnalysis { assertRasterPrepared(source); return { ...prepared.get(source.id)!.analysis }; }
 export function assertRasterParameters(source: RasterSource, params: RasterParameters): void {
   assertRasterPrepared(source);
@@ -61,12 +62,14 @@ export async function prepareRasterSource(raw: RasterSource): Promise<void> {
   pending.set(source.id, { data: source.dataUrl, promise });
   try { await promise; } finally { pending.delete(source.id); }
 }
-export function rasterCanvas(source: RasterSource, params: RasterParameters, rawCrop?: RasterCrop): HTMLCanvasElement {
-  assertRasterParameters(source, params); const crop = checkedRasterCrop(source, rawCrop), key = `${source.id}:${params.mode ?? "binary"}:${params.threshold}:${params.invert}:${params.whiteTransparent}:${params.backgroundRemoval ?? 'none'}:${params.method ?? "threshold"}:${params.brightness ?? 0}:${params.contrast ?? 0}:${crop.leftPx}:${crop.topPx}:${crop.widthPx}:${crop.heightPx}`, cached = derived.get(key);
+/** Filters stay anchored to original pixels; cropping is a viewport, never a resampling step. */
+export function rasterCanvas(source: RasterSource, params: RasterParameters): HTMLCanvasElement {
+  assertRasterParameters(source, params); const key = `${source.id}:${params.mode ?? "binary"}:${params.threshold}:${params.invert}:${params.whiteTransparent}:${params.backgroundRemoval ?? 'none'}:${params.method ?? "threshold"}:${params.brightness ?? 0}:${params.contrast ?? 0}`, cached = derived.get(key);
   if (cached) { derived.delete(key); derived.set(key, cached); return cached; }
-  const canvas = document.createElement('canvas'); canvas.width = crop.widthPx; canvas.height = crop.heightPx;
+  const canvas = document.createElement('canvas');
+  canvas.width = source.pixelWidth; canvas.height = source.pixelHeight;
   const context = canvas.getContext('2d', { willReadFrequently: true }); if (!context) throw new Error('Elaborazione raster non disponibile in questo browser');
-  context.drawImage(prepared.get(source.id)!.image, crop.leftPx, crop.topPx, crop.widthPx, crop.heightPx, 0, 0, crop.widthPx, crop.heightPx);
+  context.drawImage(prepared.get(source.id)!.image, 0, 0);
   if (params.mode !== 'original') { const pixels = context.getImageData(0, 0, canvas.width, canvas.height), output = rasterPixels(pixels.data, params, canvas.width); pixels.data.set(output); context.putImageData(pixels, 0, 0); }
   derived.set(key, canvas);
   let pixels = [...derived.values()].reduce((sum, entry) => sum + entry.width * entry.height, 0);

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="60mm" height="40mm" viewBox="0 0 480 320" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
+<g transform="matrix(4 0 0 4 202 138.5)"  >
+<clipPath id="imageCrop_1">
+	<rect x="-27.25" y="-13.125" width="54.5" height="26.25" />
+</clipPath>
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAiklEQVR4AezUsREEIRADQfryz5nnCmudD+AkDLbWHGng2eestc69d+J88NIvMudrQCw8Vg04j78GJIfQP4DM35/LXQO4SZA5awCZzXO5awA3CTJnDSCreSZvDWAmQtZeA8hqnMlbA5iJkLXXALIaZ/LWAGYiZO01gKzGmbw1gJkIWXsN4NuN85/vBwAA///K1eS0AAAABklEQVQDAMNnQFV0eh1dAAAAAElFTkSuQmCC" x="-30.5" y="-14.625" width="64" height="32" clip-path="url(#imageCrop_1)" ></image>
+</g>
+</svg>

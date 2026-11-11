@@ -19,8 +19,8 @@ describe('ritaglio raster non distruttivo', () => {
     expect(restored).toMatchObject({ widthMm: 12, heightMm: 12, crop: { leftPx: 0, topPx: 0, widthPx: 2, heightPx: 2 } });
     const copy = cloneSceneObject(restored); copy.crop!.leftPx = 1; expect(restored.crop!.leftPx).toBe(0);
   });
-  it('rifiuta pixel frazionari, finestra vuota o fuori dall’originale', () => {
-    for (const change of [{ leftPx: -1 }, { leftPx: 2 }, { widthPx: 0 }, { widthPx: 3 }, { topPx: 0.5 }, { heightPx: NaN }]) expect(() => changeRasterCrop(image(), change)).toThrow();
+  it('rifiuta finestre vuote, non finite o fuori dall’originale', () => {
+    for (const change of [{ leftPx: -1 }, { leftPx: 2 }, { widthPx: 0 }, { widthPx: 3 }, { heightPx: NaN }]) expect(() => changeRasterCrop(image(), change)).toThrow();
   });
   it('comandi e JSON conservano ritaglio/riflessioni e rifiutano errori senza perdere redo', () => {
     const doc = createDocument(); doc.objects = [image()]; const store = new DocumentStore(doc, measure), object = { ...changeRasterCrop(image(), { leftPx: 1 }), flipX: true, flipY: true };

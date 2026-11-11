@@ -21,7 +21,7 @@ export function originalRasterSvg(image: FabricImage, source: RasterSource, rawC
         href = `data:image/jpeg;base64,${btoa(binary)}`;
         transform = ` transform="matrix(${jpegOrientationMatrix(info.orientation, width, height).join(' ')})"`;
       }
-      original = `<svg x="${-crop.widthPx / 2}" y="${-crop.heightPx / 2}" width="${crop.widthPx}" height="${crop.heightPx}" viewBox="${crop.leftPx} ${crop.topPx} ${crop.widthPx} ${crop.heightPx}" preserveAspectRatio="none" overflow="hidden"><g${transform}><image x="0" y="0" width="${width}" height="${height}" xlink:href="${href}" /></g></svg>`;
+      original = `<svg x="${-image.width / 2}" y="${-image.height / 2}" width="${image.width}" height="${image.height}" viewBox="${crop.leftPx} ${crop.topPx} ${crop.widthPx} ${crop.heightPx}" preserveAspectRatio="none" overflow="hidden"><g${transform}><image x="0" y="0" width="${width}" height="${height}" xlink:href="${href}" /></g></svg>`;
     }
     const markup = serialize(), svg = markup.replace(/<image\b[^>]*(?:\/>|><\/image>)/, original);
     if(svg===markup)throw new Error('Serializzazione dell’immagine originale non riuscita.');

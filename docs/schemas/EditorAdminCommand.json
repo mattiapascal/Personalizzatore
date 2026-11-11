@@ -2310,22 +2310,22 @@
                             "type": "object",
                             "properties": {
                               "leftPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 0,
                                 "maximum": 11999
                               },
                               "topPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 0,
                                 "maximum": 11999
                               },
                               "widthPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 1,
                                 "maximum": 12000
                               },
                               "heightPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 1,
                                 "maximum": 12000
                               }
@@ -6164,22 +6164,22 @@
                             "type": "object",
                             "properties": {
                               "leftPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 0,
                                 "maximum": 11999
                               },
                               "topPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 0,
                                 "maximum": 11999
                               },
                               "widthPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 1,
                                 "maximum": 12000
                               },
                               "heightPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 1,
                                 "maximum": 12000
                               }
@@ -8977,22 +8977,22 @@
                             "type": "object",
                             "properties": {
                               "leftPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 0,
                                 "maximum": 11999
                               },
                               "topPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 0,
                                 "maximum": 11999
                               },
                               "widthPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 1,
                                 "maximum": 12000
                               },
                               "heightPx": {
-                                "type": "integer",
+                                "type": "number",
                                 "minimum": 1,
                                 "maximum": 12000
                               }

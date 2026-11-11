@@ -1,3 +1,5 @@
+**Aggiornamento 11 novembre:** [ritagli frazionari e griglia filtri stabile](iteration-editor-fractional-crop.md) supera i riferimenti storici ai bordi interi e al filtraggio della sola porzione tagliata. I quattro bordi sono ora in mm; i filtri operano sui pixel originali completi, conservati sotto un clip SVG.
+
 # Elaborazione raster locale — 9 novembre 2026
 
 ## Piano iniziale

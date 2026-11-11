@@ -1,3 +1,4 @@
+import {preciseIntermediateSvg} from './svg-precision';
 import { assertTextGeometry, textGeometryVerified } from './font-measurement';
 import { originalRasterSvg } from './raster-svg';
 import {productionDocument,selectableObjectIds,effectiveObjectProperties,type EditorRole} from './object-properties';
@@ -33,7 +34,7 @@ import { pathWorldPoints, type PathObject } from './path-nodes';
 import { PathNodeControls, polyNodeScenePoint } from './path-node-controls';
 import type { PointMm } from './line-geometry';
 import { PolylineDrawingController, type PolylineCallbacks } from './polyline-drawing';
-import { assertRasterParameters, rasterCanvas } from './raster-cache';
+import { assertRasterParameters, rasterCanvas, originalRasterImage } from './raster-cache';
 import { bezierCommands, normalizedBezier } from './bezier-geometry';
 import { BezierDrawingController, type BezierDrawingCallbacks } from './bezier-drawing';
 import { BezierNodeControls } from './bezier-controls';
@@ -95,8 +96,9 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
     if (editable) { if (box instanceof EditorPathText) selectionControls(box); else textBoxControls(box); }
     object = box;
   } else if (o.type === 'image') {
-    const bitmap = rasterCanvas(o.source, o.raster, o.crop);
-    const image = new FabricImage(bitmap, { ...common, strokeWidth: 0, perPixelTargetFind: true, flipX: o.flipX ?? false, flipY: o.flipY ?? false, scaleX: o.widthMm * PX_PER_MM / bitmap.width, scaleY: o.heightMm * PX_PER_MM / bitmap.height });
+    assertRasterParameters(o.source,o.raster);
+    const crop=checkedRasterCrop(o.source,o.crop),original=o.raster.mode==='original',bitmap=original?originalRasterImage(o.source):rasterCanvas(o.source,o.raster),width=crop.widthPx,height=crop.heightPx;
+    const image = new FabricImage(bitmap, {width,height,cropX:crop.leftPx,cropY:crop.topPx, ...common, strokeWidth: 0, perPixelTargetFind: true, flipX: o.flipX ?? false, flipY: o.flipY ?? false, scaleX: o.widthMm * PX_PER_MM / width, scaleY: o.heightMm * PX_PER_MM / height });
     if(o.raster.mode==='original')originalRasterSvg(image,o.source,o.crop);object=image;
   } else {
     const strokeWidth = o.stroke === 'none' ? 0 : o.strokeMm * PX_PER_MM;
@@ -549,7 +551,7 @@ export class FabricAdapter {
   private drawRasterCropFocus(): void {
     const target = this.canvas.getActiveObject(), original = this.document?.objects.find(object => object.id === this.cropFocus);
     if (!(target instanceof FabricImage) || original?.type !== 'image' || this.idByObject.get(target) !== this.cropFocus || !this.document) return;
-    const object = this.cropControls.preview ?? original, crop = checkedRasterCrop(object.source, object.crop), bitmap = rasterCanvas(object.source, object.raster), context = this.canvas.getContext(), retina = this.canvas.getRetinaScaling();
+    const object = this.cropControls.preview ?? original, crop = checkedRasterCrop(object.source, object.crop), bitmap = object.raster.mode==='original'?originalRasterImage(object.source):rasterCanvas(object.source, object.raster), context = this.canvas.getContext(), retina = this.canvas.getRetinaScaling();
     context.save(); context.setTransform(retina * this.zoom, 0, 0, retina * this.zoom, 0, 0); context.beginPath();
     if (this.document.shape === 'round') context.arc(this.document.areaMm.width * 4, this.document.areaMm.height * 4, this.document.areaMm.width * 4, 0, Math.PI * 2); else context.rect(0, 0, this.document.areaMm.width * 8, this.document.areaMm.height * 8);
     context.clip(); context.transform(...target.calcTransformMatrix());
@@ -702,7 +704,7 @@ export class FabricAdapter {
     const selected = [...this.selectedIds];
     try {
       this.zoom = 1; this.render(productionDocument(document), null);
-      return embedSvgFonts(this.canvas.toSVG({ width: `${document.areaMm.width}mm`, height: `${document.areaMm.height}mm`, viewBox: { x: 0, y: 0, width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM } }), document.fontAssets);
+      return embedSvgFonts(preciseIntermediateSvg(()=>this.canvas.toSVG({ width: `${document.areaMm.width}mm`, height: `${document.areaMm.height}mm`, viewBox: { x: 0, y: 0, width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM } })), document.fontAssets);
     } finally { this.zoom = zoom; this.render(document, selected); }
   }
   setZoom(zoom: number, document: GraphicDocument): void {

@@ -1,3 +1,5 @@
+**Aggiornamento 11 novembre:** [ritagli frazionari e griglia filtri stabile](iteration-editor-fractional-crop.md) supera i riferimenti storici ai bordi interi e al filtraggio della sola porzione tagliata. I quattro bordi sono ora in mm; i filtri operano sui pixel originali completi, conservati sotto un clip SVG.
+
 # Ritaglio e riflessione raster — 9 novembre 2026
 
 Ritaglio rettangolare non distruttivo in pixel della sorgente originale, con scheda dedicata nell’ispettore: sinistra, alto, larghezza e altezza intere; ripristino dell’intera sorgente. Il ritaglio conserva centro e scala fisica dei pixel, quindi cambia le dimensioni mm secondo la porzione visibile; spostare la finestra mantenendone le dimensioni cambia il contenuto nel medesimo riquadro. Nessuna deformazione.

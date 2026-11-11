@@ -20,7 +20,7 @@ it('preferisce l’originale dichiarato e conserva la mappa pixel/mm senza norma
   expect(pitchprintImageGeometry({ width: 8, height: 6, cropX: 4, cropY: 3 }, source, 2, 3)).toMatchObject({ widthMm: 16, heightMm: 18, crop: { leftPx: 4, topPx: 3, widthPx: 8, heightPx: 6 } });
   // Fabric 3 samples at most the actual source size and stretches it to the declared size.
   expect(pitchprintImageGeometry({ width: 32, height: 24 }, source, 2, 3)).toMatchObject({ widthMm: 64, heightMm: 72, crop: fullRasterCrop(source) });
-  for (const raw of [{ width: 8.5, height: 6 }, { width: 8, height: 6, cropX: .5 }, { width: 8, height: 6, cropY: -1 }, { width: 16, height: 12, cropX: 1 }, { width: 0, height: 12 }]) expect(() => pitchprintImageGeometry(raw, source, 2, 3)).toThrow();
+  for (const raw of [{ width: 8, height: 6, cropY: -1 }, { width: 16, height: 12, cropX: 1 }, { width: 0, height: 12 }]) expect(() => pitchprintImageGeometry(raw, source, 2, 3)).toThrow();
 });
 it('ritaglio, ripristino e maniglie conservano entrambe le scale e i pixel fissi, anche con riflessioni/rotazione', () => {
   const original = image(), cropped = changeRasterCrop(original, { leftPx: 4, topPx: 3 });

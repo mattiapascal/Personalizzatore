@@ -25,3 +25,9 @@ export async function replaceSelectedText(page: Page, value: string): Promise<vo
 export async function chooseEditorFont(page: Page, family: string): Promise<void> {
   const label=family==='font-aaaaaaaa-0000-4000-8000-000000000001'?'Arimo':family==='font-aaaaaaaa-0000-4000-8000-000000000005'?'Tinos':family==='font-aaaaaaaa-0000-4000-8000-000000000007'?'Cousine':family;await page.getByRole('combobox', { name: 'Font', exact: true }).click(); await page.getByRole('option', { name: label, exact: true }).click();
 }
+
+/** Exercise the mm inspector while keeping older pixel-specific assertions explicit. */
+export async function setRasterCropPixels(page: Page, side: 'Sinistra'|'Destra'|'Alto'|'Basso', pixels: number): Promise<void> {
+ const id=await page.locator('.object-inspector .object-identity-id').innerText(),doc=JSON.parse((await page.getByTestId('graphic-state').textContent())!),image=doc.objects.find((o:{id:string})=>o.id===id),horizontal=side==='Sinistra'||side==='Destra',scale=horizontal?image.widthMm/(image.crop?.widthPx??image.source.pixelWidth):image.heightMm/(image.crop?.heightPx??image.source.pixelHeight);
+ await page.getByLabel(`${side} ritaglio (mm)`,{exact:true}).fill(String(pixels*scale));
+}
