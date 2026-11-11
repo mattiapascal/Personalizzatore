@@ -1,4 +1,4 @@
-**11 novembre — priorità dei template:** [analisi aggiornata degli esclusi](editor-template-blockers-priority-2026-11-11.md). Biglietti da Visita e Templates PitchPrint in coda. Nelle altre categorie: **258/357 convertibili, 99 bloccati**, più otto sorgenti multipagina da valutare solo per estrazione di pagine autonome. Principali blocchi: font/simboli, contorni deformati, maschere e testo curvo. Archivio invariato; nessuna importazione aggiuntiva.
+**11 novembre — priorità dei template:** [analisi aggiornata degli esclusi](editor-template-blockers-priority-2026-11-11.md). Biglietti da Visita, Templates PitchPrint e tutti i template con testo curvo in coda. Nel perimetro prioritario: **258/344 convertibili, 86 bloccati**, più otto sorgenti multipagina da valutare solo per estrazione di pagine autonome. Principali blocchi prioritari: font/simboli, contorni deformati e maschere. Archivio invariato; nessuna importazione aggiuntiva.
 
 # Configuratore grafico locale — percorso incrementale
 

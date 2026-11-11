@@ -1,6 +1,6 @@
 # Template esclusi: priorità aggiornate — 11 novembre 2026
 
-Il titolare assegna la **minima priorità** alle categorie **Biglietti da Visita** e **Templates PitchPrint**. Questa scelta cambia l’ordine del lavoro, non autorizza a scartare elementi o sostituire font nelle conversioni.
+Il titolare assegna la **minima priorità** alle categorie **Biglietti da Visita**, **Templates PitchPrint** e a **tutti i template contenenti testo curvo**. Questa scelta cambia l’ordine del lavoro, non autorizza a scartare elementi o sostituire font nelle conversioni.
 
 ## Ricontrollo
 
@@ -8,15 +8,29 @@ Riesaminati con l’importatore attuale i 370 sorgenti a pagina singola acquisit
 
 | Perimetro a pagina singola | Convertibili | Bloccati | Totale |
 | --- | ---: | ---: | ---: |
-| Categorie prioritarie | 258 | 99 | 357 |
+| Prioritari, senza testo curvo | 258 | 86 | 344 |
 | Biglietti da Visita / Templates PitchPrint | 1 | 12 | 13 |
+| Testo curvo nelle altre categorie | 0 | 13 | 13 |
 | Totale | 259 | 111 | 370 |
 
 L’inventario complessivo ha 473 sorgenti: altri 95 delle due categorie a bassa priorità sono multipagina, insieme a 8 delle categorie prioritarie. **Il multipagina resta escluso dall’editor.** I quattro sorgenti di numeri civici a nove pagine e i quattro di cartelli viari a due pagine possono essere valutati per estrazione di pagine utili come template autonomi.
 
 Le categorie sono abbinate all’ID del file dell’inventario: in quattro sorgenti legacy il `designId` interno è diverso dall’ID nell’elenco. Usare solo il primo avrebbe lasciato senza categoria quattro template a bassa priorità e falsato il conteggio dei prioritari.
 
-## I 99 blocchi prioritari
+## Sorgenti multipagina prioritari: contenuto verificato
+
+| Categoria | Nome nell’inventario | Pagine | Contenuto |
+| --- | --- | ---: | --- |
+| Numero civico con bordo blu, con variazioni | 15×10 MODELLI / 16×12 MODELLI | 9 ciascuno | Impaginazioni alternative per 1/2/3 cifre, con o senza lettera/subalterno |
+| Numero civico con bordo blu | 15×10 modelli / 16×12 modelli | 9 ciascuno | Impaginazioni alternative per 1/2/3 cifre, con o senza lettera/subalterno |
+| Cartello viario | 80×25 tre righe / 80×25 due righe | 2 ciascuno | Fronte e Retro, esplicitamente etichettati nel sorgente |
+| Cartello viario | 60×20 tre righe / 60×20 due righe | 2 ciascuno | Fronte e Retro, esplicitamente etichettati nel sorgente |
+
+Le varianti dei civici possono diventare alternative selezionabili; le facciate dei viari devono conservare una relazione produttiva. I nomi dei viari non coincidono con le tavole sorgente: 900 × 400 mm nei due «80×25», 700 × 400 mm nei due «60×20». Prima di qualsiasi associazione verificare misure nominali/utili da catalogo e BSS, senza dedurle dai nomi o assumere che l’intera tavola sorgente sia l’area da produrre.
+
+Il titolare propone ora di valutare il multipagina. Consigliata una prima modalità fronte/retro, con progetto unico, comandi riferiti alla tavola, miniature, salvataggio/conferma di tutte le facciate, SVG per facciata e PDF multipagina. È una proposta in discussione: non è ancora una funzione implementata o una migrazione dei progetti esistenti.
+
+## Gli 86 blocchi prioritari
 
 Conteggi per **primo errore rilevato**. Sono gruppi esclusivi, ma un template può presentare altre incompatibilità dopo la correzione della prima: non sono promesse di recupero immediato.
 
@@ -25,11 +39,12 @@ Conteggi per **primo errore rilevato**. Sono gruppi esclusivi, ma un template pu
 | Font e simboli | 29 | 26 casi con simboli assenti in font già installati; 2 con mappa di Continuum Medium non verificabile; 1 con Gloria Hallelujah 700 non disponibile |
 | Contorni con deformazione diversa sui due assi | 21 | Espansione fedele del tratto in geometria; non uniformare la scala o eliminare il bordo |
 | Maschere/opacità | 21 | 7 rettangoli con opacità 0,9; 12 immagini con clip rettangolare; 2 testi con clip |
-| Testo curvo legacy | 12 | Tradurre raggio, verso, spaziatura e trasformazioni nel testo su tracciato già presente |
 | Testo giustificato | 4 | Collegare l’allineamento già supportato dall’editor verificando le differenze di impaginazione |
 | Limite TEST di 200 elementi | 3 | 301/542/543 elementi foglia; compattazione senza perdita di proprietà o capacità maggiore collaudata |
-| Altri casi | 9 | Formato, risorse, filtri, indici di stile e grafica vuota |
-| **Totale** | **99** | |
+| Altri casi | 8 | Formato, risorse, indici di stile e grafica vuota |
+| **Totale** | **86** | |
+
+I 13 template con testo curvo ora in coda comprendono i 12 già fermati da `curvedText` e un Azienda Agricola il cui primo errore riguarda i filtri immagine. La nuova priorità è stata applicata cercando ricorsivamente il testo curvo nei sorgenti completi, non soltanto nel messaggio di errore. Prima di questa scelta i prioritari bloccati erano 99; nessun sorgente è stato scartato o convertito per far diminuire il conteggio.
 
 ### Font
 
@@ -72,11 +87,11 @@ Nelle tre categorie relative ai cartelli: **23 sorgenti a pagina singola, 9 conv
 
 1. Compatibilità circoscritte: giustificazioni, mappa Continuum, opacità semplice, limiti di capacità/formato con collaudi adeguati.
 2. Contorni deformati e simboli: coinvolgono molte targhe/cartelli; preservare l’aspetto e i font del testo.
-3. Clip rettangolari e conversione del testo curvo, riutilizzando gli strumenti già disponibili.
-4. Risorse anomale, filtri e casi residui; categorie a bassa priorità in coda.
+3. Clip rettangolari, riutilizzando gli strumenti già disponibili.
+4. Risorse anomale e casi residui. Biglietti da Visita, Templates PitchPrint e tutti i template con testo curvo restano in coda.
 
 ## Evidenze e confini
 
-Esecuzione privata `.local/analyze-priority-templates-readonly.ts`, log `.local/priority-template-analysis.log`, report `.local/pitchprint-migration/priority-analysis-2026-11-11.report.json`. Elenco nominativo completo con ID e categorie in `.local/pitchprint-migration/analisi-template-prioritari-2026-11-11.md`; contiene tutti i 99 casi e gli otto sorgenti multipagina prioritari. I dati sorgente e i file personali non vengono pubblicati nel repository.
+Esecuzione privata `.local/analyze-priority-templates-readonly.ts`, log `.local/priority-template-analysis.log`, report `.local/pitchprint-migration/priority-analysis-2026-11-11.report.json`. Elenco nominativo completo con ID e categorie in `.local/pitchprint-migration/analisi-template-prioritari-2026-11-11.md`; contiene tutti gli 86 casi prioritari e gli otto sorgenti multipagina prioritari. I dati sorgente e i file personali non vengono pubblicati nel repository.
 
 **370 analisi completate, zero scritture amministrative/errori browser, hash dell’archivio invariato.** Restano 117 bozze importate; nessuna nuova importazione, correzione di template/font, associazione prodotto o approvazione produttiva. Il controllo è tecnico, non certifica la resa visiva di tutti i template o Illustrator. Nessun deploy o intervento su Shopify/tema/PitchPrint/BSS/prezzi/carrello/checkout/chat pubblicata.
