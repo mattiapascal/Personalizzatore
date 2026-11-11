@@ -4,6 +4,7 @@ import { fontIssueMessage, inspectDocumentFonts, type FontReport } from './font-
 import type { FontIssue } from './font-preflight';
 import { FontPicker } from './FontPicker';
 import { fontVariantChoices, fontVariantLabel, subscribeFonts, fontCatalogVersion } from './fonts';
+import { fontCoverageVersion, subscribeFontCoverage } from './font-coverage-cache';
 
 type Repair = (issue: FontIssue, fontId: string, revision: number) => Promise<boolean>;
 function FontRepairRow({ issue, revision, busy, onOpen, onRepair }: { issue: FontIssue; revision: number; busy: boolean; onOpen: () => void; onRepair: Repair }) {
@@ -21,6 +22,7 @@ function FontRepairRow({ issue, revision, busy, onOpen, onRepair }: { issue: Fon
 }
 
 export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {}, onRepair }: { document: GraphicDocument; busy?: boolean; onOpen?: () => void; onRepair?: Repair }) {
+  const coverageVersion=useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion);
   const [retry,setRetry]=useState(0);
   const [result, setResult] = useState<{ document: GraphicDocument; report: FontReport } | null>(null);
   const relevant = doc.objects.some(object => object.type === 'text');
@@ -29,7 +31,7 @@ export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {},
     let active = true;
     void inspectDocumentFonts(doc).then(report => { if (active) setResult({ document: doc, report }); });
     return () => { active = false; };
-  }, [doc, relevant, retry]);
+  }, [doc, relevant, retry, coverageVersion]);
   if (!relevant) return null;
   const report = result?.document === doc ? result.report : null;
   return <section aria-label="Controllo font del progetto" className="font-check-panel">

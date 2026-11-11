@@ -1,5 +1,6 @@
-import { fontAssetBytes, type FontAsset } from './font-assets';
-import { hasUnicode, readCmapCoverage, UnicodeCoverageSchema, type UnicodeRange } from './font-cmap';
+import { readFontCoverage as coverage, type FontInspectionOptions } from './font-coverage-cache';
+export type { FontInspectionOptions } from './font-coverage-cache';
+import { hasUnicode } from './font-cmap';
 import type { GraphicDocument } from './model';
 
 export interface FontIssue {
@@ -8,55 +9,6 @@ export interface FontIssue {
   characters?: string[];
 }
 export interface FontReport { issues: FontIssue[]; checkedFonts: number; }
-const cache = new Map<string, Promise<UnicodeRange[] | undefined>>();
-export interface FontInspectionOptions {resolveWoff2?:(asset:FontAsset)=>Promise<readonly UnicodeRange[]|undefined>;}
-
-async function coverage(asset: FontAsset,options:FontInspectionOptions): Promise<UnicodeRange[] | undefined> {
-  const key = `${options.resolveWoff2?'server':'browser'}:${asset.format}:${asset.dataBase64}`, existing = cache.get(key); if (existing) return existing;
-  const pending = (async () => {
-    try {
-      if(asset.format==='woff2'){
-        if(options.resolveWoff2){const ranges=await options.resolveWoff2(asset);return ranges?UnicodeCoverageSchema.parse(ranges):undefined;}
-        if(typeof window==='undefined'||!import.meta.env.DEV)return;
-        const response=await fetch('/__editor-local/admin/font-coverage',{method:'POST',headers:{'X-Editor-Local':'1','Content-Type':'font/woff2'},body:fontAssetBytes(asset).buffer,signal:AbortSignal.timeout(10000)});
-        if(!response.ok)throw new Error('Controllo font locale non disponibile');const result=await response.json();return result.ranges?UnicodeCoverageSchema.parse(result.ranges):undefined;
-      }
-      const bytes = fontAssetBytes(asset), view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
-      const woff = asset.format === 'woff';
-      if (!woff && asset.format !== 'ttf' && asset.format !== 'otf') return;
-      const count = view.getUint16(woff ? 12 : 4), directory = woff ? 44 : 12, stride = woff ? 20 : 16;
-      if (count > 4096 || directory + count * stride > bytes.length) return;
-      for (let i = 0; i < count; i++) {
-        const at = directory + i * stride;
-        if (String.fromCharCode(...bytes.subarray(at, at + 4)) !== 'cmap') continue;
-        const offset = view.getUint32(at + (woff ? 4 : 8)), length = view.getUint32(at + (woff ? 8 : 12));
-        if (length > 1024 * 1024 || offset + length > bytes.length) return;
-        let table: Uint8Array = bytes.subarray(offset, offset + length);
-        if (woff) {
-          const originalLength = view.getUint32(at + 12);
-          if (originalLength > 1024 * 1024 || originalLength < length) return;
-          if (originalLength !== length) {
-            const reader = new Blob([table as Uint8Array<ArrayBuffer>]).stream().pipeThrough(new DecompressionStream('deflate')).getReader();
-            const parts: Uint8Array[] = []; let size = 0;
-            try {
-              for (;;) { const { value, done } = await reader.read(); if (done) break; size += value.length; if (size > originalLength) return; parts.push(value); }
-            } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
-            if (size !== originalLength) return;
-            table = new Uint8Array(size); let start = 0; for (const part of parts) { table.set(part, start); start += part.length; }
-          }
-        }
-        return readCmapCoverage(table);
-      }
-    } catch { return; }
-  })();
-  if (cache.size >= 32) cache.delete(cache.keys().next().value!);
-  cache.set(key, pending);
-  // A failed service/read must be retryable; it is not a permanent property of
-  // the embedded file. Concurrent inspections still share the pending request.
-  void pending.then(ranges => { if (!ranges && cache.get(key) === pending) cache.delete(key); });
-  return pending;
-}
-
 /** Derives checks from exact embedded bytes, never client-supplied coverage metadata. */
 export async function inspectDocumentFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>,options:FontInspectionOptions={}): Promise<FontReport> {
   const assets = new Map(doc.fontAssets?.map(asset => [asset.id, asset]) ?? []);

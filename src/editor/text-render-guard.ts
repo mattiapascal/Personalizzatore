@@ -5,7 +5,7 @@ import type { TextObject } from './text-style';
 export type TextRenderStatus = 'pending' | 'blocked' | 'ready';
 interface Entry { key: string; fonts: readonly FontAsset[]; status: TextRenderStatus; report?: FontReport; }
 /** Geometry and selection must not trigger another check on every frame. */
-function key(object: TextObject): string {
+export function textFontKey(object: TextObject): string {
   return JSON.stringify([object.text, object.fontFamily, object.fontWeight, object.fontStyle,
     object.characterStyles?.map(run => [run.start, run.end, run.style.fontFamily, run.style.fontWeight, run.style.fontStyle])]);
 }
@@ -17,7 +17,7 @@ export class TextRenderGuard {
   private disposed = false;
   constructor(private readonly changed: () => void, private readonly inspect = inspectDocumentFonts) {}
   status(object: TextObject, assets: readonly FontAsset[] = []): TextRenderStatus {
-    const nextKey = key(object), fonts = assets.filter(asset => asset.id === object.fontFamily || object.characterStyles?.some(run => run.style.fontFamily === asset.id));
+    const nextKey = textFontKey(object), fonts = assets.filter(asset => asset.id === object.fontFamily || object.characterStyles?.some(run => run.style.fontFamily === asset.id));
     const previous = this.entries.get(object.id);
     if (previous?.key === nextKey && sameFiles(previous.fonts, fonts)) return previous.status;
     if (this.disposed) return 'blocked';

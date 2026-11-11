@@ -26,6 +26,7 @@ import { strokeGeometry } from './path-geometry';
 import { assertFontAvailable, renderFontFamily, canonicalFontFamily, embedSvgFonts, loadFontAssets } from './fonts';
 import { assertOutputFonts } from './font-preflight';
 import { TextRenderGuard } from './text-render-guard';
+import { subscribeFontCoverage } from './font-coverage-cache';
 import { tintImprintPixels } from './ink';
 import { pathWorldPoints, type PathObject } from './path-nodes';
 import { PathNodeControls, polyNodeScenePoint } from './path-node-controls';
@@ -220,14 +221,17 @@ export class FabricAdapter {
   private publishSelection: () => void;
   private publishObjectSelection: () => void;
   private textRenderGuard?: TextRenderGuard;
+  private unsubscribeFontCoverage?: () => void;
   private fontRenderStatus?: (blocked: readonly string[], pending: readonly string[]) => void;
   /** Interactive scenes opt in; output uses the separate strict preflight. */
   protectTextRendering(onStatus?: (blocked: readonly string[], pending: readonly string[]) => void): void {
+    this.unsubscribeFontCoverage?.();
     this.textRenderGuard?.dispose(); this.fontRenderStatus = onStatus;
     this.textRenderGuard = new TextRenderGuard(() => {
       if (this.disposed) return;
       this.publishFontRenderStatus(); this.canvas.requestRenderAll();
     });
+    this.unsubscribeFontCoverage=subscribeFontCoverage(()=>{if(!this.disposed)this.retryTextRendering();});
   }
   retryTextRendering(): void { this.textRenderGuard?.retry(); this.publishFontRenderStatus(); this.canvas.requestRenderAll(); }
   private textFontProbe(target: EditorTextBox, source: TextObject): TextObject {
@@ -688,5 +692,5 @@ export class FabricAdapter {
     const active = this.canvas.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
   }
-  dispose(): void { this.disposed = true; this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
+  dispose(): void { this.disposed = true; this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
 }

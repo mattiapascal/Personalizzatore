@@ -24,6 +24,7 @@ import { jpegInfo } from './jpeg-source';
 import { rasterAnalysis } from './raster-cache';
 import { ObjectIdentity } from './ObjectIdentity';
 import { smallestPrintedFontPt } from './text-production';
+import { SelectedTextFontNotice } from './SelectedTextFontNotice';
 
 type Section = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'arrange' | 'template';
 
@@ -141,6 +142,7 @@ export function ObjectInspector({ minimumFontPt = null, allowColor = false, onPr
         <p className="caption inspector-anchor"><span aria-hidden="true">⊙</span> Ancoraggio al centro · X/Y del centro. Dimensioni delle forme senza contorno.</p>
       </>}
       {section === 'text' && current.type === 'text' && <>
+        <SelectedTextFontNotice object={current}/>
         <FontPicker onOpen={onFontMenuOpen} disabled={noCharacters} value={commonFamily??''} onChange={fontFamily => {const exact=textFontFamily(current,fontFamily,styleAssets,characterSelection??undefined),next=exact??textFontFamily(current,fontFamily,styleAssets,characterSelection??undefined,true);if(next){toggleFace(next);if(!exact)setFontError('Alcune varianti non sono disponibili: applicato lo stile originale del font scelto.',revision+1);}else setFontError('Il file font scelto non è disponibile. Aggiorna la libreria e riprova.');}}/>
         <div role="group" aria-label="Stile del testo" className="button-row"><fieldset className="inspector-arrangement" disabled={noCharacters}>
           <EditorButton icon="bold" label="Grassetto" disabled={!boldToggle?.object} aria-pressed={boldToggle?.pressed??false} onClick={()=>toggleFace(boldToggle?.object)}/>
