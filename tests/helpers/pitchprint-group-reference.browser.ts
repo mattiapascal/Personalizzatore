@@ -1,4 +1,4 @@
-import {Group,IText,Textbox,Rect,Circle,Ellipse,Line,Path,Polygon,Polyline,FabricImage,StaticCanvas,type FabricObject} from 'fabric';
+import {config,Group,IText,Textbox,Rect,Circle,Ellipse,Line,Path,Polygon,Polyline,FabricImage,StaticCanvas,type FabricObject} from 'fabric';
 import {pitchprintFontRequest,fontNameKey} from '../../src/editor/pitchprint-fonts';
 import {loadFontAssets,renderFontFamily,embedSvgFonts} from '../../src/editor/fonts';
 import type {FontAsset} from '../../src/editor/font-assets';
@@ -26,7 +26,7 @@ export async function pitchprintReferenceSvg(source:any,asset:FontAsset|FontAsse
   if(type==='rect')return new Rect(options);if(type==='circle')return new Circle({...options,...((raw.startAngle??0)===0&&Math.abs(raw.endAngle-2*Math.PI)<1e-9?{endAngle:360}:{})});if(type==='ellipse')return new Ellipse(options);if(type==='line')return new Line([raw.x1,raw.y1,raw.x2,raw.y2],options);if(type==='path')return new Path(raw.path,options);if(type==='polygon')return new Polygon(raw.points,options);if(type==='polyline')return new Polyline(raw.points,options);throw new Error('Tipo di riferimento TEST non previsto');
  };
  const page=source.pages[0],clip=page.canvas.clipPath,canvas=new StaticCanvas(document.createElement('canvas'),{width:clip.width,height:clip.height,renderOnAddRemove:false});
- try{canvas.add(...await Promise.all(page.canvas.objects.map(build)));return embedSvgFonts(canvas.toSVG({viewBox:{x:clip.left??0,y:clip.top??0,width:clip.width,height:clip.height},width:`${page.pageData.fWidth}mm`,height:`${page.pageData.fHeight}mm`}),assets);}finally{canvas.dispose();}
+ try{canvas.add(...await Promise.all(page.canvas.objects.map(build)));const unit=({mm:1,cm:10,in:25.4,inch:25.4,inches:25.4}as Record<string,number>)[String(source.unit).trim().toLowerCase()];if(!unit)throw Error('Unità del riferimento nativo non riconosciuta');const digits=config.NUM_FRACTION_DIGITS;try{config.NUM_FRACTION_DIGITS=12;return embedSvgFonts(canvas.toSVG({viewBox:{x:clip.left??0,y:clip.top??0,width:clip.width,height:clip.height},width:`${Number(page.pageData.fWidth)*unit}mm`,height:`${Number(page.pageData.fHeight)*unit}mm`}),assets);}finally{config.NUM_FRACTION_DIGITS=digits;}}finally{canvas.dispose();}
 }
 export async function svgPixelDifference(a:string,b:string,width=800,height=480){
  const pixels=async(svg:string)=>{const image=new Image();image.src=`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;await image.decode();const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d')!;ctx.fillStyle='white';ctx.fillRect(0,0,width,height);ctx.drawImage(image,0,0,width,height);return ctx.getImageData(0,0,width,height).data;};

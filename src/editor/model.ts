@@ -127,7 +127,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
       if (Math.abs(a - b) > 1e-7 * Math.max(a, b)) ctx.addIssue({ code: 'custom', message: 'Le proporzioni dei pixel visibili dell’immagine devono essere conservate' });
     } catch (e) { ctx.addIssue({ code: 'custom', message: e instanceof Error ? e.message : 'Ritaglio non valido' }); }
   }
-  if (d.objects.reduce((sum, object) => sum + (object.type === 'vector' ? object.commands.length : 0), 0) > 8192) ctx.addIssue({ code: 'custom', message: 'Massimo 8192 segmenti vettoriali nel documento TEST' });
+  if (d.objects.reduce((sum, object) => sum + (object.type === 'vector' ? object.commands.length : 0), 0) > EDITOR_LIMITS.vectorCommands) ctx.addIssue({ code: 'custom', message: `Massimo ${EDITOR_LIMITS.vectorCommands} segmenti vettoriali nel documento TEST` });
   const assetIds = new Set(d.fontAssets?.map(asset => asset.id) ?? []);
   for (const object of d.objects) {
     if (object.type === 'text' && [object.fontFamily,...object.characterStyles?.map(r=>r.style.fontFamily).filter((f):f is string=>!!f)??[]].some(f => f.startsWith('font-') && !assetIds.has(f))) ctx.addIssue({code:'custom',message:'Il documento non contiene la risorsa del font utilizzato'});

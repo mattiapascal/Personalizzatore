@@ -1,4 +1,5 @@
 import { StrokeWidthSchema } from './stroke';
+import { requestStrokeOutline } from './stroke-outline';
 import {canonicalPaint} from './paint';
 import { EDITOR_LIMITS } from './limits';
 import { assertMinimumText } from './text-production';
@@ -14,7 +15,7 @@ import { DocumentSchema, cloneSceneObject, type GraphicDocument, type GraphicCom
 import { transformSelection, selectionBounds } from './selection';
 type VectorObject = Extract<SceneObject, { type: 'vector' }>;
 const PX_TO_MM = 25.4 / 96;
-function shapeCommands(object: FabricObject | NonNullable<FabricObject['clipPath']>, matrix?: TMat2D): VectorCommand[] {
+function shapeCommands(object: FabricObject | NonNullable<FabricObject['clipPath']>, matrix?: TMat2D, unitScale = PX_TO_MM): VectorCommand[] {
   let path: Path;
   if (object instanceof Path) path = object;
   else {
@@ -35,12 +36,16 @@ function shapeCommands(object: FabricObject | NonNullable<FabricObject['clipPath
   const flush = () => { if (contour.some(c => c[0] === 'L' || c[0] === 'C')) cleaned.push(...contour); contour = []; };
   for (const c of commands) { if (c[0] === 'M') { flush(); contour.push(c); } else if (c[0] === 'Z') { contour.push(c); flush(); } else contour.push(c); } flush();
   const offset = object instanceof Path ? object.pathOffset : { x: 0, y: 0 }, m = matrix ?? object.calcTransformMatrix();
-  return mapVector(cleaned, (x, y) => ({ x: ((x - offset.x) * m[0] + (y - offset.y) * m[2] + m[4]) * PX_TO_MM, y: ((x - offset.x) * m[1] + (y - offset.y) * m[3] + m[5]) * PX_TO_MM }));
+  return mapVector(cleaned, (x, y) => ({ x: ((x - offset.x) * m[0] + (y - offset.y) * m[2] + m[4]) * unitScale, y: ((x - offset.x) * m[1] + (y - offset.y) * m[3] + m[5]) * unitScale }));
 }
 const paint = canonicalPaint;
 
 export type ImportTextMode = 'outlines' | 'editable';
-export interface PreparedSvg { monochrome: boolean; objects: SceneObject[]; fontAssets?: FontAsset[]; widthMm: number; heightMm: number; }
+export interface PreparedSvg { monochrome: boolean; objects: SceneObject[]; fontAssets?: FontAsset[]; widthMm: number; heightMm: number; expandedStrokes?:number; }
+function expandedFill(commands:VectorCommand[],fill:string,fillRule:'nonzero'|'evenodd'):VectorObject{
+ const box=vectorBounds(commands);if(!Number.isFinite(box.width)||!Number.isFinite(box.height)||box.width<=0||box.height<=0)throw Error('Contorno espanso privo di area');
+ return{id:`svg-${crypto.randomUUID()}`,type:'vector',xMm:box.x,yMm:box.y,widthMm:box.width,heightMm:box.height,commands:VectorCommandsSchema.parse(mapVector(commands,(x,y)=>({x:(x-box.x)/box.width,y:(y-box.y)/box.height}))),fill,fillRule,stroke:'none',strokeMm:.25,strokeLineCap:'butt',strokeLineJoin:'miter',strokeMiterLimit:4};
+}
 export async function prepareSvg(source: string, monochrome = false, textMode: ImportTextMode = 'outlines'): Promise<PreparedSvg> {
   let safe = sanitizeSvg(source, monochrome, true);
   const xml = new DOMParser().parseFromString(safe, 'image/svg+xml'), hasText = !!xml.querySelector('text');
@@ -65,7 +70,7 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
     }
   }
   const textLengths=new WeakMap<FabricObject,number>(),textAnchors=new WeakMap<FabricObject,string>();
-  const parsed = await loadSVGFromString(safe,(element,object)=>{if(object instanceof FabricText){for(let node:Element|null=element;node;node=node.parentElement)if(node.hasAttribute('text-anchor')){textAnchors.set(object,node.getAttribute('text-anchor')!);break;}}if(element.hasAttribute('textLength')){if(element.getAttribute('lengthAdjust')!=='spacingAndGlyphs'||!['start',null].includes(element.getAttribute('text-anchor')))throw new Error('Dilatazione SVG supportata solo con testo ancorato a sinistra');textLengths.set(object,Number(element.getAttribute('textLength')));}}); let objects: SceneObject[] = [];
+  const parsed = await loadSVGFromString(safe,(element,object)=>{if(object instanceof FabricText){for(let node:Element|null=element;node;node=node.parentElement)if(node.hasAttribute('text-anchor')){textAnchors.set(object,node.getAttribute('text-anchor')!);break;}}if(element.hasAttribute('textLength')){if(element.getAttribute('lengthAdjust')!=='spacingAndGlyphs'||!['start',null].includes(element.getAttribute('text-anchor')))throw new Error('Dilatazione SVG supportata solo con testo ancorato a sinistra');textLengths.set(object,Number(element.getAttribute('textLength')));}}); let objects: SceneObject[] = [],expandedStrokes=0;
   if (parsed.objects.length > 500) throw new Error('SVG oltre il limite di elaborazione di 500 elementi sorgente');
   for (const object of parsed.objects) {
     if (!object || !object.visible) continue; const fill = paint(object.fill), stroke = paint(object.stroke); if (fill === 'none' && stroke === 'none') continue;
@@ -79,7 +84,14 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
       const text:SceneObject={id:`svg-${crypto.randomUUID()}`,type:'text',xMm:box.left*PX_TO_MM,yMm:box.top*PX_TO_MM,rotationDeg:Math.atan2(m[1],m[0])*180/Math.PI,text:object.text,fontFamily:family,fontSizePt,textScaleX:sx/sy*(length?length/object.width:1),fill,fontWeight:object.fontWeight==='bold'||object.fontWeight===700?'bold':'normal',fontStyle:object.fontStyle==='italic'?'italic':'normal',textAlign:textAnchors.get(object)==='middle'?'center':textAnchors.get(object)==='end'?'right':'left',lineHeight:1,...(object.charSpacing?{letterSpacingPt:object.charSpacing/1000*fontSizePt}: {})};
       const measured=measureFabric(text); text.textBox={widthMm:measured.widthMm,heightMm:measured.heightMm,autoWidth:true,autoHeight:true};objects.push(text);continue;
     }
-    if (stroke !== 'none' && (Math.abs(sx - sy) > 1e-7 * Math.max(sx, sy) || Math.abs(m[0] * m[2] + m[1] * m[3]) > 1e-7 * sx * sy)) throw new Error('Contorno SVG con deformazione non uniforme: espandilo in tracciati prima di importare');
+    if (stroke !== 'none' && (Math.abs(sx - sy) > 1e-7 * Math.max(sx, sy) || Math.abs(m[0] * m[2] + m[1] * m[3]) > 1e-7 * sx * sy)) {
+      if(object.clipPath)throw Error('Contorno deformato con ritaglio: espansione combinata ancora da convertire');
+      const outlined=await requestStrokeOutline({schemaVersion:1,commands:shapeCommands(object,[1,0,0,1,0,0],1),matrix:m.map(v=>v*PX_TO_MM) as TMat2D,strokeWidth:object.strokeWidth,lineCap:object.strokeLineCap,lineJoin:object.strokeLineJoin,miterLimit:object.strokeMiterLimit}),commands=shapeCommands(object),bounds=vectorBounds(commands);
+      if(fill!=='none'&&!(object instanceof Line)&&bounds.width>0&&bounds.height>0)objects.push(expandedFill(commands,fill,object.fillRule));
+      // Keep the entire compound stroke in one path. Inner contours must never
+      // be split away from their outer contour, which would fill the holes.
+      objects.push(expandedFill(outlined.commands,stroke,'nonzero'));expandedStrokes++;continue;
+    }
     const commands = shapeCommands(object); if (!commands.length && stroke === 'none') continue; const box = vectorBounds(commands); if (!Number.isFinite(box.width) || !Number.isFinite(box.height) || !box.width && !box.height) throw new Error('Tracciato SVG degenere');
     const strokeMm = stroke === 'none' ? .25 : object.strokeWidth * sx * PX_TO_MM; if (!StrokeWidthSchema.safeParse(strokeMm).success) throw new Error(`Contorno SVG fuori dal limite di capacità del laboratorio: deve essere positivo e non superare ${EDITOR_LIMITS.maxStrokeMm} mm`);
     let clipRect: VectorObject['clipRect'];
@@ -93,7 +105,7 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
     objects.push({ id: `svg-${crypto.randomUUID()}`, type: 'vector', xMm: box.x - (stroke === 'none' ? 0 : strokeMm / 2), yMm: box.y - (stroke === 'none' ? 0 : strokeMm / 2), widthMm: box.width, heightMm: box.height, ...(clipRect ? { clipRect } : {}), commands: VectorCommandsSchema.parse(mapVector(commands, (x, y) => ({ x: box.width ? (x - box.x) / box.width : 0, y: box.height ? (y - box.y) / box.height : 0 }))), fill, fillRule: object.fillRule, stroke, strokeMm, strokeLineCap: object.strokeLineCap, strokeLineJoin: object.strokeLineJoin, strokeMiterLimit: object.strokeMiterLimit });
   }
   if (objects.length > EDITOR_LIMITS.objects && objects.every((o):o is VectorObject=>o.type==='vector')) objects = compactVectors(objects);
-  if (!objects.length) throw new Error('SVG senza elementi visibili'); const bounds=selectionBounds(objects,measureFabric);return { monochrome, objects, ...(fontAssets.length?{fontAssets}:{}),widthMm:bounds.widthMm,heightMm:bounds.heightMm };
+  if (!objects.length) throw new Error('SVG senza elementi visibili'); const bounds=selectionBounds(objects,measureFabric);return { monochrome, objects, ...(fontAssets.length?{fontAssets}:{}),...(expandedStrokes?{expandedStrokes}:{}),widthMm:bounds.widthMm,heightMm:bounds.heightMm };
 }
 export function svgInsertion(prepared: PreparedSvg, doc: GraphicDocument, measure: Measure, minimumFontPt: number | null = null): { command: Extract<GraphicCommand, { tool: 'insertObjects' }>; report: string } {
   if (doc.objects.length + prepared.objects.length > EDITOR_LIMITS.objects) throw new Error(`L’importazione supera i ${EDITOR_LIMITS.objects} oggetti del laboratorio`);
@@ -104,5 +116,5 @@ export function svgInsertion(prepared: PreparedSvg, doc: GraphicDocument, measur
   DocumentSchema.parse({ ...doc, ...(fontAssets.length?{fontAssets}:{}), objects: [...doc.objects, ...objects], ...(groups.length ? { groups: [...doc.groups ?? [], ...groups] } : {}) });
   const command: Extract<GraphicCommand, { tool: 'insertObjects' }> = { schemaVersion: 1, tool: 'insertObjects', objectId: objects[0]!.id, expectedRevision: doc.revision, arguments: { objects, groups, ...(prepared.fontAssets?.length?{fontAssets:prepared.fontAssets}:{}) } };
   const texts=objects.filter(o=>o.type==='text').length;
-  return { command, report: `SVG importato: ${objects.length} elementi${texts?`, di cui ${texts} testi editabili`:' vettoriali'}; ingombro originale ${bounds.widthMm.toFixed(2)} × ${bounds.heightMm.toFixed(2)} mm${scale < 1 ? `, adattato al ${(scale * 100).toFixed(1)}% per l’area di prova` : ', scala originale'}.${prepared.monochrome ? ' Importazione nella palette nero/bianco: colori diversi convertiti in nero.' : ''}` };
+  return { command, report: `SVG importato: ${objects.length} elementi${texts?`, di cui ${texts} testi editabili`:' vettoriali'}; ingombro originale ${bounds.widthMm.toFixed(2)} × ${bounds.heightMm.toFixed(2)} mm${scale < 1 ? `, adattato al ${(scale * 100).toFixed(1)}% per l’area di prova` : ', scala originale'}.${prepared.monochrome ? ' Importazione nella palette nero/bianco: colori diversi convertiti in nero.' : ''}${prepared.expandedStrokes?` ${prepared.expandedStrokes} contorni deformati convertiti in forme per conservarne l’aspetto.`:''}` };
 }

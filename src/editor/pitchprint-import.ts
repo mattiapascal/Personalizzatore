@@ -10,7 +10,7 @@ import {pitchprintNumber as numeric,pitchprintUnitMm} from './pitchprint-units';
 import {pitchprintFontRequest} from './pitchprint-fonts';
 import {pitchprintTree,pitchprintTransform,pitchprintPoint,multiplyPitchprintMatrices,type PitchprintMatrix} from './pitchprint-tree';
 import {z} from 'zod';import {IText,Textbox,Rect,Circle,Ellipse,Line,Path,Polygon,Polyline,type FabricObject} from 'fabric';
-import {createDocument,DocumentSchema,placeObjectAtCenter,type GraphicDocument,type SceneObject} from './model';import {loadFontAssets,renderFontFamily} from './fonts';import {FontAssetsSchema,type FontAsset} from './font-assets';import {measureFabric} from './fabric-adapter';import {prepareSvg} from './svg-import';import {rasterSourceFromBytes} from './raster-source';import {prepareRasterSource} from './raster-cache';import {DEFAULT_RASTER} from './raster-processing';import {defaultMountingFor} from './plaque';import type {ObjectProperties} from './object-properties';
+import {createDocument,DocumentSchema,placeObjectAtCenter,type GraphicDocument,type SceneObject,type SceneGroup} from './model';import {loadFontAssets,renderFontFamily} from './fonts';import {FontAssetsSchema,type FontAsset} from './font-assets';import {measureFabric} from './fabric-adapter';import {prepareSvg} from './svg-import';import {rasterSourceFromBytes} from './raster-source';import {prepareRasterSource} from './raster-cache';import {DEFAULT_RASTER} from './raster-processing';import {defaultMountingFor} from './plaque';import type {ObjectProperties} from './object-properties';
 const record=z.record(z.string(),z.unknown()),sourceSchema=z.object({title:z.string().max(1000).optional(),unit:z.string(),pages:z.array(z.object({canvas:z.object({objects:z.array(record).max(200),clipPath:record}).passthrough(),pageData:record}).passthrough()).length(1)}).passthrough();
 export interface PitchImportOptions {monochrome:boolean;excludeBackground:boolean;family?:'flat-plaque'|'doorplate'|'boxed-sign';pageImages?:{background:PageImagePolicy;foreground:PageImagePolicy};font:(family:string,weight:number,italic:boolean)=>Promise<PitchprintFontResult>;image:(url:string)=>Promise<Uint8Array>;}
 export type PitchprintConversionOptions=Pick<PitchImportOptions,'monochrome'|'excludeBackground'|'family'|'pageImages'>;
@@ -26,7 +26,7 @@ const color=canonicalPaint;
 export async function importPitchPrint(raw:unknown,options:PitchImportOptions):Promise<PitchImportResult>{
  if(raw&&typeof raw==='object'&&Array.isArray((raw as any).pages)&&(raw as any).pages.length!==1)throw new Error('Il configuratore importa soltanto template a pagina singola.');
  const source=sourceSchema.parse(raw);const unitMm=pitchprintUnitMm(source.unit),page=source.pages[0]!,data=page.pageData,clip=page.canvas.clipPath,width=numeric(data.fWidth,'Larghezza')*unitMm,height=numeric(data.fHeight,'Altezza')*unitMm,cw=numeric(clip.width,'Area canvas'),ch=numeric(clip.height,'Area canvas');if(width<=0||height<=0||width>1000||height>1000||cw<=0||ch<=0)throw new Error('Formato fuori dai limiti del laboratorio.');
- const left=numeric(clip.left??0,'Origine canvas'),top=numeric(clip.top??0,'Origine canvas'),sx=width/cw,sy=height/ch,tree=pitchprintTree(page.canvas.objects,properties),warnings:string[]=[...tree.warnings],objects:SceneObject[]=[],assets:FontAsset[]=[],fontCache=new Map<string,Promise<PitchprintFontResult>>(),groupMembers=new Map<string,string[]>();
+ const left=numeric(clip.left??0,'Origine canvas'),top=numeric(clip.top??0,'Origine canvas'),sx=width/cw,sy=height/ch,tree=pitchprintTree(page.canvas.objects,properties),warnings:string[]=[...tree.warnings],objects:SceneObject[]=[],assets:FontAsset[]=[],fontCache=new Map<string,Promise<PitchprintFontResult>>(),groupMembers=new Map<string,string[]>(),expandedGroups:SceneGroup[]=[];
  const pageMatrix:PitchprintMatrix=[sx,0,0,sy,-left*sx,-top*sy];
  let paperColor:string|undefined;
  if(page.canvas.background!==undefined&&page.canvas.background!==null&&page.canvas.background!==''){
@@ -77,6 +77,7 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
    objects.push(placeObjectAtCenter({id,type:'image',xMm:0,yMm:0,...geometry,rotationDeg:rotation,source,raster:{...DEFAULT_RASTER,...(!options.monochrome?{mode:'original' as const}:{})},flipY:determinant<0,editor},center,measureFabric));
   }else{
    const shapeFill=color(item.fill,options.monochrome),shapeStroke=stroke===0?'none':color(item.stroke,options.monochrome);
+   if(shapeStroke!=='none'&&item.strokeUniform===true)throw Error(`${name}: contorno uniforme indipendente dalla scala ancora da convertire.`);
    const empty=emptyPitchprintPrimitive(item,editor,tree.groups.some(group=>group.leafIds.includes(id)),shapeStroke);
    if(empty){warnings.push(`${name}: ${empty} senza area e senza contorno, privo di grafica visibile, escluso esplicitamente.`);rememberGroup();continue;}
    const primitive=orthogonal&&shapeStroke==='none'?unstrokedPitchprintPrimitive(item,id,editor,axisX,axisY,rotation,shapeFill):null;
@@ -89,14 +90,16 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
    // The physical page axes are independent: legacy canvas dimensions can be
    // rounded pixels. SVG's default "meet" would add margins and move paths,
    // while texts/images already use the exact page matrix. Nonuniform strokes
-   // remain explicitly guarded by prepareSvg rather than approximated.
-   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}mm" height="${height}mm" viewBox="${left} ${top} ${cw} ${ch}" preserveAspectRatio="none"><g transform="matrix(${parent.join(' ')})">${preciseIntermediateSvg(()=>object.toSVG())}</g></svg>`;try{const prepared=await prepareSvg(svg,false,'editable');objects.push(...prepared.objects.map((entry,n)=>({...entry,id:n?`${id}-${n}`:id,editor:{...editor}})));}catch(cause){throw new Error(`${name}: ${cause instanceof Error?cause.message:'geometria non convertibile'}`);}finally{object.dispose();}
+   // are expanded locally instead of replacing their affine shape with an average.
+   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}mm" height="${height}mm" viewBox="${left} ${top} ${cw} ${ch}" preserveAspectRatio="none"><g transform="matrix(${parent.join(' ')})">${preciseIntermediateSvg(()=>object.toSVG())}</g></svg>`;try{const prepared=await prepareSvg(svg,false,'editable'),entries=prepared.objects.map((entry,n)=>({...entry,id:n?`${id}-${n}`:id,editor:{...editor}}));
+    if(prepared.expandedStrokes){warnings.push(`${name}: contorno deformato espanso in tracciati per conservarne l’aspetto; lo spessore è ora geometria.`);if(entries.length>1){const parentId=tree.groups.filter(group=>group.leafIds.includes(id)).at(-1)?.id;expandedGroups.push({id:`${id}-outline-group`,...(parentId?{parentId}:{}),editor,objectIds:entries.map(entry=>entry.id)});for(const entry of entries)entry.editor={};}}
+    objects.push(...entries);}catch(cause){throw new Error(`${name}: ${cause instanceof Error?cause.message:'geometria non convertibile'}`);}finally{object.dispose();}
   }
   rememberGroup();
  }
  const backgroundObject=pageObjects.find(object=>object.id==='pp-background');if(backgroundObject)objects.unshift(backgroundObject);const foregroundObject=pageObjects.find(object=>object.id==='pp-foreground');if(foregroundObject)objects.push(foregroundObject);
  if(unitMm!==1)warnings.push(`Misure convertite da ${source.unit} a millimetri senza ridimensionare il formato fisico.`);if(options.monochrome)warnings.push('Colori della grafica convertiti nella palette nero/bianco per scelta esplicita.');if(!objects.length&&!paperColor)throw new Error('Il template non contiene elementi convertibili.');
- const groups=tree.groups.map(({id,parentId,editor,leafIds})=>({id,...(parentId?{parentId}:{}),editor,objectIds:leafIds.flatMap(id=>groupMembers.get(id)??[])}));
+ const groups:SceneGroup[]=[...tree.groups.map(({id,parentId,editor,leafIds})=>({id,...(parentId?{parentId}:{}),editor,objectIds:leafIds.flatMap(id=>groupMembers.get(id)??[])})),...expandedGroups];
  if(groups.length)warnings.push(`${groups.length} gruppi grafici conservati come unità di selezione e trasformazione.`);
  const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),...(backgroundObject?{backgroundImageId:backgroundObject.id}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
 }

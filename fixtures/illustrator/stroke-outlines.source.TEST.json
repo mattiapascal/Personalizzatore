@@ -1,0 +1,148 @@
+{
+  "title": "Contorni deformati TEST",
+  "unit": "mm",
+  "pages": [
+    {
+      "pageData": {
+        "fWidth": 100,
+        "fHeight": 70
+      },
+      "canvas": {
+        "clipPath": {
+          "width": 281,
+          "height": 200
+        },
+        "objects": [
+          {
+            "type": "group",
+            "left": 140,
+            "top": 100,
+            "originX": "center",
+            "originY": "center",
+            "width": 220,
+            "height": 150,
+            "scaleX": 1.1,
+            "scaleY": 0.85,
+            "angle": 10,
+            "title": "Logo composto TEST",
+            "objects": [
+              {
+                "type": "rect",
+                "left": -95,
+                "top": -65,
+                "width": 80,
+                "height": 55,
+                "rx": 8,
+                "ry": 8,
+                "fill": "#cc5500",
+                "stroke": "#0088cc",
+                "strokeWidth": 4,
+                "title": "Cornice colorata"
+              },
+              {
+                "type": "path",
+                "path": [
+                  [
+                    "M",
+                    0,
+                    20
+                  ],
+                  [
+                    "C",
+                    25,
+                    60,
+                    65,
+                    -20,
+                    90,
+                    20
+                  ]
+                ],
+                "width": 90,
+                "height": 23.094010767585033,
+                "strokeWidth": 4,
+                "fill": null,
+                "stroke": "#0088cc",
+                "left": 5,
+                "top": -60,
+                "strokeLineCap": "round",
+                "title": "Curva TEST"
+              },
+              {
+                "type": "circle",
+                "left": -65,
+                "top": 10,
+                "width": 50,
+                "height": 50,
+                "radius": 25,
+                "strokeWidth": 4,
+                "fill": null,
+                "stroke": "#a47b3a",
+                "title": "Cerchio TEST"
+              },
+              {
+                "type": "path",
+                "path": [
+                  [
+                    "M",
+                    0,
+                    0
+                  ],
+                  [
+                    "L",
+                    65,
+                    0
+                  ],
+                  [
+                    "L",
+                    65,
+                    45
+                  ],
+                  [
+                    "L",
+                    0,
+                    45
+                  ],
+                  [
+                    "Z"
+                  ],
+                  [
+                    "M",
+                    20,
+                    15
+                  ],
+                  [
+                    "L",
+                    45,
+                    15
+                  ],
+                  [
+                    "L",
+                    45,
+                    30
+                  ],
+                  [
+                    "L",
+                    20,
+                    30
+                  ],
+                  [
+                    "Z"
+                  ]
+                ],
+                "width": 65,
+                "height": 45,
+                "strokeWidth": 3,
+                "fill": "#bd3557",
+                "stroke": "#0088cc",
+                "left": 10,
+                "top": 15,
+                "fillRule": "evenodd",
+                "title": "Foro composto TEST"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { EDITOR_LIMITS } from './limits';
 import { bezierBounds, cubicPoint } from './bezier-geometry';
 const coordinate = z.number().finite().min(-100).max(100);
 export const VectorCommandsSchema = z.array(z.union([
   z.tuple([z.literal('M'), coordinate, coordinate]), z.tuple([z.literal('L'), coordinate, coordinate]),
   z.tuple([z.literal('C'), coordinate, coordinate, coordinate, coordinate, coordinate, coordinate]), z.tuple([z.literal('Z')]),
-])).min(2).max(4096).superRefine((commands, ctx) => {
+])).min(2).max(EDITOR_LIMITS.vectorCommandsPerObject).superRefine((commands, ctx) => {
   let open = false, segments = 0;
   for (const command of commands) { if (command[0] === 'M') open = true; else if (!open) ctx.addIssue({ code: 'custom', message: 'Ogni contorno deve iniziare con M' }); else if (command[0] === 'Z') { open = false; segments++; } else segments++; }
   if (!segments) ctx.addIssue({ code: 'custom', message: 'Vettore senza segmenti' });

@@ -2396,7 +2396,7 @@
               },
               "commands": {
                 "minItems": 2,
-                "maxItems": 4096,
+                "maxItems": 32768,
                 "type": "array",
                 "items": {
                   "anyOf": [

@@ -1,0 +1,50 @@
+# Contorni deformati: espansione locale — 11 novembre 2026
+
+## Funzione
+
+SVG caricati manualmente e template PitchPrint possono ora conservare i contorni deformati su assi diversi, sotto rotazioni, riflessioni e shear. Il contorno viene espanso in una forma piena; non si sceglie uno spessore medio e non si uniforma la scala. Il riempimento originale resta distinto e mantiene colore e regola dei fori. L’importatore indica che lo spessore è diventato geometria.
+
+Per PitchPrint, quando riempimento e contorno diventano due oggetti, sono riuniti in un gruppo con label, ordine e blocchi originali. Il gruppo è inserito nella gerarchia del sorgente, mantenendo una sola unità di selezione/trasformazione. Gli SVG inseriti manualmente usano il raggruppamento già previsto dall’importazione. Restano normali oggetti del documento canonico: UI e AI simulata usano i comandi validati, revisioni e Undo/Redo. JSON e SVG riaperti non richiedono il convertitore.
+
+## Servizio di sviluppo e precisione
+
+Endpoint locale `/__editor-local/stroke-outlines`, soltanto in Vite serve. Richiede loopback, origine corrispondente, intestazione dedicata e POST JSON; un’elaborazione per volta. Contratti versionati e stretti in `StrokeOutlineRequest.json` e `StrokeOutlineResponse.json`: coordinate M/L/C/Z, matrice affine, spessore ed enumerazioni per estremità/giunzioni. Nessun SVG, percorso di file o programma PostScript fornito dal documento viene eseguito. Lo script Ghostscript è una ricetta fissa costruita da numeri già validati.
+
+Il piano del tratto è normalizzato fisicamente prima dell’espansione; la matrice affine residua è applicata dopo, conservando anche la riflessione. Ghostscript usa `strokepath`, senza allineamento del tratto ai pixel. Budget nominale massimo **0,005 mm**, ridotto per i tratti sottili; metà è assegnata al flattening del motore. Limiti di coordinate, trasformazioni degeneri, precisione numerica e spessore fisico massimo 100 mm sono verificati separatamente. La tolleranza non è un certificato di produzione universale né elimina le verifiche specifiche del prodotto o l’approssimazione arco→Bézier già presente nel convertitore SVG.
+
+I poligoni del tratto vengono uniti con **NonZero**, mantenendo i contorni interni nello stesso tracciato composto. Il solo output grezzo di Ghostscript produceva cuciture nel canvas: pulizia e unione rimuovono i bordi ridondanti. Le ulteriori curve sono approssimate entro 1/8 del budget; la griglia è 1/32 e la chiusura delle sole microfessure usa 1/16. Si conservano i fori risolvibili alla precisione richiesta, senza separare i contorni interni dai rispettivi esterni. Il confronto del canvas controlla esplicitamente i pixel interni, oltre al confronto degli SVG.
+
+Limiti: richiesta 1 MB / 4096 comandi sorgente, stdout Ghostscript 8 MB, 10 secondi per il processo. Unione in worker separato, massimo 10 secondi e 128 MB; un caso patologico non blocca indefinitamente il server. Errori, motore mancante o risposta non valida lasciano documento e Redo invariati. Clip combinati con contorno deformato e `strokeUniform` PitchPrint restano esplicitamente bloccati, senza cancellarli o sostituirli.
+
+Dipendenze locali: **Ghostscript (`gs`)** già presente nell’ambiente; **clipper-lib 6.4.2** e tipi 6.4.0 fissati fra le dipendenze di sviluppo, non nel frontend pubblico. Nessun servizio AI o a pagamento. Font sempre dalla libreria incorporata, senza font del computer. Riferimenti: [PostScript Language Reference](https://www.adobe.com/jp/print/postscript/pdfs/PLRM.pdf), [documentazione della libreria Clipper utilizzata](https://github.com/junmer/clipper-lib/blob/master/Documentation.md).
+
+## Capacità e campione
+
+Capacità del documento estesa da 4096 a **32768 comandi per vettore** e da 8192 a **65536 nell’intero documento**. Schemi JSON generati aggiornati; i comandi manuali e AI rispettano lo stesso limite e rifiutano atomicamente gli eccessi. Il limite precedente di 4096 resta per le guide del testo su tracciato: questo incremento non estende una capacità di impaginazione non collaudata.
+
+Provato in browser un documento con due vettori da 32768 comandi: geometria manuale, spostamento AI e Undo, SVG vettoriale e JSON riaperto a freddo. È una prova di capacità su segmenti lineari; non una promessa di tempo costante su qualsiasi geometria.
+
+Campione `stroke-outlines.source.TEST.json` → `stroke-outlines.TEST.json/svg`, **100 × 70 mm**, sei oggetti e tre gruppi, rettangolo arrotondato con riempimento, curva aperta, cerchio e tracciato composto con foro. Generatore `node --import tsx scripts/capture-editor-stroke-outlines.ts`: importazione UI, trasformazione manuale/Undo, AI simulata/Undo e download. Originali sintetici, nessuna risorsa o scrittura personale. Schermata finale ispezionata; i tratti sono continui anche nel canvas.
+
+Confronti dei 27 casi di estremità/giunzioni/affinità: SVG indipendenti, entrambi sovracampionati 4× prima del confronto, per distinguere la copertura dei bordi fra tratto nativo e forma piena. Il confronto diretto a bassa risoluzione è conservato nei log iniziali. Test separato del canvas: 48.625 pixel interni solidi, zero differenze e zero cuciture nel campione finale. Restano verifiche di fori, primitive, blocchi e gerarchia, errori atomici e accesso al servizio.
+
+In Illustrator verificare tavola 100 × 70 mm, colori, continuità di cerchio/curva, foro composto, gruppi e separazione tra riempimento e contorno espanso. Collaudo umano Illustrator non eseguito.
+
+## Template reali e importazione locale
+
+L’analisi degli stessi 370 sorgenti a pagina singola restituisce **279 convertibili e 91 bloccati**, contro i 238 dopo la correzione degli assi fisici: 41 recuperi. Rispetto alla precedente analisi di 259 convertibili sono 20 recuperi netti e nessuna regressione. Nel perimetro prioritario: **278/345 convertibili, 67 bloccati**; fra i 25 a bassa priorità, uno convertibile. Il confronto generale conserva i colori ma esclude globalmente gli sfondi: questi numeri non certificano la conversione completa né indicano quanti template sono stati importati.
+
+Dei 20 nuovi candidati rispetto ai 259, tredici sono stati confrontati integralmente, con ruoli delle immagini di pagina espliciti: nove cartelli, due etichette adesive e due targhe legali con materiale conservato come riferimento non produttivo. Tutti superano le soglie fissate prima del confronto (rapporto <0,01, errore medio <0,25/255): massimo rapporto 0,000831, massimo errore medio 0,106/255. Il riferimento indipendente serializza a dodici decimali e converte anche cm/pollici; quattro decimali nel riferimento producevano tre false differenze, risolte senza cambiare importatore o soglie. Gli altri sette restano sospesi: tre cartelli con cani, tre datari e il Retro bottiglia 99×93 richiedono sfondi SVG o una classificazione ancora mancante delle immagini di pagina. Non sono stati cancellati gli sfondi per renderli importabili.
+
+La copia autorizzata di **Azienda Agricola 99 × 139 mm**, privata del solo testo curvo, supera il confronto completo: 31 oggetti, logo monocolore con zero differenze di pixel; 30 pixel oltre 24/255 su 839.264 pixel d’inchiostro, rapporto 0,00003575, errore medio 0,02644/255. Colore del foglio e primo piano originale preservati. Il confronto riguarda la nuova resa monocolore voluta, non l’equivalenza ai tre filtri legacy rimossi nella copia derivata. Originale, filtri e decisione conservati privatamente nel manifest.
+
+**Salvate 14 nuove bozze locali**, incluse le tredici sopra e Azienda Agricola: archivio da 117 a **131 template**, due composizioni e 219 font preesistenti invariati, revisione 371 → 385. Backup preventivo verificato con SHA-256; record preesistenti, impostazioni, profili e font confrontati dopo ciascun salvataggio. Colori mantenuti, misure in mm, tag originali e «Da verificare»; Azienda Agricola ha anche «Testo da completare». Nessuna associazione prodotto. Dati, backup, originali e manifest restano in `.local/pitchprint-migration/stroke-outlines-local-import/`, esclusi da Git. Non sono stati sovrascritti template esistenti.
+
+## Verifiche finali
+
+- **771 test unitari / 118 file**, build TypeScript/Vite, build pubblica, schemi e scansioni segreti superati.
+- Regressione completa: 509/510 passati, un timeout di dieci secondi sull’unione di un’ellisse grande. La modalità StrictlySimple di Clipper creava un caso patologico su vertici quasi coincidenti. Unione NonZero con StrictlySimple disattivato e pulizia finale conservata: ricontrollo dedicato e successivi **40/40 casi pertinenti** passati, senza allungare il timeout. Ultima ellisse: 482 ms, massimo ping del server 21 ms. Tutti i 510 casi distinti hanno superato almeno un’esecuzione; non dichiarare una nuova esecuzione completa dopo questa correzione.
+- **13/13 browser pubblici locali**, **38/38 campioni** riaperti/esportati, zero richieste esterne nel verificatore degli artefatti. Illustrator ancora da collaudare.
+- **14/14 record effettivamente salvati riaperti dal loro ID**: oggetti, area e colore confrontati con l’archivio, zero errori browser/scritture; SHA-256 finale invariato. Quattro schermate ispezionate (Azienda Agricola, Avvocato, etichetta e cartello). Il primo processo di verifica aveva esaurito memoria nel matcher di confronto byte per byte dell’intero archivio, dopo le quattordici riaperture; confronto finale SHA-256 completato senza modifiche applicative. Queste prove non sostituiscono il collaudo produttivo umano.
+
+Prossimi blocchi prioritari: sfondi SVG di pagina, maschere/opacità di importazione e diagnosi dei glifi mancanti, senza fallback tipografici. Nessun deploy, modifica al negozio o alla chat pubblicata, a PitchPrint, BSS, prezzi, carrello o checkout.
