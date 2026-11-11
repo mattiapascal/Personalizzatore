@@ -219,3 +219,7 @@
 .font-other-styles{margin:6px 0 10px}.font-other-styles>summary{cursor:pointer;color:#007bb9;font-size:13px}.font-other-styles[open]>summary{margin-bottom:8px}
 
 .editor-workspace[data-view-ready=false] .canvas-container { visibility: hidden; }
+
+.font-repair-row { display: grid; gap: .5rem; margin: .6rem 0 1rem; }
+.font-repair-row .caption { margin: 0; }
+.font-repair-row select, .font-repair-row button { max-width: 100%; }

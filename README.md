@@ -1,6 +1,8 @@
 # Assistente AI e personalizzatore Shopify
 
-**Ultimo incremento locale:** [testi PitchPrint e interlinea](docs/iteration-editor-pitchprint-text-styles.md): stili per carattere con file font esatti, interlinea compatta e altezza automatica. 642 unitari, 183 browser pertinenti e 22 campioni passati. 144 sorgenti tecnicamente convertibili, 21 in più; nessuna nuova importazione nell’archivio. Nessun deploy.
+**Ultimo incremento locale:** [correzione guidata dei caratteri mancanti](docs/iteration-editor-font-repair.md), con file scelto esplicitamente e verificato, stili/centro/storico conservati. 645 unitari, 59 browser più due percorsi desktop/mobile e 23 campioni passati. Nessuna correzione alle bozze personali o deploy.
+
+**Incremento precedente:** [testi PitchPrint e interlinea](docs/iteration-editor-pitchprint-text-styles.md): stili per carattere con file font esatti, interlinea compatta e altezza automatica. 642 unitari, 183 browser pertinenti e 22 campioni passati. 144 sorgenti tecnicamente convertibili, 21 in più; nessuna nuova importazione nell’archivio. Nessun deploy.
 
 **Incremento precedente:** [contorni e template reali](docs/iteration-editor-wide-strokes.md): spessori fino a 100 mm, ispettori e import coerenti, campione JSON/SVG 300 × 180 mm. 639 unitari, 113 browser mirati e 21 campioni passati. Analisi in sola lettura: 123 sorgenti convertibili, sei in più; archivio personale invariato. Nessun deploy.
 

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { fontFamilyChoices, fontFamilyLabel, renderFontFamily, subscribeFonts, fontCatalogVersion, isFontAvailable, type FontFamily } from './fonts';
-export function FontPicker({ value, disabled, onChange, onOpen, emptyLabel='Misto' }: { emptyLabel?:string; onOpen: () => void; value: FontFamily | ''; disabled: boolean; onChange: (font: FontFamily) => void }) {
+export function FontPicker({ value, disabled, onChange, onOpen, emptyLabel='Misto', label='Font' }: { label?:string; emptyLabel?:string; onOpen: () => void; value: FontFamily | ''; disabled: boolean; onChange: (font: FontFamily) => void }) {
   useSyncExternalStore(subscribeFonts, fontCatalogVersion); const families = fontFamilyChoices();
   const root = useRef<HTMLDivElement>(null), button = useRef<HTMLButtonElement>(null), id = useId(), [open, setOpen] = useState(false), [active, setActive] = useState(0), [position, setPosition] = useState({ left: 0, top: 0, width: 0, maxHeight: 300 });
   const [scrollRequest, requestScroll] = useState(0);
@@ -19,7 +19,7 @@ export function FontPicker({ value, disabled, onChange, onOpen, emptyLabel='Mist
   // Only opening the menu and explicit keyboard navigation may scroll an option
   // into view. Hover and scroll-driven positioning must never fight the wheel.
   useEffect(() => { if (!open) return; const list = document.getElementById(`${id}-list`), option = document.getElementById(`${id}-${active}`); if (!list || !option) return; if (option.offsetTop < list.scrollTop) list.scrollTop = option.offsetTop; else if (option.offsetTop + option.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = option.offsetTop + option.offsetHeight - list.clientHeight; }, [scrollRequest, open]);
-  return <div className="font-picker" ref={root}><label id={`${id}-label`}>Font</label><button ref={button} type="button" role="combobox" aria-labelledby={`${id}-label`} aria-haspopup="listbox" aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open ? `${id}-${active}` : undefined} disabled={disabled || !families.length} style={{ fontFamily: value && isFontAvailable(value) ? renderFontFamily(value) : undefined }} onClick={() => open ? close() : show()} onKeyDown={event => {
+  return <div className="font-picker" ref={root}><label id={`${id}-label`}>{label}</label><button ref={button} type="button" role="combobox" aria-labelledby={`${id}-label`} aria-haspopup="listbox" aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open ? `${id}-${active}` : undefined} disabled={disabled || !families.length} style={{ fontFamily: value && isFontAvailable(value) ? renderFontFamily(value) : undefined }} onClick={() => open ? close() : show()} onKeyDown={event => {
     if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); close(); return; }
     if (event.key === 'Tab') { close(); return; }
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (open) choose(active); else show(); return; }

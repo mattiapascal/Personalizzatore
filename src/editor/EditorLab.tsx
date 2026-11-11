@@ -1,3 +1,4 @@
+import { missingCharacterFontCommand } from './font-repair';
 import {useProjectFontPreparation} from './LegacyFontDialog';
 import {legacyFontRequests} from './legacy-fonts';
 import {CustomerFieldsPanel} from './CustomerFieldsPanel';
@@ -500,7 +501,12 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       {import.meta.env.DEV && (new URLSearchParams(window.location.search).has('configurations') || new URLSearchParams(window.location.search).has('configuration')) && <ConfigurationPanel api={workflowApi}/>}
     </>}
     project={<>
-      {projectFonts.dialog}{mode!=='customer'&&<FontCheckPanel document={doc}/>}
+      {projectFonts.dialog}{mode!=='customer'&&<FontCheckPanel document={doc} busy={editing || drawing || assetBusy || archiveBusy} onOpen={() => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).catch(cause => setError(cause.message)); }} onRepair={(issue, fontId, expectedRevision) => prepareAndAct(async store => {
+        if (store.document.revision !== expectedRevision) throw new Error('Revisione grafica obsoleta: rileggi la segnalazione.');
+        const asset = registeredFontAsset(fontId); if (!asset) throw new Error('File font non caricato dalla libreria.');
+        const command = await missingCharacterFontCommand(store.document, issue, asset, measureFabric);
+        return () => store.dispatch(command, 'manual');
+      }, issue.objectId)}/>}
       {mode!=='customer'&&<EditorButton disabled={editing || drawing || assetBusy} onClick={() => download('progetto.TEST.json', JSON.stringify(storeRef.current!.document, null, 2), 'application/json')} icon="download" label="Esporta JSON" badge="JSON"/>}
       <fieldset className="editor-actions" disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated}><legend>Progetto</legend>
         {import.meta.env.DEV&&product&&<p className="caption"><a href={`/editor/templates?mode=${mode}&model=${encodeURIComponent(profileKey(product))}`}>Scegli un template per questo modello</a></p>}
