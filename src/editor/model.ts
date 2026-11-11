@@ -1,3 +1,4 @@
+import { UnverifiedTextGeometryError } from './unverified-text-geometry';
 import { StrokeWidthSchema } from './stroke';
 import {ColorSchema,PaintSchema,isMonochromePaint} from './paint';
 import {ObjectPropertiesSchema,GroupPropertiesSchema,effectiveObjectProperties,assertObjectPolicies,type EditorRole} from './object-properties';
@@ -298,10 +299,13 @@ export function objectIntersectsArea(doc: Pick<GraphicDocument, 'areaMm' | 'shap
   });
 }
 export function validateLayout(doc: GraphicDocument, measure: Measure, mode: 'strict' | 'edit' = 'strict'): void {
-  const visibleGroups = new Set((doc.groups ?? []).filter(group => group.objectIds.some(id => objectIntersectsArea(doc, doc.objects.find(object => object.id === id)!, measure))).flatMap(group => group.objectIds));
+  const intersections=new Map<SceneObject,boolean>();
+  const intersects = (object: SceneObject): boolean => {const previous=intersections.get(object);if(previous!==undefined)return previous;let visible:boolean;try { visible=objectIntersectsArea(doc, object, measure); } catch(error) { if(mode==='edit'&&object.type==='text'&&error instanceof UnverifiedTextGeometryError)visible=true;else throw error; }intersections.set(object,visible);return visible;};
+  const visibleGroups = new Set((doc.groups ?? []).filter(group => group.objectIds.some(id => intersects(doc.objects.find(object => object.id === id)!))).flatMap(group => group.objectIds));
   for (const object of doc.objects) {
     if (mode === 'edit') {
-      if (!visibleGroups.has(object.id) && !objectIntersectsArea(doc, object, measure)) throw new Error('Oggetto completamente fuori dall’area di disegno');
+      const visible=intersects(object); // Every member is checked, even when a sibling already makes its group visible.
+      if (!visibleGroups.has(object.id) && !visible) throw new Error('Oggetto completamente fuori dall’area di disegno');
       continue;
     }
     const box = objectGeometry(object, measure), epsilon = 1e-8;
@@ -381,7 +385,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
         const before = cloneSceneObject(object);
         if (object.type !== 'text') throw new Error('Il comando richiede un testo');
         object.text = object.textPath ? command.arguments.text.replace(/\n/g, ' ') : command.arguments.text; delete object.characterStyles; delete object.lineStyles;
-        if (object.textPath && before.type === 'text') Object.assign(object, preserveTextPathGuide(before, object, measure)); else if(role==='customer'&&effectiveObjectProperties(doc,before.id).transformLocked)Object.assign(object,placeObjectAtCenter(object,objectCenter(before,measure),measure)); break;
+        try { if (object.textPath && before.type === 'text') Object.assign(object, preserveTextPathGuide(before, object, measure)); else if(role==='customer'&&effectiveObjectProperties(doc,before.id).transformLocked)Object.assign(object,placeObjectAtCenter(object,objectCenter(before,measure),measure)); } catch(error) {if(!(error instanceof UnverifiedTextGeometryError))throw error;} break;
       }
       case 'setObjectStyle': {
         const before = cloneSceneObject(object);
@@ -393,7 +397,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
           }).filter(run => Object.keys(run.style).length > 0);
           if (!object.characterStyles.length) delete object.characterStyles;
         }
-        if (object.textPath && before.type === 'text') Object.assign(object, preserveTextPathGuide(before, object, measure));
+        try { if (object.textPath && before.type === 'text') Object.assign(object, preserveTextPathGuide(before, object, measure)); } catch(error) {if(!(error instanceof UnverifiedTextGeometryError))throw error;}
         break;
       }
       case 'duplicateObject':
@@ -435,7 +439,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   assertObjectPolicies(doc,parsed,command,role,(a,b)=>{
     const keys=['rotationDeg','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textBox','points','nodes','commands','textPath'];
     if(keys.some(key=>JSON.stringify((a as unknown as Record<string,unknown>)[key])!==JSON.stringify((b as unknown as Record<string,unknown>)[key])))return false;
-    if(a.type==='text'&&b.type==='text'){const ac=objectCenter(a,measure),bc=objectCenter(b,measure);return Math.abs(ac.xMm-bc.xMm)<1e-6&&Math.abs(ac.yMm-bc.yMm)<1e-6;}return Math.abs(a.xMm-b.xMm)<1e-6&&Math.abs(a.yMm-b.yMm)<1e-6;
+    if(a.type==='text'&&b.type==='text'){try{const ac=objectCenter(a,measure),bc=objectCenter(b,measure);return Math.abs(ac.xMm-bc.xMm)<1e-6&&Math.abs(ac.yMm-bc.yMm)<1e-6;}catch(error){if(!(error instanceof UnverifiedTextGeometryError))throw error;return a.xMm===b.xMm&&a.yMm===b.yMm;}}return Math.abs(a.xMm-b.xMm)<1e-6&&Math.abs(a.yMm-b.yMm)<1e-6;
   });
   return parsed;
 }

@@ -1,3 +1,6 @@
+import { textGeometryVerified } from './font-measurement';
+import { fontCoverageVersion, subscribeFontCoverage } from './font-coverage-cache';
+import { UnverifiedTextInspector } from './UnverifiedTextInspector';
 import {textFontToggle,textFontFamily,commonTextFontFamily} from './text-font-toggle';
 import {ObjectPropertiesPanel} from './ObjectPropertiesPanel';
 import type {ObjectProperties} from './object-properties';
@@ -28,7 +31,7 @@ import { SelectedTextFontNotice } from './SelectedTextFontNotice';
 
 type Section = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'arrange' | 'template';
 
-export function ObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, object, revision, arrangement, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen }: { minimumFontPt?:number|null;allowColor?:boolean; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; arrangement: ReactNode; onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
+function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, object, revision, arrangement, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen }: { minimumFontPt?:number|null;allowColor?:boolean; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; arrangement: ReactNode; onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
   const form = useRef<HTMLFormElement>(null);
   const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
   const [section, setSection] = useState<Section>('geometry');
@@ -215,4 +218,10 @@ export function ObjectInspector({ minimumFontPt = null, allowColor = false, onPr
     </div>
     <div className="inspector-footer"><span role="status">{status}</span></div>
   </form>;
+}
+
+export function ObjectInspector(props: Parameters<typeof MeasuredObjectInspector>[0]) {
+ useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion);useSyncExternalStore(subscribeFonts,fontCatalogVersion);
+ const object=props.characterSelection?.object??props.object;
+ return object.type==='text'&&!textGeometryVerified(object)?<UnverifiedTextInspector object={object} revision={props.revision} onApply={props.onApply} onFontMenuOpen={props.onFontMenuOpen}/>:<MeasuredObjectInspector {...props}/>;
 }

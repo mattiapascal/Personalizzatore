@@ -21,7 +21,9 @@ export class EditorPathText extends EditorTextBox {
   get pathLength(): number { return this.path ? guideLength(this.path) : 0; }
   private sample(distance: number) { return sampleTextGuide(this.path!, distance, !!this.binding && guideClosed(this.binding.guide), this.binding?.reversed ?? false); }
   private baselineShift(style: ReturnType<EditorPathText['getCompleteStyleDeclaration']>, character: string) {
-    const context = measureContext(); context.font = this._getFontDeclaration(style); const metric = context.measureText(character || 'Mg');
+    if(!this.binding||this.binding.baseline==='baseline')return -(this.binding?.normalOffsetMm??0)*8;
+    if(!character||!this.canMeasureCharacter(character,style))return -(this.binding.normalOffsetMm??0)*8;
+    const context = measureContext(); context.font = this._getFontDeclaration(style); const metric = context.measureText(character);
     const reference = this.binding?.baseline === 'ascender' ? metric.fontBoundingBoxAscent ?? style.fontSize * .8 : this.binding?.baseline === 'descender' ? -(metric.fontBoundingBoxDescent ?? style.fontSize * .2) : 0;
     return reference - (this.binding?.normalOffsetMm ?? 0) * 8;
   }
@@ -49,7 +51,7 @@ export class EditorPathText extends EditorTextBox {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     const include = (x: number, y: number) => { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); };
     this._textLines[0]!.forEach((character, i) => {
-      if (!character.trim()) return; const box = this.__charBounds[0]![i]!, style = this.getCompleteStyleDeclaration(0, i), context = measureContext(); context.font = this._getFontDeclaration(style); const metric = context.measureText(character), shift = this.baselineShift(style, character), angle = box.angle ?? 0;
+      if (!character.trim()) return; const box = this.__charBounds[0]![i]!, style = this.getCompleteStyleDeclaration(0, i), context = measureContext(); context.font = this._getFontDeclaration(style); const metric = this.canMeasureCharacter(character,style) ? context.measureText(character) : {actualBoundingBoxLeft:0,actualBoundingBoxRight:0,actualBoundingBoxAscent:0,actualBoundingBoxDescent:0}, shift = this.baselineShift(style, character), angle = box.angle ?? 0;
       const left = -box.width / 2 - metric.actualBoundingBoxLeft * this.glyphScale, right = -box.width / 2 + metric.actualBoundingBoxRight * this.glyphScale;
       let top = shift - metric.actualBoundingBoxAscent, bottom = shift + metric.actualBoundingBoxDescent;
       for (const decoration of ['underline', 'overline', 'linethrough'] as const) if (style[decoration]) { const y = shift + this.offsets[decoration] * style.fontSize; top = Math.min(top, y); bottom = Math.max(bottom, y + style.fontSize / 12); }
@@ -82,14 +84,14 @@ export class EditorPathText extends EditorTextBox {
   }
   override getSelectionStartFromPointer(event: TPointerEvent): number {
     if (!this.binding || !this.canvas) return super.getSelectionStartFromPointer(event); const point = this.canvas.getScenePoint(event).transform(util.invertTransform(this.calcTransformMatrix())); let nearest = 0, distance = Infinity;
-    this.cursorDistances.forEach((position, i) => { const p = this.pointAt(position), style = this.getCompleteStyleDeclaration(0, Math.max(0, i - 1)), dx = point.x - p.x, dy = point.y - p.y, x = dx * Math.cos(p.angle) + dy * Math.sin(p.angle), y = -dx * Math.sin(p.angle) + dy * Math.cos(p.angle), top = this.baselineShift(style, '') - style.fontSize * .85, bottom = top + style.fontSize, delta = Math.hypot(x, y - Math.max(top, Math.min(bottom, y))); if (delta < distance) { distance = delta; nearest = i; } }); return nearest;
+    this.cursorDistances.forEach((position, i) => { const p = this.pointAt(position), style = this.getCompleteStyleDeclaration(0, Math.max(0, i - 1)), dx = point.x - p.x, dy = point.y - p.y, x = dx * Math.cos(p.angle) + dy * Math.sin(p.angle), y = -dx * Math.sin(p.angle) + dy * Math.cos(p.angle), top = this.baselineShift(style, this._textLines[0]?.[Math.max(0, i - 1)] ?? '') - style.fontSize * .85, bottom = top + style.fontSize, delta = Math.hypot(x, y - Math.max(top, Math.min(bottom, y))); if (delta < distance) { distance = delta; nearest = i; } }); return nearest;
   }
   override _renderCursor(...args: Parameters<EditorTextBox['_renderCursor']>): void {
-    if (!this.binding) { super._renderCursor(...args); return; } const index = args[2], point = this.pointAt(this.cursorDistances[index] ?? this.anchorDistance()), style = this.getCompleteStyleDeclaration(0, Math.max(0, index - 1)), context = args[0]; context.save(); context.translate(point.x, point.y); context.rotate(point.angle); context.globalAlpha = this._currentCursorOpacity; context.fillStyle = this.cursorColor || String(style.fill); context.fillRect(0, this.baselineShift(style, '') - style.fontSize * .85, this.cursorWidth / (this.getTotalObjectScaling().x || 1), style.fontSize); context.restore();
+    if (!this.binding) { super._renderCursor(...args); return; } const index = args[2], point = this.pointAt(this.cursorDistances[index] ?? this.anchorDistance()), style = this.getCompleteStyleDeclaration(0, Math.max(0, index - 1)), context = args[0]; context.save(); context.translate(point.x, point.y); context.rotate(point.angle); context.globalAlpha = this._currentCursorOpacity; context.fillStyle = this.cursorColor || String(style.fill); context.fillRect(0, this.baselineShift(style, this._textLines[0]?.[Math.max(0, index - 1)] ?? '') - style.fontSize * .85, this.cursorWidth / (this.getTotalObjectScaling().x || 1), style.fontSize); context.restore();
   }
   override _renderSelection(...args: Parameters<EditorTextBox['_renderSelection']>): void {
     if (!this.binding) { super._renderSelection(...args); return; } const context = args[0], selection = args[1]; context.save(); context.fillStyle = this.selectionColor;
-    for (let i = selection.selectionStart; i < selection.selectionEnd; i++) { const box = this.__charBounds[0]?.[i]; if (!box || box.renderLeft === undefined) continue; const style = this.getCompleteStyleDeclaration(0, i); context.save(); context.translate(box.renderLeft, box.renderTop!); context.rotate(box.angle!); context.fillRect(-box.kernedWidth / 2, this.baselineShift(style, '') - style.fontSize * .85, box.kernedWidth, style.fontSize); context.restore(); } context.restore();
+    for (let i = selection.selectionStart; i < selection.selectionEnd; i++) { const box = this.__charBounds[0]?.[i]; if (!box || box.renderLeft === undefined) continue; const style = this.getCompleteStyleDeclaration(0, i); context.save(); context.translate(box.renderLeft, box.renderTop!); context.rotate(box.angle!); context.fillRect(-box.kernedWidth / 2, this.baselineShift(style, this._textLines[0]?.[i] ?? '') - style.fontSize * .85, box.kernedWidth, style.fontSize); context.restore(); } context.restore();
   }
   override _toSVG(): string[] {
     if (!this.binding) return super._toSVG(); let content = '';

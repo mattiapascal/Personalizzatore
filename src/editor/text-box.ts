@@ -1,3 +1,4 @@
+import { canMeasureFontText } from './font-measurement';
 import { EDITOR_LIMITS } from './limits';
 import { justifySpacing, type JustificationSettings } from './justification';
 import type { VisualTextLine } from './text-lines';
@@ -15,6 +16,17 @@ export class EditorTextBox extends Textbox {
     context.save(); context.strokeStyle = '#a34b00'; context.fillStyle = '#fff0dc'; context.lineWidth = 1;
     context.fillRect(-width / 2, -height / 2, width, height); context.strokeRect(-width / 2, -height / 2, width, height);
     context.beginPath(); context.moveTo(-width / 2, -height / 2); context.lineTo(width / 2, height / 2); context.moveTo(width / 2, -height / 2); context.lineTo(-width / 2, height / 2); context.stroke(); context.restore();
+  }
+  protected canMeasureCharacter(text: string, style: ReturnType<EditorTextBox['getCompleteStyleDeclaration']>): boolean {
+    return canMeasureFontText(text, style.fontFamily, style.fontWeight, style.fontStyle);
+  }
+  override _measureChar(...args: Parameters<Textbox['_measureChar']>): ReturnType<Textbox['_measureChar']> {
+    // Provisional input layout only. Canonical measures reject this text via
+    // assertTextGeometry; these zeroes never enter the Fabric font cache.
+    if (!this.canMeasureCharacter(args[0], args[1])) return { width: 0, kernedWidth: 0 };
+    // An unsupported preceding glyph must never enter a kerning pair or Fabric cache.
+    if (args[2] && !this.canMeasureCharacter(args[2], args[3] as ReturnType<EditorTextBox['getCompleteStyleDeclaration']>)) { args[2] = undefined; args[3] = {}; }
+    return super._measureChar(...args);
   }
   frame?: TextFrame;
   justificationSettings?: JustificationSettings;

@@ -15,6 +15,7 @@ export async function clickEditorButton(page: Page, options: ButtonOptions, clic
 
 /** Replace content using the actual canvas editor after removal of the inspector textarea. */
 export async function replaceSelectedText(page: Page, value: string): Promise<void> {
+  const recovery=page.getByLabel('Testo da correggere',{exact:true});if(await recovery.isVisible()){await recovery.fill(value);await recovery.press('Tab');return;}
   const id = await page.locator('.inspector-selection .object-identity-id').innerText(), doc = JSON.parse((await page.getByTestId('graphic-state').textContent())!);
   const center = await page.evaluate(async object => { const a = '/src/editor/model.ts', b = '/src/editor/fabric-adapter.ts'; return (await import(a)).objectCenter(object, (await import(b)).measureFabric); }, doc.objects.find((object: { id: string }) => object.id === id));
   const canvas = page.locator('.upper-canvas'); await canvas.scrollIntoViewIfNeeded(); const box = (await canvas.boundingBox())!, zoom = box.width / (doc.areaMm.width * 8);

@@ -1,3 +1,4 @@
+import {textGeometryVerified} from './font-measurement';
 import { MAX_PROJECT_BYTES } from './project-limits';
 import { assertFontGeometry } from './verified-font-geometry';
 import { exportDocumentSvg } from './fabric-adapter';
@@ -56,7 +57,7 @@ function createEditorDocument(product: ProductProfile|undefined, catalogVersion:
   doc.objects=doc.objects.flatMap<SceneObject>(object=>object.type==='text'?(font?[{...object,fontFamily:font}]:[]):[object]);
   if(asset)doc.fontAssets=[asset];
   doc.objects = doc.objects.map(object => {
-    if (object.type !== 'text' || object.textBox) return object;
+    if (object.type !== 'text' || object.textBox || !textGeometryVerified(object)) return object;
     const { widthMm, heightMm } = measureTextFrame(object);
     return { ...object, textBox: { widthMm, heightMm, autoWidth: true, autoHeight: true } };
   });
@@ -213,9 +214,10 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
           : type === 'line' ? { id: objectId, type, xMm: 0, yMm: 0, lengthMm: 12, strokeMm: 0.25, stroke: '#000000' }
           : { id: objectId, type, xMm: 0, yMm: 0, radiusMm: 2, strokeMm: 0.25, stroke: '#000000' };
       if(object.type==='text'&&!object.fontFamily)throw new Error('Carica almeno un font nella libreria prima di aggiungere un testo.');
+      if(object.type==='text'&&!textGeometryVerified(object)){object.xMm=store.document.areaMm.width/2;object.yMm=store.document.areaMm.height/2;}else{
       const box = measureFabric(object);
       object.xMm = (store.document.areaMm.width - box.widthMm) / 2;
-      object.yMm = (store.document.areaMm.height - box.heightMm) / 2;
+      object.yMm = (store.document.areaMm.height - box.heightMm) / 2;}
       store.dispatch({ schemaVersion: 1, tool: 'addObject', expectedRevision: store.document.revision, objectId, arguments: objectArguments(object) }, 'manual');
     }, objectId);
   };

@@ -1,3 +1,4 @@
+import {UnverifiedTextGeometryError} from './unverified-text-geometry';
 import { preserveTextPathGuide, textPathStyleChanged } from './text-path-model';
 import { useEffect, useRef, useState } from 'react';
 import { objectCenter, placeObjectAtCenter, type SceneObject } from './model';
@@ -24,7 +25,9 @@ export function useInspectorDraft(object: SceneObject, revision: number, onApply
     try {
       const result = apply.current(update, pending.revision);
       if (!result) { setStatus('Modifica non applicata. Correggi il valore o premi Esc.'); return; }
-      ownRevision.current = result.revision; saved.current = result; publish(draftFor(result)); setStatus('Salvato nella bozza');
+      ownRevision.current = result.revision; saved.current = result;
+      try { publish(draftFor(result)); } catch(error) { if(!(error instanceof UnverifiedTextGeometryError))throw error; }
+      setStatus('Salvato nella bozza');
     } finally { applying.current = false; }
 
   };

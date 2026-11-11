@@ -1,3 +1,6 @@
+import {textGeometryVerified} from './font-measurement';
+import {useSyncExternalStore} from 'react';
+import {fontCoverageVersion,subscribeFontCoverage} from './font-coverage-cache';
 import { isTextPathGuide } from './text-path-model';
 import { useEffect, useRef, useState } from 'react';
 import type { GraphicDocument, SelectionTransformArguments, SelectionStyle } from './model';
@@ -11,7 +14,7 @@ import {selectedRootGroups} from './object-properties';
 
 type Field = 'x' | 'y' | 'width' | 'height' | 'rotation';
 const format = (value: number) => String(Math.round(value * 1000) / 1000);
-export function SelectionInspector({ document, ids, onMove, onTransform, onAlign, onDistribute, onStyle, onAlignArea, onAttachText,onGroupProperties }: {
+function MeasuredSelectionInspector({ document, ids, onMove, onTransform, onAlign, onDistribute, onStyle, onAlignArea, onAttachText,onGroupProperties }: {
   document: GraphicDocument; ids: string[]; onAttachText: (textId: string, pathId: string) => void;
   onGroupProperties?:(id:string,properties:GroupProperties)=>void;
   onMove: (x: number, y: number, revision: number) => number | null;
@@ -86,4 +89,10 @@ export function SelectionInspector({ document, ids, onMove, onTransform, onAlign
     <SelectionStyleInspector {...{ document, ids, onStyle }}/>
     <div className="inspector-footer"><span role="status">{status}</span></div>
   </form>;
+}
+
+export function SelectionInspector(props: Parameters<typeof MeasuredSelectionInspector>[0]) {
+ useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion);
+ const blocked=props.document.objects.filter(object=>props.ids.includes(object.id)&&object.type==='text'&&!textGeometryVerified(object));
+ return blocked.length?<div className="object-inspector" aria-label="Proprietà selezione"><p className="notice">Correggi i font prima di misurare o trasformare questa selezione. L’ingombro di {blocked.map(object=>object.id).join(', ')} non è verificato.</p><SelectionStyleInspector document={props.document} ids={props.ids} onStyle={props.onStyle}/></div>:<MeasuredSelectionInspector {...props}/>;
 }
