@@ -32,7 +32,7 @@ export function fitComposition(source:GraphicDocument,product:ProductProfile,cat
   validateLayout(parsed.data,measure);return{document:parsed.data,scale};
 }
 export function fitTemplate(source:GraphicDocument,product:ProductProfile,catalogVersion:string,measure:Measure,allowShrink=false):TemplateFit {
-  if(!source.objects.length)throw new Error('Il template è vuoto');
+  if(!source.objects.length&&!source.paperColor)throw new Error('Il template è vuoto');
   return fitComposition(source,product,catalogVersion,measure,allowShrink);
 }
 export function smallestTemplateMount(source:GraphicDocument,products:readonly ProductProfile[],allowedKeys:readonly string[],catalogVersion:string,measure:Measure):{product:ProductProfile;fit:TemplateFit} {
@@ -42,5 +42,5 @@ export function smallestTemplateMount(source:GraphicDocument,products:readonly P
   throw new Error('Nessun modello associato contiene questa composizione con i vincoli TEST. Modifica il template o le sue associazioni.');
 }
 export function templateCommand(fit:TemplateFit,templateId:string,templateVersion:number,expectedRevision:number):GraphicCommand {
-  return{schemaVersion:1,tool:'applyTemplate',expectedRevision,objectId:fit.document.objects[0]!.id,arguments:{templateId,templateVersion,objects:fit.document.objects,...(fit.document.backgroundImageId?{backgroundImageId:fit.document.backgroundImageId}:{}),groups:fit.document.groups??[],...(fit.document.inkColor?{inkColor:fit.document.inkColor}:{}),...(fit.document.fontAssets?{fontAssets:fit.document.fontAssets}:{})}};
+  return{schemaVersion:1,tool:'applyTemplate',expectedRevision,objectId:fit.document.objects[0]?.id??'canvas',arguments:{templateId,templateVersion,objects:fit.document.objects,...(fit.document.paperColor?{paperColor:fit.document.paperColor}:{}),...(fit.document.backgroundImageId?{backgroundImageId:fit.document.backgroundImageId}:{}),groups:fit.document.groups??[],...(fit.document.inkColor?{inkColor:fit.document.inkColor}:{}),...(fit.document.fontAssets?{fontAssets:fit.document.fontAssets}:{})}};
 }

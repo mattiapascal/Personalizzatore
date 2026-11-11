@@ -77,6 +77,7 @@ const documentFields = z.strictObject({
   templateOrigin: z.strictObject({id:z.string().uuid(),version:z.number().int().positive()}).optional(),
   fontAssets: FontAssetsSchema.optional(),
   backgroundImageId:id.optional(),
+  paperColor:ColorSchema.optional(),
   schemaVersion: z.literal(2), documentId: z.string().uuid(), revision: z.number().int().nonnegative(),
   productId: z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/).nullable(),
   variantId: z.string().regex(/^gid:\/\/shopify\/ProductVariant\/\d+$/).nullable(),
@@ -91,6 +92,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
   // The typed catalog currently contains stamp mounts only. Commercial plaque
   // associations live in the archive adapter, not in these stamp binding fields.
   if (d.colorMode === 'color' && d.productId !== null) ctx.addIssue({ code: 'custom', message: 'Le montature timbro richiedono un documento monocromatico; i colori non vengono convertiti automaticamente.' });
+  if(d.colorMode!=='color'&&!isMonochromePaint(d.paperColor))ctx.addIssue({code:'custom',message:'Il documento monocromatico ammette soltanto un fondo nero o bianco.'});
   if (d.colorMode !== 'color') for (const object of d.objects) {
     const paints = object.type === 'image' ? [] : [
       ...('fill' in object ? [object.fill] : []), ...('stroke' in object ? [object.stroke] : []),
@@ -212,12 +214,13 @@ export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
+  z.strictObject({...base,tool:z.literal('setPaperColor'),arguments:z.strictObject({color:ColorSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('setBackgroundImage'),arguments:z.strictObject({object:SceneObjectSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema,fit:z.enum(['contain','cover']).optional()})}),
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
   z.strictObject({...base,tool:z.literal('changeFormat'),arguments:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1),allowShrink:z.boolean()})}),
-  z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),objects:z.array(SceneObjectSchema).min(1).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundImageId:id.optional(),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
+  z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),objects:z.array(SceneObjectSchema).min(0).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundImageId:id.optional(),paperColor:ColorSchema.optional(),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
   z.strictObject({ ...base, tool: z.literal('attachTextToPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...base, tool: z.literal('detachTextFromPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...base, tool: z.literal('setTextPath'), arguments: TextPathOptionsSchema }),
@@ -332,7 +335,8 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   if (command.expectedRevision !== doc.revision) throw new Error('Revisione grafica obsoleta: rileggi il documento');
   const next = cloneGraphicDocument(doc);
   if ('fontAssets' in command.arguments && command.arguments.fontAssets?.length) { const resources = [...next.fontAssets ?? []]; for (const asset of command.arguments.fontAssets) { const old = resources.find(a=>a.id===asset.id); if (old && (old.dataBase64!==asset.dataBase64 || old.format!==asset.format || old.family!==asset.family)) throw new Error('La risorsa originale del font è immutabile'); if (!old) resources.push({...asset}); } next.fontAssets=resources; }
-  if(command.tool==='setBackgroundImage'){
+  if(command.tool==='setPaperColor'){if(command.arguments.color===null)delete next.paperColor;else next.paperColor=command.arguments.color;}
+  else if(command.tool==='setBackgroundImage'){
     const image=command.arguments.object;if(image&&(image.type!=='image'||image.id!==command.objectId))throw new Error('Lo sfondo richiede un’immagine e un ID coerenti');
     const previous=next.backgroundImageId;if(previous&&next.groups?.some(g=>g.objectIds.includes(previous)))throw new Error('Separa il gruppo dello sfondo prima di sostituirlo');
     if(previous)next.objects=next.objects.filter(o=>o.id!==previous);delete next.backgroundImageId;
@@ -352,10 +356,12 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     Object.assign(next,fitComposition(doc,product,catalog.version,measure,command.arguments.allowShrink).document);
   }
   else if (command.tool === 'applyTemplate') {
-    if(command.objectId!==command.arguments.objects[0]!.id)throw new Error('ID del comando diverso dal primo oggetto del template');
+    if(!command.arguments.objects.length&&!command.arguments.paperColor)throw new Error('Il template è vuoto e non ha un colore del foglio.');
+    if(command.objectId!==(command.arguments.objects[0]?.id??'canvas'))throw new Error('ID del comando diverso dal primo oggetto del template');
     next.objects=command.arguments.objects.map(cloneSceneObject);
     if(command.arguments.groups.length)next.groups=command.arguments.groups.map(cloneSceneGroup);else delete next.groups;
     if(command.arguments.fontAssets?.length)next.fontAssets=command.arguments.fontAssets.map(asset=>({...asset}));else delete next.fontAssets;
+    if(command.arguments.paperColor)next.paperColor=command.arguments.paperColor;else delete next.paperColor;
     if(command.arguments.backgroundImageId)next.backgroundImageId=command.arguments.backgroundImageId;else delete next.backgroundImageId;
     next.templateOrigin={id:command.arguments.templateId,version:command.arguments.templateVersion};
     if(command.arguments.inkColor)next.inkColor=command.arguments.inkColor;

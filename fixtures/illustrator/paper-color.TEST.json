@@ -1,0 +1,45 @@
+{
+  "colorMode": "color",
+  "fontAssets": [],
+  "paperColor": "#fffeef",
+  "schemaVersion": 2,
+  "documentId": "95959595-9595-4595-a595-959595959595",
+  "revision": 4,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 120,
+    "height": 80
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "blue",
+      "type": "rect",
+      "xMm": 10,
+      "yMm": 10,
+      "widthMm": 40,
+      "heightMm": 25,
+      "strokeMm": 0.1,
+      "stroke": "none",
+      "fillOpacity": 0.5,
+      "fill": "#0088cc"
+    },
+    {
+      "id": "white",
+      "type": "rect",
+      "xMm": 60,
+      "yMm": 25,
+      "widthMm": 40,
+      "heightMm": 30,
+      "strokeMm": 0.5,
+      "stroke": "#000000",
+      "fill": "#ffffff"
+    }
+  ]
+}

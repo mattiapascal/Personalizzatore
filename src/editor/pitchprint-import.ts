@@ -26,8 +26,15 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  const source=sourceSchema.parse(raw);const unitMm=pitchprintUnitMm(source.unit),page=source.pages[0]!,data=page.pageData,clip=page.canvas.clipPath,width=numeric(data.fWidth,'Larghezza')*unitMm,height=numeric(data.fHeight,'Altezza')*unitMm,cw=numeric(clip.width,'Area canvas'),ch=numeric(clip.height,'Area canvas');if(width<=0||height<=0||width>1000||height>1000||cw<=0||ch<=0)throw new Error('Formato fuori dai limiti del laboratorio.');
  const left=numeric(clip.left??0,'Origine canvas'),top=numeric(clip.top??0,'Origine canvas'),sx=width/cw,sy=height/ch,tree=pitchprintTree(page.canvas.objects,properties),warnings:string[]=[...tree.warnings],objects:SceneObject[]=[],assets:FontAsset[]=[],fontCache=new Map<string,Promise<PitchprintFontResult>>(),groupMembers=new Map<string,string[]>();
  const pageMatrix:PitchprintMatrix=[sx,0,0,sy,-left*sx,-top*sy];
- let paperGraphics=false;if(page.canvas.background!==undefined&&page.canvas.background!==null&&page.canvas.background!==''){try{const paper=color(page.canvas.background,false);paperGraphics=paper!=='none'&&paper!=='#ffffff';}catch{paperGraphics=true;}}const background=/https?:|data:image/.test(JSON.stringify([data.templateSource,data.foregroundSource,(data.fillData as any)?.assetData]))||paperGraphics;
- if(background&&!options.excludeBackground)throw new Error('Lo sfondo/materiale o il primo piano richiede revisione. Abilita la sua esclusione soltanto se non fa parte della grafica da produrre.');if(background)warnings.push('Sfondo/materiale o primo piano escluso per scelta esplicita.');
+ let paperColor:string|undefined;
+ if(page.canvas.background!==undefined&&page.canvas.background!==null&&page.canvas.background!==''){
+  try{const paper=color(page.canvas.background,options.monochrome);if(paper!=='none'&&paper!=='#ffffff')paperColor=paper;}catch(e){if(!options.excludeBackground)throw e;warnings.push('Colore/riempimento del foglio escluso per scelta esplicita.');}
+ }
+ const imageBackground=/https?:|data:image/.test(JSON.stringify([data.templateSource,data.foregroundSource,(data.fillData as any)?.assetData]));
+ if(imageBackground&&!options.excludeBackground)throw new Error('L’immagine di sfondo/materiale o il primo piano richiede revisione. Abilita la sua esclusione soltanto se non fa parte della grafica da produrre.');
+ if(options.excludeBackground){if(imageBackground||paperColor)warnings.push('Sfondo/materiale o primo piano escluso per scelta esplicita.');paperColor=undefined;}
+ else if(paperColor)warnings.push('Colore del foglio conservato nella grafica e nelle esportazioni.');
+
  for(const {item,name,id,parent} of tree.leaves){
   const type=item.type,editor=properties(item,warnings),firstObject=objects.length;
   // Text has an early continue after conversion; collect its membership there.
@@ -82,8 +89,8 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
   }
   rememberGroup();
  }
- if(unitMm!==1)warnings.push(`Misure convertite da ${source.unit} a millimetri senza ridimensionare il formato fisico.`);if(options.monochrome)warnings.push('Colori della grafica convertiti nella palette nero/bianco per scelta esplicita.');if(!objects.length)throw new Error('Il template non contiene elementi convertibili.');
+ if(unitMm!==1)warnings.push(`Misure convertite da ${source.unit} a millimetri senza ridimensionare il formato fisico.`);if(options.monochrome)warnings.push('Colori della grafica convertiti nella palette nero/bianco per scelta esplicita.');if(!objects.length&&!paperColor)throw new Error('Il template non contiene elementi convertibili.');
  const groups=tree.groups.map(({id,parentId,editor,leafIds})=>({id,...(parentId?{parentId}:{}),editor,objectIds:leafIds.flatMap(id=>groupMembers.get(id)??[])}));
  if(groups.length)warnings.push(`${groups.length} gruppi grafici conservati come unità di selezione e trasformazione.`);
- const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
+ const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
 }

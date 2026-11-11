@@ -55,7 +55,7 @@ export function assertObjectPolicies(before:GraphicDocument,after:GraphicDocumen
   if(!next&&group.editor&&Object.values(group.editor).some(Boolean)&&group.objectIds.some(id=>after.objects.some(object=>object.id===id)))throw new Error('Un gruppo con proprietà del template può essere separato solo in modalità amministrativa.');
  }
  const argumentsWithIds=command.arguments as {objectIds?:string[];groupIds?:string[];copies?:{objectId:string}[];objects?:SceneObject[]};
- const targets=new Set([command.objectId,...argumentsWithIds.objectIds??[],...argumentsWithIds.copies?.map(copy=>copy.objectId)??[],...argumentsWithIds.objects?.map(object=>object.id)??[],...(before.groups??[]).filter(group=>argumentsWithIds.groupIds?.includes(group.id)).flatMap(group=>group.objectIds)]);
+ const targets=new Set([...(command.tool==='setPaperColor'?[]:[command.objectId]),...argumentsWithIds.objectIds??[],...argumentsWithIds.copies?.map(copy=>copy.objectId)??[],...argumentsWithIds.objects?.map(object=>object.id)??[],...(before.groups??[]).filter(group=>argumentsWithIds.groupIds?.includes(group.id)).flatMap(group=>group.objectIds)]);
  for(const object of before.objects){
   const next=after.objects.find(item=>item.id===object.id),properties=effectiveObjectProperties(before,object.id);
   if(!next){if(properties?.deleteLocked||properties?.selectionLocked)throw new Error(`Eliminazione bloccata: ${properties.label||object.id}.`);continue;}

@@ -184,6 +184,7 @@ async function renderDocumentPng(document: GraphicDocument, size: {width:number;
   try {
     const scale = size.pixelsPerMm / PX_PER_MM;
     output.setViewportTransform([scale, 0, 0, scale, 0, 0]);
+    if(document.paperColor)output.backgroundColor=document.paperColor;
     if (document.shape === 'round') output.clipPath = new Circle({ radius: document.areaMm.width * PX_PER_MM / 2, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true });
     for (const object of productionDocument(document).objects) output.add(renderObject(object));
     output.renderAll();
@@ -455,7 +456,7 @@ export class FabricAdapter {
     this.rendering = true;
     try {
       this.canvas.clear();
-      this.canvas.backgroundColor = '#ffffff';
+      this.canvas.backgroundColor = document.paperColor ?? '#ffffff';
       const partial = document.objects.some(object => { if(object.type==='text'&&!textGeometryVerified(object))return true; const bounds = objectGeometry(object, measureFabric); return object.xMm < 0 || object.yMm < 0 || object.xMm + bounds.widthMm > document.areaMm.width || object.yMm + bounds.heightMm > document.areaMm.height; });
       this.canvas.clipPath = document.shape === 'round'
         ? new Circle({ radius: document.areaMm.width * PX_PER_MM / 2, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true })
