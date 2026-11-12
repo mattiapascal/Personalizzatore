@@ -1,3 +1,4 @@
+import{pitchprintImageClip}from'./pitchprint-image-clip';
 import{EDITOR_LIMITS,GRAPHIC_IMPORT_LIMITS}from'./limits';
 import {pitchprintNumber as number} from './pitchprint-units';
 import type {ObjectProperties} from './object-properties';
@@ -22,7 +23,8 @@ export function checkedPitchprintEffects(item:Record<string,unknown>,name:string
  if(Array.isArray(item.strokeDashArray)&&item.strokeDashArray.length)throw new Error(`${name}: tratteggio personalizzato da convertire. Il sorgente resta intatto.`);
  if(item.globalCompositeOperation&&item.globalCompositeOperation!=='source-over')throw new Error(`${name}: metodo di fusione non supportato.`);
  if(item.fillRule!==undefined&&!['evenodd','nonzero'].includes(String(item.fillRule)))throw new Error(`${name}: regola di riempimento non riconosciuta.`);
- if(item.shadow||item.clipPath||item.clipTo||item.transformMatrix||Number(item.skewX??0)||Number(item.skewY??0)||item.opacity!==undefined&&item.opacity!==1)throw new Error(`${name}: maschera, ombra, skew o opacità non supportati.`);
+ if(item.clipPath!=null)pitchprintImageClip(item,name);
+ if(item.shadow||item.clipTo||item.transformMatrix||Number(item.skewX??0)||Number(item.skewY??0)||item.opacity!==undefined&&item.opacity!==1)throw new Error(`${name}: maschera, ombra, skew o opacità non supportati.`);
 }
 const inheritedKeys=['transformLocked','selectionLocked','deleteLocked','hideMenus','reference'] as const;
 export function inheritedPitchprintProperties(own:ObjectProperties,parent:ObjectProperties):ObjectProperties{const result={...own};for(const key of inheritedKeys)if(parent[key])result[key]=true;return result;}

@@ -1,3 +1,4 @@
+import{clippedPitchprintImageGeometry}from'./pitchprint-image-clip';
 import{pngSourceWarnings}from'./png-source';
 import{EDITOR_LIMITS}from'./limits';
 import{pitchprintPageImages,convertPageImage,nativePageVector,type PageImagePolicy}from'./pitchprint-page-images';
@@ -10,7 +11,7 @@ import {canonicalPaint} from './paint';
 import {checkedPitchprintFont,type PitchprintFontResult} from './pitchprint-font-resolution';
 import {pitchprintNumber as numeric,pitchprintUnitMm} from './pitchprint-units';
 import {pitchprintFontRequest} from './pitchprint-fonts';
-import {pitchprintTree,pitchprintTransform,pitchprintPoint,multiplyPitchprintMatrices,type PitchprintMatrix} from './pitchprint-tree';
+import {checkedPitchprintEffects,pitchprintTree,pitchprintTransform,pitchprintPoint,multiplyPitchprintMatrices,type PitchprintMatrix} from './pitchprint-tree';
 import {z} from 'zod';import {IText,Textbox,Rect,Circle,Ellipse,Line,Path,Polygon,Polyline,type FabricObject} from 'fabric';
 import {createDocument,DocumentSchema,placeObjectAtCenter,type GraphicDocument,type SceneObject,type SceneGroup} from './model';import {loadFontAssets,renderFontFamily} from './fonts';import {FontAssetsSchema,type FontAsset} from './font-assets';import {measureFabric} from './fabric-adapter';import {prepareSvg} from './svg-import';import {rasterSourceFromBytes} from './raster-source';import {prepareRasterSource} from './raster-cache';import {DEFAULT_RASTER} from './raster-processing';import {defaultMountingFor} from './plaque';import type {ObjectProperties} from './object-properties';
 const record=z.record(z.string(),z.unknown()),sourceSchema=z.object({title:z.string().max(1000).optional(),unit:z.string(),pages:z.array(z.object({canvas:z.object({objects:z.array(record).max(EDITOR_LIMITS.objects),clipPath:record}).passthrough(),pageData:record}).passthrough()).length(1)}).passthrough();
@@ -42,6 +43,7 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  const roots=[...page.canvas.objects],vectorPages:{role:'background'|'foreground';policy:PageImagePolicy;prefix:string}[]=[],rasterPages:typeof pageImages=[];
  for(const input of pageImages){const policy=options.pageImages?.[input.role]??'review',label=input.role==='background'?'Sfondo':'Primo piano';if(!['review','print','reference','exclude'].includes(policy))throw Error('Utilizzo dell’immagine di pagina non riconosciuto.');if(policy==='review')throw Error(`${label}: scegli se è grafica da stampare, riferimento del materiale oppure da escludere.`);if(policy!=='exclude'&&input.native&&nativePageVector(input.native)){roots.push(input.native);vectorPages.push({role:input.role,policy,prefix:`pp-${roots.length}`});}else if(policy!=='exclude')rasterPages.push(input);warnings.push(`${label}: ${policy==='print'?'conservato nella grafica produttiva':policy==='reference'?'conservato come riferimento materiale, escluso da esportazioni e miniature produttive':'escluso per scelta esplicita'}.`);}
  const tree=pitchprintTree(roots,properties);warnings.push(...tree.warnings);
+ for(const input of rasterPages)if(input.native)checkedPitchprintEffects(input.native,input.role==='background'?'Sfondo':'Primo piano');
  for(const input of rasterPages){const object=await convertPageImage(input,options.pageImages![input.role],{width,height},pageMatrix,options.monochrome,options.image,properties(input.native??{},warnings),warnings);if(object)pageObjects.push(object);}
 
 
@@ -82,8 +84,8 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
    if(!orthogonal)throw new Error(`${name}: immagine inclinata dal gruppo, da convertire senza approssimare la geometria.`);
    if(item.resizeFilter||item.filters!=null&&(!Array.isArray(item.filters)||item.filters.length))throw new Error(`${name}: filtri immagine da convertire.`);
    const url=pitchprintImageUrl(item),source=rasterSourceFromBytes(`pitch-${crypto.randomUUID()}`,url.startsWith('data:image/')?Uint8Array.from(atob(url.split(',')[1]??''),character=>character.charCodeAt(0)):await options.image(url));await prepareRasterSource(source);if(source.mime==='image/png')warnings.push(...pngSourceWarnings(source.dataUrl));
-   const geometry=pitchprintImageGeometry(item,source,axisX,axisY);
-   objects.push(placeObjectAtCenter({id,type:'image',xMm:0,yMm:0,...geometry,rotationDeg:rotation,source,raster:{...DEFAULT_RASTER,...(!options.monochrome?{mode:'original' as const}:{})},flipY:determinant<0,editor},center,measureFabric));
+   const{center:imageCenter,...geometry}=clippedPitchprintImageGeometry(item,source,pitchprintImageGeometry(item,source,axisX,axisY),matrix);
+   objects.push(placeObjectAtCenter({id,type:'image',xMm:0,yMm:0,...geometry,rotationDeg:rotation,source,raster:{...DEFAULT_RASTER,...(!options.monochrome?{mode:'original' as const}:{})},flipY:determinant<0,editor},imageCenter,measureFabric));
   }else{
    const shapeFill=color(item.fill,options.monochrome),shapeStroke=stroke===0?'none':color(item.stroke,options.monochrome);
    if(shapeStroke!=='none'&&item.strokeUniform===true)throw Error(`${name}: contorno uniforme indipendente dalla scala ancora da convertire.`);

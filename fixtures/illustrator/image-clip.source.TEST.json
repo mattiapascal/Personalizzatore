@@ -1,0 +1,111 @@
+{
+  "title": "Maschere rettangolari TEST",
+  "unit": "mm",
+  "pages": [
+    {
+      "pageData": {
+        "fWidth": 140,
+        "fHeight": 90
+      },
+      "canvas": {
+        "background": "#ffffff",
+        "clipPath": {
+          "left": 0,
+          "top": 0,
+          "width": 1400,
+          "height": 900
+        },
+        "objects": [
+          {
+            "type": "image",
+            "originX": "center",
+            "originY": "center",
+            "left": 350,
+            "top": 450,
+            "width": 64,
+            "height": 48,
+            "scaleX": 8,
+            "scaleY": 8,
+            "strokeWidth": 0,
+            "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAhklEQVR4nO3WsQmAMBQE0NTW1g7hOE7kQI7hHK4RW1FIF07IK67Lh8urrkzLWkdOSRdIB0C6QDofgGubj2fKftZW3u//fg8AAIA2QLpg73sAAAAAAAAAgCEEAAAAAAAAADCEAAAAAAAAAACGEAAAAAAAAADAEPr9BwAA6AwwWgCkC6QzPMANsEZwuo4dbDkAAAAASUVORK5CYII=",
+            "clipPath": {
+              "type": "rect",
+              "originX": "center",
+              "originY": "center",
+              "left": 2.25,
+              "top": -1.5,
+              "width": 42.5,
+              "height": 31.25,
+              "strokeWidth": 1
+            }
+          },
+          {
+            "type": "group",
+            "originX": "center",
+            "originY": "center",
+            "left": 1000,
+            "top": 450,
+            "width": 600,
+            "height": 500,
+            "scaleX": 1.1,
+            "scaleY": 0.8,
+            "angle": 20,
+            "strokeWidth": 0,
+            "objects": [
+              {
+                "type": "image",
+                "originX": "center",
+                "originY": "center",
+                "left": 0,
+                "top": 0,
+                "width": 96,
+                "height": 72,
+                "scaleX": 7,
+                "scaleY": 7,
+                "strokeWidth": 0,
+                "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAhklEQVR4nO3WsQmAMBQE0NTW1g7hOE7kQI7hHK4RW1FIF07IK67Lh8urrkzLWkdOSRdIB0C6QDofgGubj2fKftZW3u//fg8AAIA2QLpg73sAAAAAAAAAgCEEAAAAAAAAADCEAAAAAAAAAACGEAAAAAAAAADAEPr9BwAA6AwwWgCkC6QzPMANsEZwuo4dbDkAAAAASUVORK5CYII=",
+                "clipPath": {
+                  "type": "path",
+                  "originX": "center",
+                  "originY": "center",
+                  "left": 2.25,
+                  "top": -1.5,
+                  "width": 42.5,
+                  "height": 31.25,
+                  "strokeWidth": 1,
+                  "path": [
+                    [
+                      "M",
+                      10,
+                      20
+                    ],
+                    [
+                      "L",
+                      52.5,
+                      20
+                    ],
+                    [
+                      "L",
+                      52.5,
+                      51.25
+                    ],
+                    [
+                      "L",
+                      10,
+                      51.25
+                    ],
+                    [
+                      "Z"
+                    ]
+                  ]
+                },
+                "flipX": true,
+                "flipY": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

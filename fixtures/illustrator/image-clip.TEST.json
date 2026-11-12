@@ -1,0 +1,118 @@
+{
+  "colorMode": "color",
+  "schemaVersion": 2,
+  "documentId": "6e7f62c3-c6f3-40fb-b5d9-19f6389f2fd6",
+  "revision": 3,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 140,
+    "height": 90
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "pp-1",
+      "type": "image",
+      "xMm": 19.799999999999997,
+      "yMm": 31.299999999999997,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 34,
+      "heightMm": 25.000000000000004,
+      "source": {
+        "id": "pitch-6fa98e89-0037-4530-b0c5-304ddbb3fb04",
+        "mime": "image/png",
+        "pixelWidth": 64,
+        "pixelHeight": 48,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAhklEQVR4nO3WsQmAMBQE0NTW1g7hOE7kQI7hHK4RW1FIF07IK67Lh8urrkzLWkdOSRdIB0C6QDofgGubj2fKftZW3u//fg8AAIA2QLpg73sAAAAAAAAAgCEEAAAAAAAAADCEAAAAAAAAAACGEAAAAAAAAADAEPr9BwAA6AwwWgCkC6QzPMANsEZwuo4dbDkAAAAASUVORK5CYII="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "pixelAspectRatio": 1,
+      "crop": {
+        "leftPx": 13,
+        "topPx": 6.875,
+        "widthPx": 42.5,
+        "heightPx": 31.25
+      },
+      "flipY": false
+    },
+    {
+      "id": "pp-2-1",
+      "type": "image",
+      "xMm": 79.71628885238582,
+      "yMm": 31.378176876105485,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": -160,
+      "widthMm": 32.72500000000001,
+      "heightMm": 17.500000000000004,
+      "source": {
+        "id": "pitch-30062545-25bb-432e-b04a-cbe7464e7667",
+        "mime": "image/png",
+        "pixelWidth": 64,
+        "pixelHeight": 48,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAhklEQVR4nO3WsQmAMBQE0NTW1g7hOE7kQI7hHK4RW1FIF07IK67Lh8urrkzLWkdOSRdIB0C6QDofgGubj2fKftZW3u//fg8AAIA2QLpg73sAAAAAAAAAgCEEAAAAAAAAADCEAAAAAAAAAACGEAAAAAAAAADAEPr9BwAA6AwwWgCkC6QzPMANsEZwuo4dbDkAAAAASUVORK5CYII="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "pixelAspectRatio": 1.375,
+      "crop": {
+        "leftPx": 19.333333333333332,
+        "topPx": 12.583333333333334,
+        "widthPx": 28.333333333333332,
+        "heightPx": 20.833333333333336
+      },
+      "flipY": false
+    }
+  ],
+  "groups": [
+    {
+      "id": "pp-2-group",
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "objectIds": [
+        "pp-2-1"
+      ]
+    }
+  ]
+}
