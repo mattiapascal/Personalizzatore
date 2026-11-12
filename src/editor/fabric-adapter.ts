@@ -1,3 +1,4 @@
+import{ExternalCanvasControls}from'./external-controls';
 import{graphicPages,activeGraphicPageId}from'./pages';
 import {textStrokeFromFabric} from './paint-opacity';
 import { paintWithOpacity, textPaintFromFabric } from './paint-opacity';
@@ -47,6 +48,10 @@ import { pngExportSize, pngWithDpi, type PngDpi } from './png-export';
 export const PX_PER_MM = 8; // Solo zoom di visualizzazione, indipendente da DPI fisici.
 export const PT_TO_MM = 25.4 / 72;
 const fontPoints = (pixels: number) => Math.round(pixels / (PT_TO_MM * PX_PER_MM) * 1e9) / 1e9;
+function transformedImageSize(source:ImageObject,object:FabricObject):Extract<TransformArguments['size'],{type:'image'}>{
+ const crop=checkedRasterCrop(source.source,source.crop),widthMm=object.getScaledWidth()/PX_PER_MM,heightMm=object.getScaledHeight()/PX_PER_MM,aspect=widthMm*crop.heightPx/(heightMm*crop.widthPx);
+ return{type:'image',widthMm,heightMm,...(Math.abs(aspect-(source.pixelAspectRatio??1))>1e-9?{pixelAspectRatio:aspect}:{})};
+}
 function keepRotationHandleInCanvas(object: FabricObject): void {
   const rotation = object.controls.mtr;
   if (!rotation) return;
@@ -67,6 +72,13 @@ function selectionControls(object: FabricObject): void {
     if (handler) object.controls[name] = new Control({ ...control, actionHandler: (event, transform, x, y) => handler({ ...event, shiftKey: false }, transform, x, y) });
   }
   configuredSelections.add(object);
+}
+/** Corners scale proportionally unless Shift is held; edges affect only their axis. */
+function objectDimensionControls(object:FabricObject):void{
+ object.controls={...object.controls};
+ for(const name of ['tl','tr','bl','br']){const control=object.controls[name]!;object.controls[name]=new Control({...control,actionName:'scale',getActionName:()=> 'scale',actionHandler:(event,transform,x,y)=>controlsUtils.scalingEqually(event,transform,x,y)});}
+ for(const[name,handler]of[['ml',controlsUtils.scalingX],['mr',controlsUtils.scalingX],['mt',controlsUtils.scalingY],['mb',controlsUtils.scalingY]]as const){const control=object.controls[name]!;object.controls[name]=new Control({...control,actionName:name==='ml'||name==='mr'?'scaleX':'scaleY',getActionName:()=>name==='ml'||name==='mr'?'scaleX':'scaleY',actionHandler:handler,cursorStyleHandler:controlsUtils.scaleCursorStyleHandler});}
+ object.setControlsVisibility({ml:true,mr:true,mt:true,mb:true});
 }
 class UnverifiedTextMarker extends Rect {
   override _render(context: CanvasRenderingContext2D): void {
@@ -120,6 +132,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
       : new Rect({ ...common, ...appearance, width: o.widthMm * PX_PER_MM, height: o.heightMm * PX_PER_MM, rx: (o.cornerRadiusMm ?? 0) * PX_PER_MM, ry: (o.cornerRadiusMm ?? 0) * PX_PER_MM });
   }
   if (o.type === 'vector' && o.clipRect) { const c = o.clipRect; object.clipPath = new Rect({ left: ((c.left + c.right) / 2 - .5) * o.widthMm * PX_PER_MM, top: ((c.top + c.bottom) / 2 - .5) * o.heightMm * PX_PER_MM, width: (c.right - c.left) * o.widthMm * PX_PER_MM, height: (c.bottom - c.top) * o.heightMm * PX_PER_MM, originX: 'center', originY: 'center', strokeWidth: 0, fill: '#000000' }); }
+  if(editable&&o.type!=='text'&&o.type!=='line')objectDimensionControls(object);
   if (o.type === 'line') {
     object.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, mt: false, mb: false, ml: true, mr: true, mtr: true });
     for (const name of ['ml', 'mr']) { const original = object.controls[name]!; object.controls[name] = new Control({ ...original, actionName: 'scaleX', getActionName: () => 'scaleX', actionHandler: controlsUtils.scalingX, cursorStyleHandler: controlsUtils.scaleCursorStyleHandler }); }
@@ -127,15 +140,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
   if ((o.type === 'path' || o.type === 'bezier') && (o.widthMm === 0 || o.heightMm === 0)) {
     object.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, ml: o.widthMm > 0, mr: o.widthMm > 0, mt: o.heightMm > 0, mb: o.heightMm > 0 });
   }
-  if (o.type === 'circle' || o.type === 'image') {
-    object.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false, mtr: o.type !== 'circle' });
-    // I cerchi ammettono soltanto scala uniforme, anche premendo Maiusc.
-    for (const name of ['tl', 'tr', 'bl', 'br']) {
-      const control = object.controls[name]!;
-      const handler = control.actionHandler;
-      if (handler) object.controls[name] = new Control({ ...control, actionHandler: (event, transform, x, y) => handler({ ...event, shiftKey: false }, transform, x, y) });
-    }
-  }
+  if(o.type==='circle')object.setControlsVisibility({mtr:false});
   if (editable && o.type !== 'circle') keepRotationHandleInCanvas(object);
   // L’origine Fabric è centrale; il formato JSON conserva le coordinate esterne
   // storiche. La conversione non sposta i progetti salvati né cambia lo SVG.
@@ -203,6 +208,7 @@ async function renderDocumentPng(document: GraphicDocument, size: {width:number;
   } finally { await output.dispose(); }
 }
 export class FabricAdapter {
+  private readonly externalControls:ExternalCanvasControls;
   readonly canvas: Canvas;
   private idByObject = new WeakMap<FabricObject, string>();
   private sourceByObject = new WeakMap<FabricObject, SceneObject>();
@@ -282,6 +288,7 @@ export class FabricAdapter {
   }
   constructor(element: HTMLCanvasElement, revision: () => number, onMove: (id: string, xMm: number, yMm: number, expectedRevision: number) => void, onText?: (id: string, object: TextObject, expectedRevision: number) => void, onEditing?: (editing: boolean) => void, onSelect?: (id: string | null) => void, onTransform?: (id: string, args: TransformArguments, expectedRevision: number) => void, onDeleteDrag?: (id: string, expectedRevision: number) => void, onTrash?: (visible: boolean) => void, onCharacterSelection?: (selection: CharacterSelection | null) => void, onSelection?: (ids: string[]) => void, onMoveSelection?: (ids: string[], deltaXmm: number, deltaYmm: number, revision: number) => void, onDeleteSelection?: (ids: string[], revision: number) => void, onTransformSelection?: (ids: string[], args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => void) {
     this.canvas = new Canvas(element, { stopContextMenu:false,selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
+    this.externalControls=new ExternalCanvasControls(this.canvas);
     this.canvas.upperCanvasEl.tabIndex = 0; this.canvas.upperCanvasEl.setAttribute('aria-label', 'Area grafica interattiva');
     this.publishObjectSelection = () => {
       if (this.rendering || this.disposed) return;
@@ -303,7 +310,7 @@ export class FabricAdapter {
     };
     this.canvas.on('text:selection:changed', this.publishSelection);
     this.canvas.on('text:changed', () => { this.publishFontRenderStatus(); this.publishSelection(); });
-    this.canvas.on('after:render', () => { this.drawGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide(); });
+    this.canvas.on('after:render', () => { this.drawGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide();this.externalControls.render(); });
     let gestureRevision = revision(), gestureBounds = { left: 0, top: 0 }, gestureAngle = 0, gestureScale = 1;
     this.canvas.on('before:transform', ({ transform }) => { gestureRevision = revision(); gestureBounds = transform.target.getBoundingRect(); gestureAngle = transform.target.angle; gestureScale = transform.target.scaleX; this.cancelled = false; });
     const delta = (object: FabricObject) => {
@@ -394,9 +401,9 @@ export class FabricAdapter {
         const size: TransformArguments['size'] = source.type === 'text'
           ? source.textPath ? { type: 'text', textScaleX: source.textScaleX, textScaleY: 1, fontSizePt: object instanceof IText ? fontPoints(object.fontSize * object.scaleX) : source.fontSizePt * object.scaleX, textPath: scaledTextPath(source.textPath, object.scaleX) } : { type: 'text', textScaleX: object.scaleX, textScaleY: object.scaleY, fontSizePt: object instanceof EditorTextBox ? fontPoints(object.fontSize) : source.fontSizePt,
             ...(object instanceof EditorTextBox && object.frame ? { textBox: { widthMm: object.width * object.scaleX / PX_PER_MM, heightMm: object.height * object.scaleY / PX_PER_MM, autoWidth: object.frame.autoWidth, autoHeight: object.frame.autoHeight } } : {}) }
-          : source.type === 'image' ? { type: 'image', widthMm: object.getScaledWidth() / PX_PER_MM, heightMm: object.getScaledHeight() / PX_PER_MM }
+          : source.type === 'image' ? transformedImageSize(source,object)
           : source.type === 'circle'
-            ? { type: 'circle', radiusMm: ((source.radiusMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2 }
+            ? Math.abs(object.scaleX-object.scaleY)>1e-9 ? {type:'ellipse',rxMm:((source.radiusMm*2+strokeMm)*object.scaleX-strokeMm)/2,ryMm:((source.radiusMm*2+strokeMm)*object.scaleY-strokeMm)/2} : { type: 'circle', radiusMm: ((source.radiusMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2 }
             : source.type === 'line' ? { type: 'line', lengthMm: (source.lengthMm + strokeMm) * object.scaleX - strokeMm }
             : source.type === 'ellipse' ? { type: 'ellipse', rxMm: ((source.rxMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2, ryMm: ((source.ryMm * 2 + strokeMm) * object.scaleY - strokeMm) / 2 }
             : source.type === 'path' || source.type === 'bezier' || source.type === 'vector' ? { type: source.type, widthMm: source.widthMm === 0 ? 0 : (source.widthMm + strokeMm) * object.scaleX - strokeMm, heightMm: source.heightMm === 0 ? 0 : (source.heightMm + strokeMm) * object.scaleY - strokeMm }
@@ -738,5 +745,5 @@ export class FabricAdapter {
     const active = this.canvas.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
   }
-  dispose(): void { this.disposed = true; this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
+  dispose(): void { this.disposed = true;this.externalControls.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
 }

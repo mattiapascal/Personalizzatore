@@ -195,6 +195,7 @@ export class EditorTextBox extends Textbox {
 
 export function textBoxControls(object: EditorTextBox): void {
   const baseScale = object.scaleX, baseScaleY = object.scaleY, baseWidth = object.getScaledWidth(), baseHeight = object.getScaledHeight(), automatic = object.frame?.autoWidth ?? true;
+  const baseFrame=object.frame&&{...object.frame};
   const baseStroke = object.strokeWidth, baseFont = object.fontSize, baseStyles = structuredClone(object.styles), fonts = [baseFont, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.fontSize ?? baseFont))];
   const spacings = [object.charSpacing / 1000 * baseFont / (25.4 / 72 * 8), ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => (style as { editorKerningPt?: number }).editorKerningPt ?? 0))], spacingScale = Math.min(Infinity, ...spacings.filter(value => value !== 0).map(value => value > 0 ? EDITOR_LIMITS.maxTrackingPt / value : EDITOR_LIMITS.minTrackingPt / value));
   const strokes = [baseStroke, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.strokeWidth ?? 0))], strokeScale = Math.min(Infinity, ...strokes.filter(value => value > 0).map(value => EDITOR_LIMITS.maxStrokeMm * 8 / value));
@@ -206,16 +207,20 @@ export function textBoxControls(object: EditorTextBox): void {
       // larghezza/altezza del testo (un box largo non deve mostrare frecce orizzontali agli angoli).
       const angle = Math.atan2(control.y, control.x) * 180 / Math.PI + target.getTotalAngle();
       return `${['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'][((Math.round(angle / 45) % 8) + 8) % 8]}-resize`;
-    }, actionHandler: (_event, transform, pointerX, pointerY) => {
+    }, actionHandler: (event, transform, pointerX, pointerY) => {
       const target = transform.target as EditorTextBox, angle = -target.angle * Math.PI / 180;
       // Start from the actual pointer-down point, including the grab offset.
       // Il punto opposto resta fermo anche con dilatazione su entrambi gli assi.
       const dx = pointerX - transform.ex, dy = pointerY - transform.ey;
       const localX = dx * Math.cos(angle) - dy * Math.sin(angle), localY = dx * Math.sin(angle) + dy * Math.cos(angle);
-      const width = x ? Math.max(0.08, Math.sign(x) * localX + baseWidth) : baseWidth;
-      if (automatic) {
-        const height = y ? Math.max(0.08, Math.sign(y) * localY + baseHeight) : baseHeight;
-        const fontScale = Math.max(minimumFontScale, Math.min(maximumFontScale, height / (baseHeight / baseScaleY)));
+      let width = x ? Math.max(0.08, Math.sign(x) * localX + baseWidth) : baseWidth;
+      const proportional=!!x&&!!y&&!event.shiftKey;
+      if (automatic||y) {
+        const factor=proportional?Math.max(.001,1+(Math.sign(x)*localX+Math.sign(y)*localY)/(baseWidth+baseHeight)):1;
+        const height=proportional?baseHeight*factor:y?Math.max(.08,Math.sign(y)*localY+baseHeight):baseHeight;
+        const fontScale=Math.max(minimumFontScale,Math.min(maximumFontScale,height/(baseHeight/baseScaleY)));
+        if(proportional)width=baseWidth*fontScale/baseScaleY;
+        if(!automatic&&baseFrame)target.frame={...baseFrame,width:baseFrame.width*fontScale,height:baseFrame.height*fontScale};
         const styles = structuredClone(baseStyles);
         for (const line of Object.values(styles)) for (const raw of Object.values(line)) {
           const style = raw as typeof raw & { editorKerningPt?: number };
@@ -237,7 +242,7 @@ export function textBoxControls(object: EditorTextBox): void {
       context.fillRect(-4, -4, 8, 8); context.strokeRect(-4, -4, 8, 8); context.restore();
     };
   }
-  object.setControlsVisibility({ mt: automatic, ml: true, mr: true, mb: automatic });
+  object.setControlsVisibility({ mt:true,ml:true,mr:true,mb:true });
   object.controls.overflow = new Control({ x: 0.5, y: 0.5, offsetX: 11, offsetY: 11, cursorStyle: 'help', actionHandler: () => false, getVisibility: () => object.overflow, render: (context, left, top) => {
     context.save(); context.fillStyle = '#fff'; context.strokeStyle = '#b43a29'; context.lineWidth = 1.5; context.fillRect(left - 5, top - 5, 10, 10); context.strokeRect(left - 5, top - 5, 10, 10);
     context.beginPath(); context.moveTo(left - 3, top); context.lineTo(left + 3, top); context.moveTo(left, top - 3); context.lineTo(left, top + 3); context.stroke(); context.restore();

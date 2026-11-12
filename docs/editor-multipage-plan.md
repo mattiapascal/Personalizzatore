@@ -16,3 +16,7 @@ Richieste collegate: Copia nel template A e Incolla nel documento B, anche dopo 
 6. Confronti nativi pagina per pagina, prove manuali/AI/storico/riapertura, campioni portabili e regressioni. Soltanto dopo: backup e importazione delle copie conformi, senza sovrascrivere modifiche del titolare o creare associazioni prodotto implicite. Priorità ai quattro cartelli viari e quattro numeri civici multipagina; Biglietti dopo, Templates PitchPrint mai.
 
 Non confondere pagine del progetto, varianti di formato dello stesso modello e copie indipendenti con titoli simili. Il limite di risorse deve riguardare il progetto completo e non moltiplicarsi silenziosamente per il numero di pagine.
+
+## Task di coda richiesto il 12 novembre
+
+Dopo il ridimensionamento e gli sblocchi prioritari, ripetere l’audit dei sorgenti e delle preparazioni storiche per individuare eventuali conversioni multipagina ridotte a monopagina. Per ciascuna corrispondenza provata, preparare la conversione completa e confrontare tutte le pagine; conservare copia precedente e modifiche manuali, senza sovrascrittura implicita. Verificare anche eventuali aggiornamenti del sorgente rispetto alle copie già acquisite. Non confondere gruppi di template con varianti di formato con le pagine di un singolo design.

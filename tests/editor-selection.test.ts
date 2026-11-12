@@ -56,13 +56,13 @@ describe('selezione multipla e gruppi sul documento comune', () => {
     const valid = { ...doc, groups: [{ id: 'g', objectIds: ['a', 'b'] }] }; expect(DocumentSchema.parse(valid)).toEqual(valid);
     expect(() => parseGraphicDocument({ ...valid, schemaVersion: 1 })).toThrow();
   });
-  it('gruppo parzialmente fuori ammesso se resta un elemento visibile; completamente fuori rifiutato', () => {
+  it('gruppo esterno conservato durante la composizione; vincoli produttivi e Undo distinti', () => {
     const store = new DocumentStore(document(), measure);
     store.dispatch(command(0, 'groupObjects', { objectIds: ['a', 'b'], groupId: 'g' }), 'manual');
     store.dispatch(command(1, 'moveObjects', { objectIds: ['a', 'b'], deltaXmm: -10, deltaYmm: 0 }), 'manual');
     expect(store.document.objects[0]!.xMm).toBe(-7); expect(() => validateLayout(store.document, measure)).toThrow('fuori');
     const before = structuredClone(store.document);
-    expect(() => store.dispatch(command(2, 'moveObjects', { objectIds: ['a', 'b'], deltaXmm: -30, deltaYmm: 0 }), 'manual')).toThrow('fuori'); expect(store.document).toEqual(before);
+    store.dispatch(command(2,'moveObjects',{objectIds:['a','b'],deltaXmm:-30,deltaYmm:0}),'manual');expect(store.document.objects[0]!.xMm).toBe(-37);store.undo();expect(store.document.objects).toEqual(before.objects);
   });
   it('allinea oggetti e gruppi come unità senza cambiare le distanze interne', () => {
     const store = new DocumentStore(document(), measure);

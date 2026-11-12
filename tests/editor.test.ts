@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDocument, DocumentSchema, DocumentStore, type Measure, type SceneObject } from '../src/editor/model';
+import { createDocument, DocumentSchema, DocumentStore, validateLayout, type Measure, type SceneObject } from '../src/editor/model';
 import { fixtureCatalog } from '../src/catalog/adapter';
 
 // Geometria deterministica di test. Le metriche browser reali sono verificate negli e2e Fabric.
@@ -43,7 +43,7 @@ describe('documento unico e comandi revisionati', () => {
     const s = new DocumentStore(createDocument(), measure);
     s.dispatch(add(0), 'manual'); s.undo();
     const before = structuredClone(s.document), events = structuredClone(s.events);
-    const invalid = [add(1), add(2, { ...newText, id: 'text-1' }), { ...add(2), objectId: 'different-id' }, add(2, { ...newText, xMm: 100 }), { ...add(2), arguments: { object: { ...newText, fill: '#888888' } } }, { ...add(2), arguments: { object: { ...newText, type: 'image', src: 'https://example.test/private' } } }, duplicate(2, 'missing'), duplicate(2, 'text-1', 'frame-1'), duplicate(2, 'text-1', 'copy-text', 100), remove(2, 'missing'), { ...remove(2, 'text-1'), arguments: { force: true } }];
+    const invalid = [add(1), add(2, { ...newText, id: 'text-1' }), { ...add(2), objectId: 'different-id' }, add(2, { ...newText, xMm: 1001 }), { ...add(2), arguments: { object: { ...newText, fill: '#888888' } } }, { ...add(2), arguments: { object: { ...newText, type: 'image', src: 'https://example.test/private' } } }, duplicate(2, 'missing'), duplicate(2, 'text-1', 'frame-1'), duplicate(2, 'text-1', 'copy-text', 1001), remove(2, 'missing'), { ...remove(2, 'text-1'), arguments: { force: true } }];
     for (const command of invalid) {
       expect(() => s.dispatch(command, 'ai-simulation')).toThrow();
       expect(s.document).toEqual(before); expect(s.events).toEqual(events);
@@ -74,13 +74,9 @@ describe('documento unico e comandi revisionati', () => {
     s.undo(); s.dispatch(add(2, { ...newText, id: 'new-branch' }), 'manual');
     s.redo(); expect(s.document.revision).toBe(3); expect(s.document.objects.at(-1)!.id).toBe('new-branch');
   });
-  it('verifica l’area circolare per nuovi oggetti e copie', () => {
-    const doc = createDocument(); doc.areaMm = { width: 30, height: 30 }; doc.shape = 'round'; doc.objects = [];
-    const s = new DocumentStore(doc, measure);
-    expect(() => s.dispatch(add(0, { ...newText, xMm: -8, yMm: 1 }), 'manual')).toThrow('completamente fuori');
-    s.dispatch(add(0, { ...newText, xMm: 12, yMm: 12 }), 'manual');
-    expect(() => s.dispatch({ ...duplicate(1), arguments: { newObjectId: 'copy-text', xMm: -8, yMm: 1 } }, 'ai-simulation')).toThrow('completamente fuori');
-    expect(s.document.revision).toBe(1); expect(s.document.objects).toHaveLength(1);
+  it('documento circolare: conserva nuovi oggetti e copie fuori foglio; il controllo produttivo resta distinto',()=>{
+    const doc=createDocument();doc.areaMm={width:30,height:30};doc.shape='round';doc.objects=[];const store=new DocumentStore(doc,measure);
+    store.dispatch(add(0,{...newText,id:'external-text',xMm:-8,yMm:1}),'manual');store.dispatch(add(1,{...newText,xMm:12,yMm:12}),'manual');store.dispatch({...duplicate(2),arguments:{newObjectId:'copy-text',xMm:-8,yMm:1}},'ai-simulation');expect(store.document.objects).toHaveLength(3);expect(()=>validateLayout(store.document,measure)).toThrow('fuori');const saved=JSON.parse(JSON.stringify(store.document));store.open(saved);expect(store.document.objects).toEqual(saved.objects);
   });
   it('UI e AI modificano lo stesso oggetto senza cambiare ID', () => {
     const s = new DocumentStore(createDocument(), measure);
@@ -89,9 +85,9 @@ describe('documento unico e comandi revisionati', () => {
     expect(s.document.objects.find(o => o.id === 'text-1')).toMatchObject({ text: 'Città', xMm: 10 }); expect(s.document.revision).toBe(2);
     expect(s.events.map(e => e.source)).toEqual(['manual', 'ai-simulation']);
   });
-  it('rifiuta stale, ID inesistenti, fuori area, font sotto minimo e colori', () => {
+  it('rifiuta stale, ID inesistenti, oltre i limiti di coordinate, font sotto minimo e colori', () => {
     const s = new DocumentStore(createDocument(), measure); const original = structuredClone(s.document);
-    for (const c of [move(1), { ...move(0), objectId: 'unknown' }, move(0, 90), { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 0.09, fill: '#000000' } }, { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 9, fill: '#888888' } }, { ...move(0), tool: 'eval', arguments: { script: 'fetch()' } }]) expect(() => s.dispatch(c, 'ai-simulation')).toThrow();
+    for (const c of [move(1), { ...move(0), objectId: 'unknown' }, move(0, 1001), { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 0.09, fill: '#000000' } }, { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 9, fill: '#888888' } }, { ...move(0), tool: 'eval', arguments: { script: 'fetch()' } }]) expect(() => s.dispatch(c, 'ai-simulation')).toThrow();
     expect(s.document).toEqual(original); expect(s.events).toHaveLength(0);
   });
   it('undo/redo mantengono revisione monotona e invalidano comandi vecchi', () => {

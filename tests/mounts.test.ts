@@ -6,7 +6,7 @@ import { createCatalog, mountSnapshot, mountFixtureCatalog, productPage } from '
 import { profileKey } from '../src/catalog/schema';
 import { missingInformation, recommendProducts } from '../src/selection/rules';
 import { chooseProduct, newSession, restoreSession, updateRequirements } from '../src/selection/session';
-import { createDocument, DocumentStore, type Measure } from '../src/editor/model';
+import { createDocument, DocumentStore, validateLayout, type Measure } from '../src/editor/model';
 import { proposalFromArguments } from '../server/openai';
 
 const source = (id: string) => RawProductSchema.parse(sources.products.find(p => p.id.endsWith('/' + id)));
@@ -116,17 +116,16 @@ describe('Montature: conversazione, selezione e geometrie', () => {
     expect(proposalFromArguments(args({ sizeUnknown: true }), 2)).toMatchObject({ arguments: { diameterMm: null, minimumAreaMm: null, sizeUnknown: true } });
     expect(proposalFromArguments(args({ diameterMm: 35, widthMm: 20, heightMm: 10 }), 2)).toMatchObject({ arguments: {}, clarification: expect.stringContaining('diametro') });
   });
-  it('rifiuta un testo totalmente fuori dal cerchio; cambio variante conserva ID e stato', () => {
+  it('conserva testo esterno in composizione, mantiene il controllo produttivo e il cambio variante con gli stessi ID', () => {
     const mountFixtureCatalog = manualTestCatalog();
     const profiles = mountFixtureCatalog.list().filter(p => p.productId.endsWith('/15106681799036'));
     const small = profiles.find(p => p.nominalAreaMm.width === 35)!, large = profiles.find(p => p.nominalAreaMm.width === 40)!;
     const store = new DocumentStore(createDocument(small, mountFixtureCatalog.version), measure);
     const before = structuredClone(store.document);
-    expect(() => store.dispatch({ schemaVersion: 1, expectedRevision: 0, objectId: 'text-1', tool: 'moveObject', arguments: { xMm: -10, yMm: 1 } }, 'manual')).toThrow('completamente fuori');
-    expect(store.document).toEqual(before);
+    store.dispatch({schemaVersion:1,expectedRevision:0,objectId:'text-1',tool:'moveObject',arguments:{xMm:-10,yMm:1}},'manual');expect(()=>validateLayout(store.document,measure)).toThrow('fuori');store.undo();expect(store.document.objects).toEqual(before.objects);
     store.changeProduct(large, mountFixtureCatalog.version);
     expect(store.document.objects).toEqual(before.objects); expect(store.document.documentId).toBe(before.documentId);
-    expect(store.document.variantId).toBe(large.variantIds[0]); expect(store.document.revision).toBe(1);
+    expect(store.document.variantId).toBe(large.variantIds[0]); expect(store.document.revision).toBe(3);
     expect(() => store.import({ ...store.document, shape: 'rectangle' })).toThrow('Area');
   });
   it('usa i metafield anche con titolo discordante e ricalcola versione e selezione quando cambiano', () => {

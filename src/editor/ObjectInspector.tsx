@@ -1,3 +1,5 @@
+import{AspectRatioControl}from'./AspectRatioControl';
+import{resizeObjectDimension}from'./resize-object';
 import { OpacityControls } from './OpacityControls';
 import {ImageReplacementControl} from './ImageReplacementControl';
 import { textGeometryVerified } from './font-measurement';
@@ -9,7 +11,7 @@ import type {ObjectProperties} from './object-properties';
 import { EDITOR_LIMITS } from './limits';
 import { fontVariantChoices, fontVariantLabel, renderFontFamily, chooseFontStyle, fontChoices, registeredFontAsset, fontCatalogVersion, subscribeFonts } from './fonts';
 import { transformSelection } from './selection';
-import { resizeTextHeight, textHeightLimits } from './text-sizing';
+import { textHeightLimits } from './text-sizing';
 import { DEFAULT_JUSTIFICATION } from './justification';
 import { useSyncExternalStore, useEffect, useRef, useState, type ReactNode } from 'react';
 import { EditorButton, type EditorIconName } from './EditorButton';
@@ -39,7 +41,8 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
   const [section, setSection] = useState<Section>('geometry');
   const [opacityLinked, setOpacityLinked] = useState(true);
   useEffect(() => setOpacityLinked(true), [object.id]);
-  const [ratioLocked, setRatioLocked] = useState(false),[cropContents,setCropContents]=useState(false);
+  const [ratioLocked, setRatioLocked] = useState(true),[cropContents,setCropContents]=useState(false);
+  useEffect(()=>setRatioLocked(true),[object.id]);
   useEffect(()=>setCropContents(false),[object.id,section]);
   useEffect(() => {
     if (object.type === 'image' && section === 'stroke' || object.type !== 'text' && section === 'text' || (object.type === 'line' || (object.type === 'path' || object.type === 'bezier') && !object.closed) && section === 'fill' || object.type !== 'path' && object.type !== 'bezier' && section === 'nodes' || object.type === 'image' && section === 'fill' || object.type !== 'image' && (section === 'image' || section === 'crop')) setSection('geometry');
@@ -125,33 +128,22 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
             <NumberField {...fields} label="Larghezza (mm)" value={frame.widthMm} min={0.01} max={1000} onChange={width => { if (width > 0) replaceObject(transformSelection([current], { scale: width / frame.widthMm, rotationDeg: 0, center: draft.center }, measureFabric)[0]!); }}/>
             <NumberField {...fields} label="Altezza (mm)" value={frame.heightMm} min={0.01} max={1000} onChange={height => { if (height > 0) replaceObject(transformSelection([current], { scale: height / frame.heightMm, rotationDeg: 0, center: draft.center }, measureFabric)[0]!); }}/>
           </>}
-          {current.type === 'text' && !current.textPath && frame && <>
-            <NumberField {...fields} label="Larghezza box (mm)" value={frame.widthMm} min={0.01} max={1000} onChange={widthMm => { if (widthMm <= 0 || widthMm > 1000) return; if (current.textBox?.autoWidth ?? true) { const value = (current.textScaleX ?? 1) * widthMm / frame.widthMm; if (value < .1 || value > 10) return; if (characterSelection) onTextStretch(value); else patch({ textScaleX: value }); } else patchFrame({ widthMm }); }}/>
-            <NumberField {...fields} label="Altezza testo (mm)" value={frame.heightMm} min={Math.floor(heightLimits!.min * 1000) / 1000} max={Math.ceil(heightLimits!.max * 1000) / 1000} onChange={heightMm => { if (heightMm >= heightLimits!.min && heightMm <= heightLimits!.max) replaceObject(resizeTextHeight(current, heightMm, measureFabric)); }}/>
-          </>}
+          {current.type === 'text' && !current.textPath && frame && <div className="dimension-fields">
+            <NumberField {...fields} label="Larghezza box (mm)" value={frame.widthMm} min={0.01} max={1000} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'width',value,ratioLocked,measureFabric));}}/>
+            <AspectRatioControl linked={ratioLocked} onChange={setRatioLocked}/>
+            <NumberField {...fields} label="Altezza testo (mm)" value={frame.heightMm} min={ratioLocked ? .001 : Math.floor(heightLimits!.min * 1000) / 1000} max={ratioLocked?1000:Math.ceil(heightLimits!.max * 1000) / 1000} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'height',value,ratioLocked,measureFabric));}}/>
+          </div>}
           {current.type === 'circle' && <NumberField {...fields} label="Diametro (mm)" value={current.radiusMm * 2} min={0.01} max={1000} onChange={diameter => patch({ radiusMm: diameter / 2 })}/>}
           {current.type === 'line' && <NumberField {...fields} label="Lunghezza linea (mm)" value={current.lengthMm} min={0.01} max={1000} step={0.1} onChange={lengthMm => patch({ lengthMm })}/>}
-          {current.type === 'ellipse' && <>
-            <NumberField {...fields} label="Larghezza (mm)" value={current.rxMm * 2} min={0.01} max={1000} onChange={width => patch({ rxMm: width / 2, ...(ratioLocked ? { ryMm: width / 2 * current.ryMm / current.rxMm } : {}) })}/>
-            <NumberField {...fields} label="Altezza (mm)" value={current.ryMm * 2} min={0.01} max={1000} onChange={height => patch({ ryMm: height / 2, ...(ratioLocked ? { rxMm: height / 2 * current.rxMm / current.ryMm } : {}) })}/>
-          </>}
-          {(current.type === 'path' || current.type === 'bezier' || current.type === 'vector') && <>
-            <NumberField {...fields} label="Larghezza (mm)" value={current.widthMm} min={0.01} max={1000} disabled={current.widthMm === 0} onChange={widthMm => patch({ widthMm, ...(ratioLocked ? { heightMm: widthMm * current.heightMm / current.widthMm } : {}) })}/>
-            <NumberField {...fields} label="Altezza (mm)" value={current.heightMm} min={0.01} max={1000} disabled={current.heightMm === 0} onChange={heightMm => patch({ heightMm, ...(ratioLocked ? { widthMm: heightMm * current.widthMm / current.heightMm } : {}) })}/>
-          </>}
-          {current.type === 'image' && visiblePixels && <>
-            <NumberField {...fields} label="Larghezza (mm)" value={current.widthMm} min={0.001} max={1000} onChange={widthMm => patch({ widthMm, heightMm: widthMm * current.heightMm / current.widthMm })}/>
-            <NumberField {...fields} label="Altezza (mm)" value={current.heightMm} min={0.001} max={1000} onChange={heightMm => patch({ heightMm, widthMm: heightMm * current.widthMm / current.heightMm })}/>
-          </>}
-          {current.type === 'rect' && <>
-            <NumberField {...fields} label="Larghezza (mm)" value={current.widthMm} min={0.01} max={1000} onChange={widthMm => patch({ widthMm, ...(ratioLocked ? { heightMm: widthMm * current.heightMm / current.widthMm } : {}) })}/>
-            <NumberField {...fields} label="Altezza (mm)" value={current.heightMm} min={0.01} max={1000} onChange={heightMm => patch({ heightMm, ...(ratioLocked ? { widthMm: heightMm * current.widthMm / current.heightMm } : {}) })}/>
-            <NumberField {...fields} label="Raggio angoli (mm)" value={current.cornerRadiusMm ?? 0} min={0} max={Math.min(current.widthMm, current.heightMm) / 2} onChange={cornerRadiusMm => patch({ cornerRadiusMm })}/>
-          </>}
+          {current.type!=='text'&&current.type!=='circle'&&current.type!=='line'&&<div className="dimension-fields">
+            <NumberField {...fields} label="Larghezza (mm)" value={current.type==='ellipse'?current.rxMm*2:current.widthMm} min={0.001} max={1000} disabled={current.type!=='ellipse'&&current.widthMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'width',value,ratioLocked,measureFabric));}}/>
+            <AspectRatioControl linked={ratioLocked} onChange={setRatioLocked}/>
+            <NumberField {...fields} label="Altezza (mm)" value={current.type==='ellipse'?current.ryMm*2:current.heightMm} min={0.001} max={1000} disabled={current.type!=='ellipse'&&current.heightMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'height',value,ratioLocked,measureFabric));}}/>
+          </div>}
+          {current.type==='rect'&&<NumberField {...fields} label="Raggio angoli (mm)" value={current.cornerRadiusMm??0} min={0} max={Math.min(current.widthMm,current.heightMm)/2} onChange={cornerRadiusMm=>patch({cornerRadiusMm})}/>}
           {current.type !== 'circle' && <NumberField {...fields} className="property-wide" label="Rotazione (°)" value={current.rotationDeg ?? 0} min={-180} max={180} onChange={rotationDeg => patch({ rotationDeg })}/>}
         </div>
         {current.type === 'text' && !current.textPath && <><label className="ratio-toggle"><input type="checkbox" checked={!(current.textBox?.autoWidth ?? true)} disabled={fixedJustification} onChange={event => patchFrame({ autoWidth: !event.target.checked })}/> Larghezza fissa del box</label><p className="caption">Con larghezza fissa il testo va a capo senza allargare il box. L’altezza cresce per mostrare tutto il testo. Le maniglie restano utilizzabili; disattivando la spunta ridimensionano anche il testo.{fixedJustification && ' Per disattivare la larghezza fissa scegli prima un altro allineamento sull’intero box.'}</p></>}
-        {(current.type === 'rect' || current.type === 'ellipse' || current.type === 'path' || current.type === 'bezier') && <label className="ratio-toggle"><input type="checkbox" checked={ratioLocked} onChange={event => setRatioLocked(event.target.checked)}/> Mantieni proporzioni</label>}
         </fieldset>
         {current.type === 'path' && <><label className="ratio-toggle"><input type="checkbox" checked={current.closed} disabled={current.points.length < 3 || current.widthMm === 0 || current.heightMm === 0} onChange={event => patch({ closed: event.target.checked, ...(!event.target.checked ? { fill: 'none' } : {}) }, true)}/> Chiudi tracciato</label><p className="caption">{current.points.length} punti vettoriali · giunzioni ed estremità arrotondate.</p></>}
         {current.type === 'image' && visiblePixels && <p className="caption">Proporzioni dell’immagine mantenute. Risoluzione effettiva: {(visiblePixels.widthPx / current.widthMm * 25.4).toFixed(0)} dpi. Pixel orientati {current.source.pixelWidth} × {current.source.pixelHeight} px. {current.source.mime === 'image/jpeg' ? `Originale JPEG · orientamento EXIF ${jpegInfo(current.source.dataUrl).orientation}, normalizzato localmente.` : 'Originale PNG.'}</p>}

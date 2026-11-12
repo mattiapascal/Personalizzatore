@@ -52,13 +52,12 @@ describe('ispettore atomico sul documento comune', () => {
     expect(() => store.dispatch({ schemaVersion: 1, tool: 'transformObject', objectId: 'frame-1', expectedRevision: 2, arguments: { xMm: 5, yMm: 5, rotationDeg: 0, size: { type: 'rect', widthMm: 3, heightMm: 6 } } }, 'manual')).toThrow('Raggio');
     expect(store.document.objects[0]).toEqual(rect); expect(store.document.revision).toBe(2);
   });
-  it('contorno parzialmente esterno ammesso; spostamento interamente esterno rifiutato', () => {
+  it('contorno e spostamento esterni conservati nello spazio di lavoro, con Undo', () => {
     const doc = createDocument(); const rect: SceneObject = { id: 'r', type: 'rect', xMm: 48, yMm: 5, widthMm: 8, heightMm: 4, stroke: 'none', strokeMm: 2, fill: '#000000' }; doc.objects = [rect];
     const store = new DocumentStore(doc, measure);
     store.dispatch(update(0, { ...rect, xMm: 49, stroke: '#000000' }), 'manual');
     const before = structuredClone(store.document);
-    expect(() => store.dispatch(update(1, { ...rect, xMm: 60 }), 'manual')).toThrow('completamente fuori');
-    expect(store.document).toEqual(before); expect(store.events).toHaveLength(1);
+    store.dispatch(update(1,{...rect,xMm:60}),'manual');expect(store.document.objects[0]!.xMm).toBe(60);store.undo();expect(store.document.objects).toEqual(before.objects);expect(store.events).toHaveLength(3);
   });
   it('copia conserva tutti gli attributi e il payload non può mutare il documento dopo il commit', () => {
     const store = new DocumentStore(createDocument(), measure), object = text();

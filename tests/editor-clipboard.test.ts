@@ -37,7 +37,7 @@ describe('appunti grafici e inserimento atomico', () => {
       { ...command, arguments: { ...command.arguments, groups: [{ id: 'mixed', objectIds: ['object-1', 'rect'] }] } },
       { ...command, objectId: 'rect', arguments: { objects: [rect], groups: [] } },
       { ...command, arguments: { objects: Array.from({ length: 999 }, (_, i) => ({ ...rect, id: `object-${i + 1}` })), groups: [] } },
-      { ...command, arguments: { objects: [{ ...rect, id: 'object-1', xMm: 999 }], groups: [] } },
+      { ...command, arguments: { objects: [{ ...rect, id: 'object-1', xMm: 1001 }], groups: [] } },
     ];
     for (const raw of invalid) { expect(() => store.dispatch(raw, 'ai-simulation')).toThrow(); expect(store.document).toEqual(before); }
     store.redo(); expect(store.document.objects[0]!.xMm).toBe(6);

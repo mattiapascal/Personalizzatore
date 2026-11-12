@@ -21716,6 +21716,11 @@
                       "type": "number",
                       "exclusiveMinimum": 0,
                       "maximum": 1000
+                    },
+                    "pixelAspectRatio": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 100
                     }
                   },
                   "required": [

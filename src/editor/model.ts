@@ -227,7 +227,7 @@ export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('line'), lengthMm: z.number().finite().positive().max(1000) }),
   z.strictObject({ type: z.literal('ellipse'), rxMm: z.number().finite().positive().max(500), ryMm: z.number().finite().positive().max(500) }),
   z.strictObject({ type: z.literal('path'), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000) }),
-  z.strictObject({ type: z.literal('image'), widthMm: z.number().finite().positive().max(1000), heightMm: z.number().finite().positive().max(1000) }),
+  z.strictObject({ type: z.literal('image'), widthMm: z.number().finite().positive().max(1000), heightMm: z.number().finite().positive().max(1000),pixelAspectRatio:z.number().finite().min(.01).max(100).optional() }),
   z.strictObject({ type: z.literal('bezier'), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000) }),
 ]);
 export const TransformArgumentsSchema = z.strictObject({ ...position, rotationDeg: rotation, size: ObjectSizeSchema });
@@ -344,12 +344,15 @@ export function objectIntersectsArea(doc: Pick<GraphicDocument, 'areaMm' | 'shap
 }
 export function validateLayout(doc: GraphicDocument, measure: Measure, mode: 'strict' | 'edit' = 'strict'): void {for(const page of graphicPages(doc))validateSinglePageLayout(page,measure,mode);}
 function validateSinglePageLayout(doc: GraphicDocument, measure: Measure, mode: 'strict' | 'edit'): void {
+  // The editing workspace includes the area outside the paper. Only a drag
+  // gesture can request deletion; importing/resizing must preserve every object.
+  if(mode==='edit'){for(const object of doc.objects)try{objectGeometry(object,measure);}catch(error){if(!(object.type==='text'&&error instanceof UnverifiedTextGeometryError))throw error;}return;}
   const backgrounds=backgroundObjectIds(doc);
   const intersections=new Map<SceneObject,boolean>();
-  const intersects = (object: SceneObject): boolean => {const previous=intersections.get(object);if(previous!==undefined)return previous;let visible:boolean;try { visible=objectIntersectsArea(doc, object, measure); } catch(error) { if(mode==='edit'&&object.type==='text'&&error instanceof UnverifiedTextGeometryError)visible=true;else throw error; }intersections.set(object,visible);return visible;};
+  const intersects = (object: SceneObject): boolean => {const previous=intersections.get(object);if(previous!==undefined)return previous;const visible=objectIntersectsArea(doc, object, measure);intersections.set(object,visible);return visible;};
   const visibleGroups = new Set((doc.groups ?? []).filter(group => group.objectIds.some(id => intersects(doc.objects.find(object => object.id === id)!))).flatMap(group => group.objectIds));
   for (const object of doc.objects) {
-    if (mode === 'edit'||backgrounds.has(object.id)) {
+    if (backgrounds.has(object.id)) {
       const visible=intersects(object); // Every member is checked, even when a sibling already makes its group visible.
       if (!visibleGroups.has(object.id) && !visible) throw new Error('Oggetto completamente fuori dall’area di disegno');
       continue;
@@ -428,8 +431,9 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     next.objects.push(cloneSceneObject(command.arguments.object));
   } else {
     if (!['setText','replaceImageSource','setObjectProperties'].includes(command.tool)&&next.groups?.some(group => group.objectIds.includes(command.objectId))) throw new Error('Separa il gruppo prima di modificare un singolo elemento');
-    const object = next.objects.find(o => o.id === command.objectId);
-    if (!object) throw new Error('ID oggetto sconosciuto');
+    const found=next.objects.find(o=>o.id===command.objectId);
+    if(!found)throw new Error('ID oggetto sconosciuto');
+    let object:SceneObject=found;
     switch (command.tool) {
       case 'setObjectProperties': if(role!=='admin')throw new Error('Le proprietà del template si configurano in modalità amministrativa.'); object.editor={...command.arguments};break;
       case 'replaceImageSource': {
@@ -473,6 +477,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
       }
       case 'transformObject': {
         const { size, ...transform } = command.arguments;
+        if(object.type==='circle'&&size.type==='ellipse'){const{radiusMm:_radius,...appearance}=object;const changed:SceneObject={...appearance,type:'ellipse',rxMm:size.rxMm,ryMm:size.ryMm};next.objects[next.objects.indexOf(object)]=changed;object=changed;}
         if (object.type !== size.type) throw new Error('Dimensioni incompatibili con il tipo di oggetto');
         if (object.type === 'text' && size.type === 'text') {
           const factor = size.fontSizePt / object.fontSizePt;
