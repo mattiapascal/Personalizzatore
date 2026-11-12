@@ -4346,3 +4346,9 @@ test('stili oltre fine riga: testo e ritorni a capo fedeli, font residui mai ric
   const reopened=DocumentSchema.parse(JSON.parse(JSON.stringify(store.document)));return{objectsUnchanged:JSON.stringify(reopened.objects)===original,svgUnchanged:(await exportDocumentSvg(reopened)).replace(/CLIPPATH_\d+/g,'CLIPPATH_TEST')===svg.replace(/CLIPPATH_\d+/g,'CLIPPATH_TEST'),revision:reopened.revision};
  },result.document);expect(history).toEqual({objectsUnchanged:true,svgUnchanged:true,revision:8});
 });
+
+
+test('PitchPrint: un elemento esterno al foglio blocca la bozza prima di offrire un documento non riapribile',async({page})=>{
+ await page.goto('/editor');const result=await page.evaluate(async()=>{const p='/src/editor/pitchprint-import.ts',{importPitchPrint}=await import(p),source={title:'Oggetti esterni TEST',unit:'mm',pages:[{pageData:{fWidth:100,fHeight:50},canvas:{clipPath:{left:0,top:0,width:1000,height:500},objects:[{type:'rect',left:20,top:20,width:100,height:100,fill:'black',strokeWidth:0},{type:'rect',left:200,top:-900,width:1,height:1,fill:'red',strokeWidth:0}]}}]},before=JSON.stringify(source),options={monochrome:false,excludeBackground:false,font:async()=>{throw Error('Nessun font TEST');},image:async()=>{throw Error('Nessuna immagine TEST');}};let error;try{await importPitchPrint(source,options);}catch(e){error=String(e);}return{error,sourceUnchanged:before===JSON.stringify(source)};});
+ expect(result.error).toContain('Oggetto completamente fuori');expect(result.sourceUnchanged).toBe(true);
+});
