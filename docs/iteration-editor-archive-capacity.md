@@ -12,7 +12,7 @@ Le scritture restano in coda nell’istanza del backend. Prima della rinomina at
 
 ## Prove eseguite
 
-Otto nuove regressioni coprono letture concorrenti, corruzione e recupero, modifica durante il caricamento, file oltre capacità rifiutato prima della lettura, copie indipendenti, scrittura da altra istanza durante una verifica asincrona, condivisione senza variazione del JSON e superamento atomico del budget con successivo comando ancora funzionante. Suite unitari completa: **783 test / 119 file passati**; build locale e pubblica passate.
+Otto nuove regressioni coprono letture concorrenti, corruzione e recupero, modifica durante il caricamento, file oltre capacità rifiutato prima della lettura, copie indipendenti, scrittura da altra istanza durante una verifica asincrona, condivisione senza variazione del JSON e superamento atomico del budget con successivo comando ancora funzionante. Suite unitari completa: **783 test / 119 file passati**; build locale e pubblica passate. Anche la regressione browser completa aggiornata è **513/513**, più 13 casi pubblici e 39 campioni JSON/SVG; nessun ricontrollo selettivo necessario.
 
 Benchmark su copia isolata di **384 MiB**, 244 template e due composizioni, senza modificare l’archivio personale e senza opzioni speciali dell’heap:
 

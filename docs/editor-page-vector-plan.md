@@ -16,6 +16,14 @@ Eseguito un prototipo **in sola lettura sui soli fondi** dei diciannove sorgenti
 
 La prova dimostra il riuso della conversione geometrica dei fondi osservati. **Non è ancora un’importazione completa dei diciannove template**: corpo, testi/font, primi piani, classificazione produttiva, collegamento canonico al fondo e comandi di sostituzione non sono coperti da questa prova. Nessun nuovo record salvato. Non occorre rasterizzare i fondi per aggirare il blocco attuale.
 
+## Diagnosi del corpo e dei record esistenti
+
+Seconda prova locale su copie di lavoro: fondo nativo inserito sotto il corpo, stessi originali e font esatti, riferimento produttivo che esclude soltanto gli elementi con `isReference: true`. **Nove confronti completi della grafica su diciannove superano le soglie**; la gestione canonica dello sfondo rimane da implementare, quindi non sono ancora nove template dichiarati pronti al salvataggio. Dieci arresti: un Gloria Hallelujah 700 irrisolto, un’immagine su CDN non ancora ammessa, due primi piani fuori dal perimetro del prototipo, tre effetti/maschere, due limiti di 200 elementi e un PNG con orientamento EXIF. La prima prova includeva erroneamente una foto di riferimento nel confronto e segnalava un falso scostamento; il riferimento è stato corretto secondo la politica già adottata, senza eliminare la foto dal documento convertito. Rapporti separati conservati in `.local/pitchprint-migration/native-page-vector-full-probe/`.
+
+Nei due sorgenti oltre capacità il corpo contiene rispettivamente 542 e 301 foglie, tutte con area non nulla: non sono centinaia di primitive vuote eliminabili. Occorre collaudare la capacità su composizioni reali prima di aumentarne il tetto. L’URL non ammesso appartiene a una distribuzione CloudFront specifica; non autorizzare genericamente qualsiasi host CloudFront o ricostruire percorsi presunti. Il PNG richiede conservazione dell’originale e normalizzazione esplicita dell’orientamento.
+
+Controllato l’incrocio con l’archivio attuale: diciotto sorgenti non presenti e un «Retro bottiglia classico» già importato, versione 1 e hash sorgente coincidente. Il record preesistente non viene sovrascritto da questa indagine; un eventuale recupero del suo fondo/primo piano dovrà seguire una revisione separata che conservi le modifiche dell’utente. Nessuna scrittura negli archivi.
+
 ## Sequenza concreta
 
 1. Estendere il riconoscimento delle risorse di pagina ai gruppi/primitive vettoriali già serializzati. URL e descrittori devono restare coerenti; scelta del ruolo ancora obbligatoria, nessuna inferenza dal nome del file.
