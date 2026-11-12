@@ -14,7 +14,7 @@ export function placeTextPathGuide(object: TextObject, center: { xMm: number; yM
 }
 export function preserveTextPathGuide(before: TextObject, after: TextObject, measure: Measure): TextObject { return placeTextPathGuide(after, textPathGuideCenter(before, measure), measure); }
 export function textPathStyleChanged(before: TextObject, after: TextObject): boolean {
-  return ['text', 'fontSizePt', 'fontFamily', 'fontWeight', 'fontStyle', 'underline', 'overline', 'linethrough', 'characterStyles', 'letterSpacingPt', 'textAlign', 'textScaleX', 'textScaleY', 'textPath'].some(key => JSON.stringify(before[key as keyof TextObject]) !== JSON.stringify(after[key as keyof TextObject]));
+  return ['stroke', 'strokeMm', 'strokeOpacity', 'strokeLineJoin', 'strokeMiterLimit', 'text', 'fontSizePt', 'fontFamily', 'fontWeight', 'fontStyle', 'underline', 'overline', 'linethrough', 'characterStyles', 'letterSpacingPt', 'textAlign', 'textScaleX', 'textScaleY', 'textPath'].some(key => JSON.stringify(before[key as keyof TextObject]) !== JSON.stringify(after[key as keyof TextObject]));
 }
 function assertUngrouped(doc: GraphicDocument, ids: string[]) { if (doc.groups?.some(group => group.objectIds.some(id => ids.includes(id)))) throw new Error('Separa il gruppo prima di applicare o separare testo e tracciato'); }
 export function attachTextPath(doc: GraphicDocument, textId: string, pathId: string, measure: Measure): SceneObject[] {
@@ -23,8 +23,9 @@ export function attachTextPath(doc: GraphicDocument, textId: string, pathId: str
   const { id: _id, xMm: _x, yMm: _y, rotationDeg: _rotation, ...rawGuide } = path, guide = TextPathGuideSchema.parse(rawGuide), firstAlignment = text.lineStyles?.find(run => run.start === 0)?.alignment ?? text.textAlign ?? 'left';
   const next = cloneSceneObject(text), vertical = next.textScaleY ?? 1;
   next.text = next.text.replace(/\n/g, ' '); next.fontSizePt *= vertical; next.textScaleX = (next.textScaleX ?? 1) / vertical; next.textScaleY = 1;
+  if (next.strokeMm !== undefined) next.strokeMm *= vertical;
   if (next.letterSpacingPt !== undefined) next.letterSpacingPt *= vertical;
-  if (next.characterStyles) next.characterStyles = next.characterStyles.map(run => ({ ...run, style: { ...run.style, ...(run.style.fontSizePt === undefined ? {} : { fontSizePt: run.style.fontSizePt * vertical }), ...(run.style.kerningPt === undefined ? {} : { kerningPt: run.style.kerningPt * vertical }) } }));
+  if (next.characterStyles) next.characterStyles = next.characterStyles.map(run => ({ ...run, style: { ...run.style, ...(run.style.strokeMm === undefined ? {} : { strokeMm: run.style.strokeMm * vertical }), ...(run.style.fontSizePt === undefined ? {} : { fontSizePt: run.style.fontSizePt * vertical }), ...(run.style.kerningPt === undefined ? {} : { kerningPt: run.style.kerningPt * vertical }) } }));
   delete next.textBox; delete next.lineStyles; next.textAlign = firstAlignment === 'justify-left' ? 'center' : firstAlignment; next.rotationDeg = path.rotationDeg ?? 0;
   next.textPath = { guide, originalPathId: path.id, offsetMm: 0, baseline: 'baseline', reversed: false, showGuide: false };
   const attached = placeTextPathGuide(next, objectCenter(path, measure), measure);

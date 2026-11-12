@@ -1,3 +1,4 @@
+import {pitchprintTextStroke} from './pitchprint-text-stroke';
 import type { IText } from 'fabric';
 import { CharacterStyleSchema, type CharacterStyle } from './model';
 import { compressStyles } from './text-style';
@@ -18,7 +19,6 @@ function decoration(value: unknown, key: string): boolean {
   throw Error(`Decorazione «${key}» non riconosciuta.`);
 }
 function checkAppearance(style: Raw, alignment: unknown): void {
-  if (style.stroke != null && canonicalPaint(style.stroke) !== 'none' && pitchprintNumber(style.strokeWidth ?? 1, 'Contorno testo') !== 0) throw Error('Testo con contorno da convertire senza perderne l’aspetto.');
   if (style.deltaY !== undefined && pitchprintNumber(style.deltaY, 'Scostamento carattere') !== 0) throw Error('Scostamento verticale dei caratteri da convertire.');
   if (style.textBackgroundColor != null && canonicalPaint(style.textBackgroundColor) !== 'none') throw Error('Sfondo dei caratteri da convertire.');
   if (style.textAlign !== undefined && style.textAlign !== alignment) throw Error('Allineamento locale dei caratteri differente dal box: richiede revisione.');
@@ -30,6 +30,7 @@ function checkAppearance(style: Raw, alignment: unknown): void {
 export async function pitchprintTextStyles(item: Raw, axisY: number, monochrome: boolean, resolve: (request: PitchprintFontRequest) => Promise<FontAsset>) {
   if (typeof item.text !== 'string' || Array.from(item.text).length > EDITOR_LIMITS.textCharacters) throw Error('Testo PitchPrint oltre i limiti del laboratorio.');
   checkAppearance(item, item.textAlign);
+  pitchprintTextStroke(item, axisY, monochrome);
   let ignoredInsertionStyles = 0;
   const nativeStyles: IText['styles'] = {}, characters: CharacterStyle[] = Array.from(item.text, () => ({}));
   const raw = item.styles;
@@ -47,6 +48,7 @@ export async function pitchprintTextStyles(item: Raw, axisY: number, monochrome:
       for (const key of Object.keys(style)) if (!keys.has(key)) throw Error(`Proprietà del carattere «${key}» da convertire.`);
       if (Number(col) === lines[line]!.length) { ignoredInsertionStyles++; continue; }
       checkAppearance(style, item.textAlign ?? 'left');
+      pitchprintTextStroke({...item,...style},axisY,monochrome);
       entries.push({ line, column: Number(col), index: offsets[line]! + Number(col), style });
     }
   }
@@ -67,6 +69,11 @@ export async function pitchprintTextStyles(item: Raw, axisY: number, monochrome:
     if (style.fill !== undefined) {
       const fill = canonicalPaint(style.fill, monochrome); if (fill === 'none') throw Error('Carattere senza riempimento non convertibile.');
       canonical.fill = native.fill = fill;
+    }
+    if (style.stroke !== undefined || style.strokeWidth !== undefined) {
+      const outline=pitchprintTextStroke({...item,...style},axisY,monochrome);
+      if(style.stroke!==undefined){canonical.stroke=outline.stroke;canonical.strokeOpacity=outline.opacity;native.stroke=outline.native.stroke;}
+      if(style.strokeWidth!==undefined){canonical.strokeMm=outline.width*axisY;native.strokeWidth=outline.width;}
     }
     for (const key of ['underline', 'linethrough', 'overline'] as const) if (style[key] !== undefined) canonical[key] = native[key] = decoration(style[key], key);
     characters[index] = CharacterStyleSchema.parse(canonical); (nativeStyles[line] ??= {})[column] = native;

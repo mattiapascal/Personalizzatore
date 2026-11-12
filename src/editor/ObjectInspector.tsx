@@ -42,7 +42,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
   const [ratioLocked, setRatioLocked] = useState(false),[cropContents,setCropContents]=useState(false);
   useEffect(()=>setCropContents(false),[object.id,section]);
   useEffect(() => {
-    if ((object.type === 'text' || object.type === 'image') && section === 'stroke' || object.type !== 'text' && section === 'text' || (object.type === 'line' || (object.type === 'path' || object.type === 'bezier') && !object.closed) && section === 'fill' || object.type !== 'path' && object.type !== 'bezier' && section === 'nodes' || object.type === 'image' && section === 'fill' || object.type !== 'image' && (section === 'image' || section === 'crop')) setSection('geometry');
+    if (object.type === 'image' && section === 'stroke' || object.type !== 'text' && section === 'text' || (object.type === 'line' || (object.type === 'path' || object.type === 'bezier') && !object.closed) && section === 'fill' || object.type !== 'path' && object.type !== 'bezier' && section === 'nodes' || object.type === 'image' && section === 'fill' || object.type !== 'image' && (section === 'image' || section === 'crop')) setSection('geometry');
   }, [object, revision]);
   useEffect(() => { onCropFocus(section === 'crop' && object.type === 'image' ? object.id : null,cropContents); return () => onCropFocus(null); }, [object.id, object.type, section,cropContents]);
   const current = characterSelection?.object ?? draft.object;
@@ -88,7 +88,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
     { id: 'geometry', label: 'Geometria', icon: 'geometry' },
     ...(current.type === 'text' ? [{ id: 'text' as const, label: 'Testo', icon: 'text' as const }] : []),
     ...(current.type === 'image' || current.type === 'line' || (current.type === 'path' || current.type === 'bezier') && !current.closed ? [] : [{ id: 'fill' as const, label: 'Riempimento', icon: 'fill' as const }]),
-    ...(current.type !== 'text' && current.type !== 'image' ? [{ id: 'stroke' as const, label: 'Contorno', icon: 'stroke' as const }] : []),
+    ...(current.type !== 'image' ? [{ id: 'stroke' as const, label: 'Contorno', icon: 'stroke' as const }] : []),
     ...(current.type === 'path' || current.type === 'bezier' ? [{ id: 'nodes' as const, label: 'Nodi', icon: 'nodes' as const }] : []),
     ...(current.type === 'image' ? [{ id: 'image' as const, label: 'Immagine', icon: 'image' as const }, { id: 'crop' as const, label: 'Ritaglio', icon: 'crop' as const }] : []),
     { id: 'arrange', label: 'Disposizione', icon: 'centerX' },
@@ -97,10 +97,10 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
   const title = tabs.find(tab => tab.id === section)?.label ?? 'Geometria';
   const opacityControls = current.type !== 'image' && <OpacityControls
     fill={current.type === 'text' ? characterScope?.mixed.includes('fillOpacity') ? null : character?.fillOpacity ?? current.fillOpacity ?? 1 : current.fillOpacity ?? 1}
-    stroke={current.type === 'text' ? 1 : current.strokeOpacity ?? 1}
-    canFill={current.type !== 'line' && ((current.type !== 'path' && current.type !== 'bezier') || current.closed)} canStroke={current.type !== 'text'}
+    stroke={current.type === 'text' ? characterScope?.mixed.includes('strokeOpacity') ? null : character?.strokeOpacity ?? current.strokeOpacity ?? 1 : current.strokeOpacity ?? 1}
+    canFill={current.type !== 'line' && ((current.type !== 'path' && current.type !== 'bezier') || current.closed)} canStroke
     linked={opacityLinked} onLinkedChange={setOpacityLinked} revision={draft.revision} disabled={current.type === 'text' && noCharacters}
-    onChange={style => { if (current.type === 'text') characterPatch({ fillOpacity: style.fillOpacity }); else patch(style); }}/>;
+    onChange={style => { if (current.type === 'text') characterPatch(style); else patch(style); }}/>;
 
   return <form ref={form} className="object-inspector" aria-label="Proprietà oggetto" onSubmit={event => { event.preventDefault(); flush(); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) flush(); }} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); reset(); } }}>
     <div className="inspector-selection"><ObjectIdentity object={current}/></div>
@@ -201,10 +201,10 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
         {!current.textPath && <p className="caption">Interlinea sul box; allineamento su tutto il box oppure sulle righe interessate durante l’editing; spaziatura generale e crenature locali si sommano. Limite di capacità: {EDITOR_LIMITS.textLines} righe esplicite, {EDITOR_LIMITS.textCharacters} caratteri Unicode per box. Scrivi e modifica il contenuto direttamente sul canvas.</p>}
       </>}
       {section === 'fill' && current.type !== 'image' && <><fieldset className="inspector-arrangement" disabled={current.type === 'text' && noCharacters}><PaintPicker allowColor={allowColor} label="Riempimento" value={current.type === 'text' ? characterScope?.mixed.includes('fill') ? 'mixed' : character?.fill ?? current.fill : current.fill ?? 'none'} allowNone={current.type !== 'text'} onChange={fill => { if (current.type === 'text') { if (fill !== 'none') characterPatch({ fill }, true); } else patch({ fill }, true); }}/></fieldset><p className="caption">{allowColor ? 'Colori RGB del progetto.' : 'Palette del profilo TEST: nero e bianco.'}</p>{opacityControls}</>}
-      {section === 'stroke' && current.type !== 'text' && current.type !== 'image' && <>
-        <PaintPicker allowColor={allowColor} label="Contorno" value={current.stroke} allowNone={current.type !== 'line' && current.type !== 'path' && current.type !== 'bezier'} onChange={stroke => { if (current.type !== 'line' && current.type !== 'path' && current.type !== 'bezier' || stroke !== 'none') patch({ stroke }, true); }}/>
-        <NumberField {...fields} label="Spessore contorno (mm)" value={current.strokeMm} min={0.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={current.stroke === 'none'} onChange={strokeMm => patch({ strokeMm })}/>
-        <label>Tipo di contorno<select disabled={current.stroke === 'none'} value={current.strokeDash ?? 'solid'} onChange={event => patch({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' }, true)}><option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>
+      {section === 'stroke' && current.type !== 'image' && <>
+        <PaintPicker allowColor={allowColor} label="Contorno" value={current.type === 'text' ? characterScope?.mixed.includes('stroke') ? 'mixed' : character?.stroke ?? current.stroke ?? 'none' : current.stroke} allowNone={current.type !== 'line' && current.type !== 'path' && current.type !== 'bezier'} onChange={stroke => { if(current.type==='text')characterPatch({stroke,...(stroke!=='none'&&(character?.stroke??current.stroke??'none')==='none'&&(character?.strokeMm??current.strokeMm??.25)===0?{strokeMm:.25}:{})},true);else if (current.type !== 'line' && current.type !== 'path' && current.type !== 'bezier' || stroke !== 'none') patch({ stroke }, true); }}/>
+        <NumberField {...fields} label="Spessore contorno (mm)" value={current.type === 'text' ? character?.strokeMm ?? current.strokeMm ?? .25 : current.strokeMm} mixed={current.type === 'text' && characterScope?.mixed.includes('strokeMm')} min={current.type==='text'?0:.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={current.type === 'text' ? noCharacters || (character?.stroke ?? current.stroke ?? 'none') === 'none' : current.stroke === 'none'} onChange={strokeMm => {if(current.type==='text')characterPatch({strokeMm});else patch({strokeMm});}}/>
+        {current.type !== 'text' && <label>Tipo di contorno<select disabled={current.stroke === 'none'} value={current.strokeDash ?? 'solid'} onChange={event => patch({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' }, true)}><option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>}
         {opacityControls}
       </>}
       {section === 'image' && current.type === 'image' && <>

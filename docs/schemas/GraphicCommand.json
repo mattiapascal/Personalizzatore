@@ -327,6 +327,56 @@
                           "type": "string",
                           "pattern": "^#[0-9a-f]{6}$"
                         },
+                        "stroke": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^#[0-9a-f]{6}$"
+                            },
+                            {
+                              "type": "string",
+                              "const": "none"
+                            }
+                          ]
+                        },
+                        "strokeMm": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "strokeOpacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "strokeLineCap": {
+                          "type": "string",
+                          "enum": [
+                            "butt",
+                            "round",
+                            "square"
+                          ]
+                        },
+                        "strokeLineJoin": {
+                          "type": "string",
+                          "enum": [
+                            "miter",
+                            "round",
+                            "bevel"
+                          ]
+                        },
+                        "strokeMiterLimit": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 100
+                        },
+                        "paintFirst": {
+                          "type": "string",
+                          "enum": [
+                            "fill",
+                            "stroke"
+                          ]
+                        },
                         "fillOpacity": {
                           "type": "number",
                           "minimum": 0,
@@ -1192,6 +1242,28 @@
                               "style": {
                                 "type": "object",
                                 "properties": {
+                                  "stroke": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "pattern": "^#[0-9a-f]{6}$"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "const": "none"
+                                      }
+                                    ]
+                                  },
+                                  "strokeMm": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "strokeOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
                                   "fontSizePt": {
                                     "type": "number",
                                     "minimum": 0.1,
@@ -2913,6 +2985,56 @@
                         "type": "string",
                         "pattern": "^#[0-9a-f]{6}$"
                       },
+                      "stroke": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeLineCap": {
+                        "type": "string",
+                        "enum": [
+                          "butt",
+                          "round",
+                          "square"
+                        ]
+                      },
+                      "strokeLineJoin": {
+                        "type": "string",
+                        "enum": [
+                          "miter",
+                          "round",
+                          "bevel"
+                        ]
+                      },
+                      "strokeMiterLimit": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 100
+                      },
+                      "paintFirst": {
+                        "type": "string",
+                        "enum": [
+                          "fill",
+                          "stroke"
+                        ]
+                      },
                       "fillOpacity": {
                         "type": "number",
                         "minimum": 0,
@@ -3778,6 +3900,28 @@
                             "style": {
                               "type": "object",
                               "properties": {
+                                "stroke": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^#[0-9a-f]{6}$"
+                                    },
+                                    {
+                                      "type": "string",
+                                      "const": "none"
+                                    }
+                                  ]
+                                },
+                                "strokeMm": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                "strokeOpacity": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
                                 "fontSizePt": {
                                   "type": "number",
                                   "minimum": 0.1,
@@ -5955,6 +6099,56 @@
                         "type": "string",
                         "pattern": "^#[0-9a-f]{6}$"
                       },
+                      "stroke": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeLineCap": {
+                        "type": "string",
+                        "enum": [
+                          "butt",
+                          "round",
+                          "square"
+                        ]
+                      },
+                      "strokeLineJoin": {
+                        "type": "string",
+                        "enum": [
+                          "miter",
+                          "round",
+                          "bevel"
+                        ]
+                      },
+                      "strokeMiterLimit": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 100
+                      },
+                      "paintFirst": {
+                        "type": "string",
+                        "enum": [
+                          "fill",
+                          "stroke"
+                        ]
+                      },
                       "fillOpacity": {
                         "type": "number",
                         "minimum": 0,
@@ -6820,6 +7014,28 @@
                             "style": {
                               "type": "object",
                               "properties": {
+                                "stroke": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^#[0-9a-f]{6}$"
+                                    },
+                                    {
+                                      "type": "string",
+                                      "const": "none"
+                                    }
+                                  ]
+                                },
+                                "strokeMm": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                "strokeOpacity": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
                                 "fontSizePt": {
                                   "type": "number",
                                   "minimum": 0.1,
@@ -8980,6 +9196,56 @@
                       "type": "string",
                       "pattern": "^#[0-9a-f]{6}$"
                     },
+                    "stroke": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^#[0-9a-f]{6}$"
+                        },
+                        {
+                          "type": "string",
+                          "const": "none"
+                        }
+                      ]
+                    },
+                    "strokeMm": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "strokeOpacity": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "strokeLineCap": {
+                      "type": "string",
+                      "enum": [
+                        "butt",
+                        "round",
+                        "square"
+                      ]
+                    },
+                    "strokeLineJoin": {
+                      "type": "string",
+                      "enum": [
+                        "miter",
+                        "round",
+                        "bevel"
+                      ]
+                    },
+                    "strokeMiterLimit": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 100
+                    },
+                    "paintFirst": {
+                      "type": "string",
+                      "enum": [
+                        "fill",
+                        "stroke"
+                      ]
+                    },
                     "fillOpacity": {
                       "type": "number",
                       "minimum": 0,
@@ -9845,6 +10111,28 @@
                           "style": {
                             "type": "object",
                             "properties": {
+                              "stroke": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^#[0-9a-f]{6}$"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "const": "none"
+                                  }
+                                ]
+                              },
+                              "strokeMm": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              "strokeOpacity": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
                               "fontSizePt": {
                                 "type": "number",
                                 "minimum": 0.1,
@@ -11630,6 +11918,56 @@
                         "type": "string",
                         "pattern": "^#[0-9a-f]{6}$"
                       },
+                      "stroke": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeLineCap": {
+                        "type": "string",
+                        "enum": [
+                          "butt",
+                          "round",
+                          "square"
+                        ]
+                      },
+                      "strokeLineJoin": {
+                        "type": "string",
+                        "enum": [
+                          "miter",
+                          "round",
+                          "bevel"
+                        ]
+                      },
+                      "strokeMiterLimit": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 100
+                      },
+                      "paintFirst": {
+                        "type": "string",
+                        "enum": [
+                          "fill",
+                          "stroke"
+                        ]
+                      },
                       "fillOpacity": {
                         "type": "number",
                         "minimum": 0,
@@ -12495,6 +12833,28 @@
                             "style": {
                               "type": "object",
                               "properties": {
+                                "stroke": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^#[0-9a-f]{6}$"
+                                    },
+                                    {
+                                      "type": "string",
+                                      "const": "none"
+                                    }
+                                  ]
+                                },
+                                "strokeMm": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                "strokeOpacity": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
                                 "fontSizePt": {
                                   "type": "number",
                                   "minimum": 0.1,
@@ -14342,6 +14702,56 @@
                       "type": "string",
                       "pattern": "^#[0-9a-f]{6}$"
                     },
+                    "stroke": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^#[0-9a-f]{6}$"
+                        },
+                        {
+                          "type": "string",
+                          "const": "none"
+                        }
+                      ]
+                    },
+                    "strokeMm": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "strokeOpacity": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "strokeLineCap": {
+                      "type": "string",
+                      "enum": [
+                        "butt",
+                        "round",
+                        "square"
+                      ]
+                    },
+                    "strokeLineJoin": {
+                      "type": "string",
+                      "enum": [
+                        "miter",
+                        "round",
+                        "bevel"
+                      ]
+                    },
+                    "strokeMiterLimit": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 100
+                    },
+                    "paintFirst": {
+                      "type": "string",
+                      "enum": [
+                        "fill",
+                        "stroke"
+                      ]
+                    },
                     "fillOpacity": {
                       "type": "number",
                       "minimum": 0,
@@ -15207,6 +15617,28 @@
                           "style": {
                             "type": "object",
                             "properties": {
+                              "stroke": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^#[0-9a-f]{6}$"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "const": "none"
+                                  }
+                                ]
+                              },
+                              "strokeMm": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              "strokeOpacity": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
                               "fontSizePt": {
                                 "type": "number",
                                 "minimum": 0.1,
@@ -18327,7 +18759,7 @@
                 },
                 "strokeMm": {
                   "type": "number",
-                  "exclusiveMinimum": 0,
+                  "minimum": 0,
                   "maximum": 100
                 },
                 "strokeDash": {

@@ -1,3 +1,4 @@
+import {textStrokeEnvelope} from './text-stroke';
 import { util, type TextboxProps, type TOptions, type TPointerEvent } from 'fabric';
 import { EditorTextBox } from './text-box';
 import { createTextGuide, guideLength, sampleTextGuide } from './text-path-geometry';
@@ -18,6 +19,7 @@ export class EditorPathText extends EditorTextBox {
     super(text, { ...options, scaleX: 1, scaleY: 1, path: createTextGuide(binding.guide), pathAlign: 'baseline', pathStartOffset: binding.offsetMm * 8 });
     this.binding = binding; this.glyphScale = glyphScale; this.initDimensions(); this.setCoords();
   }
+  override strokeBoundsWidth(): number { return this.binding ? 0 : super.strokeBoundsWidth(); }
   get pathLength(): number { return this.path ? guideLength(this.path) : 0; }
   private sample(distance: number) { return sampleTextGuide(this.path!, distance, !!this.binding && guideClosed(this.binding.guide), this.binding?.reversed ?? false); }
   private baselineShift(style: ReturnType<EditorPathText['getCompleteStyleDeclaration']>, character: string) {
@@ -52,8 +54,8 @@ export class EditorPathText extends EditorTextBox {
     const include = (x: number, y: number) => { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); };
     this._textLines[0]!.forEach((character, i) => {
       if (!character.trim()) return; const box = this.__charBounds[0]![i]!, style = this.getCompleteStyleDeclaration(0, i), context = measureContext(); context.font = this._getFontDeclaration(style); const metric = this.canMeasureCharacter(character,style) ? context.measureText(character) : {actualBoundingBoxLeft:0,actualBoundingBoxRight:0,actualBoundingBoxAscent:0,actualBoundingBoxDescent:0}, shift = this.baselineShift(style, character), angle = box.angle ?? 0;
-      const left = -box.width / 2 - metric.actualBoundingBoxLeft * this.glyphScale, right = -box.width / 2 + metric.actualBoundingBoxRight * this.glyphScale;
-      let top = shift - metric.actualBoundingBoxAscent, bottom = shift + metric.actualBoundingBoxDescent;
+      const halfStroke = textStrokeEnvelope(style.stroke, style.strokeWidth, this.strokeLineJoin, this.strokeMiterLimit) / 2, left = -box.width / 2 - (metric.actualBoundingBoxLeft + halfStroke) * this.glyphScale, right = -box.width / 2 + (metric.actualBoundingBoxRight + halfStroke) * this.glyphScale;
+      let top = shift - metric.actualBoundingBoxAscent - halfStroke, bottom = shift + metric.actualBoundingBoxDescent + halfStroke;
       for (const decoration of ['underline', 'overline', 'linethrough'] as const) if (style[decoration]) { const y = shift + this.offsets[decoration] * style.fontSize; top = Math.min(top, y); bottom = Math.max(bottom, y + style.fontSize / 12); }
       for (const [x, y] of [[left, top], [right, top], [right, bottom], [left, bottom]]) include(box.renderLeft! + x! * Math.cos(angle) - y! * Math.sin(angle), box.renderTop! + x! * Math.sin(angle) + y! * Math.cos(angle));
     });
@@ -98,7 +100,7 @@ export class EditorPathText extends EditorTextBox {
     if (this.binding.showGuide && this.path) { const visible = this.path.visible; this.path.visible = true; try { content += `<g transform="translate(${-this.pathCenterOffset.x} ${-this.pathCenterOffset.y})">${this.path.toSVG()}</g>`; } finally { this.path.visible = visible; } }
     this._textLines[0]!.forEach((character, i) => {
       const box = this.__charBounds[0]![i]!, style = this.getCompleteStyleDeclaration(0, i), shift = this.baselineShift(style, character), decoration = [style.underline && 'underline', style.linethrough && 'line-through', style.overline && 'overline'].filter(Boolean).join(' ');
-      content += `<g transform="translate(${rounded(box.renderLeft!)} ${rounded(box.renderTop!)}) rotate(${rounded(box.angle! * 180 / Math.PI)}) scale(${rounded(this.glyphScale)} 1)"><text xml:space="preserve" x="${rounded(-box.width / 2 / this.glyphScale)}" y="${rounded(shift)}" font-family="${xml(style.fontFamily)}" font-size="${rounded(style.fontSize)}" font-weight="${style.fontWeight}" font-style="${style.fontStyle}" fill="${xml(String(style.fill))}"${decoration ? ` text-decoration="${decoration}"` : ''}><tspan>${xml(character)}</tspan></text></g>`;
+      content += `<g transform="translate(${rounded(box.renderLeft!)} ${rounded(box.renderTop!)}) rotate(${rounded(box.angle! * 180 / Math.PI)}) scale(${rounded(this.glyphScale)} 1)"><text xml:space="preserve" x="${rounded(-box.width / 2 / this.glyphScale)}" y="${rounded(shift)}" font-family="${xml(style.fontFamily)}" font-size="${rounded(style.fontSize)}" font-weight="${style.fontWeight}" font-style="${style.fontStyle}" fill="${xml(String(style.fill))}" stroke="${xml(String(style.stroke ?? 'none'))}" stroke-width="${rounded(style.strokeWidth)}" stroke-linecap="${this.strokeLineCap}" stroke-linejoin="${this.strokeLineJoin}" stroke-miterlimit="${this.strokeMiterLimit}" paint-order="${this.paintFirst === 'stroke' ? 'stroke fill' : 'fill stroke'}"${decoration ? ` text-decoration="${decoration}"` : ''}><tspan>${xml(character)}</tspan></text></g>`;
     }); return ['<g ', 'COMMON_PARTS', '>', content, '</g>'];
   }
   override toSVG(...args: Parameters<EditorTextBox['toSVG']>): string { return this.binding ? this._createBaseSVGMarkup(this._toSVG(), { reviver: args[0], noStyle: true, withShadow: true }) : super.toSVG(...args); }

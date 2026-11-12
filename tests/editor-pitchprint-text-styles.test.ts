@@ -17,7 +17,7 @@ it('stili Unicode per righe: eredita font, risolve varianti esatte, converte mm/
  const mono=await pitchprintTextStyles({...base,styles:{0:{0:{fill:'#f00'}}}},.2,true,resolve);expect(mono.characterStyles[0]!.style.fill).toBe('#000000');
 });
 it('indici, effetti sconosciuti e sequenze ambigue bloccano prima dei font degli stili; variante mancante non sostituita',async()=>{
- for(const styles of [{1:{9:{fill:'black'}}},{0:{0:{opacity:.5}}},{0:{0:{deltaY:1}}},{0:{0:{stroke:'black',strokeWidth:1}}},{0:{0:{textBackgroundColor:'red'}}},{0:{0:{textAlign:'left'}}},{0:{0:{underline:'yes'}}},{0:{0:{fontSize:.01}}},[]]){
+ for(const styles of [{1:{9:{fill:'black'}}},{0:{0:{opacity:.5}}},{0:{0:{deltaY:1}}},{0:{0:{stroke:'black',strokeWidth:-1}}},{0:{0:{textBackgroundColor:'red'}}},{0:{0:{textAlign:'left'}}},{0:{0:{underline:'yes'}}},{0:{0:{fontSize:.01}}},[]]){
   await expect(pitchprintTextStyles({...base,styles},.2,false,resolve)).rejects.toThrow();
  }
  await expect(pitchprintTextStyles({...base,text:'e\u0301',styles:{0:{0:{fill:'black'}}}},.2,false,resolve)).rejects.toThrow('Unicode');

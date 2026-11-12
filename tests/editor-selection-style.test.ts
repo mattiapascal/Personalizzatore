@@ -20,9 +20,9 @@ describe('stile comune di selezioni e gruppi', () => {
     store.document.objects.forEach((object, index) => { const center = objectCenter(object, measure); expect(center.xMm).toBeCloseTo(centers[index]!.xMm, 8); expect(center.yMm).toBeCloseTo(centers[index]!.yMm, 8); expect(object).toMatchObject({ stroke: '#ffffff', strokeMm: 0.3375, strokeDash: 'dashed' }); });
     store.undo(); expect(store.document.objects).toEqual([rect('a'), rect('b', 30)]); store.redo(); expect(store.document.objects).toEqual(saved.objects);
   });
-  it('riempimenti su aperti, contorni su testo e stile su immagini respinti atomicamente', () => {
+  it('riempimenti su aperti, tratteggi su testo e stile su immagini respinti atomicamente', () => {
     const line: SceneObject = { id: 'line', type: 'line', xMm: 20, yMm: 5, lengthMm: 8, strokeMm: 0.25, stroke: '#000000' }, image: SceneObject = { id: 'image', type: 'image', xMm: 20, yMm: 5, widthMm: 4, heightMm: 4, source: rasterSourceFromBytes('asset', testPng()), raster: { ...DEFAULT_RASTER } };
-    for (const [object, style] of [[line, { fill: '#ffffff' }], [line, { stroke: 'none' }], [text, { strokeMm: 0.5 }], [text, { fill: 'none' }], [image, { fill: '#000000' }]] as const) {
+    for (const [object, style] of [[line, { fill: '#ffffff' }], [line, { stroke: 'none' }], [text, { strokeDash: 'dashed' }], [text, { fill: 'none' }], [image, { fill: '#000000' }]] as const) {
       const store = storeFor([rect('rect'), object]), before = cloneGraphicDocument(store.document); expect(() => store.dispatch(styleCommand(store, style), 'ai-simulation')).toThrow(); expect(store.document).toEqual(before); expect(store.events).toEqual([]);
     }
   });

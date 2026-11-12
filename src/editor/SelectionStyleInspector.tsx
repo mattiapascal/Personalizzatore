@@ -8,7 +8,7 @@ import { selectionStyle } from './text-style';
 export function SelectionStyleInspector({ document, ids, onStyle }: { document: GraphicDocument; ids: string[]; onStyle: (style: SelectionStyle, revision: number) => boolean }) {
   const objects = document.objects.filter(object => ids.includes(object.id));
   const hasImage = objects.some(object => object.type === 'image'), hasText = objects.some(object => object.type === 'text');
-  const canFill = !hasImage && objects.every(object => object.type !== 'line' && (object.type !== 'path' && object.type !== 'bezier' || object.closed)), canStroke = !hasImage && !hasText;
+  const canFill = !hasImage && objects.every(object => object.type !== 'line' && (object.type !== 'path' && object.type !== 'bezier' || object.closed)), canStroke = !hasImage;
   const common = <T,>(values: T[]): T | null => values.every(value => value === values[0]) ? values[0]! : null;
   const fill = common(objects.map(object => {
     if (object.type === 'image') return 'mixed';
@@ -16,7 +16,8 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
     const effective = selectionStyle(object, 0, Array.from(object.text).length);
     return effective.mixed.includes('fill') ? 'mixed' : effective.style.fill ?? object.fill;
   }));
-  const strokes = objects.flatMap(object => object.type === 'text' || object.type === 'image' ? [] : [object]), stroke = common(strokes.map(object => object.stroke)), width = common(strokes.map(object => object.strokeMm)), dash = common(strokes.map(object => object.strokeDash ?? 'solid'));
+  const strokes = objects.filter(object => object.type !== 'image'), scope = (object: typeof strokes[number]) => object.type === 'text' ? selectionStyle(object,0,Array.from(object.text).length) : null;
+  const stroke = common(strokes.map(object => { const value=scope(object); return value?.mixed.includes('stroke') ? 'mixed' : value?.style.stroke ?? object.stroke ?? 'none'; })), width = common(strokes.map(object => { const value=scope(object); return value?.mixed.includes('strokeMm') ? null : value?.style.strokeMm ?? object.strokeMm ?? .25; })), dash = common(strokes.map(object => 'strokeDash' in object ? object.strokeDash ?? 'solid' : 'solid'));
   const [linked, setLinked] = useState(true);
   useEffect(() => setLinked(true), [ids.join(',')]);
   const [status, setStatus] = useState(''), timer = useRef<ReturnType<typeof setTimeout> | null>(null), pending = useRef<{ style: SelectionStyle; revision: number } | null>(null), ownRevision = useRef(-1);
@@ -41,8 +42,8 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
     {canStroke && <>
       <h4>Contorno</h4><PaintPicker allowColor={document.colorMode==='color'} label="Contorno selezione" value={stroke ?? 'mixed'} allowNone={objects.every(object => object.type !== 'line' && object.type !== 'path' && object.type !== 'bezier')} onChange={stroke => change({ stroke })}/>
       {stroke === null && <p className="caption">Contorni misti</p>}
-      <NumberField label="Spessore contorno selezione (mm)" value={pending.current?.style.strokeMm ?? width ?? strokes[0]!.strokeMm} mixed={width === null && !pending.current?.style.strokeMm} revision={document.revision} min={0.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={stroke === 'none'} onChange={strokeMm => change({ strokeMm }, false)}/>
-      <label>Tipo contorno selezione<select aria-label="Tipo contorno selezione" value={dash ?? ''} disabled={stroke === 'none'} onChange={event => change({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' })}>{dash === null && <option value="" disabled>Misto</option>}<option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>
+      <NumberField label="Spessore contorno selezione (mm)" value={pending.current?.style.strokeMm ?? width ?? strokes[0]?.strokeMm ?? .25} mixed={width === null && !pending.current?.style.strokeMm} revision={document.revision} min={objects.every(o=>o.type==='text')?0:.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={stroke === 'none'} onChange={strokeMm => change({ strokeMm }, false)}/>
+      {!hasText && <label>Tipo contorno selezione<select aria-label="Tipo contorno selezione" value={dash ?? ''} disabled={stroke === 'none'} onChange={event => change({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' })}>{dash === null && <option value="" disabled>Misto</option>}<option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>}
     </>}
     <OpacityControls canFill={canFill} canStroke={canStroke} linked={linked} onLinkedChange={setLinked} revision={document.revision} selection
       fill={common(objects.map(object => {
@@ -51,7 +52,7 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
         const scope = selectionStyle(object,0,Array.from(object.text).length);
         return scope.mixed.includes('fillOpacity') ? null : scope.style.fillOpacity ?? object.fillOpacity ?? 1;
       }))}
-      stroke={common(strokes.map(object => object.strokeOpacity ?? 1))} onChange={style => change(style)}/>
+      stroke={common(strokes.map(object => {const value=scope(object);return value?.mixed.includes('strokeOpacity')?null:value?.style.strokeOpacity??object.strokeOpacity??1;}))} onChange={style => change(style)}/>
     <p className="caption">Stesso stile per tutti gli elementi selezionati. Sui testi il colore riguarda tutti i caratteri; i centri delle forme restano fermi.</p>
     {status && <p className="caption" role="status">{status}</p>}
   </div>;

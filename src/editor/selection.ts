@@ -58,10 +58,11 @@ export function transformSelection(objects: readonly SceneObject[], args: Omit<S
     if (scale !== 1) {
       if (object.type === 'text') {
         object.fontSizePt = scalePoints(object.fontSizePt, scale);
+        if (object.strokeMm !== undefined) object.strokeMm *= scale;
         if (object.letterSpacingPt !== undefined) object.letterSpacingPt = scalePoints(object.letterSpacingPt, scale);
         if (object.textPath) object.textPath = scaledTextPath(object.textPath, scale);
         if (object.textBox) { object.textBox.widthMm *= scale; object.textBox.heightMm *= scale; }
-        if (object.characterStyles) for (const run of object.characterStyles) { if (run.style.fontSizePt !== undefined) run.style.fontSizePt = scalePoints(run.style.fontSizePt, scale); if (run.style.kerningPt !== undefined) run.style.kerningPt = scalePoints(run.style.kerningPt, scale); }
+        if (object.characterStyles) for (const run of object.characterStyles) { if (run.style.strokeMm !== undefined) run.style.strokeMm *= scale; if (run.style.fontSizePt !== undefined) run.style.fontSizePt = scalePoints(run.style.fontSizePt, scale); if (run.style.kerningPt !== undefined) run.style.kerningPt = scalePoints(run.style.kerningPt, scale); }
       } else if (object.type === 'image') { object.widthMm *= scale; object.heightMm *= scale; } else {
         object.strokeMm *= scale;
         if (object.type === 'circle') object.radiusMm *= scale;

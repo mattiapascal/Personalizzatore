@@ -1,8 +1,9 @@
+import {textStrokeEnvelope} from './text-stroke';
 import { canMeasureFontText } from './font-measurement';
 import { EDITOR_LIMITS } from './limits';
 import { justifySpacing, type JustificationSettings } from './justification';
 import type { VisualTextLine } from './text-lines';
-import { Textbox, Rect, Control, type TextboxProps, type TOptions, type TPointerEventInfo } from 'fabric';
+import { Textbox, Rect, Point, Control, type TextboxProps, type TOptions, type TPointerEventInfo } from 'fabric';
 
 export interface TextFrame { width: number; height: number; autoWidth: boolean; autoHeight: true; }
 
@@ -28,6 +29,18 @@ export class EditorTextBox extends Textbox {
     if (args[2] && !this.canMeasureCharacter(args[2], args[3] as ReturnType<EditorTextBox['getCompleteStyleDeclaration']>)) { args[2] = undefined; args[3] = {}; }
     return super._measureChar(...args);
   }
+  /** Envelope affects selection/containment, never wrapping or character advances. */
+  strokeBoundsWidth(): number {
+    let width = 0;
+    for (const [row, line] of (this._textLines ?? []).entries()) for (const [column, character] of line.entries()) {
+      if (!character.trim()) continue;
+      const style = this.getCompleteStyleDeclaration(row, column);
+      width = Math.max(width, textStrokeEnvelope(style.stroke, style.strokeWidth, this.strokeLineJoin, this.strokeMiterLimit));
+    }
+    return width;
+  }
+  override _getNonTransformedDimensions(): Point { const extra = this.strokeBoundsWidth(); return new Point(this.width + extra, this.height + extra); }
+  override _getTransformedDimensions(options: Parameters<Textbox['_getTransformedDimensions']>[0] = {}): Point { return super._getTransformedDimensions({ ...options, strokeWidth: this.strokeBoundsWidth() }); }
   frame?: TextFrame;
   justificationSettings?: JustificationSettings;
   justificationResults: ReturnType<typeof justifySpacing>[] = [];
@@ -168,7 +181,7 @@ export class EditorTextBox extends Textbox {
     this.contentWidth = this.calcTextWidth(); this.contentHeight = this.height;
     if (!this.frame || this.frame.autoWidth) this.width = Math.max(0.001, this.contentWidth);
     this.clipPath = this.frame && !this.frame.autoWidth
-      ? new Rect({ width: this.width, height: this.height, left: 0, top: 0, originX: 'center', originY: 'center', strokeWidth: 0 }) : undefined;
+      ? new Rect({ width: this.width + this.strokeBoundsWidth(), height: this.height + this.strokeBoundsWidth(), left: 0, top: 0, originX: 'center', originY: 'center', strokeWidth: 0 }) : undefined;
   }
   get overflow(): boolean { return this.contentWidth > this.width + 1e-6 || this.contentHeight > this.height + 1e-6; }
   resizeFrame(width: number, height: number, autoWidth = false): void {
@@ -177,10 +190,11 @@ export class EditorTextBox extends Textbox {
 }
 
 export function textBoxControls(object: EditorTextBox): void {
-  const baseScale = object.scaleX, baseScaleY = object.scaleY, baseWidth = object.width * baseScale, baseHeight = object.height * baseScaleY, automatic = object.frame?.autoWidth ?? true;
-  const baseFont = object.fontSize, baseStyles = structuredClone(object.styles), fonts = [baseFont, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.fontSize ?? baseFont))];
+  const baseScale = object.scaleX, baseScaleY = object.scaleY, baseWidth = object.getScaledWidth(), baseHeight = object.getScaledHeight(), automatic = object.frame?.autoWidth ?? true;
+  const baseStroke = object.strokeWidth, baseFont = object.fontSize, baseStyles = structuredClone(object.styles), fonts = [baseFont, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.fontSize ?? baseFont))];
   const spacings = [object.charSpacing / 1000 * baseFont / (25.4 / 72 * 8), ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => (style as { editorKerningPt?: number }).editorKerningPt ?? 0))], spacingScale = Math.min(Infinity, ...spacings.filter(value => value !== 0).map(value => value > 0 ? EDITOR_LIMITS.maxTrackingPt / value : EDITOR_LIMITS.minTrackingPt / value));
-  const minimumFontScale = EDITOR_LIMITS.minFontSizePt * 25.4 / 72 * 8 / Math.min(...fonts), maximumFontScale = Math.min(EDITOR_LIMITS.maxFontSizePt * 25.4 / 72 * 8 / Math.max(...fonts), spacingScale);
+  const strokes = [baseStroke, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.strokeWidth ?? 0))], strokeScale = Math.min(Infinity, ...strokes.filter(value => value > 0).map(value => EDITOR_LIMITS.maxStrokeMm * 8 / value));
+  const minimumFontScale = EDITOR_LIMITS.minFontSizePt * 25.4 / 72 * 8 / Math.min(...fonts), maximumFontScale = Math.min(EDITOR_LIMITS.maxFontSizePt * 25.4 / 72 * 8 / Math.max(...fonts), spacingScale, strokeScale);
   const handles = { tl: [-0.5, -0.5], tr: [0.5, -0.5], bl: [-0.5, 0.5], br: [0.5, 0.5], ml: [-0.5, 0], mr: [0.5, 0], mt: [0, -0.5], mb: [0, 0.5] } as const;
   for (const [name, [x, y]] of Object.entries(handles)) {
     object.controls[name] = new Control({ x, y, actionName: 'resizeTextBox', cursorStyle: y ? x * y > 0 ? 'nwse-resize' : 'nesw-resize' : 'ew-resize', cursorStyleHandler: (_event, control, target) => {
@@ -190,25 +204,26 @@ export function textBoxControls(object: EditorTextBox): void {
       return `${['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'][((Math.round(angle / 45) % 8) + 8) % 8]}-resize`;
     }, actionHandler: (_event, transform, pointerX, pointerY) => {
       const target = transform.target as EditorTextBox, angle = -target.angle * Math.PI / 180;
-      // Ogni gesto parte dalla geometria iniziale, non dal centro che si muove.
+      // Start from the actual pointer-down point, including the grab offset.
       // Il punto opposto resta fermo anche con dilatazione su entrambi gli assi.
-      const dx = pointerX - transform.original.left, dy = pointerY - transform.original.top;
+      const dx = pointerX - transform.ex, dy = pointerY - transform.ey;
       const localX = dx * Math.cos(angle) - dy * Math.sin(angle), localY = dx * Math.sin(angle) + dy * Math.cos(angle);
-      const width = x ? Math.max(0.08, Math.sign(x) * localX + baseWidth / 2) : baseWidth;
+      const width = x ? Math.max(0.08, Math.sign(x) * localX + baseWidth) : baseWidth;
       if (automatic) {
-        const height = y ? Math.max(0.08, Math.sign(y) * localY + baseHeight / 2) : baseHeight;
+        const height = y ? Math.max(0.08, Math.sign(y) * localY + baseHeight) : baseHeight;
         const fontScale = Math.max(minimumFontScale, Math.min(maximumFontScale, height / (baseHeight / baseScaleY)));
         const styles = structuredClone(baseStyles);
         for (const line of Object.values(styles)) for (const raw of Object.values(line)) {
           const style = raw as typeof raw & { editorKerningPt?: number };
           if (style.fontSize !== undefined) style.fontSize *= fontScale;
+          if (style.strokeWidth !== undefined) style.strokeWidth *= fontScale;
           if (style.editorKerningPt !== undefined) style.editorKerningPt *= fontScale;
         }
-        target.set({ fontSize: baseFont * fontScale, styles, scaleY: 1 }); target.initDimensions();
-        target.set('scaleX', Math.max(.1, Math.min(10, width / target.width)));
-      } else target.resizeFrame(width / baseScale, baseHeight / baseScaleY, false);
-      const offsetX = x ? Math.sign(x) * (target.width * target.scaleX - baseWidth) / 2 : 0;
-      const offsetY = y ? Math.sign(y) * (target.height * target.scaleY - baseHeight) / 2 : 0;
+        target.set({ fontSize: baseFont * fontScale, strokeWidth: baseStroke * fontScale, styles, scaleY: 1 }); target.initDimensions();
+        target.set('scaleX', Math.max(.1, Math.min(10, width / (target.width + target.strokeBoundsWidth()))));
+      } else target.resizeFrame(Math.max(.001, width / baseScale - target.strokeBoundsWidth()), object.height, false);
+      const offsetX = x ? Math.sign(x) * (target.getScaledWidth() - baseWidth) / 2 : 0;
+      const offsetY = y ? Math.sign(y) * (target.getScaledHeight() - baseHeight) / 2 : 0;
       target.set({ left: transform.original.left + offsetX * Math.cos(-angle) - offsetY * Math.sin(-angle), top: transform.original.top + offsetX * Math.sin(-angle) + offsetY * Math.cos(-angle) });
       target.setCoords(); return true;
     } });

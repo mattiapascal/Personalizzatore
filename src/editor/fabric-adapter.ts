@@ -1,3 +1,4 @@
+import {textStrokeFromFabric} from './paint-opacity';
 import { paintWithOpacity, textPaintFromFabric } from './paint-opacity';
 import {preciseIntermediateSvg} from './svg-precision';
 import { assertTextGeometry, textGeometryVerified } from './font-measurement';
@@ -81,15 +82,15 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
     assertFontAvailable(o.fontFamily);
     for (const run of o.characterStyles ?? []) if (run.style.fontFamily) assertFontAvailable(run.style.fontFamily);
     assertTextGeometry(o);
-    const options = { ...common, scaleX: o.textScaleX ?? 1, scaleY: o.textScaleY ?? 1, fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: renderFontFamily(o.fontFamily), fill: paintWithOpacity(o.fill, o.fillOpacity), strokeWidth: 0,
+    const options = { ...common, scaleX: o.textScaleX ?? 1, scaleY: o.textScaleY ?? 1, fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: renderFontFamily(o.fontFamily), fill: paintWithOpacity(o.fill, o.fillOpacity), stroke: o.stroke && o.stroke !== 'none' ? paintWithOpacity(o.stroke, o.strokeOpacity) : undefined, strokeWidth: o.stroke && o.stroke !== 'none' ? (o.strokeMm ?? .25) * PX_PER_MM : 0, strokeLineCap: o.strokeLineCap ?? 'butt', strokeLineJoin: o.strokeLineJoin ?? 'miter', strokeMiterLimit: o.strokeMiterLimit ?? 4, paintFirst: o.paintFirst ?? 'fill',
       fontWeight: o.fontWeight ?? 'normal', fontStyle: o.fontStyle ?? 'normal', underline: o.underline ?? false, linethrough: o.linethrough ?? false, overline: o.overline ?? false,
       textAlign: o.textAlign ?? 'left', lineHeight: o.lineHeight ?? 1, charSpacing: (o.letterSpacingPt ?? 0) / o.fontSizePt * 1000 };
     const styles: IText['styles'] = {}, characters = characterStyles(o), alignments = lineAlignments(o);
     let line = 0, column = 0;
     Array.from(o.text).forEach((character, index) => {
-      const { fontSizePt, kerningPt, fillOpacity, ...style } = characters[index]!; if (style.fill !== undefined || fillOpacity !== undefined) style.fill = paintWithOpacity(style.fill ?? o.fill, fillOpacity ?? o.fillOpacity); if (style.fontFamily) style.fontFamily = renderFontFamily(style.fontFamily);
+      const { fontSizePt, kerningPt, fillOpacity, strokeMm, strokeOpacity, ...style } = characters[index]!; if (style.stroke !== undefined || strokeOpacity !== undefined) style.stroke = paintWithOpacity(style.stroke ?? o.stroke, strokeOpacity ?? o.strokeOpacity); if (style.fill !== undefined || fillOpacity !== undefined) style.fill = paintWithOpacity(style.fill ?? o.fill, fillOpacity ?? o.fillOpacity); if (style.fontFamily) style.fontFamily = renderFontFamily(style.fontFamily);
       const editorLineAlign = alignments[index];
-      if (Object.keys(style).length || fontSizePt !== undefined || kerningPt !== undefined || editorLineAlign !== undefined) (styles[line] ??= {})[column] = { ...style, ...(editorLineAlign === undefined ? {} : { editorLineAlign }), ...(kerningPt === undefined ? {} : { editorKerningPt: kerningPt }), ...(fontSizePt === undefined ? {} : { fontSize: fontSizePt * PT_TO_MM * PX_PER_MM }) };
+      if (Object.keys(style).length || strokeMm !== undefined || fontSizePt !== undefined || kerningPt !== undefined || editorLineAlign !== undefined) (styles[line] ??= {})[column] = { ...style, ...(editorLineAlign === undefined ? {} : { editorLineAlign }), ...(kerningPt === undefined ? {} : { editorKerningPt: kerningPt }), ...(strokeMm === undefined ? {} : { strokeWidth: strokeMm * PX_PER_MM }), ...(fontSizePt === undefined ? {} : { fontSize: fontSizePt * PT_TO_MM * PX_PER_MM }) };
       if (character === '\n') { line++; column = 0; } else column++;
     });
     if (alignments[Array.from(o.text).length]) (styles[line] ??= {})[column] = { ...styles[line]?.[column], editorLineAlign: alignments[Array.from(o.text).length] } as IText['styles'][number][number];
@@ -144,11 +145,11 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
 export const measureFabric: Measure = object => {
   if (object.type === 'image') { assertRasterParameters(object.source, object.raster); return { widthMm: object.widthMm, heightMm: object.heightMm }; }
   const f = renderObject(object);
-  return { widthMm: f.getScaledWidth() / PX_PER_MM, heightMm: f.getScaledHeight() / PX_PER_MM, ...(f instanceof EditorPathText ? { pathCenterOffsetMm: { x: f.pathCenterOffset.x / PX_PER_MM, y: f.pathCenterOffset.y / PX_PER_MM }, pathLengthMm: f.pathLength / PX_PER_MM, textAdvanceMm: f.textAdvance / PX_PER_MM } : {}) };
+  return { widthMm: f.getScaledWidth() / PX_PER_MM, heightMm: f.getScaledHeight() / PX_PER_MM, ...(f instanceof EditorTextBox && f.strokeBoundsWidth() > 0 ? { textLayoutWidthMm: f.width * f.scaleX / PX_PER_MM, textLayoutHeightMm: f.height * f.scaleY / PX_PER_MM } : {}), ...(f instanceof EditorPathText ? { pathCenterOffsetMm: { x: f.pathCenterOffset.x / PX_PER_MM, y: f.pathCenterOffset.y / PX_PER_MM }, pathLengthMm: f.pathLength / PX_PER_MM, textAdvanceMm: f.textAdvance / PX_PER_MM } : {}) };
 };
 export function measureTextFrame(object: TextObject) {
   const box = renderObject(object) as EditorTextBox;
-  return { widthMm: box.getScaledWidth() / PX_PER_MM, heightMm: box.getScaledHeight() / PX_PER_MM, overflow: box.overflow, justificationLimited: box.justificationResults.some(line => line.underfull || line.overfull), lines: box.textLines.length };
+  return { widthMm: box.width * box.scaleX / PX_PER_MM, heightMm: box.height * box.scaleY / PX_PER_MM, overflow: box.overflow, justificationLimited: box.justificationResults.some(line => line.underfull || line.overfull), lines: box.textLines.length };
 }
 /** The canonical project stays untouched. Only its productive objects and used
  * files are prepared, after the nominal glyph check and before Fabric renders. */
@@ -388,7 +389,7 @@ export class FabricAdapter {
         const strokeMm = source.type !== 'text' && source.type !== 'image' && source.stroke !== 'none' ? source.strokeMm : 0;
         const size: TransformArguments['size'] = source.type === 'text'
           ? source.textPath ? { type: 'text', textScaleX: source.textScaleX, textScaleY: 1, fontSizePt: object instanceof IText ? fontPoints(object.fontSize * object.scaleX) : source.fontSizePt * object.scaleX, textPath: scaledTextPath(source.textPath, object.scaleX) } : { type: 'text', textScaleX: object.scaleX, textScaleY: object.scaleY, fontSizePt: object instanceof EditorTextBox ? fontPoints(object.fontSize) : source.fontSizePt,
-            ...(object instanceof EditorTextBox && object.frame ? { textBox: { widthMm: object.getScaledWidth() / PX_PER_MM, heightMm: object.getScaledHeight() / PX_PER_MM, autoWidth: object.frame.autoWidth, autoHeight: object.frame.autoHeight } } : {}) }
+            ...(object instanceof EditorTextBox && object.frame ? { textBox: { widthMm: object.width * object.scaleX / PX_PER_MM, heightMm: object.height * object.scaleY / PX_PER_MM, autoWidth: object.frame.autoWidth, autoHeight: object.frame.autoHeight } } : {}) }
           : source.type === 'image' ? { type: 'image', widthMm: object.getScaledWidth() / PX_PER_MM, heightMm: object.getScaledHeight() / PX_PER_MM }
           : source.type === 'circle'
             ? { type: 'circle', radiusMm: ((source.radiusMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2 }
@@ -410,7 +411,7 @@ export class FabricAdapter {
       const target = this.canvas.getActiveObject(); if (!(target instanceof EditorTextBox) || target.isEditing) return;
       const control = target.findControl(this.canvas.getViewportPoint(event.e)); if (!control || !['ml', 'mr'].includes(control.key)) return;
       const source = this.sourceByObject.get(target); if (source?.type !== 'text' || (source.textBox?.autoWidth ?? true) || source.textAlign === 'justify-left' || source.lineStyles?.some(run => run.alignment === 'justify-left')) return;
-      const object = placeObjectAtCenter({ ...source, textBox: { widthMm: target.getScaledWidth() / PX_PER_MM, heightMm: target.getScaledHeight() / PX_PER_MM, autoWidth: true, autoHeight: true } }, objectCenter(source, measureFabric), measureFabric) as TextObject, expectedRevision = revision();
+      const object = placeObjectAtCenter({ ...source, textBox: { widthMm: target.width * target.scaleX / PX_PER_MM, heightMm: target.height * target.scaleY / PX_PER_MM, autoWidth: true, autoHeight: true } }, objectCenter(source, measureFabric), measureFabric) as TextObject, expectedRevision = revision();
       queueMicrotask(() => { if (!this.disposed) onText?.(source.id, object, expectedRevision); });
     });
     this.canvas.on('text:editing:entered', ({ target }) => {
@@ -636,8 +637,8 @@ export class FabricAdapter {
       alignments.push((target.styles[line]?.[column] as { editorLineAlign?: import('./model').TextAlignment } | undefined)?.editorLineAlign);
       if (character === '\n') { line++; column = 0; return {}; }
       const raw = target.styles[line]?.[column++] as { editorKerningPt?: number } | undefined;
-      const { fontSize, fontWeight, fontStyle, underline, linethrough, overline, fill, fontFamily } = raw as (IText['styles'][number][number] & { editorKerningPt?: number }) ?? {};
-      return Object.fromEntries(Object.entries({ kerningPt: raw?.editorKerningPt, fontSizePt: fontSize === undefined ? undefined : fontPoints(fontSize), fontWeight, fontStyle, underline, linethrough, overline, ...textPaintFromFabric(fill, source.fillOpacity), fontFamily: canonicalFontFamily(fontFamily) }).filter(([, value]) => value !== undefined)) as CharacterStyle;
+      const { fontSize, fontWeight, fontStyle, underline, linethrough, overline, fill, fontFamily, stroke, strokeWidth } = raw as (IText['styles'][number][number] & { editorKerningPt?: number }) ?? {};
+      return Object.fromEntries(Object.entries({ kerningPt: raw?.editorKerningPt, fontSizePt: fontSize === undefined ? undefined : fontPoints(fontSize), fontWeight, fontStyle, underline, linethrough, overline, ...textPaintFromFabric(fill, source.fillOpacity), ...(strokeWidth === undefined ? {} : { strokeMm: strokeWidth / PX_PER_MM }), ...textStrokeFromFabric(stroke, source.strokeOpacity), fontFamily: canonicalFontFamily(fontFamily) }).filter(([, value]) => value !== undefined)) as CharacterStyle;
     });
     alignments.push((target.styles[line]?.[column] as { editorLineAlign?: import('./model').TextAlignment } | undefined)?.editorLineAlign);
     const next = { ...source, text: target.text, characterStyles: compressStyles(styles), lineStyles: compressLineAlignments(alignments, Array.from(target.text).length, target.text.endsWith('\n')) };
@@ -668,7 +669,7 @@ export class FabricAdapter {
     const snapshot = this.textSnapshot(target);
     if (snapshot.textPath) return { object: preserveTextPathGuide(snapshot, { ...snapshot, textAlign: alignment === 'justify-left' ? 'center' : alignment }, measureFabric), revision: this.editingRevision };
     const scope = lineSelection(snapshot, target.visualLineRanges(), target.selectionStart, target.selectionEnd);
-    const next = applyLineAlignment(snapshot, alignment, scope, { widthMm: target.getScaledWidth() / PX_PER_MM, heightMm: target.getScaledHeight() / PX_PER_MM });
+    const next = applyLineAlignment(snapshot, alignment, scope, { widthMm: target.width * target.scaleX / PX_PER_MM, heightMm: target.height * target.scaleY / PX_PER_MM });
     return { object: snapshot.textPath ? preserveTextPathGuide(snapshot, next, measureFabric) : placeObjectAtCenter(next, objectCenter(snapshot, measureFabric), measureFabric) as TextObject, revision: this.editingRevision };
   }
   styledText(style: CharacterStyle): { object: TextObject; revision: number } | null {

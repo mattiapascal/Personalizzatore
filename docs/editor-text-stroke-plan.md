@@ -1,6 +1,6 @@
 # Contorno dei testi: diagnosi e prossimo incremento — 12 novembre 2026
 
-Questa è una diagnosi con prototipo privato, **non una capacità implementata**. Il collaudo completo delle maschere sul codice applicativo `3e9f594` è concluso: **532/532 passati**. Primo lavoro sul contorno in copia isolata `/private/tmp/personalizzatore-text-stroke`, branch `codex/text-stroke-local`; nessuna modifica applicativa portata nel laboratorio principale prima dei collaudi.
+Diagnosi storica del prototipo, seguita dall’[implementazione canonica e dai collaudi](iteration-editor-text-stroke.md). Il controllo completo precedente delle maschere è concluso con 532/532 passati; il contorno è poi stato sviluppato inizialmente in una copia isolata e portato nel laboratorio dopo i controlli unitari. La descrizione seguente del prototipo resta distinta dalla conversione effettiva e dall’importazione successiva di Rappresentanti.
 
 ## Evidenza reale
 

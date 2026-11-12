@@ -34,7 +34,7 @@ it('stile comune conserva centri e alpha attraverso cambi colore e blocchi delle
 });
 it('trasparenza locale sui caratteri, valori misti e applicazione al box senza perdere gli altri stili',()=>{
  const doc=createTestDocument(),original=doc.objects.find(object=>object.type==='text')!;if(original.type!=='text')throw Error();const selected=applyCharacterStyle(original,{fillOpacity:.25},{start:0,end:2});expect(selected.fillOpacity).toBeUndefined();expect(selectionStyle(selected,0,2).style.fillOpacity).toBe(.25);expect(selectionStyle(selected,0,4).mixed).toContain('fillOpacity');
- const whole=applyCharacterStyle(selected,{fillOpacity:.5});expect(whole.fillOpacity).toBe(.5);expect(whole.characterStyles).toBeUndefined();expect(objectWithAppearance(whole,{fill:'#ff0000'},measure)).toMatchObject({fill:'#ff0000',fillOpacity:.5});expect(()=>objectWithAppearance(whole,{strokeOpacity:.5},measure)).toThrow('incompatibile');
+ const whole=applyCharacterStyle(selected,{fillOpacity:.5});expect(whole.fillOpacity).toBe(.5);expect(whole.characterStyles).toBeUndefined();expect(objectWithAppearance(whole,{fill:'#ff0000'},measure)).toMatchObject({fill:'#ff0000',fillOpacity:.5});expect(objectWithAppearance(whole,{strokeOpacity:.5},measure)).toMatchObject({strokeOpacity:.5});
 });
 it('guide del testo su tracciato conservano le due trasparenze dopo applicazione e separazione',()=>{
  const doc=createTestDocument();const text=doc.objects.find(o=>o.type==='text')!;doc.objects=[text,{id:'line',type:'line',xMm:5,yMm:5,lengthMm:40,stroke:'#000000',strokeMm:.5,strokeOpacity:.4,fillOpacity:.2}];

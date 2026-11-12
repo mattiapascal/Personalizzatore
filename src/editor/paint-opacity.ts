@@ -17,3 +17,11 @@ export function textPaintFromFabric(fill: unknown, baseOpacity = 1): { fill?: st
   const alpha = color.getAlpha();
   return { fill: `#${color.toHex().toLowerCase()}`, ...(alpha !== 1 || baseOpacity !== 1 ? { fillOpacity: alpha } : {}) };
 }
+
+/** Preserve a character's explicit transparent stroke as an override of its box. */
+export function textStrokeFromFabric(stroke: unknown, baseOpacity = 1): { stroke?: string; strokeOpacity?: number } {
+  if (stroke === undefined) return {};
+  if (stroke === null || stroke === 'transparent' || stroke === 'none') return { stroke: 'none' };
+  const paint = textPaintFromFabric(stroke, baseOpacity);
+  return { ...(paint.fill === undefined ? {} : { stroke: paint.fill }), ...(paint.fillOpacity === undefined ? {} : { strokeOpacity: paint.fillOpacity }) };
+}

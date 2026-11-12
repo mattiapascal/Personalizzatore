@@ -34,7 +34,10 @@ const id = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/);
 const color = ColorSchema;
 const paint = PaintSchema;
 const fontFamily = z.union([z.enum(FONT_FAMILIES), FontIdSchema]);
+const textStrokeWidth = z.number().finite().min(0).max(EDITOR_LIMITS.maxStrokeMm);
+const textStrokeFields = { stroke: paint.optional(), strokeMm: textStrokeWidth.optional(), strokeOpacity: OpacitySchema.optional() };
 export const CharacterStyleSchema = z.strictObject({
+  ...textStrokeFields,
   fontSizePt: z.number().finite().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt).optional(), fontFamily: fontFamily.optional(), fill: color.optional(), fillOpacity: OpacitySchema.optional(),
   kerningPt: z.number().finite().min(EDITOR_LIMITS.minTrackingPt).max(EDITOR_LIMITS.maxTrackingPt).optional(),
   fontWeight: z.enum(['normal', 'bold']).optional(), fontStyle: z.enum(['normal', 'italic']).optional(), underline: z.boolean().optional(), linethrough: z.boolean().optional(), overline: z.boolean().optional(),
@@ -46,6 +49,8 @@ export const TextAlignmentSchema = z.enum(['left', 'center', 'right', 'justify-l
 export type TextAlignment = z.infer<typeof TextAlignmentSchema>;
 const lineStyles = z.array(z.strictObject({ start: z.number().int().nonnegative(), end: z.number().int().nonnegative(), alignment: TextAlignmentSchema })).max(EDITOR_LIMITS.textCharacters+1).optional();
 const textAppearance = {
+  ...textStrokeFields,
+  strokeLineCap: z.enum(['butt', 'round', 'square']).optional(), strokeLineJoin: z.enum(['miter', 'round', 'bevel']).optional(), strokeMiterLimit: z.number().finite().min(1).max(100).optional(), paintFirst: z.enum(['fill', 'stroke']).optional(),
   fillOpacity: OpacitySchema.optional(),
   lineStyles, justification: JustificationSchema.optional(), textPath: TextPathSchema.optional(),
   textScaleX: textScale.optional(),
@@ -98,7 +103,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
   if (d.colorMode !== 'color') for (const object of d.objects) {
     const paints = object.type === 'image' ? [] : [
       ...('fill' in object ? [object.fill] : []), ...('stroke' in object ? [object.stroke] : []),
-      ...(object.type === 'text' ? object.characterStyles?.map(run => run.style.fill) ?? [] : []),
+      ...(object.type === 'text' ? object.characterStyles?.flatMap(run => [run.style.fill, run.style.stroke]) ?? [] : []),
     ];
     if (paints.some(paint => !isMonochromePaint(paint)) || object.type === 'image' && (object.raster.mode === 'original' || !isMonochromePaint(object.raster.tintColor))) ctx.addIssue({ code: 'custom', message: 'Il documento monocromatico ammette soltanto nero/bianco. Per conservare i colori usa un progetto a colori, senza montatura timbro.' });
   }
@@ -213,7 +218,7 @@ const ids = z.array(id).min(1).max(EDITOR_LIMITS.objects);
 const alignment = z.enum(['left', 'centerX', 'right', 'top', 'centerY', 'bottom']);
 export const SelectionTransformSchema = z.strictObject({ objectIds: ids.min(2), scale: z.number().finite().min(0.01).max(100), rotationDeg: rotation, center: z.strictObject(position) });
 export type SelectionTransformArguments = z.infer<typeof SelectionTransformSchema>;
-export const SelectionStyleSchema = z.strictObject({ ...PaintOpacityFields, fill: paint.optional(), stroke: paint.optional(), strokeMm: StrokeWidthSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }).refine(style => Object.values(style).some(value => value !== undefined), 'Scegli almeno una proprietà di stile');
+export const SelectionStyleSchema = z.strictObject({ ...PaintOpacityFields, fill: paint.optional(), stroke: paint.optional(), strokeMm: textStrokeWidth.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }).refine(style => Object.values(style).some(value => value !== undefined), 'Scegli almeno una proprietà di stile');
 export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
@@ -254,7 +259,7 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({ ...base, tool: z.literal('distributeObjects'), arguments: z.strictObject({ objectIds: ids.min(3), axis: z.enum(['horizontal', 'vertical']) }) }),
 ]);
 export type GraphicCommand = z.infer<typeof GraphicCommandSchema>;
-export type Measure = (object: SceneObject) => { widthMm: number; heightMm: number; pathCenterOffsetMm?: { x: number; y: number }; pathLengthMm?: number; textAdvanceMm?: number };
+export type Measure = (object: SceneObject) => { widthMm: number; heightMm: number; textLayoutWidthMm?: number; textLayoutHeightMm?: number; pathCenterOffsetMm?: { x: number; y: number }; pathLengthMm?: number; textAdvanceMm?: number };
 export const TEST_MARGIN_MM = 1;
 export function objectGeometry(object: SceneObject, measure: Measure) {
   const box = measure(object);
@@ -441,8 +446,9 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
         if (object.type !== size.type) throw new Error('Dimensioni incompatibili con il tipo di oggetto');
         if (object.type === 'text' && size.type === 'text') {
           const factor = size.fontSizePt / object.fontSizePt;
+          if (object.strokeMm !== undefined) object.strokeMm *= factor;
           if (object.letterSpacingPt !== undefined) object.letterSpacingPt = Math.round(object.letterSpacingPt * factor * 1e9) / 1e9;
-          if (object.characterStyles) object.characterStyles = object.characterStyles.map(run => ({ ...run, style: { ...run.style, ...(run.style.fontSizePt === undefined ? {} : { fontSizePt: Math.round(run.style.fontSizePt * factor * 1e9) / 1e9 }), ...(run.style.kerningPt === undefined ? {} : { kerningPt: Math.round(run.style.kerningPt * factor * 1e9) / 1e9 }) } }));
+          if (object.characterStyles) object.characterStyles = object.characterStyles.map(run => ({ ...run, style: { ...run.style, ...(run.style.strokeMm === undefined ? {} : { strokeMm: run.style.strokeMm * factor }), ...(run.style.fontSizePt === undefined ? {} : { fontSizePt: Math.round(run.style.fontSizePt * factor * 1e9) / 1e9 }), ...(run.style.kerningPt === undefined ? {} : { kerningPt: Math.round(run.style.kerningPt * factor * 1e9) / 1e9 }) } }));
         }
         Object.assign(object, transform, size); break;
       }

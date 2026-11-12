@@ -19,7 +19,7 @@ export async function pitchprintReferenceSvg(source:any,asset:FontAsset|FontAsse
   }
   if(['text','i-text','textbox'].includes(type)){
    const styles=structuredClone(raw.styles??{});for(const row of Object.values(styles) as any[])for(const style of Object.values(row) as any[])if(['fontFamily','fontWeight','fontStyle'].some(key=>style[key]!==undefined)){style.fontFamily=renderFontFamily(font({...raw,...style}).id);style.fontWeight=style.fontStyle='normal';}
-   const textOptions={...options,styles,fontFamily:renderFontFamily(font(raw).id),fontWeight:'normal',fontStyle:'normal' as const,stroke:null,strokeWidth:0};return type==='textbox'?new Textbox(raw.text,textOptions):new IText(raw.text,textOptions);
+   const textOptions={...options,styles,fontFamily:renderFontFamily(font(raw).id),fontWeight:'normal',fontStyle:'normal' as const,stroke:raw.stroke??null,strokeWidth:raw.strokeWidth??(raw.stroke?1:0)};return type==='textbox'?new Textbox(raw.text,textOptions):new IText(raw.text,textOptions);
   }
   if(type==='image'){const image=await FabricImage.fromURL(raw.src,{},{...options,clipPath:undefined});if(raw.clipPath)image.set({clipPath:await build(raw.clipPath)});image._toSVG=()=>legacyImageReferenceMarkup(image);return image;}
   // Legacy full circles store radians; Fabric 7 expects degrees. Keep the

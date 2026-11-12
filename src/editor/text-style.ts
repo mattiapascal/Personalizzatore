@@ -2,9 +2,9 @@ import { CharacterStyleSchema, type CharacterStyle, type SceneObject } from './m
 
 export type TextObject = Extract<SceneObject, { type: 'text' }>;
 export interface CharacterSelection { start: number; end: number; style: CharacterStyle; mixed: (keyof CharacterStyle)[]; object?: TextObject; spacing?: TextSpacingScope; line?: import('./text-lines').LineSelection; }
-export const characterKeys = ['fontSizePt', 'fontFamily', 'fill', 'fillOpacity', 'fontWeight', 'fontStyle', 'underline', 'linethrough', 'overline', 'kerningPt'] as const;
+export const characterKeys = ['fontSizePt', 'fontFamily', 'fill', 'fillOpacity', 'stroke', 'strokeMm', 'strokeOpacity', 'fontWeight', 'fontStyle', 'underline', 'linethrough', 'overline', 'kerningPt'] as const;
 export function baseCharacterStyle(object: TextObject): Required<CharacterStyle> {
-  return { kerningPt: 0, fontSizePt: object.fontSizePt, fontFamily: object.fontFamily, fill: object.fill, fillOpacity: object.fillOpacity ?? 1, fontWeight: object.fontWeight ?? 'normal', fontStyle: object.fontStyle ?? 'normal', underline: object.underline ?? false, linethrough: object.linethrough ?? false, overline: object.overline ?? false };
+  return { stroke: object.stroke ?? 'none', strokeMm: object.strokeMm ?? .25, strokeOpacity: object.strokeOpacity ?? 1, kerningPt: 0, fontSizePt: object.fontSizePt, fontFamily: object.fontFamily, fill: object.fill, fillOpacity: object.fillOpacity ?? 1, fontWeight: object.fontWeight ?? 'normal', fontStyle: object.fontStyle ?? 'normal', underline: object.underline ?? false, linethrough: object.linethrough ?? false, overline: object.overline ?? false };
 }
 export function characterStyles(object: TextObject): CharacterStyle[] {
   const styles: CharacterStyle[] = Array.from(object.text, () => ({}));
