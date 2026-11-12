@@ -7,6 +7,9 @@ const command=z.union([z.tuple([z.literal('M'),coordinate,coordinate]),z.tuple([
 function path(max:number){return z.array(command).min(2).max(max).superRefine((commands,ctx)=>{let open=false,segments=0;for(const c of commands){if(c[0]==='M')open=true;else if(!open)ctx.addIssue({code:'custom',message:'Ogni contorno deve iniziare con M'});else if(c[0]==='Z'){open=false;segments++;}else segments++;}if(!segments)ctx.addIssue({code:'custom',message:'Tracciato senza segmenti'});});}
 export const STROKE_OUTLINE_FLATNESS_MM=.005;
 export const MAX_OUTLINE_COMMANDS=EDITOR_LIMITS.vectorCommandsPerObject;
+/** Ghostscript emits overlapping segment polygons before their bounded union.
+ * The canonical result retains the stricter per-object command ceiling. */
+export const MAX_OUTLINE_INTERMEDIATE_COMMANDS=131072;
 export const StrokeOutlineRequestSchema=z.strictObject({schemaVersion:z.literal(1),commands:path(4096),matrix:z.tuple([coordinate,coordinate,coordinate,coordinate,coordinate,coordinate]),strokeWidth:z.number().finite().positive().max(1e6),lineCap:z.enum(['butt','round','square']),lineJoin:z.enum(['miter','round','bevel']),miterLimit:z.number().finite().min(1).max(100)});
 export type StrokeOutlineRequest=z.infer<typeof StrokeOutlineRequestSchema>;
 export const StrokeOutlineResponseSchema=z.strictObject({schemaVersion:z.literal(1),commands:path(MAX_OUTLINE_COMMANDS),engine:z.literal('ghostscript-strokepath'),flatnessMm:z.number().positive().max(STROKE_OUTLINE_FLATNESS_MM)});

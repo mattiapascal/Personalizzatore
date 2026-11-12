@@ -1,7 +1,7 @@
 import {unionStrokeOutline} from './stroke-outline-union';
 import type { Plugin } from 'vite';
 import { execFile } from 'node:child_process';
-import { StrokeOutlineResponseSchema,strokeOutlinePlane,MAX_OUTLINE_COMMANDS } from '../src/editor/stroke-outline';
+import { StrokeOutlineResponseSchema,strokeOutlinePlane,MAX_OUTLINE_INTERMEDIATE_COMMANDS } from '../src/editor/stroke-outline';
 import type { VectorCommand } from '../src/editor/vector-geometry';
 export const MAX_STROKE_REQUEST_BYTES=1024*1024;
 type Runner=(program:string)=>Promise<string>;
@@ -14,7 +14,7 @@ export function strokeOutlineProgram(plane:ReturnType<typeof strokeOutlinePlane>
  return`${deviceScale} ${deviceScale} scale false setstrokeadjust ${flatnessMm*deviceScale/2} setflat ${strokeWidth} setlinewidth ${['butt','round','square'].indexOf(request.lineCap)} setlinecap ${['miter','round','bevel'].indexOf(request.lineJoin)} setlinejoin ${request.miterLimit} setmiterlimit\n/n { dup truncate dup 32 string cvs print (:) print sub 1000000 mul round cvi 32 string cvs print ( ) print } bind def\nnewpath\n${commands.map(c=>[...c.slice(1),ops[c[0]]].join(' ')).join('\n')}\nstrokepath { (M ) print 2 array astore { n } forall (\\n) print } { (L ) print 2 array astore { n } forall (\\n) print } { (C ) print 6 array astore { n } forall (\\n) print } { (Z\\n) print } pathforall quit\n`;
 }
 export function parseStrokeOutlineOutput(stdout:string):VectorCommand[]{
- const output:VectorCommand[]=[],arity={M:2,L:2,C:6,Z:0};for(const line of stdout.trim().split(/\r?\n/)){const[op,...values]=line.trim().split(/\s+/);if(!op||!(op in arity)||values.length!==arity[op as keyof typeof arity]||values.some(v=>!/^[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?:[-+]?\d+$/i.test(v)))throw Error('Risposta del motore dei contorni non valida');const numbers=values.map(v=>{const [whole,fraction]=v.split(':').map(Number);return whole!+fraction!/1e6;});if(numbers.some(n=>!Number.isFinite(n)||Math.abs(n)>20000)||output.length>=MAX_OUTLINE_COMMANDS)throw Error('Espansione del contorno oltre i limiti locali');output.push([op,...numbers]as VectorCommand);}return output;
+ const output:VectorCommand[]=[],arity={M:2,L:2,C:6,Z:0};for(const line of stdout.trim().split(/\r?\n/)){const[op,...values]=line.trim().split(/\s+/);if(!op||!(op in arity)||values.length!==arity[op as keyof typeof arity]||values.some(v=>!/^[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?:[-+]?\d+$/i.test(v)))throw Error('Risposta del motore dei contorni non valida');const numbers=values.map(v=>{const [whole,fraction]=v.split(':').map(Number);return whole!+fraction!/1e6;});if(numbers.some(n=>!Number.isFinite(n)||Math.abs(n)>20000)||output.length>=MAX_OUTLINE_INTERMEDIATE_COMMANDS)throw Error('Espansione del contorno oltre i limiti locali');output.push([op,...numbers]as VectorCommand);}return output;
 }
 export async function outlineLocalStroke(raw:unknown,runner:Runner=ghostscript){const plane=strokeOutlinePlane(raw),local=parseStrokeOutlineOutput(await runner(strokeOutlineProgram(plane)));return StrokeOutlineResponseSchema.parse({schemaVersion:1,commands:await unionStrokeOutline(plane.toPhysical(local),plane.flatnessMm),engine:'ghostscript-strokepath',flatnessMm:plane.flatnessMm});}
 export function localStrokeOutlinesPlugin():Plugin{let busy=false;return{name:'editor-local-stroke-outlines',apply:'serve',configureServer(server){server.middlewares.use('/__editor-local/stroke-outlines',async(req,res)=>{

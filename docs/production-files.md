@@ -192,3 +192,7 @@ Campione [JSON](../fixtures/illustrator/trailing-text-styles.TEST.json) / [SVG](
 ## Campione grande formato — 12 novembre
 
 `large-format.TEST.json/svg`, 1100 × 400 mm, font incorporato e quattro oggetti; generatore `node --import tsx scripts/capture-editor-large-format.ts`. [Capacità, limiti e prove](iteration-editor-large-format.md). Zoom di visualizzazione limitato dal budget bitmap; SVG conserva le misure fisiche. PDF reale 1100 × 400 e tavola 3000 × 3000 mm verificati per integrità e MediaBox/CropBox; testo del cartello ancora estraibile. Illustrator e dispositivi fisici da collaudare.
+
+## SVG con bitmap e maschere intersecate — 12 novembre
+
+Campione [mixed-svg.TEST.json](../fixtures/illustrator/mixed-svg.TEST.json) / [SVG](../fixtures/illustrator/mixed-svg.TEST.svg), con [sorgente sintetico indipendente](../fixtures/illustrator/mixed-svg.source.TEST.svg). Generatore `node --import tsx scripts/capture-editor-mixed-svg.ts`; [contratti e limiti](iteration-editor-mixed-svg.md). In Illustrator verificare formato 100 × 70 mm, PNG originale ancora incorporato, foro ellittico, foro circolare e tutte le intersezioni, quindi separazione/modifica dei vettori. Esito Illustrator non ancora acquisito.

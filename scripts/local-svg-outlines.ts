@@ -6,7 +6,7 @@ import { convertLocalPdf } from './local-pdf-import';
 const requestSchema=z.strictObject({svg:z.string().max(MAX_SVG_BYTES),fontAssets:FontAssetsSchema});
 /** Local, offline conversion through the browser's font shaper and Poppler. */
 export async function outlineLocalSvg(raw:unknown):Promise<string>{
- const {svg,fontAssets}=requestSchema.parse(raw),safe=sanitizeSvg(svg,false,true),{chromium}=await import('playwright'),browser=await chromium.launch({headless:true});
+ const {svg,fontAssets}=requestSchema.parse(raw),safe=sanitizeSvg(svg,false,true);if(/<image\b/.test(safe))throw Error('La conversione in contorni riguarda SVG senza immagini incorporate: scegli testo editabile per conservare gli originali');const{chromium}=await import('playwright'),browser=await chromium.launch({headless:true});
  try{const page=await browser.newPage();await page.route('**/*',route=>route.abort());await page.setContent('<style>html,body{margin:0;padding:0}svg{display:block}</style>');
   const size=await page.evaluate(async({assets,svg})=>{
    const allowed=new Set<string>();for(const asset of assets){const bytes=Uint8Array.from(atob(asset.dataBase64),c=>c.charCodeAt(0)),alias=`EditorFont_${asset.id.slice(5).replaceAll('-','')}`,font=new FontFace(alias,bytes.buffer);await font.load();document.fonts.add(font);allowed.add(alias);}

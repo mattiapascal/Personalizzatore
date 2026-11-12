@@ -1,3 +1,4 @@
+import{cropClipMasks}from'./clip-masks';
 import { MAX_RASTER_SIDE } from './raster-limits';
 import { z } from 'zod';
 import type { RasterSource } from './raster-source';
@@ -17,7 +18,7 @@ export function changeRasterCrop(object: ImageObject, change: Partial<RasterCrop
   if (change.leftPx !== undefined && change.widthPx === undefined) next.widthPx = Math.min(before.widthPx, object.source.pixelWidth - change.leftPx);
   if (change.topPx !== undefined && change.heightPx === undefined) next.heightPx = Math.min(before.heightPx, object.source.pixelHeight - change.topPx);
   const crop = checkedRasterCrop(object.source, next), mmPerPixelX = object.widthMm / before.widthPx, mmPerPixelY = object.heightMm / before.heightPx;
-  return { ...object, crop, widthMm: crop.widthPx * mmPerPixelX, heightMm: crop.heightPx * mmPerPixelY };
+  return { ...object, crop,...(object.clipMasks?{clipMasks:cropClipMasks(object.clipMasks,before,crop)}:{}), widthMm: crop.widthPx * mmPerPixelX, heightMm: crop.heightPx * mmPerPixelY };
 }
 
 export interface RasterInsets { left: number; right: number; top: number; bottom: number; }

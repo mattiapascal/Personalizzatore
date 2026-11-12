@@ -3,7 +3,7 @@ import { objectCenter, placeObjectAtCenter, cloneSceneObject, type GraphicDocume
 import { TextPathGuideSchema, type TextPathBinding, type TextPathGuide } from './text-path-spec';
 import type { TextObject } from './text-style';
 export type GuideObject = Extract<SceneObject, { type: 'path' | 'bezier' | 'circle' | 'ellipse' | 'line' | 'vector' }>;
-export function isTextPathGuide(object: SceneObject): object is GuideObject { return object.type === 'vector' ? !object.clipRect && object.commands.filter(c => c[0] === 'M').length === 1 : ['path', 'bezier', 'circle', 'ellipse', 'line'].includes(object.type); }
+export function isTextPathGuide(object: SceneObject): object is GuideObject { return object.type === 'vector' ? !object.clipRect && !object.clipMasks && object.commands.filter(c => c[0] === 'M').length === 1 : ['path', 'bezier', 'circle', 'ellipse', 'line'].includes(object.type); }
 export function textPathGuideCenter(object: TextObject, measure: Measure) {
   const center = objectCenter(object, measure), offset = measure(object).pathCenterOffsetMm ?? { x: 0, y: 0 }, a = (object.rotationDeg ?? 0) * Math.PI / 180;
   return { xMm: center.xMm - offset.x * Math.cos(a) + offset.y * Math.sin(a), yMm: center.yMm - offset.x * Math.sin(a) - offset.y * Math.cos(a) };

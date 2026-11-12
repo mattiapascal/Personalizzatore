@@ -1,3 +1,5 @@
+**Riscontro 12 novembre, revisione 618:** il salvataggio della nuova bozza è riuscito; la rilettura ha poi esaurito il vecchio heap Node da 2 GiB. Archivio e backup confrontati, nessuna ripetizione della scrittura. Avvio locale ora limitato esplicitamente a 4 GiB e riapertura/cache verificate; JSON circa 503 MiB, SQLite ancora separato e non attivato. [Dettagli del recupero](iteration-editor-mixed-svg.md). Questo riscontro conferma la necessità delle prove di picco previste sotto, senza dimostrare da solo la causa di ogni accumulo HMR.
+
 # Capacità dell’archivio locale — 12 novembre 2026
 
 L’archivio JSON contiene copie complete delle risorse nei singoli documenti. Il formato è portabile e le stringhe uguali sono condivise in memoria, ma sul disco font e immagini comuni possono ripetersi. Con i nuovi template si avvicina al limite di 512 MiB; aumentare soltanto il tetto del JSON accentuerebbe tempi di lettura/salvataggio e picchi di memoria.

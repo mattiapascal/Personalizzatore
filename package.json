@@ -12,7 +12,7 @@
     "predev": "npm run assistant:generate",
     "prebuild": "npm run assistant:check",
     "pretest": "npm run assistant:check",
-    "dev": "vite --host 127.0.0.1",
+    "dev": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "build:storefront": "npm run assistant:check && tsc --noEmit && tsc --noEmit -p tsconfig.worker.json && vite build --config vite.storefront.config.ts",
     "worker:dev": "WRANGLER_LOG_PATH=.local/wrangler-logs WRANGLER_SEND_METRICS=false wrangler dev --local --persist-to .local/worker-state",

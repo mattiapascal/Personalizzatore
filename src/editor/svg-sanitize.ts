@@ -2,11 +2,12 @@ import{EDITOR_LIMITS}from'./limits';
 import{PX_PER_MM}from'./canvas-size';
 import{GRAPHIC_IMPORT_LIMITS}from'./limits';
 import {canonicalPaint} from './paint';
+import{embeddedSvgRaster}from'./svg-raster';
 import { expandSvgReferences } from './svg-references';
 import { Parser } from 'htmlparser2';
 export const MAX_SVG_BYTES = GRAPHIC_IMPORT_LIMITS.svgBytes;
 export const SVG_SIZE_LABEL='2 MB';
-const elements = new Set(['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'title', 'desc', 'defs', 'clipPath']);
+const elements = new Set(['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'title', 'desc', 'defs', 'clipPath','image']);
 const properties = new Set(['fill', 'stroke', 'fill-rule', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-dasharray', 'stroke-dashoffset', 'opacity', 'fill-opacity', 'stroke-opacity', 'display', 'visibility', 'color', 'clip-rule', 'clip-path']);
 const geometry = new Set(['d', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'width', 'height', 'points', 'viewBox', 'preserveAspectRatio', 'transform', 'id', 'version', 'xmlns', 'xmlns:xlink', 'class', 'clipPathUnits']);
 const escape = (value: string) => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[char]!);
@@ -39,11 +40,12 @@ export function sanitizeSvg(source: string, monochrome = false, allowText = fals
       if (!elements.has(name) && !(allowText && ['text','tspan'].includes(name))) throw new Error(name === 'text' || name === 'tspan' ? 'Testi SVG non ancora importabili: esportali come tracciati per conservare l’aspetto.' : `Elemento SVG non supportato: ${name}`);
       if (name === 'tspan' && (stack.at(-1) !== 'text' || Object.keys(attrs).length)) throw new Error('Testo SVG con stili o posizioni diversi nella stessa riga: separare le righe prima di importare');
       if (stack.some(tag => tag === 'text' || tag === 'tspan') && name !== 'tspan') throw new Error('Struttura del testo SVG non supportata');
-      if (name === 'svg') { if (stack.length || ++roots !== 1) throw new Error('È supportata una sola area SVG'); if (!attrs.xmlns) attrs.xmlns = 'http://www.w3.org/2000/svg'; }
+      if (name === 'svg') { if (stack.length || ++roots !== 1) throw new Error('È supportata una sola area SVG'); if (!attrs.xmlns) attrs.xmlns = 'http://www.w3.org/2000/svg';if(!attrs['xmlns:xlink'])attrs['xmlns:xlink']='http://www.w3.org/1999/xlink'; }
       else if (!stack.length) throw new Error('Manca la radice SVG');
       if (stack.includes('defs') && !stack.includes('clipPath') && !['defs', 'title', 'desc', 'clipPath'].includes(name)) throw new Error('Risorse SVG in defs non ancora supportate');
       if (attrs.style) { for (const entry of attrs.style.split(';').filter(value => value.trim())) { const at = entry.indexOf(':'), key = entry.slice(0, at).trim(), value = entry.slice(at + 1).trim(); if (at < 0 || !properties.has(key)) throw new Error(`Stile SVG non supportato: ${key}`); attrs[key] = value; } delete attrs.style; }
       for (const [key, value] of Object.entries(attrs)) {
+        if(name==='image'&&key==='xlink:href'){embeddedSvgRaster(value);continue;}
         if (/^on/i.test(key) || /href/i.test(key) || (/url\s*\(/i.test(value) && !(key === 'clip-path' && /^url\(\s*#[a-zA-Z_][\w.:-]*\s*\)$/.test(value)) || /javascript:|data:|!important/i.test(value))) throw new Error('SVG con script o riferimenti a risorse non consentiti');
         const textProperty = allowText && ['font-family','font-size','font-weight','font-style','text-anchor','letter-spacing','textLength','lengthAdjust'].includes(key);
         if (!geometry.has(key) && !properties.has(key) && !textProperty) { if (/^(data-|aria-|inkscape:|sodipodi:|xmlns:)/.test(key)) { delete attrs[key]; continue; } throw new Error(`Attributo SVG non supportato: ${key}`); }
@@ -63,10 +65,11 @@ export function sanitizeSvg(source: string, monochrome = false, allowText = fals
         if (['fill-rule','clip-rule'].includes(key) && !['evenodd','nonzero'].includes(value) || key === 'stroke-linecap' && !['butt','round','square'].includes(value) || key === 'stroke-linejoin' && !['miter','round','bevel'].includes(value) || key === 'visibility' && !['visible','hidden','collapse'].includes(value) || key === 'display' && !['inline','block','none'].includes(value)) throw new Error(`Proprietà SVG non supportata: ${key}`);
         if (key === 'transform') validateTransform(value);
         if (key === 'd') validateSvgPath(value);
-        if (key === 'preserveAspectRatio' && !/^(none|x(?:Min|Mid|Max)Y(?:Min|Mid|Max)(?:\s+meet)?)$/.test(value)) throw new Error('Ritaglio del viewport SVG non ancora supportato');
+        if (key === 'preserveAspectRatio' && !(name==='image'?/^(none|x(?:Min|Mid|Max)Y(?:Min|Mid|Max)(?:\s+(?:meet|slice))?)$/:/^(none|x(?:Min|Mid|Max)Y(?:Min|Mid|Max)(?:\s+meet)?)$/).test(value)) throw new Error('Ritaglio del viewport SVG non ancora supportato');
         if (key === 'xmlns' && value !== 'http://www.w3.org/2000/svg' || key === 'xmlns:xlink' && value !== 'http://www.w3.org/1999/xlink') throw new Error('Namespace SVG non valido');
       }
       if (name === 'svg') { const box = attrs.viewBox?.trim().split(/[\s,]+/).map(Number); if (box && (box.length !== 4 || box.some(value => !Number.isFinite(value) || Math.abs(value) > 1e6) || box[2]! <= 0 || box[3]! <= 0)) throw new Error('viewBox SVG non valido'); if (!attrs.width && box) attrs.width = String(box[2]); if (!attrs.height && box) attrs.height = String(box[3]); for (const dimension of [attrs.width, attrs.height]) if (!dimension || !/^[+]?(?:\d*\.\d+|\d+\.?\d*)(?:e[+-]?\d+)?(?:px|pt|mm|cm|in|pc)?$/i.test(dimension) || parseFloat(dimension) <= 0 || parseFloat(dimension) > 1e6) throw new Error('SVG richiede larghezza/altezza o viewBox con misure finite'); }
+      if(name==='image'&&(!attrs['xlink:href']||!attrs.width||!attrs.height||parseFloat(attrs.width)<=0||parseFloat(attrs.height)<=0))throw Error('Immagine SVG senza sorgente o dimensioni positive');
       stack.push(name); result += `<${name}${Object.entries(attrs).map(([key, value]) => ` ${key}="${escape(value)}"`).join('')}>`;
     },
     onclosetag(name, implied) { if (implied && !source.slice(parser.startIndex, parser.endIndex + 1).trim().endsWith('/>') || stack.pop() !== name) throw new Error('Struttura XML SVG non valida'); result += `</${name}>`; },

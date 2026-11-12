@@ -1,3 +1,4 @@
+import{applyClipMasks}from'./clip-mask-view';
 import{ExternalCanvasControls}from'./external-controls';
 import{graphicPages,activeGraphicPageId}from'./pages';
 import {textStrokeFromFabric} from './paint-opacity';
@@ -133,6 +134,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
       : new Rect({ ...common, ...appearance, width: o.widthMm * PX_PER_MM, height: o.heightMm * PX_PER_MM, rx: (o.cornerRadiusMm ?? 0) * PX_PER_MM, ry: (o.cornerRadiusMm ?? 0) * PX_PER_MM });
   }
   if (o.type === 'vector' && o.clipRect) { const c = o.clipRect; object.clipPath = new Rect({ left: ((c.left + c.right) / 2 - .5) * o.widthMm * PX_PER_MM, top: ((c.top + c.bottom) / 2 - .5) * o.heightMm * PX_PER_MM, width: (c.right - c.left) * o.widthMm * PX_PER_MM, height: (c.bottom - c.top) * o.heightMm * PX_PER_MM, originX: 'center', originY: 'center', strokeWidth: 0, fill: '#000000' }); }
+  if((o.type==='image'||o.type==='vector')&&o.clipMasks)applyClipMasks(object,o.clipMasks);
   if(editable&&o.type!=='text'&&o.type!=='line')objectDimensionControls(object);
   if (o.type === 'line') {
     object.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, mt: false, mb: false, ml: true, mr: true, mtr: true });
@@ -190,10 +192,15 @@ export async function exportDocumentThumbnail(document: GraphicDocument, side = 
 }
 async function renderDocumentPng(document: GraphicDocument, size: {width:number;height:number;pixelsPerMm:number}, transparent: boolean): Promise<Blob> {
   document = await prepareGraphicOutput(structuredClone(document)); validateLayout(document, measureFabric, 'edit');
-  const element = window.document.createElement('canvas');
-  const output = new StaticCanvas(element, { width: size.width, height: size.height, enableRetinaScaling: false, renderOnAddRemove: false });
+  const element = window.document.createElement('canvas'),masked=document.objects.some(object=>'clipMasks'in object&&object.clipMasks?.length);
+  // Intersecting bitmap masks otherwise multiply edge coverage at the output
+  // pixel grid. Sample them together before reducing, within the same bitmap
+  // ceilings as the visible canvas. Large outputs keep the bounded base scale.
+  const samples=masked?[8,4,2,1].find(n=>size.width*n<=CANVAS_BITMAP_LIMITS.side&&size.height*n<=CANVAS_BITMAP_LIMITS.side&&size.width*size.height*n*n<=CANVAS_BITMAP_LIMITS.pixels)!:1;
+  const width=size.width*samples,height=size.height*samples;
+  const output = new StaticCanvas(element, { width, height, enableRetinaScaling: false, renderOnAddRemove: false });
   try {
-    const scale = size.pixelsPerMm / PX_PER_MM;
+    const scale = size.pixelsPerMm / PX_PER_MM*samples;
     output.setViewportTransform([scale, 0, 0, scale, 0, 0]);
     if(document.paperColor)output.backgroundColor=document.paperColor;
     if (document.shape === 'round') output.clipPath = new Circle({ radius: document.areaMm.width * PX_PER_MM / 2, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true });
@@ -201,10 +208,11 @@ async function renderDocumentPng(document: GraphicDocument, size: {width:number;
     output.renderAll();
     if (!transparent) {
       const context = element.getContext('2d'); if (!context) throw new Error('Esportazione PNG non disponibile');
-      context.save(); context.setTransform(1, 0, 0, 1, 0, 0); context.globalCompositeOperation = 'destination-over'; context.fillStyle = '#ffffff'; context.fillRect(0, 0, size.width, size.height); context.restore();
+      context.save(); context.setTransform(1, 0, 0, 1, 0, 0); context.globalCompositeOperation = 'destination-over'; context.fillStyle = '#ffffff'; context.fillRect(0, 0, width, height); context.restore();
     }
-    if(document.colorMode!=='color'&&document.inkColor&&document.inkColor!=='black'){const context=element.getContext('2d');if(!context)throw new Error('Anteprima colore non disponibile');const pixels=context.getImageData(0,0,size.width,size.height);tintImprintPixels(pixels.data,document.inkColor);context.putImageData(pixels,0,0);}
-    const blob = await new Promise<Blob>((resolve, reject) => element.toBlob(value => value ? resolve(value) : reject(new Error('Il browser non ha generato il PNG')), 'image/png'));
+    if(document.colorMode!=='color'&&document.inkColor&&document.inkColor!=='black'){const context=element.getContext('2d');if(!context)throw new Error('Anteprima colore non disponibile');const pixels=context.getImageData(0,0,width,height);tintImprintPixels(pixels.data,document.inkColor);context.putImageData(pixels,0,0);}
+    let target=element;if(samples>1){target=window.document.createElement('canvas');target.width=size.width;target.height=size.height;const context=target.getContext('2d');if(!context)throw Error('Riduzione PNG non disponibile');context.drawImage(element,0,0,size.width,size.height);}
+    const blob = await new Promise<Blob>((resolve, reject) => target.toBlob(value => value ? resolve(value) : reject(new Error('Il browser non ha generato il PNG')), 'image/png'));
     return blob;
   } finally { await output.dispose(); }
 }

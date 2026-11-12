@@ -1,0 +1,393 @@
+{
+  "colorMode": "color",
+  "fontAssets": [],
+  "schemaVersion": 2,
+  "documentId": "329f8f3e-081e-4c28-9838-eb056507d29b",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 100,
+    "height": 70
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "svg-3be607d8-e653-41a0-9d37-6de953b04fec",
+      "type": "vector",
+      "xMm": 0,
+      "yMm": 7.519910620127727e-15,
+      "widthMm": 100,
+      "heightMm": 69.99999999999999,
+      "commands": [
+        [
+          "M",
+          0,
+          0
+        ],
+        [
+          "L",
+          1,
+          0
+        ],
+        [
+          "L",
+          1,
+          1
+        ],
+        [
+          "L",
+          0,
+          1
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "#ffffff",
+      "stroke": "none",
+      "strokeMm": 0.25,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    },
+    {
+      "id": "svg-7b14c229-fe54-4a9f-8ba2-092f9e904352",
+      "type": "image",
+      "xMm": 10.000000000000002,
+      "yMm": 10.000000000000009,
+      "rotationDeg": 0,
+      "widthMm": 40,
+      "heightMm": 30,
+      "source": {
+        "id": "svg-fd2651ef-e437-463e-afde-7f49ce41fb08",
+        "mime": "image/png",
+        "pixelWidth": 32,
+        "pixelHeight": 24,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAYAAACbU/80AAAANUlEQVR4nO3OIQEAIBAEsNevSUd2NDUgxAkQE/OrPcdJdKgEBAQEBD4IrJPokICAgIDA88AFNqbbW34ZIp8AAAAASUVORK5CYII="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "clipMasks": [
+        {
+          "commands": [
+            [
+              "M",
+              0,
+              0
+            ],
+            [
+              "L",
+              1,
+              0
+            ],
+            [
+              "L",
+              1,
+              1
+            ],
+            [
+              "L",
+              0,
+              1
+            ],
+            [
+              "Z"
+            ]
+          ],
+          "frame": {
+            "left": 0.1999999999999999,
+            "top": -1.1102230246251565e-16,
+            "width": 0.6000000000000003,
+            "height": 0.9999999999999999
+          },
+          "fillRule": "nonzero"
+        },
+        {
+          "commands": [
+            [
+              "M",
+              0,
+              0
+            ],
+            [
+              "L",
+              1,
+              0
+            ],
+            [
+              "L",
+              1,
+              1
+            ],
+            [
+              "L",
+              0,
+              1
+            ],
+            [
+              "Z"
+            ],
+            [
+              "M",
+              0.5,
+              0.3000000000000001
+            ],
+            [
+              "C",
+              0.6104569499661586,
+              0.3000000000000001,
+              0.7000000000000001,
+              0.38954305003384143,
+              0.7000000000000001,
+              0.5000000000000002
+            ],
+            [
+              "C",
+              0.7000000000000001,
+              0.6104569499661588,
+              0.6104569499661588,
+              0.7000000000000003,
+              0.5000000000000001,
+              0.7000000000000003
+            ],
+            [
+              "C",
+              0.3895430500338414,
+              0.7000000000000003,
+              0.29999999999999993,
+              0.6104569499661588,
+              0.29999999999999993,
+              0.5000000000000002
+            ],
+            [
+              "C",
+              0.29999999999999993,
+              0.38954305003384143,
+              0.3895430500338414,
+              0.3000000000000001,
+              0.5,
+              0.3000000000000001
+            ],
+            [
+              "Z"
+            ]
+          ],
+          "frame": {
+            "left": 0,
+            "top": -1.1102230246251565e-16,
+            "width": 1,
+            "height": 0.9999999999999999
+          },
+          "fillRule": "evenodd"
+        }
+      ],
+      "pixelAspectRatio": 1,
+      "crop": {
+        "leftPx": 0,
+        "topPx": 0,
+        "widthPx": 32,
+        "heightPx": 24
+      },
+      "flipY": false
+    },
+    {
+      "id": "svg-7500f94b-0845-4491-989a-98f6cb75ef10",
+      "type": "vector",
+      "xMm": 60,
+      "yMm": 10.000000000000009,
+      "widthMm": 30,
+      "heightMm": 30,
+      "commands": [
+        [
+          "M",
+          0,
+          0
+        ],
+        [
+          "L",
+          1,
+          0
+        ],
+        [
+          "L",
+          1,
+          1
+        ],
+        [
+          "L",
+          0,
+          1
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "clipMasks": [
+        {
+          "commands": [
+            [
+              "M",
+              0,
+              0
+            ],
+            [
+              "L",
+              1,
+              0
+            ],
+            [
+              "L",
+              1,
+              1
+            ],
+            [
+              "L",
+              0,
+              1
+            ],
+            [
+              "Z"
+            ]
+          ],
+          "frame": {
+            "left": 0.15,
+            "top": 0.09999999999999988,
+            "width": 0.75,
+            "height": 0.7500000000000001
+          },
+          "fillRule": "nonzero"
+        },
+        {
+          "commands": [
+            [
+              "M",
+              0,
+              0
+            ],
+            [
+              "L",
+              1,
+              0
+            ],
+            [
+              "L",
+              1,
+              1
+            ],
+            [
+              "L",
+              0,
+              1
+            ],
+            [
+              "Z"
+            ]
+          ],
+          "frame": {
+            "left": 0.2,
+            "top": 0,
+            "width": 0.6000000000000001,
+            "height": 1
+          },
+          "fillRule": "nonzero"
+        },
+        {
+          "commands": [
+            [
+              "M",
+              0,
+              0
+            ],
+            [
+              "L",
+              1,
+              0
+            ],
+            [
+              "L",
+              1,
+              1
+            ],
+            [
+              "L",
+              0,
+              1
+            ],
+            [
+              "Z"
+            ],
+            [
+              "M",
+              0.5,
+              0.29999999999999993
+            ],
+            [
+              "C",
+              0.6104569499661594,
+              0.29999999999999993,
+              0.7000000000000005,
+              0.3895430500338413,
+              0.7000000000000005,
+              0.49999999999999994
+            ],
+            [
+              "C",
+              0.7000000000000005,
+              0.6104569499661586,
+              0.6104569499661594,
+              0.7,
+              0.5,
+              0.7
+            ],
+            [
+              "C",
+              0.3895430500338411,
+              0.7,
+              0.3,
+              0.6104569499661586,
+              0.3,
+              0.49999999999999994
+            ],
+            [
+              "C",
+              0.3,
+              0.38954305003384143,
+              0.3895430500338411,
+              0.29999999999999993,
+              0.5,
+              0.29999999999999993
+            ],
+            [
+              "Z"
+            ]
+          ],
+          "frame": {
+            "left": 0,
+            "top": 0,
+            "width": 1,
+            "height": 1
+          },
+          "fillRule": "evenodd"
+        }
+      ],
+      "fillRule": "nonzero",
+      "fill": "#0088cc",
+      "stroke": "none",
+      "strokeMm": 0.25,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    }
+  ]
+}
