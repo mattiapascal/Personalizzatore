@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { EditorAdminStore } from '../scripts/editor-admin-store';
+import { EditorAdminStore, MAX_LOCAL_ARCHIVE_BYTES } from '../scripts/editor-admin-store';
 import { createDocument } from '../src/editor/model';
 import { fixtureCatalog } from '../src/catalog/adapter';
 import { profileKey } from '../src/catalog/schema';
@@ -42,4 +42,11 @@ describe('backend locale del configuratore',()=>{
 
 it('legge famiglia tipografica, variante, peso e corsivo senza confondere il nome PostScript',async()=>{
  const {fontNames}=await import('../scripts/font-names');const values:[[number,string],[number,string],[number,string],[number,string],[number,string],[number,string]]=[[1,'TEST Family'],[2,'Bold Italic'],[4,'TEST Family Bold Italic'],[6,'TESTFamily-BoldItalic'],[16,'TEST Family'],[17,'Bold Italic']];const records=Buffer.alloc(values.length*12),strings=Buffer.concat(values.map(([,value])=>{const bytes=Buffer.from(value,'utf16le');return bytes.swap16();}));let offset=0;values.forEach(([id,value],i)=>{const at=i*12;records.writeUInt16BE(3,at);records.writeUInt16BE(1,at+2);records.writeUInt16BE(0x409,at+4);records.writeUInt16BE(id,at+6);records.writeUInt16BE(value.length*2,at+8);records.writeUInt16BE(offset,at+10);offset+=value.length*2;});const header=Buffer.alloc(6);header.writeUInt16BE(values.length,2);header.writeUInt16BE(6+records.length,4);const name=Buffer.concat([header,records,strings]),os2=Buffer.alloc(64);os2.writeUInt16BE(700,4);os2.writeUInt16BE(1,62);const sfnt=Buffer.alloc(12+32);sfnt.writeUInt32BE(0x10000);sfnt.writeUInt16BE(2,4);sfnt.write('name',12);sfnt.writeUInt32BE(sfnt.length,20);sfnt.writeUInt32BE(name.length,24);sfnt.write('OS/2',28);sfnt.writeUInt32BE(sfnt.length+name.length,36);sfnt.writeUInt32BE(os2.length,40);expect(fontNames(Buffer.concat([sfnt,name,os2]),'ttf')).toMatchObject({family:'TESTFamily-BoldItalic',familyGroup:'TEST Family',styleName:'Bold Italic',weight:700,italic:true});
+});
+
+it('budget archivio: superamento atomico, aggiornamento piccolo e capacità configurata entro il tetto locale',async()=>{
+ const first=await store.dispatch(save()),id=first.records[0]!.id,before=await readFile(join(directory,'state.json')),limited=new EditorAdminStore(directory,undefined,before.length+32);
+ await expect(limited.dispatch(save(1))).rejects.toThrow('nessun dato salvato');expect((await readFile(join(directory,'state.json'))).equals(before)).toBe(true);expect((await limited.read()).records).toHaveLength(1);
+ await limited.dispatch({tool:'archiveRecord',expectedRevision:1,arguments:{id,archived:true}});expect((await limited.read()).revision).toBe(2);await store.dispatch(save(2));expect((await store.read()).records).toHaveLength(2);
+ expect(MAX_LOCAL_ARCHIVE_BYTES).toBe(512*1024*1024);for(const size of[0,-1,NaN,MAX_LOCAL_ARCHIVE_BYTES+1])expect(()=>new EditorAdminStore(directory,undefined,size)).toThrow('Capacità');
 });

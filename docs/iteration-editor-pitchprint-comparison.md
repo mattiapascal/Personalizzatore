@@ -1,0 +1,37 @@
+# Confronto completo dei template e immagini originali — 12 novembre 2026
+
+## Riferimento corretto, soglie conservate
+
+Il lotto successivo comprende 135 sorgenti prioritari non ancora importati: 83 senza immagini di pagina attive, 51 con materiali già classificati nella libreria e uno con fondo grafico. I ruoli derivano dai dati e dalle classificazioni già salvate; non vengono dedotti dal solo colore o dal nome del file. Per i materiali il JSON conserva il riferimento, mentre il confronto produttivo lo esclude. Il fondo grafico viene invece confrontato con il suo originale e la griglia dell’immagine nativa.
+
+Primo confronto: 105 conformi e 30 da riesaminare. L’ispezione del caso «40x60 con stemmaa» ha individuato una differenza nel riferimento, che usava lo SVG di `FabricImage` 7 per ricostruire il disegno legacy: quando il frame supera i pixel dell’immagine, lo SVG lascia il bitmap alla dimensione naturale, mentre il vecchio disegno lo estende al frame dichiarato. Il confronto stava quindi segnalando anche errori del riferimento.
+
+Il nuovo helper di prova conserva trasformazioni e gruppi nativi, ma rappresenta il piano immagine con un viewport SVG esplicito. Non richiama geometria, crop o matrici del convertitore. Il comportamento è verificabile nel sorgente ufficiale di [Fabric 3.4.0, Image._renderFill](https://raw.githubusercontent.com/fabricjs/fabric.js/v3.4.0/src/shapes/image.class.js). Il confronto indipendente usa Canvas2D e sedici combinazioni di frame minore/uguale/maggiore dei pixel, crop frazionario, rotazioni, riflessioni e gruppi. Campionamento 8× per confrontare SVG e Canvas2D: massimo rapporto 0,003573 e massimo errore medio 0,007886/255. La prima prova a 4× superava il limite del solo test sintetico su un bordo piccolo; i log sono conservati. Le soglie del lotto reale restano **rapporto <0,01 ed errore medio <0,25/255, a 4×**, come fissate prima delle prove. Nessuna modifica al convertitore per far coincidere il suo output col riferimento.
+
+Ripetuti tutti i 135 confronti: **109 conformi visivamente, 26 oltre le soglie**. I primi rapporti, SVG e PNG sono conservati separatamente in `complete-remaining-prepared-first-reference/`; il secondo rapporto è in `complete-remaining-prepared/`. I 26 non vengono salvati. Restano casi di testi/stili e contorni da diagnosticare: non basta che il parser accetti il documento per dichiarare fedele la conversione.
+
+## Nessuna anteprima promossa a originale
+
+Due dei 109 casi indicano solo un URL `lowres`, senza originale dichiarato e verificato. Sono esclusi anche se il confronto visivo passa. Il convertitore delle immagini del corpo ora rifiuta indirizzi HTTP(S) nei percorsi `lowres`/`thumbs`, come già avveniva per le immagini di pagina. Un URL originale esplicito continua a prevalere sulla preview. Non viene ricostruito automaticamente un indirizzo presunto né sostituito il file con un’anteprima. Data URL e nomi dei file che contengono semplicemente la parola restano gestiti normalmente.
+
+Controllo degli URL su tutti i candidati con la nuova funzione: per ogni caso ammesso la sorgente selezionata è identica a quella del confronto; solo i due casi senza originale cambiano esito. **107 candidati conformi e 28 sospesi**. I due sono «40x60 con stemmaa» e «40x60 senzaXstemma». Questo controllo non modifica i loro sorgenti o le bozze già esistenti.
+
+## Salvataggio locale
+
+**107 nuove bozze salvate; archivio a 244 template**, due composizioni e 219 file font, revisione 391 → 498. Ogni copia conserva colori, misure in mm, provenienza/hash e tag originali più «PitchPrint» e «Da verificare». Nessuna associazione prodotto aggiunta. Il controllo dei digest ha verificato record preesistenti, font, impostazioni, profili e ordine dei tag, senza sovrascriverli.
+
+L’importazione ha avuto tre passaggi, tutti riconciliati per ID sorgente. Dopo le prime 55 copie il tetto del vecchio archivio di 256 MiB ha fermato atomicamente il salvataggio successivo. Dopo l’estensione collaudata sono state verificate altre 16 copie; il processo di controllo, che tratteneva troppe copie del grande JSON, ha esaurito la memoria. Il backend aveva completato un ulteriore record, riconosciuto alla ripresa anziché duplicato. Il verificatore alleggerito ha controllato i 72 già presenti e salvato gli ultimi 35. Nessun aumento dell’heap di Node. Copie di sicurezza alle revisioni 391, 446 e 463; giornali e rapporto finale privati in `.local/pitchprint-migration/complete-remaining-local-import/`.
+
+**Riaperti tutti i 107 record effettivamente salvati nel browser**, confrontando ID documento, oggetti, font, formato e colore del foglio con l’archivio. Zero errori di pagina o avvisi, zero scritture amministrative, checksum dell’archivio invariato. Le schermate campione e il rapporto `reopen-report.json` restano privati. Verificate anche tutte le **107 miniature**: prima generazione, ricaricamento e secondo giro dalla cache persistente, senza richieste dei record per i 107 ID, errori o scritture; checksum ancora invariato. Il verificatore ha richiesto due correzioni proprie: scorrere ogni scheda in vista per attivare il caricamento differito e distinguere gli omonimi per ordinamento stabile degli ID. I due arresti precedenti non erano guasti delle miniature; log conservati. La regressione completa aggiornata è ancora in esecuzione.
+
+[Capacità e cache dell’archivio locale](iteration-editor-archive-capacity.md): tetto 512 MiB, letture condivise per identità del file, contenitori indipendenti e stringhe delle risorse identiche condivise in memoria. Il formato JSON su disco non cambia.
+
+Sorgenti, originali e dati personali restano in `.local`, fuori da Git. Le bozze hanno ancora `fixture: true`, `validatedForProduction: false` e tag «Da verificare»: non sono un’autorizzazione alla produzione o una dichiarazione di parità completa con PitchPrint. I vecchi template con glifi da correggere sono conservati, senza sostituzioni di font o sovrascritture.
+
+## Prove e prossimi lavori
+
+**783 unitari / 119 file, 49 browser pertinenti, build locale/pubblica, scansioni segreti e 39 campioni JSON/SVG passati.** I 49 comprendono il nuovo riferimento raster, la regressione di gruppi/contorni e l’importazione UI di un’immagine solo lowres: nessuna richiesta dell’anteprima, nessun risultato parziale o azione di salvataggio proposta. I 13 browser pubblici locali sono passati. La regressione completa precedente era **511/511**, prima della guardia aggiuntiva, della cache/capacità backend e dei due nuovi casi; non viene dichiarata una nuova esecuzione completa dei 513 casi. Nessun cambiamento al modello canonico o alla semantica dei comandi manuali/AI.
+
+Il benchmark storico con sfondi globalmente esclusi contava 279/370 accettati dal parser prima della nuova guardia. I due nuovi arresti sugli originali e i 28 confronti non conformi mostrano perché quel conteggio non certifica la fedeltà del lotto intero. I dati effettivi delle copie salvate e i risultati di confronto vanno tenuti distinti dal solo superamento del parser.
+
+Proseguire con la diagnosi dei 28 sospesi e con i [fondi vettoriali attivi](editor-page-vector-plan.md); ci sono inoltre 29 candidati che richiedono classificazione/capacità prima del confronto completo. Biglietti da visita, Templates PitchPrint e altri testi curvi restano a bassa priorità. Multipagina e nuove immagini AI esclusi. Collaudo umano Illustrator ancora necessario. Nessun deploy o modifica a Shopify, tema, PitchPrint, BSS, prezzi, carrello, checkout o chat pubblicata.

@@ -1,3 +1,4 @@
+import{legacyImageReferenceMarkup}from'./pitchprint-raster-reference.browser';
 import {config,Group,IText,Textbox,Rect,Circle,Ellipse,Line,Path,Polygon,Polyline,FabricImage,StaticCanvas,type FabricObject} from 'fabric';
 import {pitchprintFontRequest,fontNameKey} from '../../src/editor/pitchprint-fonts';
 import {loadFontAssets,renderFontFamily,embedSvgFonts} from '../../src/editor/fonts';
@@ -20,7 +21,7 @@ export async function pitchprintReferenceSvg(source:any,asset:FontAsset|FontAsse
    const styles=structuredClone(raw.styles??{});for(const row of Object.values(styles) as any[])for(const style of Object.values(row) as any[])if(['fontFamily','fontWeight','fontStyle'].some(key=>style[key]!==undefined)){style.fontFamily=renderFontFamily(font({...raw,...style}).id);style.fontWeight=style.fontStyle='normal';}
    const textOptions={...options,styles,fontFamily:renderFontFamily(font(raw).id),fontWeight:'normal',fontStyle:'normal' as const,stroke:null,strokeWidth:0};return type==='textbox'?new Textbox(raw.text,textOptions):new IText(raw.text,textOptions);
   }
-  if(type==='image')return FabricImage.fromURL(raw.src,{},options);
+  if(type==='image'){const image=await FabricImage.fromURL(raw.src,{},options);image._toSVG=()=>legacyImageReferenceMarkup(image);return image;}
   // Legacy full circles store radians; Fabric 7 expects degrees. Keep the
   // independent reference faithful to the original full circle, not a 6° arc.
   if(type==='rect')return new Rect(options);if(type==='circle')return new Circle({...options,...((raw.startAngle??0)===0&&Math.abs(raw.endAngle-2*Math.PI)<1e-9?{endAngle:360}:{})});if(type==='ellipse')return new Ellipse(options);if(type==='line')return new Line([raw.x1,raw.y1,raw.x2,raw.y2],options);if(type==='path')return new Path(raw.path,options);if(type==='polygon')return new Polygon(raw.points,options);if(type==='polyline')return new Polyline(raw.points,options);throw new Error('Tipo di riferimento TEST non previsto');

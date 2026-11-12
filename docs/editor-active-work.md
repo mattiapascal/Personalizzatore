@@ -1,3 +1,5 @@
+**12 novembre — checkpoint:** [107 nuove bozze complete](iteration-editor-pitchprint-comparison.md), archivio a **244 template**, due composizioni e 219 font conservati. Tutte le nuove copie riaperte in sola lettura e 107 miniature verificate dalla cache dopo ricaricamento; regressione completa aggiornata in esecuzione. [Cache/capacità locale](iteration-editor-archive-capacity.md) a 512 MiB, senza migrazione del JSON. Confronti completati sui 135 candidati; prossimi casi: 28 sospesi e fondi SVG attivi, oltre ai 29 da classificare o estendere. Nessuna associazione prodotto o deploy.
+
 # Lavori attivi e direttive più recenti — 12 novembre 2026
 
 Questa nota mantiene le richieste più recenti. Gli incrementi completati e quelli ancora aperti sono distinti qui sotto.
@@ -37,4 +39,4 @@ Tutto locale. Nessun deploy o modifica a Shopify, tema, PitchPrint, BSS, prezzi,
 
 ## Prossimo blocco di conversione
 
-Sfondi/primi piani raster e contorni deformati ora conservati con originali e precisione collaudati. Prima completare il confronto indipendente dei **135 candidati** individuati in sola lettura, importando solo risultati conformi con backup e senza sovrascritture. Poi proseguire con gli **sfondi SVG di pagina** ([piano](editor-page-vector-plan.md)): conservare vettori, colori, proporzioni, griglia d’anteprima e distinzione grafica/materiale; nessuna sostituzione con miniature. Poi maschere/opacità e copertura dei caratteri. Non cancellare elementi per aggirare i blocchi e non importare risultati che superino soltanto il primo errore del convertitore.
+Sfondi/primi piani raster e contorni deformati ora conservati con originali e precisione collaudati. Completato il confronto indipendente dei **135 candidati**: 107 importati, 28 sospesi. Miniature e riapertura verificate; codice sincronizzato dopo unitari, build, regressioni pertinenti e pubbliche. Attendere l’esito della suite completa prima di modificare ancora il codice. Poi proseguire con gli **sfondi SVG di pagina** ([piano](editor-page-vector-plan.md)): conservare vettori, colori, proporzioni, griglia d’anteprima e distinzione grafica/materiale; nessuna sostituzione con miniature. Poi maschere/opacità e copertura dei caratteri. Non cancellare elementi per aggirare i blocchi e non importare risultati che superino soltanto il primo errore del convertitore.

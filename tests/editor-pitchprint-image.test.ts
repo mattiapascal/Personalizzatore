@@ -59,3 +59,10 @@ it('decodifica un originale oltre il vecchio megapixel senza aumentare il limite
   expect(bytes.length).toBeLessThan(256_000); expect(source.pixelWidth * source.pixelHeight).toBe(1_638_400); await validatePngData(source.dataUrl);
   expect(() => rasterSourceFromBytes('too-large', testPng(6001, 4000))).toThrow('24 milioni');
 });
+
+it('non promuove lowres e miniature a originali; un originale esplicito prevale sulla preview',()=>{
+ for(const folder of['lowres','thumbs','LOWRES'])for(const field of['src','url'])expect(()=>pitchprintImageUrl({[field]:`https://pitchprint.io/${folder}/unverified.TEST.png`})).toThrow('originale verificato');
+ expect(pitchprintImageUrl({url:'https://pitchprint.io/assets/original.TEST.png',src:'https://pitchprint.io/lowres/original.TEST.png'})).toBe('https://pitchprint.io/assets/original.TEST.png');
+ expect(pitchprintImageUrl({src:'https://pitchprint.io/assets/original.TEST.png?note=/lowres/unused'})).toContain('/assets/');
+ expect(pitchprintImageUrl({src:'data:image/png;base64,/lowres/'})).toBe('data:image/png;base64,/lowres/');
+});

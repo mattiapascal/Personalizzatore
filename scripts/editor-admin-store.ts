@@ -1,3 +1,5 @@
+import{EditorAdminReadCache,cloneArchiveValue,MAX_LOCAL_ARCHIVE_BYTES}from'./editor-admin-read-cache';
+export{MAX_LOCAL_ARCHIVE_BYTES}from'./editor-admin-read-cache';
 import { MAX_FONT_LIBRARY_BYTES } from '../src/editor-admin/font-library-limits';
 import {archivePreviewContent} from '../src/editor-admin/preview-key';
 import {AdminRevisionConflictError} from '../src/editor-admin/errors';
@@ -13,14 +15,15 @@ import { profileKey } from '../src/catalog/schema';
 import { validateProductionProfile } from '../src/editor-admin/production-profile';
 import { planFontLibraryRestore } from '../src/editor-admin/font-backup';
 import { archiveTagVocabulary,canonicalRecordTags,uniqueTags,tagKey } from '../src/editor-admin/archive-tags';
-import { mkdir, readFile, writeFile, rename, stat } from 'node:fs/promises';
+import { mkdir, writeFile, rename, stat, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID,createHash } from 'node:crypto';
-import { AdminStateSchema, AdminCommandSchema, DEFAULT_ADMIN_SETTINGS, type AdminSnapshot, type AdminState } from '../src/editor-admin/schema';
+import { AdminStateSchema, AdminCommandSchema, type AdminSnapshot, type AdminState } from '../src/editor-admin/schema';
 export function adminSnapshot(state:AdminState):AdminSnapshot {
  return {...state,records:state.records.map(({document,...record})=>({...record,previewKey:createHash('sha256').update(archivePreviewContent(document)).digest('hex'),graphicFamily:document.plaque?'plaque' as const:'stamp-test' as const})),fonts:state.fonts.map(({dataBase64,...font})=>{const names=fontNames(Buffer.from(dataBase64,'base64'),font.format);return{...font,fileHash:createHash('sha256').update(Buffer.from(dataBase64,'base64')).digest('hex'),actualFamily:names.postscriptName??names.fullName??names.family,actualFullName:names.fullName,actualFamilyGroup:font.familyGroup??names.familyGroup,detectedFamilyGroup:names.familyGroup,detectedCategories:detectedFontCategories(Buffer.from(dataBase64,'base64'),font.format),actualStyleName:font.styleName??names.styleName,actualWeight:font.weight??names.weight,actualItalic:font.italic??names.italic};})};
 }
 export class EditorAdminStore {
+ private readonly readCache:EditorAdminReadCache;
  private fontFilesCache:{key:string;pending:Promise<Map<string,{format:string;dataBase64:string}>>}|null=null;
  /** All font GETs share one validated archive read per on-disk revision. */
  async readFont(id:string):Promise<{format:string;dataBase64:string}|undefined>{
@@ -30,10 +33,10 @@ export class EditorAdminStore {
   const cache=this.fontFilesCache;try{return(await cache.pending).get(id);}catch(error){if(this.fontFilesCache===cache)this.fontFilesCache=null;throw error;}
  }
  private queue:Promise<unknown>=Promise.resolve();
- constructor(private directory:string,private resolveShopProduct?:(id:string)=>Promise<ShopProductDetail>){}
+ constructor(private directory:string,private resolveShopProduct?:(id:string)=>Promise<ShopProductDetail>,private readonly maxArchiveBytes=MAX_LOCAL_ARCHIVE_BYTES){if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<=0||maxArchiveBytes>MAX_LOCAL_ARCHIVE_BYTES)throw Error('Capacità archivio locale non valida');this.readCache=new EditorAdminReadCache(directory);}
  async previewFontRestore(raw:unknown){const command=AdminCommandSchema.parse(raw);if(command.tool!=='restoreFontLibrary')throw new Error('Richiesta di ripristino non valida');const state=await this.read();if(command.expectedRevision!==state.revision)throw new AdminRevisionConflictError();for(const font of command.arguments.backup.fonts)validateFontFile(font);return planFontLibraryRestore(command.arguments.backup,state);}
- async read():Promise<AdminState>{try{return AdminStateSchema.parse(JSON.parse(await readFile(join(this.directory,'state.json'),'utf8')));}catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return{schemaVersion:1,revision:0,settings:{...DEFAULT_ADMIN_SETTINGS},records:[],fonts:[]};throw error;}}
- async dispatch(raw:unknown):Promise<AdminSnapshot>{const work=async()=>{const command=AdminCommandSchema.parse(raw),state=await this.read();if(state.revision!==command.expectedRevision)throw new AdminRevisionConflictError();const now=new Date().toISOString();
+ async read():Promise<AdminState>{return cloneArchiveValue((await this.readCache.get()).state);}
+ async dispatch(raw:unknown):Promise<AdminSnapshot>{const work=async()=>{const command=AdminCommandSchema.parse(raw),snapshot=await this.readCache.get(),state=cloneArchiveValue(snapshot.state);if(state.revision!==command.expectedRevision)throw new AdminRevisionConflictError();const now=new Date().toISOString();
   switch(command.tool){
    case'setFontCategories':{const {ids,categories,mode}=command.arguments;if(new Set(ids).size!==ids.length)throw new Error('Font duplicati nella selezione');for(const id of ids){const font=state.fonts.find(item=>item.id===id);if(!font)throw new Error('Un font non è più disponibile: nessuna categoria modificata');const detected=detectedFontCategories(Buffer.from(font.dataBase64,'base64'),font.format),labels=canonicalRecordTags(categories??detected,fontCategories(state.fonts)),current=font.categories??detected;font.categories=mode==='replace'?uniqueTags(labels):mode==='add'?uniqueTags([...current,...labels]):current.filter(label=>!labels.some(value=>tagKey(value)===tagKey(label)));font.updatedAt=now;}break;}
    case'importPitchprintTemplate':{const {origin,title,tags,document}=command.arguments,existing=state.records.find(record=>record.pitchprintSource?.sourceId===origin.sourceId);if(existing){if(existing.pitchprintSource!.sourceHash!==origin.sourceHash)throw new Error('Sorgente già importato ma cambiato: apri il template esistente per una revisione esplicita. Nessuna sovrascrittura.');return adminSnapshot(state);}const known=archiveTagVocabulary(state),labels=canonicalRecordTags(uniqueTags(['PitchPrint','Da verificare',...tags]),known);if(labels.length>20)throw new Error('Troppi tag per il template');state.tagOrder=uniqueTags([...known,...labels]);state.records.push({id:randomUUID(),kind:'template',title,tags:labels,clientRef:'',document:{...document,validatedForProduction:false},version:1,archived:false,createdAt:now,updatedAt:now,pitchprintSource:origin});break;}
@@ -59,5 +62,5 @@ export class EditorAdminStore {
    case'archiveFont':{const font=state.fonts.find(f=>f.id===command.arguments.id);if(!font)throw new Error('Font non trovato');font.archived=command.arguments.archived;font.updatedAt=now;break;}
    case'updateFontMetadata':{const {id,...metadata}=command.arguments,font=state.fonts.find(f=>f.id===id);if(!font)throw new Error('Font non trovato');if(font.source==='google'&&(metadata.family!==font.family||metadata.sourceUrl!==(font.sourceUrl??'')||metadata.licenseText!==(font.licenseText??'')))throw new Error('Nome, fonte e licenza di Google Fonts sono conservati dall’importazione; puoi modificare le note.');Object.assign(font,metadata,{title:metadata.family,updatedAt:now});break;}
   }
-  state.revision++;AdminStateSchema.parse(state);if(Buffer.byteLength(JSON.stringify(state.fonts))>MAX_FONT_LIBRARY_BYTES)throw new Error('Libreria font oltre 64 MB: esporta un backup e rivedi i file prima di continuare');const content=JSON.stringify(state);if(Buffer.byteLength(content)>256*1024*1024)throw new Error('Archivio locale oltre 256 MB: esporta e archivia i progetti prima di continuare');await mkdir(this.directory,{recursive:true});const temp=join(this.directory,`state-${randomUUID()}.tmp`);await writeFile(temp,content,{mode:0o600});await rename(temp,join(this.directory,'state.json'));return adminSnapshot(state);};const result=this.queue.then(work);this.queue=result.catch(()=>{});return result;}
+  state.revision++;AdminStateSchema.parse(state);if(Buffer.byteLength(JSON.stringify(state.fonts))>MAX_FONT_LIBRARY_BYTES)throw new Error('Libreria font oltre 64 MB: esporta un backup e rivedi i file prima di continuare');const content=JSON.stringify(state);if(Buffer.byteLength(content)>this.maxArchiveBytes){const limit=this.maxArchiveBytes>=1024*1024?`${this.maxArchiveBytes/1024/1024} MB`:`${Math.ceil(this.maxArchiveBytes/1024)} KB`;throw new Error(`Archivio locale oltre ${limit}: nessun dato salvato; occorre estendere la capacità dell’archivio locale`);}await mkdir(this.directory,{recursive:true});const temp=join(this.directory,`state-${randomUUID()}.tmp`);try{await writeFile(temp,content,{mode:0o600});if(!await this.readCache.isCurrent(snapshot.key))throw new AdminRevisionConflictError();await rename(temp,join(this.directory,'state.json'));this.readCache.invalidate();this.fontFilesCache=null;}catch(error){await unlink(temp).catch(()=>{});throw error;}return adminSnapshot(state);};const result=this.queue.then(work);this.queue=result.catch(()=>{});return result;}
 }

@@ -20,5 +20,7 @@ export function pitchprintImageGeometry(item: Record<string, unknown>, source: R
 export function pitchprintImageUrl(item: Record<string, unknown>): string {
   const url = typeof item.url === 'string' && item.url ? item.url : typeof item.src === 'string' ? item.src : '';
   if (!url) throw Error('Immagine priva di sorgente.');
+  let address:URL|undefined;try{address=new URL(url);}catch{}
+  if(address&&['http:','https:'].includes(address.protocol)&&/\/(?:lowres|thumbs)\//i.test(address.pathname))throw Error('Manca l’originale verificato dell’immagine: l’anteprima non viene usata come file produttivo.');
   return url;
 }
