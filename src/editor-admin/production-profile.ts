@@ -1,8 +1,9 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'../editor/limits';
 import {PlaqueFamilySchema} from '../editor/plaque';
 import { z } from 'zod';
 import { ShopProfileBindingSchema } from './shop-catalog';
 import { ReservedRegionsSchema,assertRegionsFit } from '../editor/regions';
-const nullableMm=z.number().finite().positive().max(1000).nullable(),label=z.string().trim().min(1).max(120);
+const nullableMm=z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.pageSideMm).nullable(),label=z.string().trim().min(1).max(120);
 export const FixingProfileSchema=z.strictObject({id:z.string().uuid(),label,kind:z.enum(['holes-only','kit']),drilling:z.strictObject({diameterMm:nullableMm,offsetXMm:nullableMm,offsetYMm:nullableMm,clearanceMm:z.number().finite().min(0).max(100).nullable(),pattern:z.enum(['top-pair','bottom-pair','four-corners'])}).nullable()});
 export const ProductionProfileDataSchema=z.strictObject({
  plaqueFamily:PlaqueFamilySchema.optional(),

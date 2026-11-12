@@ -1,5 +1,6 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import { z } from 'zod';
-export const ReservedRegionSchema=z.strictObject({id:z.string().uuid(),label:z.string().trim().min(1).max(120),xMm:z.number().finite().min(0).max(1000),yMm:z.number().finite().min(0).max(1000),widthMm:z.number().finite().positive().max(1000),heightMm:z.number().finite().positive().max(1000),shape:z.enum(['rectangle','ellipse'])});
+export const ReservedRegionSchema=z.strictObject({id:z.string().uuid(),label:z.string().trim().min(1).max(120),xMm:z.number().finite().min(0).max(GRAPHIC_GEOMETRY_LIMITS.pageSideMm),yMm:z.number().finite().min(0).max(GRAPHIC_GEOMETRY_LIMITS.pageSideMm),widthMm:z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.pageSideMm),heightMm:z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.pageSideMm),shape:z.enum(['rectangle','ellipse'])});
 export const ReservedRegionsSchema=z.array(ReservedRegionSchema).max(20).refine(regions=>new Set(regions.map(region=>region.id)).size===regions.length,'ID duplicati nelle zone');
 export type ReservedRegion=z.infer<typeof ReservedRegionSchema>;
 export interface RegionArea {width:number;height:number;shape:'rectangle'|'square'|'round';}

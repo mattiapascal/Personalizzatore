@@ -1,16 +1,17 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import { PaintOpacityFields } from './paint-opacity';
 import { StrokeWidthSchema } from './stroke';
 import { VectorCommandsSchema, vectorBounds } from './vector-geometry';
 import { z } from 'zod';
 import { BezierNodeSchema, bezierBounds, MAX_BEZIER_NODES } from './bezier-geometry';
-const size = z.number().finite().positive().max(1000), dimension = z.number().finite().nonnegative().max(1000), paint = z.enum(['#000000', '#ffffff', 'none']);
+const size = z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), dimension = z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), paint = z.enum(['#000000', '#ffffff', 'none']);
 const appearance = { ...PaintOpacityFields, stroke: paint, strokeMm: StrokeWidthSchema, fill: paint.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() };
 const point = z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) });
 export const TextPathGuideSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('vector'), widthMm: dimension, heightMm: dimension, commands: VectorCommandsSchema.max(4096), ...appearance, fill: paint, fillRule: z.enum(['evenodd','nonzero']), strokeLineCap: z.enum(['butt','round','square']), strokeLineJoin: z.enum(['miter','round','bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
   z.strictObject({ type: z.literal('line'), lengthMm: size, ...appearance, stroke: z.enum(['#000000', '#ffffff']), fill: z.literal('none').optional() }),
-  z.strictObject({ type: z.literal('circle'), radiusMm: z.number().finite().positive().max(500), ...appearance }),
-  z.strictObject({ type: z.literal('ellipse'), rxMm: z.number().finite().positive().max(500), ryMm: z.number().finite().positive().max(500), ...appearance }),
+  z.strictObject({ type: z.literal('circle'), radiusMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ...appearance }),
+  z.strictObject({ type: z.literal('ellipse'), rxMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ryMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ...appearance }),
   z.strictObject({ type: z.literal('path'), widthMm: dimension, heightMm: dimension, points: z.array(point).min(2).max(512), closed: z.boolean(), ...appearance, stroke: z.enum(['#000000', '#ffffff']) }),
   z.strictObject({ type: z.literal('bezier'), widthMm: dimension, heightMm: dimension, nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), ...appearance, stroke: z.enum(['#000000', '#ffffff']) }),
 ]).superRefine((guide, ctx) => {
@@ -27,7 +28,7 @@ export const TextPathGuideSchema = z.discriminatedUnion('type', [
   }
 });
 export type TextPathGuide = z.infer<typeof TextPathGuideSchema>;
-export const TextPathSchema = z.strictObject({ guide: TextPathGuideSchema, originalPathId: z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/), offsetMm: z.number().finite().min(-10000).max(10000), normalOffsetMm: z.number().finite().min(-1000).max(1000).optional(), baseline: z.enum(['baseline', 'ascender', 'descender']), reversed: z.boolean(), showGuide: z.boolean() });
+export const TextPathSchema = z.strictObject({ guide: TextPathGuideSchema, originalPathId: z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/), offsetMm: z.number().finite().min(-10000).max(10000), normalOffsetMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.objectSideMm).max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm).optional(), baseline: z.enum(['baseline', 'ascender', 'descender']), reversed: z.boolean(), showGuide: z.boolean() });
 export type TextPathBinding = z.infer<typeof TextPathSchema>;
 export const TextPathOptionsSchema = TextPathSchema.pick({ offsetMm: true, normalOffsetMm: true, baseline: true, reversed: true, showGuide: true }).partial().refine(value => Object.keys(value).length > 0, 'Specifica almeno un’opzione del testo su tracciato');
 export function scaledTextPath(binding: TextPathBinding, scale: number): TextPathBinding {

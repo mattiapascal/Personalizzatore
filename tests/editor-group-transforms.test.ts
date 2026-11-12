@@ -62,7 +62,7 @@ describe('trasformazione atomica di gruppi e selezioni', () => {
   });
   it('JSON e storico conservano lo stesso risultato e una trasformazione oltre i limiti è rifiutata atomicamente', () => {
     const doc = source(), store = new DocumentStore(doc, measure);
-    expect(() => store.dispatch(command(0, 1, 0, { xMm: 1001, yMm: 1001 }), 'manual')).toThrow(); expect(store.document).toEqual(doc);
+    expect(() => store.dispatch(command(0, 1, 0, { xMm: 10001, yMm: 10001 }), 'manual')).toThrow(); expect(store.document).toEqual(doc);
     store.dispatch(command(0), 'manual'); const transformed = structuredClone(store.document);
     store.import(JSON.parse(JSON.stringify(transformed))); expect(store.document.objects).toEqual(transformed.objects);
     store.undo(); store.undo(); expect(store.document.objects).toEqual(doc.objects); store.redo(); store.redo();

@@ -1,7 +1,8 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import {z} from 'zod';
 export const PlaqueFamilySchema=z.enum(['flat-plaque','doorplate','boxed-sign']);
 export type PlaqueFamily=z.infer<typeof PlaqueFamilySchema>;
-export const PlaqueMountingSchema=z.strictObject({policyVersion:z.literal('local-mounting-v1').optional(),family:PlaqueFamilySchema.optional(),method:z.enum(['glue','holes','screws','spacer-midi','spacer-maxi','brackets']),pattern:z.enum(['horizontal-pair','vertical-pair','four-corners']),offsetXMm:z.number().finite().positive().max(1000),offsetYMm:z.number().finite().positive().max(1000),holeDiameterMm:z.number().finite().positive().max(100).nullable()});
+export const PlaqueMountingSchema=z.strictObject({policyVersion:z.literal('local-mounting-v1').optional(),family:PlaqueFamilySchema.optional(),method:z.enum(['glue','holes','screws','spacer-midi','spacer-maxi','brackets']),pattern:z.enum(['horizontal-pair','vertical-pair','four-corners']),offsetXMm:z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.pageSideMm),offsetYMm:z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.pageSideMm),holeDiameterMm:z.number().finite().positive().max(100).nullable()});
 export type PlaqueMounting=z.infer<typeof PlaqueMountingSchema>;
 export const DEFAULT_PLAQUE_MOUNTING:PlaqueMounting={policyVersion:'local-mounting-v1',method:'glue',pattern:'four-corners',offsetXMm:15,offsetYMm:15,holeDiameterMm:null};
 export const mountingLabels={glue:'Incollaggio, senza fori',holes:'Solo fori, senza accessori',screws:'Viti','spacer-midi':'Distanziatori Midi','spacer-maxi':'Distanziatori Maxi',brackets:'Staffe'}as const;

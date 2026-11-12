@@ -1,3 +1,4 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import { useEffect, useState } from 'react';
 import { NumberField } from './InspectorNumberField';
 import { EditorButton } from './EditorButton';
@@ -16,8 +17,8 @@ export function BezierNodeInspector({ object, revision, onChange, onFocusNode }:
   const coordinates = (part: BezierPart, label: string) => {
     const p = part === 'point' ? node : node[part]; if (!p) return null;
     return <div className="property-grid" key={`${index}-${part}`}>
-      <NumberField label={`X ${label} (mm)`} value={p.x} revision={revision} min={-1000} max={1000} onChange={x => change(() => moveBezierPart(object, index, part, { ...p, x }, measureFabric))}/>
-      <NumberField label={`Y ${label} (mm)`} value={p.y} revision={revision} min={-1000} max={1000} onChange={y => change(() => moveBezierPart(object, index, part, { ...p, y }, measureFabric))}/>
+      <NumberField label={`X ${label} (mm)`} value={p.x} revision={revision} min={-GRAPHIC_GEOMETRY_LIMITS.coordinateMm} max={GRAPHIC_GEOMETRY_LIMITS.coordinateMm} onChange={x => change(() => moveBezierPart(object, index, part, { ...p, x }, measureFabric))}/>
+      <NumberField label={`Y ${label} (mm)`} value={p.y} revision={revision} min={-GRAPHIC_GEOMETRY_LIMITS.coordinateMm} max={GRAPHIC_GEOMETRY_LIMITS.coordinateMm} onChange={y => change(() => moveBezierPart(object, index, part, { ...p, y }, measureFabric))}/>
     </div>;
   };
   return <>

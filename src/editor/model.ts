@@ -12,14 +12,15 @@ import {PlaqueMountingSchema,plaqueMountingPoints} from './plaque';
 import { FontAssetsSchema, FontIdSchema } from './font-assets';
 import { fitComposition } from './format-adaptation';
 import { InkColorSchema } from './ink';
-import { EDITOR_LIMITS } from './limits';
+import { EDITOR_LIMITS,GRAPHIC_GEOMETRY_LIMITS } from './limits';
+import {GraphicAreaSchema as AreaSchema}from'./graphic-area';
 import { assertDocumentTextProduction, assertMinimumText, minimumFontForProduct } from './text-production';
 import { VectorCommandsSchema, VectorClipSchema, vectorBounds, vectorContours } from './vector-geometry';
 import { attachTextPath, detachTextPath, updateTextPath, preserveTextPathGuide } from './text-path-model';
 import { TextPathSchema, TextPathOptionsSchema } from './text-path-spec';
 import { JustificationSchema } from './justification';
 import { z } from 'zod';
-import { AreaSchema, ShapeSchema, profileKey, type ProductProfile } from '../catalog/schema';
+import { ShapeSchema, profileKey, type ProductProfile } from '../catalog/schema';
 import { applySelectionCommand, isSelectionCommand, selectionUnits } from './selection';
 import { ellipseIntersectsArea } from './ellipse-intersection';
 import { pathIntersectsArea } from './path-intersection';
@@ -30,7 +31,7 @@ import { RasterCropSchema, checkedRasterCrop } from './raster-geometry';
 import { areaAlignmentDelta } from './align-area';
 import { BezierNodeSchema, bezierBounds, flattenBezier, MAX_BEZIER_NODES } from './bezier-geometry';
 
-const position = { xMm: z.number().finite().min(-1000).max(1000), yMm: z.number().finite().min(-1000).max(1000) };
+const position = { xMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(GRAPHIC_GEOMETRY_LIMITS.coordinateMm), yMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(GRAPHIC_GEOMETRY_LIMITS.coordinateMm) };
 const rotation = z.number().finite().min(-180).max(180);
 const id = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/);
 const color = ColorSchema;
@@ -62,18 +63,18 @@ const textAppearance = {
   letterSpacingPt: z.number().finite().min(EDITOR_LIMITS.minTrackingPt).max(EDITOR_LIMITS.maxTrackingPt).optional(),
 };
 const shapeAppearance = { ...PaintOpacityFields, fill: paint.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() };
-export const TextBoxSchema = z.strictObject({ widthMm: z.number().finite().positive().max(1000), heightMm: z.number().finite().positive().max(1000), autoWidth: z.boolean(), autoHeight: z.literal(true) });
+export const TextBoxSchema = z.strictObject({ widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), autoWidth: z.boolean(), autoHeight: z.literal(true) });
 const textContent = z.string().max(EDITOR_LIMITS.textCharacters*2).refine(t => !/[\r\u0000-\u0009\u000b-\u001f]/.test(t) && Array.from(t).length<=EDITOR_LIMITS.textCharacters && t.split('\n').length <= EDITOR_LIMITS.textLines, `Massimo ${EDITOR_LIMITS.textCharacters} caratteri Unicode e ${EDITOR_LIMITS.textLines} righe per box nel laboratorio`);
 export const SceneObjectSchema = z.discriminatedUnion('type', [
   z.strictObject({ id, type: z.literal('text'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), text: textContent, fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fontFamily, fill: color, ...textAppearance, textBox: TextBoxSchema.optional(), characterStyles: characterRuns }),
-  z.strictObject({ id, type: z.literal('rect'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().positive().max(1000), heightMm: z.number().positive().max(1000), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance, cornerRadiusMm: z.number().finite().min(0).max(500).optional() }),
-  z.strictObject({ id, type: z.literal('circle'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: z.literal(0).optional(), radiusMm: z.number().positive().max(500), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
-  z.strictObject({ id, type: z.literal('line'), ...PaintOpacityFields, ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), lengthMm: z.number().finite().positive().max(1000), strokeMm: StrokeWidthSchema, stroke: color, fill: z.literal('none').optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }),
-  z.strictObject({ id, type: z.literal('ellipse'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), rxMm: z.number().finite().positive().max(500), ryMm: z.number().finite().positive().max(500), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
-  z.strictObject({ id, type: z.literal('path'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000), points: z.array(z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) })).min(2).max(512), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
-  z.strictObject({ id, type: z.literal('image'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().positive().max(1000), heightMm: z.number().finite().positive().max(1000), source: RasterSourceSchema, raster: RasterParametersSchema, pixelAspectRatio: z.number().finite().min(0.01).max(100).optional(), crop: RasterCropSchema.optional(), flipX: z.boolean().optional(), flipY: z.boolean().optional() }),
-  z.strictObject({ id, type: z.literal('vector'), ...PaintOpacityFields, ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000), commands: VectorCommandsSchema, clipRect: VectorClipSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), fillRule: z.enum(['evenodd', 'nonzero']), fill: paint, stroke: paint, strokeMm: StrokeWidthSchema, strokeLineCap: z.enum(['butt', 'round', 'square']), strokeLineJoin: z.enum(['miter', 'round', 'bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
-  z.strictObject({ id, type: z.literal('bezier'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('rect'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance, cornerRadiusMm: z.number().finite().min(0).max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2).optional() }),
+  z.strictObject({ id, type: z.literal('circle'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: z.literal(0).optional(), radiusMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('line'), ...PaintOpacityFields, ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), lengthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: color, fill: z.literal('none').optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }),
+  z.strictObject({ id, type: z.literal('ellipse'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), rxMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ryMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('path'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), points: z.array(z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) })).min(2).max(512), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('image'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), source: RasterSourceSchema, raster: RasterParametersSchema, pixelAspectRatio: z.number().finite().min(0.01).max(100).optional(), crop: RasterCropSchema.optional(), flipX: z.boolean().optional(), flipY: z.boolean().optional() }),
+  z.strictObject({ id, type: z.literal('vector'), ...PaintOpacityFields, ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), commands: VectorCommandsSchema, clipRect: VectorClipSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), fillRule: z.enum(['evenodd', 'nonzero']), fill: paint, stroke: paint, strokeMm: StrokeWidthSchema, strokeLineCap: z.enum(['butt', 'round', 'square']), strokeLineJoin: z.enum(['miter', 'round', 'bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
+  z.strictObject({ id, type: z.literal('bezier'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
 ]);
 export type SceneObject = z.infer<typeof SceneObjectSchema>;
 export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
@@ -220,15 +221,15 @@ export function cloneGraphicDocument(document: GraphicDocument): GraphicDocument
   return { ...document, ...(document.pageOrder?{pageOrder:[...document.pageOrder]}:{}),...(document.otherPages?{otherPages:document.otherPages.map(page=>{const{objects,groups,areaMm,...rest}=page;return{...structuredClone(rest),areaMm:{...areaMm},objects:objects.map(cloneSceneObject),...(groups?{groups:groups.map(cloneSceneGroup)}:{})};})}:{}), ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
 }
 export const ObjectSizeSchema = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('vector'), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000) }),
+  z.strictObject({ type: z.literal('vector'), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
   z.strictObject({ type: z.literal('text'), fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), textScaleX: textScale.optional(), textScaleY: textScale.optional(), textBox: TextBoxSchema.optional(), textPath: TextPathSchema.optional() }),
-  z.strictObject({ type: z.literal('rect'), widthMm: z.number().positive().max(1000), heightMm: z.number().positive().max(1000) }),
-  z.strictObject({ type: z.literal('circle'), radiusMm: z.number().positive().max(500) }),
-  z.strictObject({ type: z.literal('line'), lengthMm: z.number().finite().positive().max(1000) }),
-  z.strictObject({ type: z.literal('ellipse'), rxMm: z.number().finite().positive().max(500), ryMm: z.number().finite().positive().max(500) }),
-  z.strictObject({ type: z.literal('path'), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000) }),
-  z.strictObject({ type: z.literal('image'), widthMm: z.number().finite().positive().max(1000), heightMm: z.number().finite().positive().max(1000),pixelAspectRatio:z.number().finite().min(.01).max(100).optional() }),
-  z.strictObject({ type: z.literal('bezier'), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000) }),
+  z.strictObject({ type: z.literal('rect'), widthMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
+  z.strictObject({ type: z.literal('circle'), radiusMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2) }),
+  z.strictObject({ type: z.literal('line'), lengthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
+  z.strictObject({ type: z.literal('ellipse'), rxMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ryMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2) }),
+  z.strictObject({ type: z.literal('path'), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
+  z.strictObject({ type: z.literal('image'), widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm),pixelAspectRatio:z.number().finite().min(.01).max(100).optional() }),
+  z.strictObject({ type: z.literal('bezier'), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
 ]);
 export const TransformArgumentsSchema = z.strictObject({ ...position, rotationDeg: rotation, size: ObjectSizeSchema });
 export type TransformArguments = z.infer<typeof TransformArgumentsSchema>;
@@ -272,7 +273,7 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({ ...base, tool: z.literal('alignObject'), arguments: z.strictObject({ alignment: z.enum(['left', 'centerX', 'right', 'top', 'centerY', 'bottom']) }) }),
   z.strictObject({ ...base, tool: z.literal('groupObjects'), arguments: z.strictObject({ objectIds: ids.min(2), groupId: id }) }),
   z.strictObject({ ...base, tool: z.literal('ungroupObjects'), arguments: z.strictObject({ groupIds: z.array(id).min(1).max(EDITOR_LIMITS.groups) }) }),
-  z.strictObject({ ...base, tool: z.literal('moveObjects'), arguments: z.strictObject({ objectIds: ids, deltaXmm: z.number().finite().min(-2000).max(2000), deltaYmm: z.number().finite().min(-2000).max(2000) }) }),
+  z.strictObject({ ...base, tool: z.literal('moveObjects'), arguments: z.strictObject({ objectIds: ids, deltaXmm: z.number().finite().min(-2*GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(2*GRAPHIC_GEOMETRY_LIMITS.coordinateMm), deltaYmm: z.number().finite().min(-2*GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(2*GRAPHIC_GEOMETRY_LIMITS.coordinateMm) }) }),
   z.strictObject({ ...base, tool: z.literal('transformObjects'), arguments: SelectionTransformSchema }),
   z.strictObject({ ...base, tool: z.literal('styleObjects'), arguments: z.strictObject({ objectIds: ids.min(2), style: SelectionStyleSchema }) }),
   z.strictObject({ ...base, tool: z.literal('reorderObjects'), arguments: z.strictObject({ objectIds: ids.min(2), position: z.enum(['front', 'back', 'forward', 'backward']) }) }),

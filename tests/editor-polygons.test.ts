@@ -16,7 +16,7 @@ describe('costruzione di poligoni e stelle vettoriali', () => {
   });
   it('rifiuta conteggi, raggi e rapporti invalidi prima di costruire una forma', () => {
     for (const sides of [0, 2, 3.5, 33, Infinity]) { expect(() => regularPolygonPoints(sides, 4)).toThrow(); expect(() => starPoints(sides, 4, 0.5)).toThrow(); }
-    for (const radius of [0, -1, 501, NaN]) { expect(() => regularPolygonPoints(5, radius)).toThrow(); expect(() => starPoints(5, radius, 0.5)).toThrow(); }
+    for (const radius of [0, -1, 1501, NaN]) { expect(() => regularPolygonPoints(5, radius)).toThrow(); expect(() => starPoints(5, radius, 0.5)).toThrow(); }
     for (const ratio of [0, 1, NaN, Infinity]) expect(() => starPoints(5, 4, ratio)).toThrow();
   });
 });

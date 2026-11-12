@@ -1,3 +1,5 @@
+import{EDITOR_LIMITS}from'./limits';
+import{PX_PER_MM}from'./canvas-size';
 import{GRAPHIC_IMPORT_LIMITS}from'./limits';
 import {canonicalPaint} from './paint';
 import { expandSvgReferences } from './svg-references';
@@ -47,7 +49,7 @@ export function sanitizeSvg(source: string, monochrome = false, allowText = fals
         if (!geometry.has(key) && !properties.has(key) && !textProperty) { if (/^(data-|aria-|inkscape:|sodipodi:|xmlns:)/.test(key)) { delete attrs[key]; continue; } throw new Error(`Attributo SVG non supportato: ${key}`); }
         if (key === 'font-family' && (!value.trim() || value.length > 160 || !/^[\p{L}\p{N} _.,+'"\/-]+$/u.test(value))) throw new Error('Nome font SVG non valido');
         if (key === 'font-weight' && !['normal','bold','400','700'].includes(value) || key === 'font-style' && !['normal','italic'].includes(value) || key === 'text-anchor' && !['start','middle','end'].includes(value)) throw new Error('Stile testo SVG non supportato');
-        if (['font-size','letter-spacing'].includes(key) && (!/^[+-]?(?:\d*\.\d+|\d+\.?\d*)(?:px|pt|mm)?$/.test(value) || Math.abs(parseFloat(value)) > 1000 || key === 'font-size' && parseFloat(value) <= 0)) throw new Error('Misura del testo SVG non valida');
+        if (['font-size','letter-spacing'].includes(key) && (!/^[+-]?(?:\d*\.\d+|\d+\.?\d*)(?:px|pt|mm)?$/.test(value) || Math.abs(parseFloat(value)) > (key==='font-size'?EDITOR_LIMITS.maxFontSizePt*25.4/72*PX_PER_MM:1000) || key === 'font-size' && parseFloat(value) <= 0)) throw new Error('Misura del testo SVG non valida');
         if (key === 'textLength' && (name !== 'text' || !/^(?:\d*\.\d+|\d+\.?\d*)$/.test(value) || Number(value) <= 0 || Number(value) > 10000) || key === 'lengthAdjust' && value !== 'spacingAndGlyphs') throw new Error('Dilatazione del testo SVG non supportata');
         if (['fill','stroke','color'].includes(key) && value !== 'none') attrs[key] = canonicalPaint(value, monochrome);
         if (key === 'clipPathUnits' && value !== 'userSpaceOnUse') throw new Error('Ritaglio SVG con unità non supportate');

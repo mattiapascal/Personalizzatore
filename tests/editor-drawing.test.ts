@@ -37,7 +37,7 @@ describe('primitive costruite con un gesto', () => {
     const command = { schemaVersion: 1, tool: 'addObject', objectId: 'r', expectedRevision: 0, arguments: { object } };
     manual.dispatch(command, 'manual'); ai.dispatch(command, 'ai-simulation'); expect(manual.document).toEqual(ai.document);
     manual.undo(); expect(manual.document.objects).toEqual([]); const before = structuredClone(manual.document);
-    expect(() => manual.dispatch({ ...command, expectedRevision: before.revision, arguments: { object: { ...object, xMm: 1001 } } }, 'manual')).toThrow();
+    expect(() => manual.dispatch({ ...command, expectedRevision: before.revision, arguments: { object: { ...object, xMm: 10001 } } }, 'manual')).toThrow();
     expect(manual.document).toEqual(before); manual.redo(); expect(manual.document.objects).toEqual([object]);
   });
 });

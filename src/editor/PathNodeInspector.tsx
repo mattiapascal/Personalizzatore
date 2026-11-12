@@ -1,3 +1,4 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import { useEffect, useState } from 'react';
 import { NumberField } from './InspectorNumberField';
 import { EditorButton } from './EditorButton';
@@ -17,8 +18,8 @@ export function PathNodeInspector({ object, revision, onChange, onFocusNode }: {
   return <>
     <label>Nodo<select aria-label="Nodo" value={index} onChange={event => { setNode(Number(event.target.value)); setError(''); }}>{object.points.map((_, i) => <option key={i} value={i}>Nodo {i + 1}</option>)}</select></label>
     <div className="property-grid" key={index}>
-      <NumberField label="X nodo (mm)" value={point.xMm} revision={revision} min={-1000} max={1000} onChange={xMm => change(() => movePathNode(object, index, { ...point, xMm }, measureFabric))}/>
-      <NumberField label="Y nodo (mm)" value={point.yMm} revision={revision} min={-1000} max={1000} onChange={yMm => change(() => movePathNode(object, index, { ...point, yMm }, measureFabric))}/>
+      <NumberField label="X nodo (mm)" value={point.xMm} revision={revision} min={-GRAPHIC_GEOMETRY_LIMITS.coordinateMm} max={GRAPHIC_GEOMETRY_LIMITS.coordinateMm} onChange={xMm => change(() => movePathNode(object, index, { ...point, xMm }, measureFabric))}/>
+      <NumberField label="Y nodo (mm)" value={point.yMm} revision={revision} min={-GRAPHIC_GEOMETRY_LIMITS.coordinateMm} max={GRAPHIC_GEOMETRY_LIMITS.coordinateMm} onChange={yMm => change(() => movePathNode(object, index, { ...point, yMm }, measureFabric))}/>
     </div>
     <div className="button-row">
       <EditorButton icon="insertNode" label="Inserisci punto medio dopo il nodo" disabled={object.points.length >= 512 || !object.closed && index === object.points.length - 1} onClick={() => change(() => insertPathNode(object, index, measureFabric), true, index + 1)}/>

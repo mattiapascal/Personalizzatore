@@ -188,3 +188,7 @@ Aggiornato il campione con [proprietà e gerarchia](iteration-editor-group-prope
 ## Stili legacy oltre fine riga — 12 novembre
 
 Campione [JSON](../fixtures/illustrator/trailing-text-styles.TEST.json) / [SVG](../fixtures/illustrator/trailing-text-styles.TEST.svg), 160 × 100 mm con Arimo/Tinos incorporati; [sorgente](../fixtures/illustrator/trailing-text-styles.source.TEST.json). Generatore `node --import tsx scripts/capture-editor-trailing-text-styles.ts`, verifica di importazione, ispettore, comando AI simulato, Undo ed export. Gli stili inattivi non cambiano le righe successive né richiedono font inesistenti. In Illustrator restano da controllare misure, ritorni a capo, modificabilità e facce tipografiche. [Prove native e limiti](iteration-editor-trailing-text-styles.md).
+
+## Campione grande formato — 12 novembre
+
+`large-format.TEST.json/svg`, 1100 × 400 mm, font incorporato e quattro oggetti; generatore `node --import tsx scripts/capture-editor-large-format.ts`. [Capacità, limiti e prove](iteration-editor-large-format.md). Zoom di visualizzazione limitato dal budget bitmap; SVG conserva le misure fisiche. PDF reale 1100 × 400 e tavola 3000 × 3000 mm verificati per integrità e MediaBox/CropBox; testo del cartello ancora estraibile. Illustrator e dispositivi fisici da collaudare.

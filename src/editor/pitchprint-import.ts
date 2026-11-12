@@ -1,3 +1,4 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import{joinGraphicPages}from'./pages';
 import {pitchprintTextIsBlank,prunePitchprintRefuse} from './pitchprint-refuse';
 import {singleFillPitchprintOpacity} from './pitchprint-opacity';
@@ -33,7 +34,7 @@ const color=canonicalPaint;
 /** Single-page native PitchPrint v10/Fabric 3 source. Never executes source scripts or silently drops objects. */
 async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Promise<PitchImportResult>{
  if(raw&&typeof raw==='object'&&Array.isArray((raw as any).pages)&&(raw as any).pages.length!==1)throw new Error('Il configuratore importa soltanto template a pagina singola.');
- const source=sourceSchema.parse(raw);const unitMm=pitchprintUnitMm(source.unit),page=source.pages[0]!,data=page.pageData,clip=page.canvas.clipPath,width=numeric(data.fWidth,'Larghezza')*unitMm,height=numeric(data.fHeight,'Altezza')*unitMm,cw=numeric(clip.width,'Area canvas'),ch=numeric(clip.height,'Area canvas');if(width<=0||height<=0||width>1000||height>1000||cw<=0||ch<=0)throw new Error('Formato fuori dai limiti del laboratorio.');
+ const source=sourceSchema.parse(raw);const unitMm=pitchprintUnitMm(source.unit),page=source.pages[0]!,data=page.pageData,clip=page.canvas.clipPath,width=numeric(data.fWidth,'Larghezza')*unitMm,height=numeric(data.fHeight,'Altezza')*unitMm,cw=numeric(clip.width,'Area canvas'),ch=numeric(clip.height,'Area canvas');if(width<=0||height<=0||width>GRAPHIC_GEOMETRY_LIMITS.pageSideMm||height>GRAPHIC_GEOMETRY_LIMITS.pageSideMm||cw<=0||ch<=0)throw new Error('Formato fuori dai limiti del laboratorio.');
  const left=numeric(clip.left??0,'Origine canvas'),top=numeric(clip.top??0,'Origine canvas'),sx=width/cw,sy=height/ch,warnings:string[]=[],objects:SceneObject[]=[],assets:FontAsset[]=[],fontCache=new Map<string,Promise<PitchprintFontResult>>(),groupMembers=new Map<string,string[]>(),expandedGroups:SceneGroup[]=[];
  const pageMatrix:PitchprintMatrix=[sx,0,0,sy,-left*sx,-top*sy];
  let paperColor:string|undefined;

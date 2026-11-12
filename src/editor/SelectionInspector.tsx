@@ -1,3 +1,4 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import {textGeometryVerified} from './font-measurement';
 import {useSyncExternalStore} from 'react';
 import {fontCoverageVersion,subscribeFontCoverage} from './font-coverage-cache';
@@ -38,7 +39,7 @@ function MeasuredSelectionInspector({ document, ids, onMove, onTransform, onAlig
   const flush = () => {
     if (!timer.current) return; cancel();
     const raw = current.current, x = Number(raw.x), y = Number(raw.y), width = Number(raw.width), height = Number(raw.height), rotation = Number(raw.rotation);
-    if (Object.values(raw).some(value => !value.trim() || !Number.isFinite(Number(value))) || Math.abs(x) > 1000 || Math.abs(y) > 1000 || width <= 0 || height <= 0 || width > 4000 || height > 4000 || Math.abs(rotation) > 180) { setStatus('Completa o correggi il valore.'); return; }
+    if (Object.values(raw).some(value => !value.trim() || !Number.isFinite(Number(value))) || Math.abs(x) > GRAPHIC_GEOMETRY_LIMITS.coordinateMm || Math.abs(y) > GRAPHIC_GEOMETRY_LIMITS.coordinateMm || width <= 0 || height <= 0 || width > GRAPHIC_GEOMETRY_LIMITS.selectionSideMm || height > GRAPHIC_GEOMETRY_LIMITS.selectionSideMm || Math.abs(rotation) > 180) { setStatus('Completa o correggi il valore.'); return; }
     const saved = latest.current;
     const target = { xMm: touched.current.x ? x : saved.center.x, yMm: touched.current.y ? y : saved.center.y };
     const scale = sizeAxis.current === 'width' ? width / saved.bounds.widthMm : sizeAxis.current === 'height' ? height / saved.bounds.heightMm : 1;
@@ -77,7 +78,7 @@ function MeasuredSelectionInspector({ document, ids, onMove, onTransform, onAlig
     {root&&onGroupProperties&&<GroupPropertiesPanel document={document} group={root} onChange={onGroupProperties}/>}
     {canAttach && <div className="button-row"><EditorButton icon="textPath" label="Applica testo al tracciato" onClick={() => onAttachText(text.id, guide.id)}/></div>}
     <h3>Geometria</h3>
-    <div className="property-grid">{input('x', 'X selezione (mm)', -1000, 1000)}{input('y', 'Y selezione (mm)', -1000, 1000)}{input('width', 'Larghezza selezione (mm)', 0.01, 4000)}{input('height', 'Altezza selezione (mm)', 0.01, 4000)}{input('rotation', 'Ruota selezione di (°)', -180, 180)}</div>
+    <div className="property-grid">{input('x', 'X selezione (mm)', -GRAPHIC_GEOMETRY_LIMITS.coordinateMm, GRAPHIC_GEOMETRY_LIMITS.coordinateMm)}{input('y', 'Y selezione (mm)', -GRAPHIC_GEOMETRY_LIMITS.coordinateMm, GRAPHIC_GEOMETRY_LIMITS.coordinateMm)}{input('width', 'Larghezza selezione (mm)', 0.01, GRAPHIC_GEOMETRY_LIMITS.selectionSideMm)}{input('height', 'Altezza selezione (mm)', 0.01, GRAPHIC_GEOMETRY_LIMITS.selectionSideMm)}{input('rotation', 'Ruota selezione di (°)', -180, 180)}</div>
     <p className="caption">Posizione del centro e dimensioni dell’ingombro. Proporzioni sempre mantenute; la scala comprende caratteri, spaziature e contorni. L’angolo è aggiuntivo rispetto alla composizione attuale e torna a zero dopo la rotazione.</p>
     <h3>Allinea gli elementi tra loro</h3>
     <div className="button-row">{([['left', 'Allinea a sinistra'], ['centerX', 'Centra orizzontalmente'], ['right', 'Allinea a destra'], ['top', 'Allinea in alto'], ['centerY', 'Centra verticalmente'], ['bottom', 'Allinea in basso']] as const).map(([alignment, label]) => <EditorButton key={alignment} icon={alignment} label={label} disabled={units.length < 2} onClick={() => onAlign(alignment)}/>)}</div>

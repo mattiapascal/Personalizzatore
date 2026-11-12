@@ -72,12 +72,12 @@
                   "offsetXMm": {
                     "type": "number",
                     "exclusiveMinimum": 0,
-                    "maximum": 1000
+                    "maximum": 3000
                   },
                   "offsetYMm": {
                     "type": "number",
                     "exclusiveMinimum": 0,
-                    "maximum": 1000
+                    "maximum": 3000
                   },
                   "holeDiameterMm": {
                     "anyOf": [
@@ -297,12 +297,12 @@
                   "width": {
                     "type": "number",
                     "exclusiveMinimum": 0,
-                    "maximum": 1000
+                    "maximum": 3000
                   },
                   "height": {
                     "type": "number",
                     "exclusiveMinimum": 0,
-                    "maximum": 1000
+                    "maximum": 3000
                   }
                 },
                 "required": [
@@ -338,13 +338,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -406,7 +406,7 @@
                         "fontSizePt": {
                           "type": "number",
                           "minimum": 0.1,
-                          "maximum": 500
+                          "maximum": 2000
                         },
                         "fontFamily": {
                           "anyOf": [
@@ -608,12 +608,12 @@
                                     "widthMm": {
                                       "type": "number",
                                       "minimum": 0,
-                                      "maximum": 1000
+                                      "maximum": 3000
                                     },
                                     "heightMm": {
                                       "type": "number",
                                       "minimum": 0,
-                                      "maximum": 1000
+                                      "maximum": 3000
                                     },
                                     "commands": {
                                       "minItems": 2,
@@ -815,7 +815,7 @@
                                     "lengthMm": {
                                       "type": "number",
                                       "exclusiveMinimum": 0,
-                                      "maximum": 1000
+                                      "maximum": 3000
                                     },
                                     "fillOpacity": {
                                       "type": "number",
@@ -870,7 +870,7 @@
                                     "radiusMm": {
                                       "type": "number",
                                       "exclusiveMinimum": 0,
-                                      "maximum": 500
+                                      "maximum": 1500
                                     },
                                     "fillOpacity": {
                                       "type": "number",
@@ -930,12 +930,12 @@
                                     "rxMm": {
                                       "type": "number",
                                       "exclusiveMinimum": 0,
-                                      "maximum": 500
+                                      "maximum": 1500
                                     },
                                     "ryMm": {
                                       "type": "number",
                                       "exclusiveMinimum": 0,
-                                      "maximum": 500
+                                      "maximum": 1500
                                     },
                                     "fillOpacity": {
                                       "type": "number",
@@ -996,12 +996,12 @@
                                     "widthMm": {
                                       "type": "number",
                                       "minimum": 0,
-                                      "maximum": 1000
+                                      "maximum": 3000
                                     },
                                     "heightMm": {
                                       "type": "number",
                                       "minimum": 0,
-                                      "maximum": 1000
+                                      "maximum": 3000
                                     },
                                     "points": {
                                       "minItems": 2,
@@ -1091,12 +1091,12 @@
                                     "widthMm": {
                                       "type": "number",
                                       "minimum": 0,
-                                      "maximum": 1000
+                                      "maximum": 3000
                                     },
                                     "heightMm": {
                                       "type": "number",
                                       "minimum": 0,
-                                      "maximum": 1000
+                                      "maximum": 3000
                                     },
                                     "nodes": {
                                       "minItems": 2,
@@ -1229,8 +1229,8 @@
                             },
                             "normalOffsetMm": {
                               "type": "number",
-                              "minimum": -1000,
-                              "maximum": 1000
+                              "minimum": -3000,
+                              "maximum": 3000
                             },
                             "baseline": {
                               "type": "string",
@@ -1315,12 +1315,12 @@
                             "widthMm": {
                               "type": "number",
                               "exclusiveMinimum": 0,
-                              "maximum": 1000
+                              "maximum": 3000
                             },
                             "heightMm": {
                               "type": "number",
                               "exclusiveMinimum": 0,
-                              "maximum": 1000
+                              "maximum": 3000
                             },
                             "autoWidth": {
                               "type": "boolean"
@@ -1382,7 +1382,7 @@
                                   "fontSizePt": {
                                     "type": "number",
                                     "minimum": 0.1,
-                                    "maximum": 500
+                                    "maximum": 2000
                                   },
                                   "fontFamily": {
                                     "anyOf": [
@@ -1479,13 +1479,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -1543,12 +1543,12 @@
                         "widthMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "heightMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "strokeMm": {
                           "type": "number",
@@ -1600,7 +1600,7 @@
                         "cornerRadiusMm": {
                           "type": "number",
                           "minimum": 0,
-                          "maximum": 500
+                          "maximum": 1500
                         }
                       },
                       "required": [
@@ -1628,13 +1628,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -1691,7 +1691,7 @@
                         "radiusMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 500
+                          "maximum": 1500
                         },
                         "strokeMm": {
                           "type": "number",
@@ -1775,13 +1775,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -1839,7 +1839,7 @@
                         "lengthMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "strokeMm": {
                           "type": "number",
@@ -1887,13 +1887,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -1951,12 +1951,12 @@
                         "rxMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 500
+                          "maximum": 1500
                         },
                         "ryMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 500
+                          "maximum": 1500
                         },
                         "strokeMm": {
                           "type": "number",
@@ -2031,13 +2031,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -2095,12 +2095,12 @@
                         "widthMm": {
                           "type": "number",
                           "minimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "heightMm": {
                           "type": "number",
                           "minimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "points": {
                           "minItems": 2,
@@ -2197,13 +2197,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -2261,12 +2261,12 @@
                         "widthMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "heightMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "source": {
                           "type": "object",
@@ -2441,13 +2441,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -2505,12 +2505,12 @@
                         "widthMm": {
                           "type": "number",
                           "minimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "heightMm": {
                           "type": "number",
                           "minimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "commands": {
                           "minItems": 2,
@@ -2748,13 +2748,13 @@
                         },
                         "xMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "yMm": {
                           "type": "number",
-                          "minimum": -1000,
-                          "maximum": 1000
+                          "minimum": -10000,
+                          "maximum": 10000
                         },
                         "editor": {
                           "type": "object",
@@ -2812,12 +2812,12 @@
                         "widthMm": {
                           "type": "number",
                           "minimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "heightMm": {
                           "type": "number",
                           "minimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "nodes": {
                           "minItems": 2,
@@ -3061,12 +3061,12 @@
                         "offsetXMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "offsetYMm": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "holeDiameterMm": {
                           "anyOf": [
@@ -3192,12 +3192,12 @@
                         "width": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         },
                         "height": {
                           "type": "number",
                           "exclusiveMinimum": 0,
-                          "maximum": 1000
+                          "maximum": 3000
                         }
                       },
                       "required": [
@@ -3233,13 +3233,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -3301,7 +3301,7 @@
                               "fontSizePt": {
                                 "type": "number",
                                 "minimum": 0.1,
-                                "maximum": 500
+                                "maximum": 2000
                               },
                               "fontFamily": {
                                 "anyOf": [
@@ -3503,12 +3503,12 @@
                                           "widthMm": {
                                             "type": "number",
                                             "minimum": 0,
-                                            "maximum": 1000
+                                            "maximum": 3000
                                           },
                                           "heightMm": {
                                             "type": "number",
                                             "minimum": 0,
-                                            "maximum": 1000
+                                            "maximum": 3000
                                           },
                                           "commands": {
                                             "minItems": 2,
@@ -3710,7 +3710,7 @@
                                           "lengthMm": {
                                             "type": "number",
                                             "exclusiveMinimum": 0,
-                                            "maximum": 1000
+                                            "maximum": 3000
                                           },
                                           "fillOpacity": {
                                             "type": "number",
@@ -3765,7 +3765,7 @@
                                           "radiusMm": {
                                             "type": "number",
                                             "exclusiveMinimum": 0,
-                                            "maximum": 500
+                                            "maximum": 1500
                                           },
                                           "fillOpacity": {
                                             "type": "number",
@@ -3825,12 +3825,12 @@
                                           "rxMm": {
                                             "type": "number",
                                             "exclusiveMinimum": 0,
-                                            "maximum": 500
+                                            "maximum": 1500
                                           },
                                           "ryMm": {
                                             "type": "number",
                                             "exclusiveMinimum": 0,
-                                            "maximum": 500
+                                            "maximum": 1500
                                           },
                                           "fillOpacity": {
                                             "type": "number",
@@ -3891,12 +3891,12 @@
                                           "widthMm": {
                                             "type": "number",
                                             "minimum": 0,
-                                            "maximum": 1000
+                                            "maximum": 3000
                                           },
                                           "heightMm": {
                                             "type": "number",
                                             "minimum": 0,
-                                            "maximum": 1000
+                                            "maximum": 3000
                                           },
                                           "points": {
                                             "minItems": 2,
@@ -3986,12 +3986,12 @@
                                           "widthMm": {
                                             "type": "number",
                                             "minimum": 0,
-                                            "maximum": 1000
+                                            "maximum": 3000
                                           },
                                           "heightMm": {
                                             "type": "number",
                                             "minimum": 0,
-                                            "maximum": 1000
+                                            "maximum": 3000
                                           },
                                           "nodes": {
                                             "minItems": 2,
@@ -4124,8 +4124,8 @@
                                   },
                                   "normalOffsetMm": {
                                     "type": "number",
-                                    "minimum": -1000,
-                                    "maximum": 1000
+                                    "minimum": -3000,
+                                    "maximum": 3000
                                   },
                                   "baseline": {
                                     "type": "string",
@@ -4210,12 +4210,12 @@
                                   "widthMm": {
                                     "type": "number",
                                     "exclusiveMinimum": 0,
-                                    "maximum": 1000
+                                    "maximum": 3000
                                   },
                                   "heightMm": {
                                     "type": "number",
                                     "exclusiveMinimum": 0,
-                                    "maximum": 1000
+                                    "maximum": 3000
                                   },
                                   "autoWidth": {
                                     "type": "boolean"
@@ -4277,7 +4277,7 @@
                                         "fontSizePt": {
                                           "type": "number",
                                           "minimum": 0.1,
-                                          "maximum": 500
+                                          "maximum": 2000
                                         },
                                         "fontFamily": {
                                           "anyOf": [
@@ -4374,13 +4374,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -4438,12 +4438,12 @@
                               "widthMm": {
                                 "type": "number",
                                 "exclusiveMinimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "heightMm": {
                                 "type": "number",
                                 "exclusiveMinimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "strokeMm": {
                                 "type": "number",
@@ -4495,7 +4495,7 @@
                               "cornerRadiusMm": {
                                 "type": "number",
                                 "minimum": 0,
-                                "maximum": 500
+                                "maximum": 1500
                               }
                             },
                             "required": [
@@ -4523,13 +4523,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -4586,7 +4586,7 @@
                               "radiusMm": {
                                 "type": "number",
                                 "exclusiveMinimum": 0,
-                                "maximum": 500
+                                "maximum": 1500
                               },
                               "strokeMm": {
                                 "type": "number",
@@ -4670,13 +4670,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -4734,7 +4734,7 @@
                               "lengthMm": {
                                 "type": "number",
                                 "exclusiveMinimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "strokeMm": {
                                 "type": "number",
@@ -4782,13 +4782,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -4846,12 +4846,12 @@
                               "rxMm": {
                                 "type": "number",
                                 "exclusiveMinimum": 0,
-                                "maximum": 500
+                                "maximum": 1500
                               },
                               "ryMm": {
                                 "type": "number",
                                 "exclusiveMinimum": 0,
-                                "maximum": 500
+                                "maximum": 1500
                               },
                               "strokeMm": {
                                 "type": "number",
@@ -4926,13 +4926,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -4990,12 +4990,12 @@
                               "widthMm": {
                                 "type": "number",
                                 "minimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "heightMm": {
                                 "type": "number",
                                 "minimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "points": {
                                 "minItems": 2,
@@ -5092,13 +5092,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -5156,12 +5156,12 @@
                               "widthMm": {
                                 "type": "number",
                                 "exclusiveMinimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "heightMm": {
                                 "type": "number",
                                 "exclusiveMinimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "source": {
                                 "type": "object",
@@ -5336,13 +5336,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -5400,12 +5400,12 @@
                               "widthMm": {
                                 "type": "number",
                                 "minimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "heightMm": {
                                 "type": "number",
                                 "minimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "commands": {
                                 "minItems": 2,
@@ -5643,13 +5643,13 @@
                               },
                               "xMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "yMm": {
                                 "type": "number",
-                                "minimum": -1000,
-                                "maximum": 1000
+                                "minimum": -10000,
+                                "maximum": 10000
                               },
                               "editor": {
                                 "type": "object",
@@ -5707,12 +5707,12 @@
                               "widthMm": {
                                 "type": "number",
                                 "minimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "heightMm": {
                                 "type": "number",
                                 "minimum": 0,
-                                "maximum": 1000
+                                "maximum": 3000
                               },
                               "nodes": {
                                 "minItems": 2,

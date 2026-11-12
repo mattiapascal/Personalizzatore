@@ -1,8 +1,9 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'../editor/limits';
 import { regionFitsArea } from '../editor/regions';
 import { useId, useState } from 'react';
 import { fixingPositions, type ProductionProfileData } from './production-profile';
 
-const positive=(value:number|null|undefined):value is number=>typeof value==='number'&&Number.isFinite(value)&&value>0&&value<=1000;
+const positive=(value:number|null|undefined):value is number=>typeof value==='number'&&Number.isFinite(value)&&value>0&&value<=GRAPHIC_GEOMETRY_LIMITS.pageSideMm;
 export function ProductionProfilePreview({profile}:{profile:ProductionProfileData}){
  const [fixingId,setFixingId]=useState(''),clip=useId().replaceAll(':',''),area=profile.usableArea,width=area?.widthMm,height=area?.heightMm;
  if(!positive(width)||!positive(height))return <section className="production-preview" aria-label="Anteprima tecnica del profilo"><h3>Schema del profilo</h3><p>Inserisci larghezza e altezza dell’area utile per visualizzare lo schema. Le misure mancanti restano da definire.</p></section>;

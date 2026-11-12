@@ -43,7 +43,7 @@ describe('documento unico e comandi revisionati', () => {
     const s = new DocumentStore(createDocument(), measure);
     s.dispatch(add(0), 'manual'); s.undo();
     const before = structuredClone(s.document), events = structuredClone(s.events);
-    const invalid = [add(1), add(2, { ...newText, id: 'text-1' }), { ...add(2), objectId: 'different-id' }, add(2, { ...newText, xMm: 1001 }), { ...add(2), arguments: { object: { ...newText, fill: '#888888' } } }, { ...add(2), arguments: { object: { ...newText, type: 'image', src: 'https://example.test/private' } } }, duplicate(2, 'missing'), duplicate(2, 'text-1', 'frame-1'), duplicate(2, 'text-1', 'copy-text', 1001), remove(2, 'missing'), { ...remove(2, 'text-1'), arguments: { force: true } }];
+    const invalid = [add(1), add(2, { ...newText, id: 'text-1' }), { ...add(2), objectId: 'different-id' }, add(2, { ...newText, xMm: 10001 }), { ...add(2), arguments: { object: { ...newText, fill: '#888888' } } }, { ...add(2), arguments: { object: { ...newText, type: 'image', src: 'https://example.test/private' } } }, duplicate(2, 'missing'), duplicate(2, 'text-1', 'frame-1'), duplicate(2, 'text-1', 'copy-text', 10001), remove(2, 'missing'), { ...remove(2, 'text-1'), arguments: { force: true } }];
     for (const command of invalid) {
       expect(() => s.dispatch(command, 'ai-simulation')).toThrow();
       expect(s.document).toEqual(before); expect(s.events).toEqual(events);
@@ -87,7 +87,7 @@ describe('documento unico e comandi revisionati', () => {
   });
   it('rifiuta stale, ID inesistenti, oltre i limiti di coordinate, font sotto minimo e colori', () => {
     const s = new DocumentStore(createDocument(), measure); const original = structuredClone(s.document);
-    for (const c of [move(1), { ...move(0), objectId: 'unknown' }, move(0, 1001), { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 0.09, fill: '#000000' } }, { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 9, fill: '#888888' } }, { ...move(0), tool: 'eval', arguments: { script: 'fetch()' } }]) expect(() => s.dispatch(c, 'ai-simulation')).toThrow();
+    for (const c of [move(1), { ...move(0), objectId: 'unknown' }, move(0, 10001), { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 0.09, fill: '#000000' } }, { ...move(0), tool: 'setObjectStyle', arguments: { fontSizePt: 9, fill: '#888888' } }, { ...move(0), tool: 'eval', arguments: { script: 'fetch()' } }]) expect(() => s.dispatch(c, 'ai-simulation')).toThrow();
     expect(s.document).toEqual(original); expect(s.events).toHaveLength(0);
   });
   it('undo/redo mantengono revisione monotona e invalidano comandi vecchi', () => {

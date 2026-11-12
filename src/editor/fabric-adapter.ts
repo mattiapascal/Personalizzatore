@@ -45,7 +45,8 @@ import { BezierNodeControls } from './bezier-controls';
 import { bezierWorldNodes, type BezierObject } from './bezier-nodes';
 import { pngExportSize, pngWithDpi, type PngDpi } from './png-export';
 
-export const PX_PER_MM = 8; // Solo zoom di visualizzazione, indipendente da DPI fisici.
+import{PX_PER_MM,canvasZoomLimit,CANVAS_BITMAP_LIMITS}from'./canvas-size';
+export{PX_PER_MM}from'./canvas-size';
 export const PT_TO_MM = 25.4 / 72;
 const fontPoints = (pixels: number) => Math.round(pixels / (PT_TO_MM * PX_PER_MM) * 1e9) / 1e9;
 function transformedImageSize(source:ImageObject,object:FabricObject):Extract<TransformArguments['size'],{type:'image'}>{
@@ -457,7 +458,7 @@ export class FabricAdapter {
     if(sources.some(object=>effectiveObjectProperties(this.document!,object.id).selectionLocked))target.set({selectable:false,evented:false});
     if(sources.some(object=>effectiveObjectProperties(this.document!,object.id).transformLocked))target.set({lockMovementX:true,lockMovementY:true,lockScalingX:true,lockScalingY:true,lockRotation:true,hasControls:false});
   }
-  render(document: GraphicDocument, selection: string | null | readonly string[] = this.selectedIds): void {
+  render(document: GraphicDocument, selection: string | null | readonly string[] = this.selectedIds, serializationOnly=false): void {
     for(const object of document.objects)if(object.type==='text')for(const font of [object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])assertFontAvailable(font);
     const selectedIds = typeof selection === 'string' ? [selection] : selection ?? [], selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
     const active = this.canvas.getActiveObject(), focus = window.document.activeElement as HTMLElement | null;
@@ -473,7 +474,17 @@ export class FabricAdapter {
       this.canvas.clipPath = document.shape === 'round'
         ? new Circle({ radius: document.areaMm.width * PX_PER_MM / 2, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true })
         : partial ? new Rect({ width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true }) : undefined;
-      this.canvas.setDimensions({ width: document.areaMm.width * PX_PER_MM * this.zoom, height: document.areaMm.height * PX_PER_MM * this.zoom });
+      if(serializationOnly){
+        // SVG needs logical paper dimensions, never a paper-sized bitmap.
+        this.canvas.width=document.areaMm.width*PX_PER_MM;this.canvas.height=document.areaMm.height*PX_PER_MM;
+      }else{
+        this.zoom=Math.min(this.zoom,canvasZoomLimit(document.areaMm,this.canvas.getRetinaScaling()));
+        const width=document.areaMm.width*PX_PER_MM*this.zoom,height=document.areaMm.height*PX_PER_MM*this.zoom;
+        // Reset before switching tall/wide surfaces: assigning width first must
+        // not temporarily combine the new width with the old large height.
+        if(Math.ceil(width*this.canvas.getRetinaScaling())*this.canvas.lowerCanvasEl.height>CANVAS_BITMAP_LIMITS.pixels)this.canvas.setDimensions({width:0,height:0});
+        this.canvas.setDimensions({width,height});
+      }
       this.canvas.setZoom(this.zoom);
       const rendered = new Set<string>();
       for (const object of document.objects) {
@@ -725,7 +736,7 @@ export class FabricAdapter {
     const zoom = this.zoom;
     const selected = [...this.selectedIds];
     try {
-      this.zoom = 1; this.render(productionDocument(document), null);if(transparentPaper&&!document.paperColor)this.canvas.backgroundColor='';
+      this.zoom = 1; this.render(productionDocument(document), null,true);if(transparentPaper&&!document.paperColor)this.canvas.backgroundColor='';
       // Both physical axes are explicit. Avoid a subpixel "meet" gutter from
       // rounding the intrinsic millimetre viewport to CSS pixels in SVG images.
       const svg=preciseIntermediateSvg(()=>this.canvas.toSVG({ width: `${document.areaMm.width}mm`, height: `${document.areaMm.height}mm`, viewBox: { x: 0, y: 0, width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM } })).replace('<svg ','<svg preserveAspectRatio="none" ');

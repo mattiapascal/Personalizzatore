@@ -29,7 +29,7 @@ describe('trasformazioni fisiche del documento v2', () => {
       transform(2, 'frame-1', { ...rectArgs, rotationDeg: 181 }), transform(2, 'frame-1', { ...rectArgs, xMm: NaN }),
       transform(2, 'text-1', { ...rectArgs, size: { type: 'text', fontSizePt: 0.09 } }),
       transform(2, 'circle-1', { ...rectArgs, size: { type: 'circle', radiusMm: 3 } }),
-      transform(2, 'frame-1', { ...rectArgs, xMm: 1001, rotationDeg: 90, size: { type: 'rect', widthMm: 30, heightMm: 4 } }),
+      transform(2, 'frame-1', { ...rectArgs, xMm: 10001, rotationDeg: 90, size: { type: 'rect', widthMm: 30, heightMm: 4 } }),
       { ...transform(2, 'frame-1', rectArgs), arguments: { ...rectArgs, scaleX: 2 } },
     ];
     for (const command of invalid) {

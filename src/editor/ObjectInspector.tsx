@@ -1,3 +1,4 @@
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import{AspectRatioControl}from'./AspectRatioControl';
 import{resizeObjectDimension}from'./resize-object';
 import { OpacityControls } from './OpacityControls';
@@ -122,23 +123,23 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
       {current.type === 'text' && <p className="caption" data-testid="character-scope">{characterSelection ? noCharacters ? 'Seleziona i caratteri da formattare. Esc torna al box.' : `${characterSelection.end - characterSelection.start} caratteri selezionati${characterSelection.mixed.length ? ' · stile misto' : ''}` : 'Box selezionato · le modifiche ai caratteri agiscono su tutto il testo.'}</p>}
       {section === 'geometry' && <>{geometryLocked&&<p className="caption">Posizione e dimensioni bloccate dal template.</p>}
         <fieldset disabled={geometryLocked} className="inspector-arrangement"><div className="property-grid">
-          <NumberField {...fields} label="X (mm)" value={draft.center.xMm} min={-1000} max={1000} onChange={xMm => moveCenter({ ...draft.center, xMm })}/>
-          <NumberField {...fields} label="Y (mm)" value={draft.center.yMm} min={-1000} max={1000} onChange={yMm => moveCenter({ ...draft.center, yMm })}/>
+          <NumberField {...fields} label="X (mm)" value={draft.center.xMm} min={-GRAPHIC_GEOMETRY_LIMITS.coordinateMm} max={GRAPHIC_GEOMETRY_LIMITS.coordinateMm} onChange={xMm => moveCenter({ ...draft.center, xMm })}/>
+          <NumberField {...fields} label="Y (mm)" value={draft.center.yMm} min={-GRAPHIC_GEOMETRY_LIMITS.coordinateMm} max={GRAPHIC_GEOMETRY_LIMITS.coordinateMm} onChange={yMm => moveCenter({ ...draft.center, yMm })}/>
           {current.type === 'text' && current.textPath && frame && <>
-            <NumberField {...fields} label="Larghezza (mm)" value={frame.widthMm} min={0.01} max={1000} onChange={width => { if (width > 0) replaceObject(transformSelection([current], { scale: width / frame.widthMm, rotationDeg: 0, center: draft.center }, measureFabric)[0]!); }}/>
-            <NumberField {...fields} label="Altezza (mm)" value={frame.heightMm} min={0.01} max={1000} onChange={height => { if (height > 0) replaceObject(transformSelection([current], { scale: height / frame.heightMm, rotationDeg: 0, center: draft.center }, measureFabric)[0]!); }}/>
+            <NumberField {...fields} label="Larghezza (mm)" value={frame.widthMm} min={0.01} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} onChange={width => { if (width > 0) replaceObject(transformSelection([current], { scale: width / frame.widthMm, rotationDeg: 0, center: draft.center }, measureFabric)[0]!); }}/>
+            <NumberField {...fields} label="Altezza (mm)" value={frame.heightMm} min={0.01} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} onChange={height => { if (height > 0) replaceObject(transformSelection([current], { scale: height / frame.heightMm, rotationDeg: 0, center: draft.center }, measureFabric)[0]!); }}/>
           </>}
           {current.type === 'text' && !current.textPath && frame && <div className="dimension-fields">
-            <NumberField {...fields} label="Larghezza box (mm)" value={frame.widthMm} min={0.01} max={1000} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'width',value,ratioLocked,measureFabric));}}/>
+            <NumberField {...fields} label="Larghezza box (mm)" value={frame.widthMm} min={0.01} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'width',value,ratioLocked,measureFabric));}}/>
             <AspectRatioControl linked={ratioLocked} onChange={setRatioLocked}/>
-            <NumberField {...fields} label="Altezza testo (mm)" value={frame.heightMm} min={ratioLocked ? .001 : Math.floor(heightLimits!.min * 1000) / 1000} max={ratioLocked?1000:Math.ceil(heightLimits!.max * 1000) / 1000} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'height',value,ratioLocked,measureFabric));}}/>
+            <NumberField {...fields} label="Altezza testo (mm)" value={frame.heightMm} min={ratioLocked ? .001 : Math.floor(heightLimits!.min * 1000) / 1000} max={ratioLocked?GRAPHIC_GEOMETRY_LIMITS.objectSideMm:Math.ceil(heightLimits!.max * 1000) / 1000} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'height',value,ratioLocked,measureFabric));}}/>
           </div>}
-          {current.type === 'circle' && <NumberField {...fields} label="Diametro (mm)" value={current.radiusMm * 2} min={0.01} max={1000} onChange={diameter => patch({ radiusMm: diameter / 2 })}/>}
-          {current.type === 'line' && <NumberField {...fields} label="Lunghezza linea (mm)" value={current.lengthMm} min={0.01} max={1000} step={0.1} onChange={lengthMm => patch({ lengthMm })}/>}
+          {current.type === 'circle' && <NumberField {...fields} label="Diametro (mm)" value={current.radiusMm * 2} min={0.01} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} onChange={diameter => patch({ radiusMm: diameter / 2 })}/>}
+          {current.type === 'line' && <NumberField {...fields} label="Lunghezza linea (mm)" value={current.lengthMm} min={0.01} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} step={0.1} onChange={lengthMm => patch({ lengthMm })}/>}
           {current.type!=='text'&&current.type!=='circle'&&current.type!=='line'&&<div className="dimension-fields">
-            <NumberField {...fields} label="Larghezza (mm)" value={current.type==='ellipse'?current.rxMm*2:current.widthMm} min={0.001} max={1000} disabled={current.type!=='ellipse'&&current.widthMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'width',value,ratioLocked,measureFabric));}}/>
+            <NumberField {...fields} label="Larghezza (mm)" value={current.type==='ellipse'?current.rxMm*2:current.widthMm} min={0.001} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} disabled={current.type!=='ellipse'&&current.widthMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'width',value,ratioLocked,measureFabric));}}/>
             <AspectRatioControl linked={ratioLocked} onChange={setRatioLocked}/>
-            <NumberField {...fields} label="Altezza (mm)" value={current.type==='ellipse'?current.ryMm*2:current.heightMm} min={0.001} max={1000} disabled={current.type!=='ellipse'&&current.heightMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'height',value,ratioLocked,measureFabric));}}/>
+            <NumberField {...fields} label="Altezza (mm)" value={current.type==='ellipse'?current.ryMm*2:current.heightMm} min={0.001} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} disabled={current.type!=='ellipse'&&current.heightMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'height',value,ratioLocked,measureFabric));}}/>
           </div>}
           {current.type==='rect'&&<NumberField {...fields} label="Raggio angoli (mm)" value={current.cornerRadiusMm??0} min={0} max={Math.min(current.widthMm,current.heightMm)/2} onChange={cornerRadiusMm=>patch({cornerRadiusMm})}/>}
           {current.type !== 'circle' && <NumberField {...fields} className="property-wide" label="Rotazione (°)" value={current.rotationDeg ?? 0} min={-180} max={180} onChange={rotationDeg => patch({ rotationDeg })}/>}
@@ -185,7 +186,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
         {characterSelection && !current.textPath && <p className="caption" data-testid="line-scope">{characterSelection.line?.indices.length ?? 0} righe interessate · anche una selezione parziale modifica tutta la riga.</p>}
         {current.textPath && <fieldset className="inspector-arrangement"><legend>Testo su tracciato</legend>
           <label>Posizione sul tracciato<select aria-label="Posizione sul tracciato" value={current.textPath.baseline} onChange={event => patch({ textPath: { ...current.textPath!, baseline: event.target.value as 'baseline' | 'ascender' | 'descender' } }, true)}><option value="baseline">Linea di base</option><option value="ascender">Ascendente</option><option value="descender">Discendente</option></select></label>
-          <NumberField {...fields} label="Scostamento verticale (mm)" value={current.textPath.normalOffsetMm ?? 0} min={-1000} max={1000} step={0.1} onChange={normalOffsetMm => patch({ textPath: { ...current.textPath!, normalOffsetMm } })}/>
+          <NumberField {...fields} label="Scostamento verticale (mm)" value={current.textPath.normalOffsetMm ?? 0} min={-GRAPHIC_GEOMETRY_LIMITS.objectSideMm} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} step={0.1} onChange={normalOffsetMm => patch({ textPath: { ...current.textPath!, normalOffsetMm } })}/>
           <p className="caption">Positivo sopra, negativo sotto: segue l’orientamento del testo e si somma al riferimento scelto.</p>
           <NumberField {...fields} label="Scorrimento sul tracciato (mm)" value={current.textPath.offsetMm} min={-10000} max={10000} step={0.1} onChange={offsetMm => patch({ textPath: { ...current.textPath!, offsetMm } })}/>
           <label className="ratio-toggle"><input type="checkbox" checked={current.textPath.reversed} onChange={event => patch({ textPath: { ...current.textPath!, reversed: event.target.checked } }, true)}/> Inverti direzione</label>

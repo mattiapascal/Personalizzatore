@@ -57,7 +57,7 @@ describe('stili dei caratteri nel documento comune', () => {
     store.dispatch({ schemaVersion: 1, tool: 'transformObject', objectId: 'text-1', expectedRevision: 0, arguments: { xMm: 5, yMm: 5, rotationDeg: 0, size: { type: 'text', fontSizePt: 18 } } }, 'manual');
     expect((store.document.objects[0] as TextObject).characterStyles?.[0]?.style.fontSizePt).toBe(24);
     const before = structuredClone(store.document);
-    expect(() => store.dispatch({ schemaVersion: 1, tool: 'transformObject', objectId: 'text-1', expectedRevision: 1, arguments: { xMm: 5, yMm: 5, rotationDeg: 0, size: { type: 'text', fontSizePt: 400 } } }, 'ai-simulation')).toThrow();
+    expect(() => store.dispatch({ schemaVersion: 1, tool: 'transformObject', objectId: 'text-1', expectedRevision: 1, arguments: { xMm: 5, yMm: 5, rotationDeg: 0, size: { type: 'text', fontSizePt: 1600 } } }, 'ai-simulation')).toThrow();
     expect(store.document).toEqual(before);
     store.dispatch({ schemaVersion: 1, tool: 'setObjectStyle', objectId: 'text-1', expectedRevision: 1, arguments: { fontSizePt: 10, fill: '#ffffff' } }, 'ai-simulation');
     expect(store.document.objects[0]).toMatchObject({ fontSizePt: 10, fill: '#ffffff', characterStyles: [{ start: 0, end: 5, style: { fontWeight: 'bold' } }] });
