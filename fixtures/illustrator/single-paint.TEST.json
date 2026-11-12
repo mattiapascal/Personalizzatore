@@ -1,0 +1,197 @@
+{
+  "colorMode": "color",
+  "schemaVersion": 2,
+  "documentId": "57575757-5757-4757-8757-575757575757",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 100,
+    "height": 60
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "pp-1",
+      "type": "rect",
+      "xMm": 0,
+      "yMm": 0,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 100,
+      "heightMm": 60,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fill": "#dbe8ee"
+    },
+    {
+      "id": "pp-2",
+      "type": "rect",
+      "xMm": 12,
+      "yMm": 12,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 38,
+      "heightMm": 26,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fill": "#0044cc"
+    },
+    {
+      "id": "pp-3",
+      "type": "rect",
+      "xMm": 22.1,
+      "yMm": 20.1,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 27,
+      "heightMm": 16,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fillOpacity": 0.9,
+      "fill": "#a7a9ac"
+    },
+    {
+      "id": "pp-4",
+      "type": "ellipse",
+      "xMm": 55.26667546850416,
+      "yMm": 12.000000000000002,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": -155,
+      "rxMm": 9.1,
+      "ryMm": 5.6000000000000005,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fillOpacity": 0.35,
+      "fill": "#118844"
+    },
+    {
+      "id": "pp-5",
+      "type": "ellipse",
+      "xMm": 18,
+      "yMm": 42,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "rxMm": 8,
+      "ryMm": 3.5,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fillOpacity": 0,
+      "fill": "#cc4400"
+    },
+    {
+      "id": "pp-6",
+      "type": "rect",
+      "xMm": 40,
+      "yMm": 40,
+      "editor": {
+        "label": "Segnaposto TEST",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": true,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 12,
+      "heightMm": 6,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fillOpacity": 0.3,
+      "fill": "none"
+    },
+    {
+      "id": "pp-7-1",
+      "type": "rect",
+      "xMm": 57.152990503872275,
+      "yMm": 40.00000000000001,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 14.999999999999996,
+      "widthMm": 22.000000000000004,
+      "heightMm": 11.000000000000002,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fillOpacity": 0.4,
+      "fill": "#cc2200"
+    }
+  ],
+  "groups": [
+    {
+      "id": "pp-7-group",
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "objectIds": [
+        "pp-7-1"
+      ]
+    }
+  ]
+}

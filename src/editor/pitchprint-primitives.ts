@@ -33,7 +33,7 @@ export function emptyPitchprintPrimitive(item: Raw, editor: ObjectProperties, gr
 
 /** Preserve unpainted placeholders as real geometry, not fake visible strokes.
  * The caller supplies the exact orthogonal affine axes and source centre. */
-export function unstrokedPitchprintPrimitive(item: Raw, id: string, editor: ObjectProperties, axisX: number, axisY: number, rotation: number, fill: string): SceneObject | null {
+export function unstrokedPitchprintPrimitive(item: Raw, id: string, editor: ObjectProperties, axisX: number, axisY: number, rotation: number, fill: string): Extract<SceneObject,{type:'rect'|'circle'|'ellipse'}> | null {
   if (!['rect', 'circle', 'ellipse'].includes(String(item.type))) return null;
   const { width, height } = dimensions(item);
   if (width <= 0 || height <= 0) return null;

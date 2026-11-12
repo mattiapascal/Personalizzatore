@@ -1,5 +1,6 @@
 import{joinGraphicPages}from'./pages';
 import {pitchprintTextIsBlank,prunePitchprintRefuse} from './pitchprint-refuse';
+import {singleFillPitchprintOpacity} from './pitchprint-opacity';
 import {pitchprintTextStroke} from './pitchprint-text-stroke';
 import {DEFAULT_JUSTIFICATION} from './justification';
 import{clippedPitchprintImageGeometry}from'./pitchprint-image-clip';
@@ -102,9 +103,11 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
    if(empty){warnings.push(`${name}: ${empty} senza area e senza contorno, privo di grafica visibile, escluso esplicitamente.`);rememberGroup();continue;}
    const primitive=orthogonal&&shapeStroke==='none'?unstrokedPitchprintPrimitive(item,id,editor,axisX,axisY,rotation,shapeFill):null;
    if(primitive){
+    const opacity=singleFillPitchprintOpacity(item);if(opacity===null)throw Error(`${name}: opacità da convertire.`);if(opacity!==1){primitive.fillOpacity=opacity;warnings.push(`${name}: opacità del singolo riempimento conservata (${opacity*100}%).`);}
     if(type==='rect'&&shapeFill==='none'&&editor.includeInForm)warnings.push(`${name}: segnaposto trasparente conservato con label/proprietà; l’eventuale campo di caricamento foto PitchPrint richiede associazione esplicita all’immagine.`);
     objects.push(placeObjectAtCenter(primitive,center,measureFabric));rememberGroup();continue;
    }
+   if(item.opacity!==undefined&&item.opacity!==1)throw Error(`${name}: opacità di una geometria affine non rappresentabile con il singolo riempimento.`);
    const safe:any={originX:item.originX??'left',originY:item.originY??'top',left:item.left,top:item.top,width:rawWidth,height:rawHeight,scaleX,scaleY,angle,flipX:item.flipX===true,flipY:item.flipY===true,fill:shapeFill==='none'?null:shapeFill,stroke:shapeStroke==='none'?null:shapeStroke,strokeWidth:stroke,strokeLineCap:item.strokeLineCap??'butt',strokeLineJoin:item.strokeLineJoin??'miter',strokeMiterLimit:item.strokeMiterLimit??4,fillRule:item.fillRule??'nonzero'};let object:FabricObject;
    if(type==='rect')object=new Rect({...safe,rx:item.rx??0,ry:item.ry??0});else if(type==='circle')object=new Circle({...safe,radius:numeric(item.radius,name)});else if(type==='ellipse')object=new Ellipse({...safe,rx:numeric(item.rx,name),ry:numeric(item.ry,name)});else if(type==='line')object=new Line([numeric(item.x1,name),numeric(item.y1,name),numeric(item.x2,name),numeric(item.y2,name)],safe);else if(type==='path'&&Array.isArray(item.path))object=new Path(item.path as any,safe);else if((type==='polygon'||type==='polyline')&&Array.isArray(item.points))object=type==='polygon'?new Polygon(item.points as any,safe):new Polyline(item.points as any,safe);else throw new Error(`${name}: tipo «${String(type)}» non supportato. Nessun elemento viene scartato.`);
    // The physical page axes are independent: legacy canvas dimensions can be
