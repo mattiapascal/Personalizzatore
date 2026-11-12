@@ -35,6 +35,8 @@ Log privati `.local/image-capacity-*.log`, report e schermate `.local/multi-imag
 
 ## Prossimo controllo dei sorgenti
 
+**Seguito completato:** [dieci template Classe energetica importati e verificati](iteration-editor-energy-templates.md). La previsione sotto documenta il controllo precedente al loro salvataggio.
+
 Dieci snapshot a pagina singola della categoria «Classe energetica» (A1–A4, B–G) contengono cinque immagini. Il vecchio numero massimo non è più un vincolo, ma ciò **non certifica la convertibilità**: originali, font, maschere, vettori e confronto completo devono essere verificati prima del salvataggio. Gli snapshot e l’archivio reale rimangono invariati; nessuna associazione commerciale viene dedotta dalla sola categoria.
 
 ## Campione ripetibile
