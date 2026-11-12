@@ -32,7 +32,7 @@ Riapertura effettiva in browser: 14 oggetti, gruppi, area, carta, famiglia targa
 
 ## Verifiche
 
-**828 test unitari / 122 file**, build laboratorio/pubblico, scansioni dei segreti, **13 browser pubblici** e **41 campioni JSON/SVG** superati. **90 browser di regressione immagini/font/librerie passati**, inclusi i cinque nuovi casi; anche i dieci controlli mirati precedenti erano passati. Avviata anche la regressione completa dei 524 scenari, ancora in corso: log `.local/png-full-browser.log`, handle exec `92719`. Durante la suite non modificare fonti/test o archivio reale. Il JavaScript pubblico resta `index-BG2r_x-8.js`.
+**828 test unitari / 122 file**, build laboratorio/pubblico, scansioni dei segreti, **13 browser pubblici** e **41 campioni JSON/SVG** superati. **90 browser di regressione immagini/font/librerie passati**, inclusi i cinque nuovi casi; anche i dieci controlli mirati precedenti erano passati. **Regressione completa 524/524 passata in 17,8 minuti** sul codice `9c164d9`, log `.local/png-full-browser.log`; handle `92719` terminale con exit 0. Nessun errore o modifica di codice/test/archivio durante l’esecuzione. Il JavaScript pubblico resta `index-BG2r_x-8.js`.
 
 I primi tentativi di collaudo sono conservati: `createImageBitmap` non decodificava il blob SVG nel test, sostituito con il decoder Image; il confronto ha poi rilevato il reale difetto di interpolazione risolto dalla permutazione nativa; una lettura del test subito dopo riapertura incontrava temporaneamente l’oggetto di prova senza `source`, ora attende la sorgente con accesso opzionale. Non sono stati aumentati timeout o allentate le tolleranze grafiche. Prove finali in `.local/png-*.log`.
 

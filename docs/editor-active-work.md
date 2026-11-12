@@ -1,4 +1,4 @@
-**12 novembre — PNG e un altro cartello recuperato:** [incremento e prove](iteration-editor-png-metadata.md). PNG EXIF canonici, copie concatenate equivalenti verificate anche nel backend, originali completi nel JSON e orientamento SVG senza ricampionamento, anche a 16 bit/palette/Adam7. Salvato «Corrieri: Cane onnivoro» con backup e confronto completo superato: **254 template**, due composizioni e 219 font conservati, nessuna associazione. Riapertura e cache miniatura verificate. **828 unitari**, 90 browser pertinenti, 13 pubblici e 41 campioni passati; build/schemi/segreti verificati, JavaScript pubblico invariato. Regressione completa dei 524 scenari in corso (`.local/png-full-browser.log`, handle `92719`): non dichiararla conclusa e non modificare codice/test/archivio durante l’esecuzione. Nessun deploy o collaudo Illustrator.
+**12 novembre — PNG e un altro cartello recuperato:** [incremento e prove](iteration-editor-png-metadata.md). PNG EXIF canonici, copie concatenate equivalenti verificate anche nel backend, originali completi nel JSON e orientamento SVG senza ricampionamento, anche a 16 bit/palette/Adam7. Salvato «Corrieri: Cane onnivoro» con backup e confronto completo superato: **254 template**, due composizioni e 219 font conservati, nessuna associazione. Riapertura e cache miniatura verificate. **828 unitari**, 90 browser pertinenti, 13 pubblici e 41 campioni passati; build/schemi/segreti verificati, JavaScript pubblico invariato. Regressione completa **524/524 passata in 17,8 minuti** (`.local/png-full-browser.log`), processo concluso; verificato il codice `9c164d9`. Si può riprendere lo sviluppo. Nessun deploy o collaudo Illustrator.
 
 **12 novembre — checkpoint fondi vettoriali:** [incremento e nove copie salvate](iteration-editor-page-vectors.md), archivio a **253 template**, due composizioni e 219 font conservati. Nove riaperture e cache miniature verificate. **794 unitari**, 13 pubblici e 40 campioni passati. Suite completa conclusa: 518/519 passati; corretto il solo test di attesa della rimozione e verificato con dieci ripetizioni e cinque regressioni configurazioni. Tutti i 519 scenari verificati fra esecuzione e ricontrolli, senza dichiarare verde il primo comando. Il processo completo è terminale; si può riprendere lo sviluppo. Prossime diagnosi: PNG EXIF/integrità, capacità dei due corpi da 542/301 elementi, maschere, fonte esatta del CDN e due primi piani; restano anche i 28 casi dell’altro lotto e i font/glifi precedentemente segnalati.
 
@@ -7,6 +7,20 @@
 # Lavori attivi e direttive più recenti — 12 novembre 2026
 
 Questa nota mantiene le richieste più recenti. Gli incrementi completati e quelli ancora aperti sono distinti qui sotto.
+
+## Diagnosi successive al PNG — 12 novembre
+
+Prove isolate, senza cambiare applicazione o archivio durante la regressione completa:
+
+| Caso | Evidenza | Prossimo intervento |
+| --- | --- | --- |
+| Il cane è buono, mia moglie no | 301 elementi nativi, 304 oggetti / cinque gruppi convertiti nel solo prototipo con budget 1.000; confronto indipendente rapporto 0,0008336, errore medio 0,0151334 | Estendere coerentemente documento, UI/AI e importatori; collaudare limiti, rendering e Undo; ripetere senza override prima dell’importazione |
+| Rappresentanti | 542 elementi, 6.833 comandi dei tracciati; superata la prima barriera emergono sette box di testo con contorno | Serve conservare il contorno e l’editabilità del testo. Non togliere lo stroke o convertire automaticamente i testi in vettori |
+| Io abito qui | Immagine della distribuzione CDN indicata dal sorgente e copia `pitchprint.io/assets/` lette in sola lettura: entrambe 875.512 byte e stesso SHA-256 | Adattatore CDN verificato e limitato, poi confronto completo e backup prima di una nuova bozza |
+
+Gli override del prototipo esistono soltanto nel trasporto Playwright di un browser separato. **Non è ancora disponibile una capacità maggiore nell’applicazione**, e nessuno di questi tre casi è stato importato. Rapporti privati in `.local/pitchprint-migration/large-design-prototype/`, `cdn-analysis/` e `recovery-readiness-2026-11-12.json`. Non sono conteggi globali degli esclusi.
+
+Controllo della cache di lettura su archivio reale a revisione 508: caricamento freddo del processo separato **5.498 ms**, riuso dello stesso snapshot **0,13 ms**, picco di heap osservato a fine lettura circa **1.494 MiB**. Nessuna scrittura. È una misura singola durante altre prove locali: conferma il riuso, ma lascia da migliorare tempo/memoria della lettura completa; non descriverla come caricamento istantaneo dell’editor.
 
 ## Ordine di lavoro
 
