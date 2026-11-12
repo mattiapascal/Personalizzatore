@@ -2,7 +2,7 @@ import{pngDescriptor,PNG_DECODING_POLICY}from'../editor/png-source';
 import type { GraphicDocument } from '../editor/model';
 import { productionDocument } from '../editor/object-properties';
 /** Bump when renderer/output changes; metadata edits must not invalidate images. */
-export const ARCHIVE_PREVIEW_RENDERER = 'png-2-fabric-7.4.0-explicit-axes';
+export const ARCHIVE_PREVIEW_RENDERER = 'png-3-fabric-7.4.0-text-paint';
 export const ARCHIVE_PREVIEW_SIDE = 512;
 export const ARCHIVE_PREVIEW_FONT_POLICY = 'strict-nominal-1';
 export const ARCHIVE_PREVIEW_ORIGINAL_RASTER_POLICY = 'direct-source-1';

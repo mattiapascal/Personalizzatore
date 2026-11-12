@@ -69,8 +69,9 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
     if(!assets.some(existing=>existing.id===asset.id)){FontAssetsSchema.parse([...assets,asset]);assets.push(asset);}await loadFontAssets([asset]);return asset;
    };
    const asset=await resolveFont(pitchprintFontRequest(item)),fontFamily=asset.id,fontSize=numeric(item.fontSize,name),fontSizePt=fontSize*axisY*72/25.4;
-   const {nativeStyles,characterStyles,ignoredInsertionStyles}=await pitchprintTextStyles(item,axisY,options.monochrome,resolveFont);
+   const {nativeStyles,characterStyles,ignoredInsertionStyles,ignoredDetachedStyles}=await pitchprintTextStyles(item,axisY,options.monochrome,resolveFont);
    if(ignoredInsertionStyles)warnings.push(`${name}: ${ignoredInsertionStyles} stili di inserimento a fine riga esclusi; nessun carattere visibile modificato.`);
+   if(ignoredDetachedStyles)warnings.push(`${name}: ${ignoredDetachedStyles} stili residui di righe assenti esclusi; nessun carattere del testo corrente modificato.`);
    const fill=color(item.fill,options.monochrome);if(fill==='none')throw new Error(`${name}: testo senza riempimento non convertibile.`);
    const outline=pitchprintTextStroke(item,axisY,options.monochrome);
    const nativeOptions={left:numeric(item.left,name),top:numeric(item.top,name),originX:(item.originX??'left') as 'left'|'center'|'right',originY:(item.originY??'top') as 'top'|'center'|'bottom',scaleX,scaleY,angle,flipX:item.flipX===true,flipY:item.flipY===true,fontSize,fontFamily:renderFontFamily(fontFamily),fontWeight:'normal' as const,fontStyle:'normal' as const,lineHeight:numeric(item.lineHeight??1,name),charSpacing:numeric(item.charSpacing??0,name),textAlign:(item.textAlign??'left') as 'left'|'center'|'right'|'justify',fill,...outline.native,underline:item.underline===true,linethrough:item.linethrough===true,overline:item.overline===true,styles:nativeStyles};

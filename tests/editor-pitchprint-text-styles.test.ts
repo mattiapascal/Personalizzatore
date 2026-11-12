@@ -4,6 +4,14 @@ import { TEST_FONT_ASSETS } from './helpers/editor-fonts';
 import { createDocument, DocumentSchema, DocumentStore } from '../src/editor/model';
 const base={text:'È😀A\nBC',fontFamily:'Arimo',fontWeight:'normal',fontStyle:'normal',fontSize:40,fill:'#000000',textAlign:'center'};
 const resolve=async(request:{family:string;weight:number;italic:boolean})=>{const font=TEST_FONT_ASSETS.find(font=>font.familyGroup===request.family&&font.weight===request.weight&&font.italic===request.italic);if(!font)throw Error('File esatto mancante');return font;};
+it('Textbox Fabric 3.4: gli stili delle righe assenti non cambiano caratteri e non richiedono font inutilizzati',async()=>{
+ const input={...base,type:'textbox',version:'3.4.0',text:'ABC',styles:{0:{0:{fill:'red'}},1:{0:{fontFamily:'Font assente mai dipinto',fontSize:9999,deltaY:500}},99:{4000:{fontFamily:'Altro font mai dipinto'}}}},before=structuredClone(input);let requests=0;
+ const result=await pitchprintTextStyles(input,.2,false,async()=>{requests++;throw Error('Non deve risolvere font residui');});expect(result.ignoredDetachedStyles).toBe(2);expect(result.ignoredInsertionStyles).toBe(0);expect(result.characterStyles).toEqual([{start:0,end:1,style:{fill:'#ff0000'}}]);expect(result.nativeStyles).toEqual({0:{0:{fill:'#ff0000'}}});expect(requests).toBe(0);expect(input).toEqual(before);
+});
+it('gli stili residui non autorizzano altre versioni, indici malformati, righe vuote o proprietà sconosciute',async()=>{
+ const legacy={...base,type:'textbox',version:'3.4.0',text:'ABC'};let requests=0;const never=async()=>{requests++;throw Error('Non deve risolvere prima della validazione');};
+ for(const input of[{...legacy,type:'i-text',styles:{1:{0:{fill:'red'}}}},{...legacy,version:'7.4.0',styles:{1:{0:{fill:'red'}}}},{...legacy,styles:{100:{0:{fill:'red'}}}},{...legacy,styles:{1:{4001:{fill:'red'}}}},{...legacy,styles:{1:{'-1':{fill:'red'}}}},{...legacy,styles:{1:{0:{futureProperty:true}}}},{...legacy,styles:{0:{4:{fill:'red'}}}},{...legacy,text:'A\n\nB',styles:{1:{0:{fill:'red'}}}}])await expect(pitchprintTextStyles(input,.2,false,never)).rejects.toThrow();expect(requests).toBe(0);
+});
 it('segnala gli stili di inserimento esattamente a fine riga senza richiedere font non usati; indici vuoti o fuori riga restano bloccanti',async()=>{
  let requests=0;const result=await pitchprintTextStyles({...base,styles:{0:{3:{fontFamily:'Font mai dipinto',fontSize:9999}},1:{2:{fill:'red'}}}},.2,false,async()=>{requests++;throw Error('Non deve risolvere font senza caratteri');});
  expect(result.ignoredInsertionStyles).toBe(2);expect(result.characterStyles).toEqual([]);expect(result.nativeStyles).toEqual({});expect(requests).toBe(0);
