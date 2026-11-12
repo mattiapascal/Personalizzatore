@@ -50,13 +50,12 @@ describe('documento unico e comandi revisionati', () => {
     }
     s.redo(); expect(s.document.objects.at(-1)!.id).toBe('new-text');
   });
-  it('il limite di 200 oggetti vale per aggiunta e copia', () => {
-    const s = new DocumentStore(createDocument(), measure);
-    for (let i = 0; i < 198; i++) s.dispatch(add(s.document.revision, { ...newText, id: `object-${i}` }), 'manual');
-    const before = structuredClone(s.document);
-    expect(() => s.dispatch(add(198), 'manual')).toThrow();
-    expect(() => s.dispatch(duplicate(198, 'text-1'), 'ai-simulation')).toThrow();
-    expect(s.document).toEqual(before); expect(s.events).toHaveLength(198);
+  it('il limite di 1000 oggetti vale per aggiunta e copia', () => {
+    const doc=createDocument();doc.objects.push(...Array.from({length:998},(_,i)=>({...newText,id:`object-${i}`})));
+    const s = new DocumentStore(doc, measure),before=structuredClone(s.document);
+    expect(() => s.dispatch(add(0), 'manual')).toThrow('1000');
+    expect(() => s.dispatch(duplicate(0, 'text-1'), 'ai-simulation')).toThrow('1000');
+    expect(s.document).toEqual(before); expect(s.events).toHaveLength(0);
   });
   it('può svuotare, salvare, riaprire e ricominciare; undo ripristina gli ID', () => {
     const s = new DocumentStore(createDocument(), measure);

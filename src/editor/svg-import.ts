@@ -1,7 +1,7 @@
 import { StrokeWidthSchema } from './stroke';
 import { requestStrokeOutline } from './stroke-outline';
 import {canonicalPaint} from './paint';
-import { EDITOR_LIMITS } from './limits';
+import { EDITOR_LIMITS,GRAPHIC_IMPORT_LIMITS } from './limits';
 import { assertMinimumText } from './text-production';
 import { compactVectors } from './vector-compaction';
 import { loadSVGFromString, FabricText, Path, Rect, Circle, Ellipse, Line, Polyline, Polygon, util, type FabricObject, type TMat2D } from 'fabric';
@@ -71,7 +71,7 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
   }
   const textLengths=new WeakMap<FabricObject,number>(),textAnchors=new WeakMap<FabricObject,string>();
   const parsed = await loadSVGFromString(safe,(element,object)=>{if(object instanceof FabricText){for(let node:Element|null=element;node;node=node.parentElement)if(node.hasAttribute('text-anchor')){textAnchors.set(object,node.getAttribute('text-anchor')!);break;}}if(element.hasAttribute('textLength')){if(element.getAttribute('lengthAdjust')!=='spacingAndGlyphs'||!['start',null].includes(element.getAttribute('text-anchor')))throw new Error('Dilatazione SVG supportata solo con testo ancorato a sinistra');textLengths.set(object,Number(element.getAttribute('textLength')));}}); let objects: SceneObject[] = [],expandedStrokes=0;
-  if (parsed.objects.length > 500) throw new Error('SVG oltre il limite di elaborazione di 500 elementi sorgente');
+  if (parsed.objects.length > GRAPHIC_IMPORT_LIMITS.sourceElements) throw new Error(`SVG oltre il limite di elaborazione di ${GRAPHIC_IMPORT_LIMITS.sourceElements} elementi sorgente`);
   for (const object of parsed.objects) {
     if (!object || !object.visible) continue; const fill = paint(object.fill), stroke = paint(object.stroke); if (fill === 'none' && stroke === 'none') continue;
     const m = object.calcTransformMatrix(), sx = Math.hypot(m[0], m[1]), sy = Math.hypot(m[2], m[3]);

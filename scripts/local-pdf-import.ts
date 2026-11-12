@@ -1,3 +1,4 @@
+import{MAX_SVG_BYTES,SVG_SIZE_LABEL}from'../src/editor/svg-sanitize';
 import type { Plugin } from 'vite';
 import { pdfEditableText } from './pdf-editable-text';
 import { execFile } from 'node:child_process';
@@ -23,9 +24,9 @@ export async function convertLocalPdf(bytes: Buffer, textMode: 'outlines'|'edita
     if(unembeddedFonts.length)throw new Error(`Il PDF usa font non incorporati (${unembeddedFonts.join(', ')}). Riesporta il PDF incorporando i font oppure convertendo i testi in contorni; i font del computer non sono utilizzabili.`);
     try { const images = (await run('pdfimages', ['-list', input], { timeout: 10000, maxBuffer: 256 * 1024, env: { ...process.env, LC_ALL: 'C' } })).stdout; if (images.split('\n').some(line => /^\s*\d+\s+\d+\s+\S+/.test(line))) throw new Error('PDF con immagini raster: questo import accetta soltanto grafica vettoriale'); } catch (error) { if (error instanceof Error && error.message.includes('immagini raster')) throw error; throw new Error('Analisi delle immagini PDF non riuscita'); }
     let svg: string;
-    try { svg = (await run('pdftocairo', ['-svg', '-f', '1', '-l', '1', input, '-'], { timeout: 10000, maxBuffer: 256 * 1024, env: { ...process.env, LC_ALL: 'C', XDG_CACHE_HOME: directory } })).stdout; }
-    catch { throw new Error('Conversione PDF oltre i limiti di tempo/256 KB SVG o non riuscita'); }
-    if (textMode === 'editable') { const xml=(await run('pdftohtml',['-xml','-stdout','-i','-zoom','1','-noroundcoord','-fontfullname','-nomerge',input],{timeout:10000,maxBuffer:256*1024,env:{...process.env,LC_ALL:'C'}})).stdout; return {...pdfEditableText(svg,xml),unembeddedFonts}; }
+    try { svg = (await run('pdftocairo', ['-svg', '-f', '1', '-l', '1', input, '-'], { timeout: 10000, maxBuffer: MAX_SVG_BYTES, env: { ...process.env, LC_ALL: 'C', XDG_CACHE_HOME: directory } })).stdout; }
+    catch { throw new Error(`Conversione PDF oltre i limiti di tempo/${SVG_SIZE_LABEL} SVG o non riuscita`); }
+    if (textMode === 'editable') { const xml=(await run('pdftohtml',['-xml','-stdout','-i','-zoom','1','-noroundcoord','-fontfullname','-nomerge',input],{timeout:10000,maxBuffer:MAX_SVG_BYTES,env:{...process.env,LC_ALL:'C'}})).stdout; return {...pdfEditableText(svg,xml),unembeddedFonts}; }
     return { svg, unembeddedFonts };
   } finally { await rm(directory, { recursive: true, force: true }); }
 }

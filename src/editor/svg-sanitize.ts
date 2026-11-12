@@ -1,7 +1,9 @@
+import{GRAPHIC_IMPORT_LIMITS}from'./limits';
 import {canonicalPaint} from './paint';
 import { expandSvgReferences } from './svg-references';
 import { Parser } from 'htmlparser2';
-export const MAX_SVG_BYTES = 256 * 1024;
+export const MAX_SVG_BYTES = GRAPHIC_IMPORT_LIMITS.svgBytes;
+export const SVG_SIZE_LABEL='2 MB';
 const elements = new Set(['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'title', 'desc', 'defs', 'clipPath']);
 const properties = new Set(['fill', 'stroke', 'fill-rule', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-dasharray', 'stroke-dashoffset', 'opacity', 'fill-opacity', 'stroke-opacity', 'display', 'visibility', 'color', 'clip-rule', 'clip-path']);
 const geometry = new Set(['d', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'width', 'height', 'points', 'viewBox', 'preserveAspectRatio', 'transform', 'id', 'version', 'xmlns', 'xmlns:xlink', 'class', 'clipPathUnits']);
@@ -24,14 +26,14 @@ function validateTransform(value: string): void {
   if (!end || value.slice(end).trim()) throw new Error('Trasformazione SVG non valida');
 }
 export function sanitizeSvg(source: string, monochrome = false, allowText = false): string {
-  if (new TextEncoder().encode(source).length > MAX_SVG_BYTES || source.includes('\0') || /<!ENTITY|<!DOCTYPE[^>]*\[/i.test(source)) throw new Error('SVG oltre 256 KB o dichiarazioni XML non consentite');
+  if (new TextEncoder().encode(source).length > MAX_SVG_BYTES || source.includes('\0') || /<!ENTITY|<!DOCTYPE[^>]*\[/i.test(source)) throw new Error(`SVG oltre ${SVG_SIZE_LABEL} o dichiarazioni XML non consentite`);
   source = expandSvgReferences(source, allowText);
-  if (new TextEncoder().encode(source).length > MAX_SVG_BYTES) throw new Error('SVG espanso oltre 256 KB');
+  if (new TextEncoder().encode(source).length > MAX_SVG_BYTES) throw new Error(`SVG espanso oltre ${SVG_SIZE_LABEL}`);
   let result = '', roots = 0, count = 0; const stack: string[] = [];
   const parser = new Parser({
     onprocessinginstruction(name) { if (!['?xml', '!DOCTYPE', '!doctype'].includes(name)) throw new Error('Istruzione XML non supportata'); },
     onopentag(name, attrs) {
-      if (++count > 1000 || stack.length >= 32) throw new Error('SVG troppo complesso');
+      if (++count > GRAPHIC_IMPORT_LIMITS.svgElements || stack.length >= 32) throw new Error('SVG troppo complesso');
       if (!elements.has(name) && !(allowText && ['text','tspan'].includes(name))) throw new Error(name === 'text' || name === 'tspan' ? 'Testi SVG non ancora importabili: esportali come tracciati per conservare l’aspetto.' : `Elemento SVG non supportato: ${name}`);
       if (name === 'tspan' && (stack.at(-1) !== 'text' || Object.keys(attrs).length)) throw new Error('Testo SVG con stili o posizioni diversi nella stessa riga: separare le righe prima di importare');
       if (stack.some(tag => tag === 'text' || tag === 'tspan') && name !== 'tspan') throw new Error('Struttura del testo SVG non supportata');

@@ -2801,7 +2801,7 @@
           "type": "object",
           "properties": {
             "objects": {
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "oneOf": [
@@ -5392,7 +5392,7 @@
                   },
                   "objectIds": {
                     "minItems": 1,
-                    "maxItems": 200,
+                    "maxItems": 1000,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -5843,7 +5843,7 @@
             },
             "objects": {
               "minItems": 0,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "oneOf": [
@@ -8434,7 +8434,7 @@
                   },
                   "objectIds": {
                     "minItems": 1,
-                    "maxItems": 200,
+                    "maxItems": 1000,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -11518,7 +11518,7 @@
           "properties": {
             "objects": {
               "minItems": 1,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "oneOf": [
@@ -14109,7 +14109,7 @@
                   },
                   "objectIds": {
                     "minItems": 1,
-                    "maxItems": 200,
+                    "maxItems": 1000,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -18039,7 +18039,7 @@
           "properties": {
             "objectIds": {
               "minItems": 2,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18140,7 +18140,7 @@
           "properties": {
             "objectIds": {
               "minItems": 1,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18200,7 +18200,7 @@
           "properties": {
             "objectIds": {
               "minItems": 2,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18281,7 +18281,7 @@
           "properties": {
             "objectIds": {
               "minItems": 2,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18383,7 +18383,7 @@
           "properties": {
             "objectIds": {
               "minItems": 2,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18441,7 +18441,7 @@
           "properties": {
             "objectIds": {
               "minItems": 1,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18502,7 +18502,7 @@
           "properties": {
             "objectIds": {
               "minItems": 1,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18550,7 +18550,7 @@
           "properties": {
             "copies": {
               "minItems": 1,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "object",
@@ -18635,7 +18635,7 @@
           "properties": {
             "objectIds": {
               "minItems": 2,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18695,7 +18695,7 @@
           "properties": {
             "objectIds": {
               "minItems": 2,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",
@@ -18755,7 +18755,7 @@
           "properties": {
             "objectIds": {
               "minItems": 3,
-              "maxItems": 200,
+              "maxItems": 1000,
               "type": "array",
               "items": {
                 "type": "string",

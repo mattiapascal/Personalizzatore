@@ -1,4 +1,5 @@
 import{pngSourceWarnings}from'./png-source';
+import{EDITOR_LIMITS}from'./limits';
 import{pitchprintPageImages,convertPageImage,nativePageVector,type PageImagePolicy}from'./pitchprint-page-images';
 import { emptyPitchprintPrimitive, unstrokedPitchprintPrimitive } from './pitchprint-primitives';
 import { pitchprintImageGeometry, pitchprintImageUrl } from './pitchprint-image';
@@ -12,7 +13,7 @@ import {pitchprintFontRequest} from './pitchprint-fonts';
 import {pitchprintTree,pitchprintTransform,pitchprintPoint,multiplyPitchprintMatrices,type PitchprintMatrix} from './pitchprint-tree';
 import {z} from 'zod';import {IText,Textbox,Rect,Circle,Ellipse,Line,Path,Polygon,Polyline,type FabricObject} from 'fabric';
 import {createDocument,DocumentSchema,placeObjectAtCenter,type GraphicDocument,type SceneObject,type SceneGroup} from './model';import {loadFontAssets,renderFontFamily} from './fonts';import {FontAssetsSchema,type FontAsset} from './font-assets';import {measureFabric} from './fabric-adapter';import {prepareSvg} from './svg-import';import {rasterSourceFromBytes} from './raster-source';import {prepareRasterSource} from './raster-cache';import {DEFAULT_RASTER} from './raster-processing';import {defaultMountingFor} from './plaque';import type {ObjectProperties} from './object-properties';
-const record=z.record(z.string(),z.unknown()),sourceSchema=z.object({title:z.string().max(1000).optional(),unit:z.string(),pages:z.array(z.object({canvas:z.object({objects:z.array(record).max(200),clipPath:record}).passthrough(),pageData:record}).passthrough()).length(1)}).passthrough();
+const record=z.record(z.string(),z.unknown()),sourceSchema=z.object({title:z.string().max(1000).optional(),unit:z.string(),pages:z.array(z.object({canvas:z.object({objects:z.array(record).max(EDITOR_LIMITS.objects),clipPath:record}).passthrough(),pageData:record}).passthrough()).length(1)}).passthrough();
 export interface PitchImportOptions {monochrome:boolean;excludeBackground:boolean;family?:'flat-plaque'|'doorplate'|'boxed-sign';pageImages?:{background:PageImagePolicy;foreground:PageImagePolicy};font:(family:string,weight:number,italic:boolean)=>Promise<PitchprintFontResult>;image:(url:string)=>Promise<Uint8Array>;}
 export type PitchprintConversionOptions=Pick<PitchImportOptions,'monochrome'|'excludeBackground'|'family'|'pageImages'>;
 export interface PitchImportResult {document:GraphicDocument;title:string;warnings:string[];sourceObjects:number;}

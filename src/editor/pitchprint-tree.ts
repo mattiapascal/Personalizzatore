@@ -1,3 +1,4 @@
+import{EDITOR_LIMITS,GRAPHIC_IMPORT_LIMITS}from'./limits';
 import {pitchprintNumber as number} from './pitchprint-units';
 import type {ObjectProperties} from './object-properties';
 export type PitchprintMatrix=[number,number,number,number,number,number];
@@ -34,9 +35,9 @@ export function pitchprintTree(roots:Record<string,unknown>[],properties:(item:R
  const walk=(items:Record<string,unknown>[],parent:PitchprintMatrix,ancestry:string,inherited:ObjectProperties,rootGroup?:string,depth=0,parentGroup?:string)=>{
   if(depth>12)throw new Error('Gruppi PitchPrint oltre il limite di 12 livelli.');
   items.forEach((item,index)=>{
-   if(++count>1000)throw new Error('Template PitchPrint oltre 1000 elementi sorgente, inclusi i gruppi.');
+   if(++count>GRAPHIC_IMPORT_LIMITS.sourceElements)throw new Error(`Template PitchPrint oltre ${GRAPHIC_IMPORT_LIMITS.sourceElements} elementi sorgente, inclusi i gruppi.`);
    const id=`${ancestry}-${index+1}`,name=`Elemento ${id.slice(3).replaceAll('-',' · ')}`;checkedPitchprintEffects(item,name);
-   if(item.type!=='group'){if(leaves.length>=200)throw new Error('Template PitchPrint oltre 200 elementi grafici.');leaves.push({item,id,name,parent,inherited,rootGroup});return;}
+   if(item.type!=='group'){if(leaves.length>=EDITOR_LIMITS.objects)throw new Error(`Template PitchPrint oltre ${EDITOR_LIMITS.objects} elementi grafici.`);leaves.push({item,id,name,parent,inherited,rootGroup});return;}
    if(!Array.isArray(item.objects)||!item.objects.length||item.objects.some(child=>!child||typeof child!=='object'||Array.isArray(child)))throw new Error(`${name}: gruppo privo di elementi validi.`);
    const own=properties(item,warnings),groupId=`${id}-group`,firstLeaf=leaves.length,group={id:groupId,...(parentGroup?{parentId:parentGroup}:{}),editor:own,leafIds:[] as string[]};groups.push(group);
    if(depth)warnings.push('Gerarchia dei gruppi conservata; la selezione grafica agisce sul gruppo esterno.');

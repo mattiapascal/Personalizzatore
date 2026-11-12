@@ -19,6 +19,6 @@ it('regole del gruppo trasferite conservativamente ai figli; etichette e priorit
 });
 it('preflight non scarta gruppi vuoti, effetti, discendenti invalidi, profondità o quantità eccessive',()=>{
  const group={type:'group',left:0,top:0,width:20,height:20,objects:[shape]};for(const extra of [{objects:[]},{objects:[null]},{opacity:.5},{clipPath:{}},{shadow:{}},{skewX:2},{visible:false}])expect(()=>pitchprintTree([{...group,...extra}],properties)).toThrow();
- let nested:Record<string,unknown>=shape;for(let i=0;i<14;i++)nested={...group,objects:[nested]};expect(()=>pitchprintTree([nested],properties)).toThrow('12 livelli');expect(()=>pitchprintTree([{...group,objects:Array.from({length:201},()=>shape)}],properties)).toThrow('200 elementi');
+ let nested:Record<string,unknown>=shape;for(let i=0;i<14;i++)nested={...group,objects:[nested]};expect(()=>pitchprintTree([nested],properties)).toThrow('12 livelli');expect(()=>pitchprintTree([{...group,objects:Array.from({length:1001},()=>shape)}],properties)).toThrow('1000 elementi');
  expect(()=>pitchprintTransform({...group,scaleX:0},'TEST')).toThrow('scala');expect(()=>pitchprintTransform({...group,originX:'invalid'},'TEST')).toThrow('Origine');
 });

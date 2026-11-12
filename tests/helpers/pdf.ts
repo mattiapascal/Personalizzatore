@@ -1,8 +1,8 @@
 import{readFileSync}from'node:fs';
 import metrics from'./pdf-font-metrics.TEST.json' with{type:'json'};
 /** Minimal PDF test source with an actual embedded TrueType file; no machine fonts. */
-export function testVectorPdf(pages=1,text=false):Buffer{
- const content=text?'BT /F1 18 Tf 10 25 Td (TEST) Tj ET':'0 g 0 0 100 50 re 25 10 50 30 re f*';
+export function testVectorPdf(pages=1,text=false,contentOverride?:string):Buffer{
+ const content=contentOverride??(text?'BT /F1 18 Tf 10 25 Td (TEST) Tj ET':'0 g 0 0 100 50 re 25 10 50 30 re f*');
  const font=4+pages,descriptor=5+pages,file=6+pages;
  const objects=['<< /Type /Catalog /Pages 2 0 R >>',`<< /Type /Pages /Kids [${Array.from({length:pages},(_,i)=>`${3+i} 0 R`).join(' ')}] /Count ${pages} >>`,...Array.from({length:pages},()=>`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 50] /Resources << ${text?`/Font << /F1 ${font} 0 R >>`:''} >> /Contents ${3+pages} 0 R >>`),`<< /Length ${content.length} >>\nstream\n${content}\nendstream`];
  if(text){const bytes=readFileSync(`fixtures/fonts/${metrics.fontFile}`),hex=bytes.toString('hex')+'>';objects.push(`<< /Type /Font /Subtype /TrueType /BaseFont /${metrics.postScriptName} /FirstChar 32 /LastChar 255 /Widths [${metrics.widths.join(' ')}] /Encoding /WinAnsiEncoding /FontDescriptor ${descriptor} 0 R >>`,`<< /Type /FontDescriptor /FontName /${metrics.postScriptName} /Flags 32 /FontBBox [${metrics.bbox.join(' ')}] /ItalicAngle 0 /Ascent ${metrics.ascent} /Descent ${metrics.descent} /CapHeight ${metrics.capHeight} /StemV 80 /FontFile2 ${file} 0 R >>`,`<< /Length ${hex.length} /Length1 ${bytes.length} /Filter /ASCIIHexDecode >>\nstream\n${hex}\nendstream`);}

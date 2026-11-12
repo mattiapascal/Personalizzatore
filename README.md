@@ -1,3 +1,5 @@
+**Aggiornamento locale 12 novembre:** [progetti fino a 1.000 oggetti](docs/iteration-editor-large-scenes.md), SVG fino a 2 MiB e un altro cartello recuperato: **256 template**. 838 unitari, 127 browser pertinenti, 13 pubblici e 42 campioni passati; suite completa 529 casi in corso. Nessun deploy.
+
 **Aggiornamento locale 12 novembre:** [CDN PitchPrint verificato](docs/iteration-editor-pitchprint-cdn.md), recuperato «Io abito qui»: **255 template**. 831 unitari e otto browser pertinenti passati dopo il collaudo completo PNG 524/524. Nessun deploy.
 
 **Aggiornamento locale 12 novembre:** [PNG con metadati e copie equivalenti](docs/iteration-editor-png-metadata.md), un altro cartello recuperato: archivio a **254 template**. 828 unitari, 90 regressioni browser pertinenti, 13 pubblici e 41 campioni verificati; regressione completa **524/524 passata**. Nessun deploy.

@@ -31,7 +31,7 @@ import { refreshLibraryFonts,initializeLibraryFonts,showProjectFontChoices } fro
 import { loadFontAssets, fontAssetArguments, defaultLibraryFont, registeredFontAsset } from './fonts';
 import { readAdminSnapshot, readArchiveRecord, localAdminRequest } from '../editor-admin/api';
 import { prepareSvg, svgInsertion } from './svg-import';
-import { MAX_SVG_BYTES } from './svg-sanitize';
+import { MAX_SVG_BYTES,SVG_SIZE_LABEL } from './svg-sanitize';
 import { EditorButton, EditorIcon } from './EditorButton';
 import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { FabricAdapter, measureFabric, measureTextFrame } from './fabric-adapter';
@@ -183,7 +183,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const importSvg = (file: File) => {
     let ids: string[] = [];
     void prepareAndAct(async store => {
-      if (file.size > MAX_SVG_BYTES) throw new Error('SVG oltre 256 KB');
+      if (file.size > MAX_SVG_BYTES) throw new Error(`SVG oltre ${SVG_SIZE_LABEL}`);
       const prepared = await prepareSvg(new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()), vectorMonochrome, importTextMode), insertion = svgInsertion(prepared, store.document, measureFabric,minimumFontForDocument(store.document,graphicCatalog)); ids = insertion.command.arguments.objects.map(object => object.id);
       return () => { store.dispatch(insertion.command, 'manual'); select(ids); setImportNotice(insertion.report); };
     });
