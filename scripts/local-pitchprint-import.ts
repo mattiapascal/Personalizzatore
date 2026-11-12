@@ -6,7 +6,19 @@ import {expandPitchprintAssociations,PitchprintAssociationsSchema} from '../src/
 import {parseEnv} from 'node:util';
 import {loadEnv,type Plugin} from 'vite';import {readFile,readdir,realpath,stat,mkdir,writeFile,rename} from 'node:fs/promises';import {homedir} from 'node:os';import {join,resolve,sep} from 'node:path';import {createHash,randomUUID} from 'node:crypto';
 export const pitchprintLabDirectory=()=>resolve(process.env.PITCHPRINT_LAB_DIR??join(homedir(),'Documents/Shopify/PitchPrint Template Lab'));
-export function allowedPitchprintAsset(url:string):boolean{try{const value=new URL(url);return value.protocol==='https:'&&!value.username&&!value.password&&!value.port&&(value.hostname==='pitchprint.io'&&/^\/(?:assets|lowres)\/[a-zA-Z0-9_.\/-]+$/.test(value.pathname)||value.hostname==='s3-eu-west-1.amazonaws.com'&&value.pathname.startsWith('/pitchprint.io/'));}catch{return false;}}
+// Distribution observed in the account's original designs and independently
+// checked against the byte-identical pitchprint.io mirror. Never allow a whole
+// hosting provider, arbitrary distribution, query redirect or generic endpoint.
+const VERIFIED_PITCHPRINT_CDN='d3jpr00va563vk.cloudfront.net';
+export function allowedPitchprintAsset(url:string):boolean{
+ try{
+  const value=new URL(url);
+  if(value.protocol!=='https:'||value.username||value.password||value.port)return false;
+  return value.hostname==='pitchprint.io'&&/^\/(?:assets|lowres)\/[a-zA-Z0-9_.\/-]+$/.test(value.pathname)
+   ||value.hostname==='s3-eu-west-1.amazonaws.com'&&value.pathname.startsWith('/pitchprint.io/')
+   ||value.hostname===VERIFIED_PITCHPRINT_CDN&&!value.search&&!value.hash&&/^\/assets\/img_[a-f0-9]{64}\.(?:png|jpe?g)$/i.test(value.pathname);
+ }catch{return false;}
+}
 export async function pitchprintAsset(url:string,fetcher=fetch):Promise<Buffer>{if(!allowedPitchprintAsset(url))throw new Error('Asset esterno non autorizzato: sono ammessi solo gli archivi PitchPrint conosciuti.');const response=await fetcher(url,{redirect:'error',signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error(`Asset PitchPrint non disponibile (HTTP ${response.status}).`);const parts:Uint8Array[]=[];let size=0;for await(const part of response.body??[] as any){size+=part.length;if(size>MAX_RASTER_BYTES)throw new Error('Asset oltre il limite locale di 20 MB: occorre prepararlo esplicitamente.');parts.push(part);}return Buffer.concat(parts);}
 export async function readRemotePitchprintDesign(directory:string,designId:string,fetcher=fetch){
  if(!/^(?:[a-f0-9]{32,64}|des_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i.test(designId))throw new Error('ID design PitchPrint non valido.');
