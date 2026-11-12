@@ -1,0 +1,158 @@
+{
+  "colorMode": "color",
+  "schemaVersion": 2,
+  "documentId": "4f1f4597-1260-466f-8d29-e2db07489003",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 100,
+    "height": 70
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "pp-1",
+      "type": "image",
+      "xMm": 10,
+      "yMm": 12.000000000000002,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 19.200000000000003,
+      "heightMm": 14.400000000000002,
+      "source": {
+        "id": "pitch-4b03f158-4bfe-4798-bdb8-8fc32403649d",
+        "mime": "image/png",
+        "pixelWidth": 64,
+        "pixelHeight": 48,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAhklEQVR4nO3WsQmAMBQE0NTW1g7hOE7kQI7hHK4RW1FIF07IK67Lh8urrkzLWkdOSRdIB0C6QDofgGubj2fKftZW3u//fg8AAIA2QLpg73sAAAAAAAAAgCEEAAAAAAAAADCEAAAAAAAAAACGEAAAAAAAAADAEPr9BwAA6AwwWgCkC6QzPMANsEZwuo4dbDkAAAAASUVORK5CYII="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "pixelAspectRatio": 1,
+      "crop": {
+        "leftPx": 0,
+        "topPx": 0,
+        "widthPx": 64,
+        "heightPx": 48
+      },
+      "flipY": false
+    },
+    {
+      "id": "pp-2",
+      "type": "image",
+      "xMm": 40.71727172824126,
+      "yMm": 10.000000000000004,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": -155,
+      "widthMm": 17,
+      "heightMm": 12.499999999999998,
+      "source": {
+        "id": "pitch-50f34db0-fb1f-47be-9055-1a85cd230634",
+        "mime": "image/png",
+        "pixelWidth": 64,
+        "pixelHeight": 48,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAhklEQVR4nO3WsQmAMBQE0NTW1g7hOE7kQI7hHK4RW1FIF07IK67Lh8urrkzLWkdOSRdIB0C6QDofgGubj2fKftZW3u//fg8AAIA2QLpg73sAAAAAAAAAgCEEAAAAAAAAADCEAAAAAAAAAACGEAAAAAAAAADAEPr9BwAA6AwwWgCkC6QzPMANsEZwuo4dbDkAAAAASUVORK5CYII="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "pixelAspectRatio": 1.0000000000000002,
+      "crop": {
+        "leftPx": 5.25,
+        "topPx": 3.75,
+        "widthPx": 42.5,
+        "heightPx": 31.25
+      },
+      "flipY": true
+    },
+    {
+      "id": "pp-3-1",
+      "type": "image",
+      "xMm": 65.0890082491208,
+      "yMm": 37.47969815896175,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 160,
+      "widthMm": 17.6,
+      "heightMm": 9.600000000000001,
+      "source": {
+        "id": "pitch-62132366-b2cc-4fcd-99ba-10838f3dce8d",
+        "mime": "image/png",
+        "pixelWidth": 64,
+        "pixelHeight": 48,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAhklEQVR4nO3WsQmAMBQE0NTW1g7hOE7kQI7hHK4RW1FIF07IK67Lh8urrkzLWkdOSRdIB0C6QDofgGubj2fKftZW3u//fg8AAIA2QLpg73sAAAAAAAAAgCEEAAAAAAAAADCEAAAAAAAAAACGEAAAAAAAAADAEPr9BwAA6AwwWgCkC6QzPMANsEZwuo4dbDkAAAAASUVORK5CYII="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "pixelAspectRatio": 1.375,
+      "crop": {
+        "leftPx": 0,
+        "topPx": 0,
+        "widthPx": 64,
+        "heightPx": 48
+      },
+      "flipY": false
+    }
+  ],
+  "groups": [
+    {
+      "id": "pp-3-group",
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "objectIds": [
+        "pp-3-1"
+      ]
+    }
+  ]
+}

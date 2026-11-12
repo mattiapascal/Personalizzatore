@@ -1,0 +1,88 @@
+{
+  "title": "Originali recuperati TEST",
+  "unit": "mm",
+  "pages": [
+    {
+      "pageData": {
+        "fWidth": 100,
+        "fHeight": 70
+      },
+      "canvas": {
+        "clipPath": {
+          "type": "rect",
+          "left": 0,
+          "top": 0,
+          "width": 1000,
+          "height": 700
+        },
+        "objects": [
+          {
+            "type": "image",
+            "originX": "left",
+            "originY": "top",
+            "width": 64,
+            "height": 48,
+            "scaleX": 3,
+            "scaleY": 3,
+            "angle": 0,
+            "strokeWidth": 0,
+            "src": "https://pitchprint.io/lowres/0123456789abcdef0123456789abcdef.png",
+            "includeInForm": false,
+            "left": 100,
+            "top": 120
+          },
+          {
+            "type": "image",
+            "originX": "left",
+            "originY": "top",
+            "width": 42.5,
+            "height": 31.25,
+            "scaleX": 4,
+            "scaleY": 4,
+            "angle": 25,
+            "strokeWidth": 0,
+            "src": "https://pitchprint.io/lowres/0123456789abcdef0123456789abcdef.png",
+            "includeInForm": false,
+            "left": 460,
+            "top": 100,
+            "cropX": 5.25,
+            "cropY": 3.75,
+            "flipX": true
+          },
+          {
+            "type": "group",
+            "originX": "center",
+            "originY": "center",
+            "left": 750,
+            "top": 450,
+            "width": 250,
+            "height": 200,
+            "scaleX": 1.1,
+            "scaleY": 0.8,
+            "angle": -20,
+            "strokeWidth": 0,
+            "objects": [
+              {
+                "type": "image",
+                "originX": "center",
+                "originY": "center",
+                "width": 64,
+                "height": 48,
+                "scaleX": 2.5,
+                "scaleY": 2.5,
+                "angle": 0,
+                "strokeWidth": 0,
+                "src": "https://pitchprint.io/lowres/0123456789abcdef0123456789abcdef.png",
+                "includeInForm": false,
+                "left": 0,
+                "top": 0,
+                "flipX": true,
+                "flipY": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

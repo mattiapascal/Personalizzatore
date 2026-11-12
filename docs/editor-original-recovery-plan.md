@@ -25,3 +25,7 @@ Questa diagnosi non autorizza il cambio di font per gli altri template: anche i 
 ## Prototipo diagnostico successivo
 
 I quattro sorgenti sono stati convertiti su copie in memoria con i soli URL riconciliati. Confronto nativo completo tecnico/produttivo: zero pixel oltre soglia, errore medio massimo 0,000128/255. Tutti i sorgenti e l’archivio sono rimasti invariati. Rapporto `.local/pitchprint-migration/sign-original-probe/report.json`, stati espliciti «Diagnosi superata — non importabile». Questo dimostra la fattibilità geometrica con quei byte, ma non rende ancora disponibile il recupero nell’importatore ordinario e non equivale a un’importazione.
+
+Implementazione dell’adattatore e verifiche ordinarie completate nel [nuovo rapporto](iteration-editor-original-recovery.md). Il rapporto distingue i prototipi storici dalle copie preparate senza modificare il sorgente.
+
+Esito effettivo: quattro copie salvate con backup a revisione 627 e riaperte; 337 template attivi. L’importatore ordinario usa i sorgenti immutati, le prove diagnostiche precedenti restano separate. Prima dei lotti successivi aggiornare la copia di archivio efficiente: il JSON attivo è vicino al limite, nessuna attivazione automatica autorizzata.

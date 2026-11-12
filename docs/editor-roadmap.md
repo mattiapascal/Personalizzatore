@@ -1,3 +1,5 @@
+**13 novembre — recupero originali completato:** [rapporto](iteration-editor-original-recovery.md). Quattro cartelli aggiunti: 337 template, revisione 627, 16 prioritari rimasti. Prima dei prossimi salvataggi preparare una copia efficiente aggiornata e verificata: JSON vicino al limite; attivazione distinta da autorizzare. Ruolo del bordo sfumato delle sette etichette ancora da chiarire.
+
 **13 novembre — geometrie trasparenti:** [incremento](iteration-editor-unpainted-geometry.md). Due etichette aggiunte, 333 template, revisione 623, 20 prioritari rimasti. Prossimo: [originali Passo Carrabile](editor-original-recovery-plan.md), con quattro prototipi già confrontati; ruolo del bordo sfumato delle sette etichette chiesto al titolare. Nessun deploy.
 
 **12 novembre — fedeltà dei contorni e ricampionamento:** [incremento verificato](iteration-editor-contour-fidelity.md). 331 template, revisione 621, 22 prioritari rimasti. Corretto il controllo delle immagini e il PNG delle maschere senza condizioni specifiche per template; nessuna modifica al motore dei contorni o migrazione.

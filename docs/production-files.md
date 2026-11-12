@@ -204,3 +204,7 @@ Campione [large-contours.TEST.json](../fixtures/illustrator/large-contours.TEST.
 ## Campione di geometrie trasparenti — 12 novembre 2026
 
 `unpainted-geometry.TEST.json/svg` conserva forme senza riempimento né contorno dentro un gruppo: rettangolo con raggi differenti e tracciato con foro. In Illustrator verificare in vista contorni posizione, dimensioni, quattro oggetti e curva/foro; assegnare poi il riempimento e verificare il foro. Nell’editor selezionare dai livelli, separare il gruppo per modificare un membro, assegnare/rimuovere il riempimento e provare Undo/JSON. Nessun risultato Illustrator dichiarato dall’agente.
+
+## Campione di recupero originali — 13 novembre 2026
+
+`recovered-originals.TEST.json/svg` conserva tre istanze dello stesso PNG sintetico 64×48, con alpha, crop frazionario, rotazione e riflessioni in un gruppo. La preview TEST magenta 16×12 non deve comparire nel documento. In Illustrator verificare misure in mm, tre immagini, campionamento/crop e colori/alpha, rispetto al JSON riaperto nell’editor. Gli indirizzi nel sorgente TEST vengono risolti dal generatore con byte sintetici, senza scaricarli. Nessun risultato Illustrator dichiarato dall’agente.

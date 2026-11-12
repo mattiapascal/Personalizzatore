@@ -66,3 +66,14 @@ it('non promuove lowres e miniature a originali; un originale esplicito prevale 
  expect(pitchprintImageUrl({src:'https://pitchprint.io/assets/original.TEST.png?note=/lowres/unused'})).toContain('/assets/');
  expect(pitchprintImageUrl({src:'data:image/png;base64,/lowres/'})).toBe('data:image/png;base64,/lowres/');
 });
+
+it('ricostruisce soltanto l’indirizzo degli originali legacy del fornitore, senza modificare il sorgente',async()=>{
+ const{pitchprintImageAddress}=await import('../src/editor/pitchprint-image');
+ for(const extension of['png','jpg','jpeg']){const src=`https://pitchprint.io/lowres/${'a1'.repeat(16)}.${extension}`,raw={src},before=JSON.stringify(raw);expect(pitchprintImageAddress(raw)).toEqual({url:src.replace('/lowres/','/assets/'),recoveredFrom:src});expect(JSON.stringify(raw)).toBe(before);}
+ const src=`https://pitchprint.io/lowres/${'a1'.repeat(16)}.png`,explicit='https://pitchprint.io/assets/explicit.TEST.png';expect(pitchprintImageAddress({src,url:explicit})).toEqual({url:explicit});
+});
+it('recupero legacy: nessuna promozione di miniature, URL esplicite lowres, host diversi o indirizzi modificati',async()=>{
+ const{pitchprintImageAddress}=await import('../src/editor/pitchprint-image'),url=`https://pitchprint.io/lowres/${'a1'.repeat(16)}.png`;
+ for(const src of[url.replace('/lowres/','/thumbs/'),url.replace('https:','http:'),url.replace('pitchprint.io','example.test'),url.replace('pitchprint.io','pitchprint.io.example.test'),url.replace('pitchprint.io','user@pitchprint.io'),url.replace('pitchprint.io','pitchprint.io:443'),url+'?size=large',url+'?',url+'#x',url+'#',url.replace('lowres','LOWRES'),url.replace('.png','.svg'),url.replace('a1a1','a1'),url.replace('a1','%61%31')])expect(()=>pitchprintImageAddress({src})).toThrow('originale verificato');
+ expect(()=>pitchprintImageAddress({src:url,url})).toThrow('originale verificato');
+});

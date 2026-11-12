@@ -10,7 +10,7 @@ import{pngSourceWarnings}from'./png-source';
 import{EDITOR_LIMITS}from'./limits';
 import{pitchprintPageImages,convertPageImage,nativePageVector,type PageImagePolicy}from'./pitchprint-page-images';
 import { emptyPitchprintPrimitive, unstrokedPitchprintPrimitive } from './pitchprint-primitives';
-import { pitchprintImageGeometry, pitchprintImageUrl } from './pitchprint-image';
+import { pitchprintImageGeometry, pitchprintImageAddress } from './pitchprint-image';
 import { pitchprintTextStyles } from './pitchprint-text-styles';
 import { assertFontGeometry } from './verified-font-geometry';
 import { preciseIntermediateSvg } from './svg-precision';
@@ -95,7 +95,8 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
    if(stroke>0&&color(item.stroke,options.monochrome)!=='none')throw new Error(`${name}: contorno immagine da convertire senza perderne l’aspetto.`);
    if(!orthogonal)throw new Error(`${name}: immagine inclinata dal gruppo, da convertire senza approssimare la geometria.`);
    if(item.resizeFilter||item.filters!=null&&(!Array.isArray(item.filters)||item.filters.length))throw new Error(`${name}: filtri immagine da convertire.`);
-   const url=pitchprintImageUrl(item),bytes=url.startsWith('data:image/')?Uint8Array.from(atob(url.split(',')[1]??''),character=>character.charCodeAt(0)):await options.image(url),svg=svgImageText(bytes);
+   const{url,recoveredFrom}=pitchprintImageAddress(item),bytes=url.startsWith('data:image/')?Uint8Array.from(atob(url.split(',')[1]??''),character=>character.charCodeAt(0)):await options.image(url),svg=svgImageText(bytes);
+   if(recoveredFrom)warnings.push(`${name}: originale recuperato dall’archivio PitchPrint (${url}); la preview non è usata come sorgente produttiva.`);
    if(svg){if(editor.includeInForm)throw Error(`${name}: SVG composto usato come campo foto: sostituzione del gruppo ancora da gestire`);const entries=(await convertPitchprintSvgImage(svg,item,matrix,options.monochrome)).map((object,n)=>({...object,id:n?`${id}-${n}`:id,editor:{includeInForm:false}}));const parentId=tree.groups.filter(group=>group.leafIds.includes(id)).at(-1)?.id;expandedGroups.push({id:`${id}-svg-group`,...(parentId?{parentId}:{}),editor,objectIds:entries.map(entry=>entry.id)});objects.push(...entries);warnings.push(`${name}: sorgente SVG riconosciuto nei byte e conservato come gruppo di vettori e immagini originali, con tutte le maschere.`);rememberGroup();continue;}
    const source=rasterSourceFromBytes(`pitch-${crypto.randomUUID()}`,bytes);await prepareRasterSource(source);if(source.mime==='image/png')warnings.push(...pngSourceWarnings(source.dataUrl));
    const{center:imageCenter,...geometry}=clippedPitchprintImageGeometry(item,source,pitchprintImageGeometry(item,source,axisX,axisY),matrix);

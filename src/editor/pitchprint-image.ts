@@ -17,10 +17,19 @@ export function pitchprintImageGeometry(item: Record<string, unknown>, source: R
   return { widthMm, heightMm, pixelAspectRatio, crop };
 }
 
-export function pitchprintImageUrl(item: Record<string, unknown>): string {
-  const url = typeof item.url === 'string' && item.url ? item.url : typeof item.src === 'string' ? item.src : '';
+export interface PitchprintImageAddress {url:string;recoveredFrom?:string;}
+/** PitchPrint's public legacy client constructs assets/<basename> and stores
+ * lowres separately. Recover that address only for its known 32-hex image IDs,
+ * never by treating the preview bytes as the original. Fetch/decode/geometry
+ * validation still have to succeed; no fallback is attempted after a failure. */
+export function pitchprintImageAddress(item: Record<string, unknown>): PitchprintImageAddress {
+  const declared=typeof item.url === 'string' && item.url ? item.url : undefined;
+  const url = declared ?? (typeof item.src === 'string' ? item.src : '');
   if (!url) throw Error('Immagine priva di sorgente.');
+  const legacy=!declared&&url.match(/^https:\/\/pitchprint\.io\/lowres\/([a-f0-9]{32}\.(?:png|jpe?g))$/);
+  if(legacy)return{url:`https://pitchprint.io/assets/${legacy[1]}`,recoveredFrom:url};
   let address:URL|undefined;try{address=new URL(url);}catch{}
   if(address&&['http:','https:'].includes(address.protocol)&&/\/(?:lowres|thumbs)\//i.test(address.pathname))throw Error('Manca l’originale verificato dell’immagine: l’anteprima non viene usata come file produttivo.');
-  return url;
+  return {url};
 }
+export function pitchprintImageUrl(item:Record<string,unknown>):string{return pitchprintImageAddress(item).url;}
