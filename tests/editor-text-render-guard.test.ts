@@ -29,3 +29,18 @@ it('una mutazione della risorsa ricevuta non modifica la prova già avviata o il
  const font={...TEST_DEFAULT_FONT},seen:string[]=[],inspect=vi.fn(async(doc:Pick<GraphicDocument,'objects'|'fontAssets'>)=>{seen.push(doc.fontAssets![0]!.dataBase64);return ready;}),guard=new TextRenderGuard(()=>{},inspect);
  guard.status(object,[font]);await tick();expect(guard.status(object,[font])).toBe('ready');font.dataBase64='changed-in-place';expect(guard.status(object,[font])).toBe('pending');await tick();expect(seen).toEqual([TEST_DEFAULT_FONT.dataBase64,'changed-in-place']);expect(inspect).toHaveBeenCalledTimes(2);
 });
+
+it('le notifiche della libreria non azzerano testi già verificati o difetti noti',async()=>{
+ const inspect=vi.fn().mockResolvedValueOnce(ready).mockResolvedValueOnce(blocked),guard=new TextRenderGuard(()=>{},inspect);
+ guard.status(object,[TEST_DEFAULT_FONT]);await tick();for(let i=0;i<50;i++){expect(guard.retryAvailableCoverage()).toBe(false);expect(guard.status(object,[TEST_DEFAULT_FONT])).toBe('ready');}expect(inspect).toHaveBeenCalledTimes(1);
+ const next={...object,text:'Ω'};guard.status(next,[TEST_DEFAULT_FONT]);await tick();expect(guard.retryAvailableCoverage()).toBe(false);expect(guard.status(next,[TEST_DEFAULT_FONT])).toBe('blocked');expect(inspect).toHaveBeenCalledTimes(2);
+});
+it('un controllo pendente continua una sola volta mentre arrivano altre coperture',async()=>{
+ let finish!:(report:FontReport)=>void;const inspect=vi.fn(()=>new Promise<FontReport>(resolve=>finish=resolve)),changed=vi.fn(),guard=new TextRenderGuard(changed,inspect);
+ guard.status(object,[TEST_DEFAULT_FONT]);for(let i=0;i<50;i++){expect(guard.retryAvailableCoverage()).toBe(false);expect(guard.status(object,[TEST_DEFAULT_FONT])).toBe('pending');}expect(inspect).toHaveBeenCalledTimes(1);finish(ready);await tick();expect(guard.status(object,[TEST_DEFAULT_FONT])).toBe('ready');expect(changed).toHaveBeenCalledTimes(1);
+});
+it('recupera soltanto la copertura prima sconosciuta che ora è disponibile per quel file',async()=>{
+ const unknown:FontReport={issues:[{objectId:object.id,fontId:object.fontFamily,fontLabel:'TEST',kind:'unknown-coverage'}],checkedFonts:0},inspect=vi.fn().mockResolvedValueOnce(unknown).mockResolvedValueOnce(ready),guard=new TextRenderGuard(()=>{},inspect);
+ guard.status(object,[TEST_DEFAULT_FONT]);await tick();expect(guard.status(object,[TEST_DEFAULT_FONT])).toBe('blocked');expect(guard.retryAvailableCoverage()).toBe(true);expect(guard.status(object,[TEST_DEFAULT_FONT])).toBe('pending');await tick();expect(guard.status(object,[TEST_DEFAULT_FONT])).toBe('ready');expect(guard.retryAvailableCoverage()).toBe(false);expect(inspect).toHaveBeenCalledTimes(2);
+ const unavailable={...TEST_DEFAULT_FONT,format:'woff2' as const,dataBase64:'AAAA'},failed=new TextRenderGuard(()=>{},async()=>unknown);failed.status(object,[unavailable]);await tick();expect(failed.retryAvailableCoverage()).toBe(false);expect(failed.status(object,[unavailable])).toBe('blocked');
+});

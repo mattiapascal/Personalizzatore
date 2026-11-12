@@ -147,7 +147,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
     }
     if (object.type === 'text') {
       if (object.textPath && (object.text.includes('\n') || object.textBox || object.lineStyles?.length || object.textAlign === 'justify-left' || object.textScaleY !== undefined && object.textScaleY !== 1)) ctx.addIssue({ code: 'custom', message: 'Il testo su tracciato richiede una sola riga, senza box/giustificazione o scala verticale' });
-      if ((object.textAlign === 'justify-left' || object.lineStyles?.some(run => run.alignment === 'justify-left')) && (object.textBox?.autoWidth ?? true)) ctx.addIssue({ code: 'custom', message: 'Il testo giustificato richiede un box a larghezza fissa' });
+      if ((object.textAlign === 'justify-left' || object.lineStyles?.some(run => run.alignment === 'justify-left')) && (object.textBox?.autoWidth ?? true) && object.justification?.distribution!=='word-space') ctx.addIssue({ code: 'custom', message: 'Il testo giustificato richiede un box a larghezza fissa' });
       let lineEnd = -1, emptyEnd = -1;
       for (const run of object.lineStyles ?? []) {
         if (run.start < lineEnd || run.start === emptyEnd || run.end < run.start || run.end > Array.from(object.text).length || run.end === run.start && (run.end !== Array.from(object.text).length || !object.text.endsWith('\n'))) ctx.addIssue({ code: 'custom', message: 'Intervalli delle righe non validi' });

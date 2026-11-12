@@ -1,5 +1,5 @@
 import{validateDocumentPngCopies}from'./png-copy-validation';
-import{EditorAdminReadCache,cloneArchiveValue,MAX_LOCAL_ARCHIVE_BYTES}from'./editor-admin-read-cache';
+import{EditorAdminReadCache,sharedEditorAdminReadCache,cloneArchiveValue,MAX_LOCAL_ARCHIVE_BYTES}from'./editor-admin-read-cache';
 export{MAX_LOCAL_ARCHIVE_BYTES}from'./editor-admin-read-cache';
 import { MAX_FONT_LIBRARY_BYTES } from '../src/editor-admin/font-library-limits';
 import {archivePreviewContent} from '../src/editor-admin/preview-key';
@@ -30,13 +30,14 @@ export class EditorAdminStore {
  async readFont(id:string):Promise<{format:string;dataBase64:string}|undefined>{
   const file=join(this.directory,'state.json');let info;try{info=await stat(file);}catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return;throw error;}
   const key=JSON.stringify([info.ino,info.size,info.mtimeMs,info.ctimeMs]);
-  if(this.fontFilesCache?.key!==key){const pending=this.read().then(state=>new Map(state.fonts.map(font=>[font.id,{format:font.format,dataBase64:font.dataBase64}])));this.fontFilesCache={key,pending};}
+  if(this.fontFilesCache?.key!==key){const pending=this.readFonts().then(fonts=>new Map(fonts.map(font=>[font.id,{format:font.format,dataBase64:font.dataBase64}])));this.fontFilesCache={key,pending};}
   const cache=this.fontFilesCache;try{return(await cache.pending).get(id);}catch(error){if(this.fontFilesCache===cache)this.fontFilesCache=null;throw error;}
  }
  private queue:Promise<unknown>=Promise.resolve();
- constructor(private directory:string,private resolveShopProduct?:(id:string)=>Promise<ShopProductDetail>,private readonly maxArchiveBytes=MAX_LOCAL_ARCHIVE_BYTES){if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<=0||maxArchiveBytes>MAX_LOCAL_ARCHIVE_BYTES)throw Error('Capacità archivio locale non valida');this.readCache=new EditorAdminReadCache(directory);}
+ constructor(private directory:string,private resolveShopProduct?:(id:string)=>Promise<ShopProductDetail>,private readonly maxArchiveBytes=MAX_LOCAL_ARCHIVE_BYTES){if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<=0||maxArchiveBytes>MAX_LOCAL_ARCHIVE_BYTES)throw Error('Capacità archivio locale non valida');this.readCache=sharedEditorAdminReadCache(directory);}
  async previewFontRestore(raw:unknown){const command=AdminCommandSchema.parse(raw);if(command.tool!=='restoreFontLibrary')throw new Error('Richiesta di ripristino non valida');const state=await this.read();if(command.expectedRevision!==state.revision)throw new AdminRevisionConflictError();for(const font of command.arguments.backup.fonts)validateFontFile(font);return planFontLibraryRestore(command.arguments.backup,state);}
  async read():Promise<AdminState>{return cloneArchiveValue((await this.readCache.get()).state);}
+ async readFonts():Promise<AdminState['fonts']>{return cloneArchiveValue((await this.readCache.get()).state.fonts);}
  async dispatch(raw:unknown):Promise<AdminSnapshot>{const work=async()=>{const command=AdminCommandSchema.parse(raw),snapshot=await this.readCache.get(),state=cloneArchiveValue(snapshot.state);if(state.revision!==command.expectedRevision)throw new AdminRevisionConflictError();if('document'in command.arguments)await validateDocumentPngCopies([command.arguments.document]);const now=new Date().toISOString();
   switch(command.tool){
    case'setFontCategories':{const {ids,categories,mode}=command.arguments;if(new Set(ids).size!==ids.length)throw new Error('Font duplicati nella selezione');for(const id of ids){const font=state.fonts.find(item=>item.id===id);if(!font)throw new Error('Un font non è più disponibile: nessuna categoria modificata');const detected=detectedFontCategories(Buffer.from(font.dataBase64,'base64'),font.format),labels=canonicalRecordTags(categories??detected,fontCategories(state.fonts)),current=font.categories??detected;font.categories=mode==='replace'?uniqueTags(labels):mode==='add'?uniqueTags([...current,...labels]):current.filter(label=>!labels.some(value=>tagKey(value)===tagKey(label)));font.updatedAt=now;}break;}

@@ -57,12 +57,16 @@ export class EditorTextBox extends Textbox {
   private hasLineStyles(): boolean { return Object.values(this.styles ?? {}).some(line => Object.values(line).some(style => !!(style as { editorLineAlign?: string }).editorLineAlign)); }
   lineAlignment(index: number): Textbox['textAlign'] {
     const style = this._getStyleDeclaration(index, 0) as { editorLineAlign?: Textbox['textAlign'] };
-    return style?.editorLineAlign === 'justify-left' ? 'justify' : style?.editorLineAlign ?? this.textAlign;
+    const alignment=style?.editorLineAlign??this.textAlign;
+    return alignment==='justify-left'&&(style?.editorLineAlign||this.justificationSettings?.justifyLastLine)?'justify':alignment;
   }
   override _getLineLeftOffset(index: number): number {
     const previous = this.textAlign; this.textAlign = this.lineAlignment(index); try { return super._getLineLeftOffset(index); } finally { this.textAlign = previous; }
   }
   override enlargeSpaces(): void {
+    // IText-style automatic width follows the longest hard line. Using the
+    // provisional Textbox width here would justify to an unrelated default.
+    const targetWidth=this.justificationSettings?.distribution==='word-space'&&(!this.frame||this.frame.autoWidth)?this.calcTextWidth():this.width;
     for (let i = 0; i < this._textLines.length; i++) {
       const alignment = this.lineAlignment(i); if (!alignment.includes('justify') || alignment !== 'justify' && this.isEndOfWrapping(i)) continue;
       const line = this._textLines[i]!, width = this.getLineWidth(i), words: number[] = [], letters: number[] = [];
@@ -71,11 +75,11 @@ export class EditorTextBox extends Textbox {
         words.push(/[ \t]/.test(line[j]!) ? space : 0);
         letters.push(j < line.length - 1 && !/[ \t]/.test(line[j]!) && !/[ \t]/.test(line[j + 1]!) ? space : 0);
       }
-      const spacing = justifySpacing(width, this.width, words.reduce((sum, value) => sum + value, 0), letters.reduce((sum, value) => sum + value, 0), this.justificationSettings);
+      const spacing = justifySpacing(width, targetWidth, words.reduce((sum, value) => sum + value, 0), letters.reduce((sum, value) => sum + value, 0), this.justificationSettings, line.filter(char=>/[ \t]/.test(char)).length);
       this.justificationResults.push(spacing); let offset = 0;
       for (let j = 0; j <= line.length; j++) {
         const box = this.__charBounds[i]![j]!; box.left += offset;
-        if (j < line.length) { const delta = words[j]! * (spacing.wordPercent - 100) / 100 + letters[j]! * spacing.letterPercent / 100; box.width += delta; box.kernedWidth += delta; offset += delta; }
+        if (j < line.length) { const delta = spacing.spaceDelta===undefined?words[j]! * (spacing.wordPercent - 100) / 100 + letters[j]! * spacing.letterPercent / 100:/[ \t]/.test(line[j]!)?spacing.spaceDelta:0; box.width += delta; box.kernedWidth += delta; offset += delta; }
       }
     }
   }

@@ -4,6 +4,8 @@ Il lotto dei template ha superato il precedente tetto di 256 MiB. Il controllo h
 
 ## Letture e scritture
 
+**Aggiornamento successivo:** [cache condivisa fra lettori temporanei e server e lettura della sola libreria font](iteration-editor-pitchprint-justification.md#letture-condivise-dellarchivio). Risolto il caricamento duplicato che aveva terminato il processo per heap esaurito, senza aumentare heap o capacità. Restano i limiti del JSON monolitico descritti sotto.
+
 `EditorAdminReadCache` conserva uno snapshot validato per identità del file: dispositivo, inode, byte, mtime e ctime a nanosecondi. Richieste concorrenti condividono la stessa lettura/validazione. Il limite viene verificato prima di leggere il file. Cambiamenti durante il caricamento causano una nuova lettura; JSON corrotto produce un errore, senza restituire silenziosamente i dati precedenti.
 
 Le risposte `read()` copiano i contenitori JSON mutabili; stringhe identiche dei font e delle immagini sono condivise soltanto in RAM. File, ID, digest e contenuto serializzato rimangono invariati. Nessun chiamante riceve i contenitori della cache interna.

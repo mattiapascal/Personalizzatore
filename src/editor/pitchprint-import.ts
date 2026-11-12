@@ -1,4 +1,5 @@
 import {pitchprintTextStroke} from './pitchprint-text-stroke';
+import {DEFAULT_JUSTIFICATION} from './justification';
 import{clippedPitchprintImageGeometry}from'./pitchprint-image-clip';
 import{pngSourceWarnings}from'./png-source';
 import{EDITOR_LIMITS}from'./limits';
@@ -59,7 +60,8 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
   if(type==='i-text'||type==='text'||type==='textbox'){
    if(determinant<=0||!orthogonal)throw new Error(`${name}: testo riflesso o inclinato dal gruppo non rappresentabile senza alterare i caratteri.`);
    if(typeof item.text!=='string'||typeof item.fontFamily!=='string')throw new Error(`${name}: testo/font mancante.`);
-   if(item.textAlign&&!['left','right','center'].includes(String(item.textAlign)))throw new Error(`${name}: allineamento testo da convertire.`);
+   if(item.textAlign&&!['left','right','center','justify'].includes(String(item.textAlign)))throw new Error(`${name}: allineamento testo da convertire.`);
+   const justified=item.textAlign==='justify';
    const resolveFont=async(request:ReturnType<typeof pitchprintFontRequest>)=>{
     const key=JSON.stringify([request.family,request.weight,request.italic]);let pending=fontCache.get(key);
     if(!pending){pending=options.font(request.family,request.weight,request.italic);fontCache.set(key,pending);}
@@ -71,8 +73,8 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
    if(ignoredInsertionStyles)warnings.push(`${name}: ${ignoredInsertionStyles} stili di inserimento a fine riga esclusi; nessun carattere visibile modificato.`);
    const fill=color(item.fill,options.monochrome);if(fill==='none')throw new Error(`${name}: testo senza riempimento non convertibile.`);
    const outline=pitchprintTextStroke(item,axisY,options.monochrome);
-   const nativeOptions={left:numeric(item.left,name),top:numeric(item.top,name),originX:(item.originX??'left') as 'left'|'center'|'right',originY:(item.originY??'top') as 'top'|'center'|'bottom',scaleX,scaleY,angle,flipX:item.flipX===true,flipY:item.flipY===true,fontSize,fontFamily:renderFontFamily(fontFamily),fontWeight:'normal' as const,fontStyle:'normal' as const,lineHeight:numeric(item.lineHeight??1,name),charSpacing:numeric(item.charSpacing??0,name),textAlign:(item.textAlign??'left') as 'left'|'center'|'right',fill,...outline.native,underline:item.underline===true,linethrough:item.linethrough===true,overline:item.overline===true,styles:nativeStyles};
-   const object:Extract<SceneObject,{type:'text'}>={id,type:'text',xMm:0,yMm:0,text:item.text,fontFamily,fontSizePt,fill,...outline.canonical,rotationDeg:rotation,fontWeight:'normal',fontStyle:'normal',textAlign:nativeOptions.textAlign,lineHeight:nativeOptions.lineHeight,textScaleX:axisX/axisY,letterSpacingPt:nativeOptions.charSpacing/1000*fontSizePt,underline:nativeOptions.underline,linethrough:nativeOptions.linethrough,overline:nativeOptions.overline,editor,...(characterStyles.length?{characterStyles}:{}),...(type==='textbox'?{textBox:{widthMm:rawWidth*axisX,heightMm:rawHeight*axisY,autoWidth:false,autoHeight:true}}:{})};
+   const nativeOptions={left:numeric(item.left,name),top:numeric(item.top,name),originX:(item.originX??'left') as 'left'|'center'|'right',originY:(item.originY??'top') as 'top'|'center'|'bottom',scaleX,scaleY,angle,flipX:item.flipX===true,flipY:item.flipY===true,fontSize,fontFamily:renderFontFamily(fontFamily),fontWeight:'normal' as const,fontStyle:'normal' as const,lineHeight:numeric(item.lineHeight??1,name),charSpacing:numeric(item.charSpacing??0,name),textAlign:(item.textAlign??'left') as 'left'|'center'|'right'|'justify',fill,...outline.native,underline:item.underline===true,linethrough:item.linethrough===true,overline:item.overline===true,styles:nativeStyles};
+   const object:Extract<SceneObject,{type:'text'}>={id,type:'text',xMm:0,yMm:0,text:item.text,fontFamily,fontSizePt,fill,...outline.canonical,rotationDeg:rotation,fontWeight:'normal',fontStyle:'normal',textAlign:justified?'justify-left':nativeOptions.textAlign as 'left'|'center'|'right',...(justified?{justification:{...DEFAULT_JUSTIFICATION,distribution:'word-space',justifyLastLine:true}}:{}),lineHeight:nativeOptions.lineHeight,textScaleX:axisX/axisY,letterSpacingPt:nativeOptions.charSpacing/1000*fontSizePt,underline:nativeOptions.underline,linethrough:nativeOptions.linethrough,overline:nativeOptions.overline,editor,...(characterStyles.length?{characterStyles}:{}),...(type==='textbox'?{textBox:{widthMm:rawWidth*axisX,heightMm:rawHeight*axisY,autoWidth:false,autoHeight:true}}:{})};
    await assertFontGeometry({objects:[object],fontAssets:assets});
    const native=type==='textbox'?new Textbox(item.text,{...nativeOptions,width:rawWidth,minWidth:.001}):new IText(item.text,nativeOptions);
    try{

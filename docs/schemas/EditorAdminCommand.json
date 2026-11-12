@@ -733,6 +733,16 @@
                                   "max"
                                 ],
                                 "additionalProperties": false
+                              },
+                              "distribution": {
+                                "type": "string",
+                                "enum": [
+                                  "typographic",
+                                  "word-space"
+                                ]
+                              },
+                              "justifyLastLine": {
+                                "type": "boolean"
                               }
                             },
                             "required": [
@@ -4816,6 +4826,16 @@
                                   "max"
                                 ],
                                 "additionalProperties": false
+                              },
+                              "distribution": {
+                                "type": "string",
+                                "enum": [
+                                  "typographic",
+                                  "word-space"
+                                ]
+                              },
+                              "justifyLastLine": {
+                                "type": "boolean"
                               }
                             },
                             "required": [
@@ -7858,6 +7878,16 @@
                                   "max"
                                 ],
                                 "additionalProperties": false
+                              },
+                              "distribution": {
+                                "type": "string",
+                                "enum": [
+                                  "typographic",
+                                  "word-space"
+                                ]
+                              },
+                              "justifyLastLine": {
+                                "type": "boolean"
                               }
                             },
                             "required": [

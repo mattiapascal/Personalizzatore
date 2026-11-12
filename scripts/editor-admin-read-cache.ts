@@ -1,6 +1,6 @@
 import{validateDocumentPngCopies}from'./png-copy-validation';
 import {readFile,stat} from 'node:fs/promises';
-import {join} from 'node:path';
+import {join,resolve} from 'node:path';
 import {AdminStateSchema,DEFAULT_ADMIN_SETTINGS,type AdminState} from '../src/editor-admin/schema';
 import {AdminRevisionConflictError} from '../src/editor-admin/errors';
 export const MAX_LOCAL_ARCHIVE_BYTES=512*1024*1024;
@@ -44,4 +44,15 @@ export class EditorAdminReadCache {
   if(!entry||entry.key!==key){const fresh={key,pending:this.stableSnapshot(key)};this.entry=entry=fresh;void fresh.pending.then(value=>{if(this.entry===fresh)fresh.key=value.key;},()=>{if(this.entry===fresh)this.entry=null;});}
   return entry.pending;
  }
+}
+
+// Short-lived readers (notably font resolution) must not parse a second copy
+// of the full archive beside the long-lived admin server. Weak references let
+// temporary stores disappear; directory keys alone are bounded as well.
+const sharedCaches=new Map<string,WeakRef<EditorAdminReadCache>>();
+export function sharedEditorAdminReadCache(directory:string):EditorAdminReadCache{
+ const key=resolve(directory),existing=sharedCaches.get(key)?.deref();if(existing)return existing;
+ for(const [name,ref]of sharedCaches)if(!ref.deref())sharedCaches.delete(name);
+ if(sharedCaches.size>=32)sharedCaches.delete(sharedCaches.keys().next().value!);
+ const cache=new EditorAdminReadCache(key);sharedCaches.set(key,new WeakRef(cache));return cache;
 }

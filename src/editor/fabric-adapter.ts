@@ -247,7 +247,7 @@ export class FabricAdapter {
       if (this.disposed) return;
       this.refreshFontView();
     });
-    this.unsubscribeFontCoverage=subscribeFontCoverage(()=>{if(!this.disposed)this.retryTextRendering();});
+    this.unsubscribeFontCoverage=subscribeFontCoverage(()=>{if(!this.disposed&&this.textRenderGuard?.retryAvailableCoverage())this.refreshFontView();});
   }
   private refreshFontView(): void {
     const active=this.canvas.getActiveObject();
@@ -410,7 +410,7 @@ export class FabricAdapter {
     this.canvas.on('mouse:dblclick', event => {
       const target = this.canvas.getActiveObject(); if (!(target instanceof EditorTextBox) || target.isEditing) return;
       const control = target.findControl(this.canvas.getViewportPoint(event.e)); if (!control || !['ml', 'mr'].includes(control.key)) return;
-      const source = this.sourceByObject.get(target); if (source?.type !== 'text' || (source.textBox?.autoWidth ?? true) || source.textAlign === 'justify-left' || source.lineStyles?.some(run => run.alignment === 'justify-left')) return;
+      const source = this.sourceByObject.get(target); if (source?.type !== 'text' || (source.textBox?.autoWidth ?? true) || source.justification?.distribution!=='word-space'&&(source.textAlign === 'justify-left' || source.lineStyles?.some(run => run.alignment === 'justify-left'))) return;
       const object = placeObjectAtCenter({ ...source, textBox: { widthMm: target.width * target.scaleX / PX_PER_MM, heightMm: target.height * target.scaleY / PX_PER_MM, autoWidth: true, autoHeight: true } }, objectCenter(source, measureFabric), measureFabric) as TextObject, expectedRevision = revision();
       queueMicrotask(() => { if (!this.disposed) onText?.(source.id, object, expectedRevision); });
     });
@@ -709,7 +709,10 @@ export class FabricAdapter {
     const selected = [...this.selectedIds];
     try {
       this.zoom = 1; this.render(productionDocument(document), null);
-      return embedSvgFonts(preciseIntermediateSvg(()=>this.canvas.toSVG({ width: `${document.areaMm.width}mm`, height: `${document.areaMm.height}mm`, viewBox: { x: 0, y: 0, width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM } })), document.fontAssets);
+      // Both physical axes are explicit. Avoid a subpixel "meet" gutter from
+      // rounding the intrinsic millimetre viewport to CSS pixels in SVG images.
+      const svg=preciseIntermediateSvg(()=>this.canvas.toSVG({ width: `${document.areaMm.width}mm`, height: `${document.areaMm.height}mm`, viewBox: { x: 0, y: 0, width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM } })).replace('<svg ','<svg preserveAspectRatio="none" ');
+      return embedSvgFonts(svg, document.fontAssets);
     } finally { this.zoom = zoom; this.render(document, selected); }
   }
   setZoom(zoom: number, document: GraphicDocument): void {

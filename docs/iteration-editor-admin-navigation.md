@@ -16,6 +16,8 @@ Gli errori reali dei font rimangono distinti e non vengono nascosti con sostituz
 
 ## Prove
 
+**Ricontrollo successivo del 12 novembre:** cinque scenari mirati nuovamente passati nella versione corrente, insieme alla prova in sola lettura di «Qui si spara a vista». Anteprima visibile, dettagli Y 16 dopo scroll, desktop/mobile senza overflow, zero errori o scritture. Archivio alla revisione 553 conservato per hash (`c765f99c…`); media invariati. Log `.local/admin-navigation-recheck-2026-11-12.log` e `.local/admin-navigation-real-recheck-2026-11-12.log`. I numeri sotto descrivono il primo collaudo.
+
 - **857 unitari / 127 file** passati, compresi isolamento delle viste, dati corrotti/storage bloccato e classificazione degli errori. Build laboratorio/pubblico e scansioni dei segreti passate.
 - **37 browser pertinenti** passati in 1,5 minuti, più **sette** su tag e operazioni massive: **44 scenari**. Coprono il percorso reale pagina 2 → editor → chiusura → stessa pagina/filtri/voce/posizione, pannello fisso fino al fondo dell’elenco, recupero dopo 503, scheda con contratto superato, viewport 1440 e 390, cache e flussi amministrativi preesistenti. Non è una nuova esecuzione completa di tutta la suite.
 - **13 browser pubblici locali** passati. JavaScript pubblico `index-BG2r_x-8.js` e CSS `index-L8Ls1asZ.css` invariati; nessun deploy.

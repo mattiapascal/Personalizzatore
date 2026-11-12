@@ -1,3 +1,4 @@
+import { peekFontCoverage } from './font-coverage-cache';
 import { inspectDocumentFonts, type FontReport } from './font-preflight';
 import type { FontAsset } from './font-assets';
 import type { TextObject } from './text-style';
@@ -31,6 +32,17 @@ export class TextRenderGuard {
       entry.status = 'blocked'; this.changed();
     });
     return 'pending';
+  }
+  /** Coverage of unrelated library files cannot invalidate an existing proof.
+   * Pending inspections already await their own files. Only a previously
+   * unknown file becoming available can recover a blocked entry here. */
+  retryAvailableCoverage(): boolean {
+    let changed = false;
+    for (const [id, entry] of this.entries) {
+      if (entry.status !== 'blocked' || !entry.report?.issues.some(issue => issue.kind === 'unknown-coverage' && entry.fonts.some(font => font.id === issue.fontId && peekFontCoverage(font) !== undefined))) continue;
+      this.entries.delete(id); changed = true;
+    }
+    return changed;
   }
   retry(): void { this.entries.clear(); }
   retain(ids: ReadonlySet<string>): void { for (const id of this.entries.keys()) if (!ids.has(id)) this.entries.delete(id); }

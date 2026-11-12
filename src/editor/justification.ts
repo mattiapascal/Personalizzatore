@@ -1,13 +1,22 @@
 import { z } from 'zod';
 const word = z.strictObject({ min: z.number().finite().min(0).max(1000), desired: z.number().finite().min(0).max(1000), max: z.number().finite().min(0).max(1000) }).refine(v => v.min <= v.desired && v.desired <= v.max, 'Minimo ≤ desiderato ≤ massimo per gli spazi tra parole');
 const letter = z.strictObject({ min: z.number().finite().min(-100).max(500), desired: z.number().finite().min(-100).max(500), max: z.number().finite().min(-100).max(500) }).refine(v => v.min <= v.desired && v.desired <= v.max, 'Minimo ≤ desiderato ≤ massimo per gli spazi tra lettere');
-export const JustificationSchema = z.strictObject({ word, letter });
+export const JustificationSchema = z.strictObject({ word, letter, distribution: z.enum(['typographic', 'word-space']).optional(), justifyLastLine: z.boolean().optional() });
 export type JustificationSettings = z.infer<typeof JustificationSchema>;
 export const DEFAULT_JUSTIFICATION: JustificationSettings = { word: { min: 80, desired: 100, max: 133 }, letter: { min: 0, desired: 15, max: 30 } };
+export interface JustificationResult { wordPercent:number;letterPercent:number;width:number;minimum:number;desired:number;maximum:number;underfull:boolean;overfull:boolean;spaceDelta?:number; }
 /** Percentages use the font's normal space width. Existing tracking/kerning remain in baseWidth. */
-export function justifySpacing(baseWidth: number, targetWidth: number, wordUnits: number, letterUnits: number, settings: JustificationSettings = DEFAULT_JUSTIFICATION) {
+export function justifySpacing(baseWidth: number, targetWidth: number, wordUnits: number, letterUnits: number, settings: JustificationSettings = DEFAULT_JUSTIFICATION, spaceCount?:number):JustificationResult {
   if ([baseWidth, targetWidth, wordUnits, letterUnits].some(value => !Number.isFinite(value)) || targetWidth < 0 || wordUnits < 0 || letterUnits < 0) throw new Error('Misure di giustificazione non valide');
-  const checked = JustificationSchema.parse(settings), widthAt = (key: 'min' | 'desired' | 'max') => baseWidth + wordUnits * (checked.word[key] - 100) / 100 + letterUnits * checked.letter[key] / 100;
+  const checked = JustificationSchema.parse(settings);
+  if(checked.distribution==='word-space'){
+    if(spaceCount===undefined||!Number.isInteger(spaceCount)||spaceCount<0)throw Error('Numero di spazi non valido');
+    // Native Fabric/PitchPrint: equal additions per space/tab, irrespective of
+    // the font/size of that space; never squeeze a line or invent letter gaps.
+    const extra=spaceCount?Math.max(0,targetWidth-baseWidth):0,width=baseWidth+extra;
+    return{spaceDelta:spaceCount?extra/spaceCount:0,wordPercent:wordUnits?100+extra/wordUnits*100:100,letterPercent:0,width,minimum:baseWidth,desired:baseWidth,maximum:spaceCount?Math.max(baseWidth,targetWidth):baseWidth,underfull:width<targetWidth-1e-6,overfull:width>targetWidth+1e-6};
+  }
+  const widthAt = (key: 'min' | 'desired' | 'max') => baseWidth + wordUnits * (checked.word[key] - 100) / 100 + letterUnits * checked.letter[key] / 100;
   const minimum = widthAt('min'), desired = widthAt('desired'), maximum = widthAt('max'), target = Math.max(minimum, Math.min(maximum, targetWidth));
   const lower = target <= desired ? 'min' : 'desired', upper = target <= desired ? 'desired' : 'max', lowWidth = widthAt(lower), highWidth = widthAt(upper), fraction = highWidth > lowWidth + 1e-12 ? Math.max(0, Math.min(1, (target - lowWidth) / (highWidth - lowWidth))) : 0;
   const interpolate = (values: JustificationSettings['word']) => values[lower] + (values[upper] - values[lower]) * fraction;

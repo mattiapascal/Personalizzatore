@@ -22,5 +22,5 @@ export function applyLineAlignment(object: TextObject, alignment: TextAlignment,
   const values = lineAlignments(object);
   for (const index of scope.indices) { const line = scope.lines[index]; if (!line || line.start < 0 || line.end > Array.from(object.text).length || line.end < line.start) throw new Error('Riga non valida'); if (line.start === line.end) values[line.start] = alignment; else for (let i = line.start; i < line.end; i++) values[i] = alignment; }
   const next = { ...object, lineStyles: compressLineAlignments(values, Array.from(object.text).length, object.text.endsWith('\n')) };
-  if (alignment === 'justify-left' && (object.textBox?.autoWidth ?? true)) next.textBox = { ...frame, autoWidth: false, autoHeight: true }; return next;
+  if (alignment === 'justify-left' && (object.textBox?.autoWidth ?? true) && object.justification?.distribution!=='word-space') next.textBox = { ...frame, autoWidth: false, autoHeight: true }; return next;
 }

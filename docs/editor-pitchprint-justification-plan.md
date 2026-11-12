@@ -1,5 +1,7 @@
 # Prossimo incremento: giustificazione importata — 12 novembre 2026
 
+**Aggiornamento:** capacità generale implementata e verifiche pertinenti passate; [risultati e limiti attuali](iteration-editor-pitchprint-justification.md). Sotto resta il piano iniziale. Controlli e primo salvataggio completati: 270 template locali. Suite generale 565/566, campione SVG aggiornato e ricontrollato; 46 regressioni pertinenti finali e 13 pubbliche passate. Preparazione dei tre candidati bloccati distinta dall’importazione.
+
 ## Evidenza corrente
 
 Quattro sorgenti a pagina singola e priorità normale, non presenti nell’archivio, dichiarano `textAlign: justify`:
