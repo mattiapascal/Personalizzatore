@@ -1,9 +1,9 @@
-import { cloneSceneObject, type GraphicDocument, type SceneGroup,type SceneObject, type GraphicCommand } from './model';
+import { cloneSceneObject, type GraphicDocument, type SceneGroup,type SceneObject, type GraphicCommand,type Measure } from './model';
 import {cloneSceneGroup,remapSceneGroups} from './scene-groups';
 import type { FontAsset } from './font-assets';
-import { expandSelection } from './selection';
+import { expandSelection,selectionBounds,transformSelection } from './selection';
 
-/** Appunti dell'editor: nessun contenuto negli appunti del sistema o nello storage. */
+/** Portable, independent snapshot. Shared locally by the clipboard storage adapter. */
 export interface GraphicClipboard {
   fontAssets?: FontAsset[];
   objects: SceneObject[];
@@ -12,9 +12,11 @@ export interface GraphicClipboard {
 export function captureSelection(document: GraphicDocument, objectIds: readonly string[]): GraphicClipboard {
   if (!objectIds.length || new Set(objectIds).size !== objectIds.length || objectIds.some(id => !document.objects.some(object => object.id === id))) throw new Error('Selezione da copiare non valida');
   const selected = new Set(expandSelection(document, objectIds));
+  const objects=document.objects.filter(object=>selected.has(object.id));
+  const used=new Set(objects.flatMap(object=>object.type==='text'?[object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]]:[]));
   return {
-    ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}),
-    objects: document.objects.filter(object => selected.has(object.id)).map(cloneSceneObject),
+    ...(document.fontAssets ? { fontAssets: document.fontAssets.filter(asset=>used.has(asset.id)).map(asset=>({...asset})) } : {}),
+    objects: objects.map(cloneSceneObject),
     groups: (document.groups ?? []).filter(group => group.objectIds.every(id => selected.has(id))).map(cloneSceneGroup),
   };
 }
@@ -24,4 +26,13 @@ export function clipboardInsertion(clipboard: GraphicClipboard, expectedRevision
   const objects = clipboard.objects.map(object => ({ ...cloneSceneObject(object), id: ids.get(object.id)! }));
   const groups = remapSceneGroups(clipboard.groups,ids,new Map(clipboard.groups.map(group=>[group.id,makeId('group')])));
   return { schemaVersion: 1, tool: 'insertObjects', objectId: objects[0]!.id, expectedRevision, arguments: { objects, groups, ...(clipboard.fontAssets ? { fontAssets: clipboard.fontAssets } : {}) } };
+}
+/** Explicit proportional fit; never enlarge, distort, discard, or rebind a product. */
+export function fittedClipboard(clipboard:GraphicClipboard,target:Pick<GraphicDocument,'areaMm'|'shape'>,measure:Measure):GraphicClipboard{
+ const bounds=selectionBounds(clipboard.objects,measure),width=target.areaMm.width,height=target.areaMm.height;
+ // A rectangle inscribed in the round work area keeps every corner visible.
+ const factor=target.shape==='round'?Math.SQRT1_2:1;
+ const scale=Math.min(1,(width*factor-.2)/Math.max(bounds.widthMm,1e-9),(height*factor-.2)/Math.max(bounds.heightMm,1e-9));
+ if(scale<=0)throw Error('Il formato è troppo piccolo per gli oggetti da incollare.');
+ return{...clipboard,objects:transformSelection(clipboard.objects,{scale,rotationDeg:0,center:{xMm:width/2,yMm:height/2}},measure),groups:clipboard.groups.map(cloneSceneGroup)};
 }

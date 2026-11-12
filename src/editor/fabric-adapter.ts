@@ -279,7 +279,7 @@ export class FabricAdapter {
     visit(this.canvas.getObjects()); this.fontRenderStatus(blocked, pending);
   }
   constructor(element: HTMLCanvasElement, revision: () => number, onMove: (id: string, xMm: number, yMm: number, expectedRevision: number) => void, onText?: (id: string, object: TextObject, expectedRevision: number) => void, onEditing?: (editing: boolean) => void, onSelect?: (id: string | null) => void, onTransform?: (id: string, args: TransformArguments, expectedRevision: number) => void, onDeleteDrag?: (id: string, expectedRevision: number) => void, onTrash?: (visible: boolean) => void, onCharacterSelection?: (selection: CharacterSelection | null) => void, onSelection?: (ids: string[]) => void, onMoveSelection?: (ids: string[], deltaXmm: number, deltaYmm: number, revision: number) => void, onDeleteSelection?: (ids: string[], revision: number) => void, onTransformSelection?: (ids: string[], args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => void) {
-    this.canvas = new Canvas(element, { selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
+    this.canvas = new Canvas(element, { stopContextMenu:false,selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
     this.canvas.upperCanvasEl.tabIndex = 0; this.canvas.upperCanvasEl.setAttribute('aria-label', 'Area grafica interattiva');
     this.publishObjectSelection = () => {
       if (this.rendering || this.disposed) return;
@@ -628,6 +628,12 @@ export class FabricAdapter {
     if (guides.guideXmm !== undefined) { context.moveTo(guides.guideXmm * PX_PER_MM, 0); context.lineTo(guides.guideXmm * PX_PER_MM, height); }
     if (guides.guideYmm !== undefined) { context.moveTo(0, guides.guideYmm * PX_PER_MM); context.lineTo(width, guides.guideYmm * PX_PER_MM); }
     context.stroke(); context.restore();
+  }
+  contextObjectIds(event: MouseEvent): string[] | null {
+    const active=this.canvas.getActiveObject();
+    if(active instanceof EditorTextBox&&active.isEditing)return null;
+    const {target}=this.canvas.findTarget(event);
+    return target?this.objectIds(target):[];
   }
   private objectIds(object: FabricObject): string[] {
     return object instanceof ActiveSelection ? object.getObjects().flatMap(child => this.objectIds(child)) : this.membersByObject.get(object) ?? [];

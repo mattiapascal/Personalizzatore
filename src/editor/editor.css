@@ -234,3 +234,8 @@
 .paint-opacity-row input[type="range"] { width: 100%; accent-color: #0088cc; }
 .inspector-paints .paint-custom{display:inline-flex;flex:none;margin:0;min-width:44px}
 .inspector-paints .paint-custom input[type=color]{width:44px;min-width:44px;height:44px;padding:3px;cursor:pointer}
+
+.canvas-context-menu{position:fixed;z-index:10000;min-width:250px;max-width:calc(100vw - 16px);padding:5px;background:#fff;color:#164058;border:1px solid #b3d9ef;border-radius:7px;box-shadow:0 5px 22px #16405833}
+.canvas-context-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:9px;border:0;border-radius:4px;background:transparent;color:inherit;text-align:left;font-size:13px}
+.canvas-context-menu button svg{width:18px;height:18px;flex:none}.canvas-context-menu button span{margin-left:auto;font-size:11px;opacity:.7}
+.canvas-context-menu button:hover:not(:disabled),.canvas-context-menu button:focus-visible{background:#e6f5fc;outline:2px solid #08c;outline-offset:-2px}.canvas-context-menu button:disabled{opacity:.4;cursor:default}

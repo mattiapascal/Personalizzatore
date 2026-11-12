@@ -1,3 +1,4 @@
+import{CanvasContextMenu}from'./CanvasContextMenu';
 import {PaperColorPanel} from './PaperColorPanel';
 import {MediaLibraryDialog} from './MediaLibraryDialog';
 import {mediaRasterCommand} from './media-insertion';
@@ -54,7 +55,8 @@ import { rasterSourceFromBytes, MAX_RASTER_BYTES } from './raster-source';
 import { prepareRasterSource } from './raster-cache';
 import { panRasterContents } from './raster-crop-edit';
 import { DEFAULT_RASTER } from './raster-processing';
-import { captureSelection, clipboardInsertion, type GraphicClipboard } from './clipboard';
+import { captureSelection, clipboardInsertion, fittedClipboard } from './clipboard';
+import {writeGraphicClipboard,readGraphicClipboard,graphicClipboardCount,subscribeGraphicClipboard,clearGraphicClipboard} from './clipboard-storage';
 import { PngExportPanel } from './PngExportPanel';
 import { normalizedBezier } from './bezier-geometry';
 import { placeObjectAtCenter } from './model';
@@ -88,6 +90,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const pdfImportRef = useRef<HTMLInputElement>(null);
   const svgImportRef = useRef<HTMLInputElement>(null);
   const [mediaLibrary,setMediaLibrary]=useState<MediaKind|null>(null);
+  const [contextPoint,setContextPoint]=useState<{x:number;y:number}|null>(null);
   const [importNotice, setImportNotice] = useState('');
   const [vectorMonochrome, setVectorMonochrome] = useState(initialDocument?.colorMode !== 'color');
   const [importTextMode,setImportTextMode]=useState<'outlines'|'editable'>('outlines');
@@ -125,7 +128,8 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const [trashVisible, setTrashVisible] = useState(false);
   const [characterSelection, setCharacterSelection] = useState<CharacterSelection | null>(null);
   const selectedRef = useRef<string[]>([]);
-  const clipboardRef = useRef<GraphicClipboard | null>(null), [clipboardCount, setClipboardCount] = useState(0);
+  const clipboardWrite=useRef<Promise<void>|null>(null),[clipboardCount, setClipboardCount] = useState(0),[clipboardBusy,setClipboardBusy]=useState(false);
+  useEffect(()=>{let live=true;const update=()=>{void graphicClipboardCount().then(count=>{if(live)setClipboardCount(count);}).catch(()=>{});};update();const stop=subscribeGraphicClipboard(update);return()=>{live=false;stop();};},[]);
   const select = (selection: string | readonly string[] | null) => {
     const ids = typeof selection === 'string' ? [selection] : selection ?? [];
     const next = storeRef.current ? selectableObjectIds(storeRef.current.document,expandSelection(storeRef.current.document,ids),policyRole) : [...ids];
@@ -268,19 +272,30 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     const single=ids.length===1&&!rootGroupFor(store.document,ids[0]!);store.dispatch({ schemaVersion: 1, tool: single ? 'deleteObject' : 'deleteObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: single ? {} : { objectIds: ids } }, 'manual');
   });
   const copySelection = (cut = false) => {
+    if(clipboardWrite.current)return;
     try {
-      const copied = captureSelection(storeRef.current!.document, selectedRef.current);
-      if (cut && !deleteSelection()) return;
-      clipboardRef.current = copied; setClipboardCount(copied.objects.length); setError('');
+      const store=storeRef.current!,revision=store.document.revision,copied=captureSelection(store.document,selectedRef.current);
+      setClipboardBusy(true);
+      const pending=writeGraphicClipboard(copied).then(()=>{
+        setClipboardCount(copied.objects.length);
+        if(cut){if(storeRef.current!==store||store.document.revision!==revision)throw Error('Oggetti copiati; il documento è cambiato, quindi il taglio è stato annullato.');if(!deleteSelection())throw Error('Oggetti copiati; il taglio non è riuscito.');}
+        setError('');setImportNotice(`${copied.objects.length} elementi copiati. Puoi incollarli anche in un altro template o documento.`);
+      });clipboardWrite.current=pending;
+      void pending.catch(error=>setError(error instanceof Error?error.message:'Copia non riuscita')).finally(()=>{clipboardWrite.current=null;setClipboardBusy(false);});
     } catch (e) { setError(e instanceof Error ? e.message : 'Copia non riuscita'); }
   };
-  const pasteSelection = () => {
-    const clipboard = clipboardRef.current, store = storeRef.current;
-    if (!clipboard || !store || assetBusyRef.current) return;
-    const insertion = clipboardInsertion(clipboard, store.document.revision), ids = insertion.arguments.objects.map(object => object.id);
-    const sources = insertion.arguments.objects.filter(object => object.type === 'image').map(object=>object.source), fontAssets = insertion.arguments.fontAssets ?? [];
-    if (sources.length || fontAssets.length) void prepareAndAct(async current => { await Promise.all([loadFontAssets(fontAssets), ...sources.map(source => prepareRasterSource(source))]); return () => current.dispatch(insertion, 'manual'); }, ids);
-    else act(() => store.dispatch(insertion, 'manual'), ids);
+  const pasteSelection = async (fit=false) => {
+    try{
+      if(clipboardWrite.current)await clipboardWrite.current;
+      if(!storeRef.current||assetBusyRef.current)return;
+      await prepareAndAct(async store=>{
+        const clipboard=await readGraphicClipboard();if(!clipboard)throw Error('Gli appunti del configuratore sono vuoti. Copia prima gli oggetti.');
+        await Promise.all([loadFontAssets(clipboard.fontAssets??[]),...clipboard.objects.filter(object=>object.type==='image').map(object=>prepareRasterSource(object.source))]);
+        const prepared=fit?fittedClipboard(clipboard,store.document,measureFabric):clipboard;
+        const insertion=clipboardInsertion(prepared,store.document.revision),ids=insertion.arguments.objects.map(object=>object.id);
+        return()=>{store.dispatch(insertion,'manual');select(ids);setImportNotice(fit?'Oggetti incollati e adattati proporzionalmente al foglio.':'Oggetti incollati con dimensioni e posizioni originali. Puoi ridimensionarli con le maniglie o nell’ispettore.');};
+      });
+    }catch(error){setError(error instanceof Error?error.message:'Incolla non riuscito');}
   };
   const selectionCommand = (tool: string, args: unknown, objectId = selectedRef.current[0]) => act(() => {
     const store = storeRef.current!; store.dispatch({ schemaVersion: 1, tool, expectedRevision: store.document.revision, objectId, arguments: args }, 'manual');
@@ -373,7 +388,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       else if (key === 'd' && !event.shiftKey && ids.length) run(duplicate);
       else if (key === 'c' && !event.shiftKey && ids.length) run(() => copySelection());
       else if (key === 'x' && !event.shiftKey && ids.length) run(() => copySelection(true));
-      else if (key === 'v' && !event.shiftKey && clipboardRef.current) run(pasteSelection);
+      else if (key === 'v' && !event.shiftKey) run(()=>{void pasteSelection();});
       else if (key === 'g' && event.shiftKey && selectedGroups.length) run(() => selectionCommand('ungroupObjects', { groupIds: selectedGroups.map(group => group.id) }, selectedGroups[0]!.objectIds[0]));
       else if (key === 'g' && !event.shiftKey && ids.length > 1 && !selectedGroups.length) run(() => selectionCommand('groupObjects', { objectIds: ids, groupId: `group-${crypto.randomUUID()}` }));
       return;
@@ -396,7 +411,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   useEffect(() => { const handle = (event: KeyboardEvent) => keyboard.current(event); window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, []);
   const arrange = (tool: 'alignObject', args: unknown) => act(() => storeRef.current!.dispatch({ schemaVersion: 1, tool, objectId: selectedId, expectedRevision: doc.revision, arguments: args }, 'manual'));
   const workflowApi: WorkflowEditorApi = { document: doc, peek: () => cloneGraphicDocument(storeRef.current?.document ?? doc), busy: editing || drawing || assetBusy || conflict || catalogOutdated, busyReason: editing ? 'Termina la scrittura con Esc o con il pulsante di conferma sul foglio.' : drawing ? 'Termina il disegno prima di controllare il progetto.' : assetBusy ? 'Attendi il caricamento della risorsa.' : 'Risolvi il cambio di formato prima di continuare.', capture: async () => { const store = storeRef.current; if (!store || !adapter.current) throw new Error('Editor non ancora disponibile'); const document = cloneGraphicDocument(store.document), svg = await exportDocumentSvg(document); if (storeRef.current !== store || store.document.documentId !== document.documentId || store.document.revision !== document.revision) throw new Error('Il progetto è cambiato durante il controllo dei font. Ripeti l’anteprima.'); return { document, svg }; }, open: next => prepareAndAct(async store => { if(autosave)await preserveDraftSnapshot(store.document); next=await projectFonts.prepare(next);await Promise.all([...next.objects.filter(o => o.type === 'image').map(o => prepareRasterSource(o.source))]); return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);}; }) };
-  return <>{mediaLibrary&&<MediaLibraryDialog kind={mediaLibrary} monochrome={doc.colorMode!=='color'} busy={assetBusy} onClose={()=>setMediaLibrary(null)} onInsert={insertLibraryAsset}/>}<WorkspaceFrame showForm={formEntries(doc).length>0} mode={mode} actions={<>
+  return <>{contextPoint&&<CanvasContextMenu point={contextPoint} selected={!!selectedIds.length} canPaste={clipboardCount>0} busy={clipboardBusy||assetBusy||archiveBusy} onCopy={()=>copySelection()} onCut={()=>copySelection(true)} onPaste={fit=>{void pasteSelection(fit);}} onClose={()=>{setContextPoint(null);adapter.current?.canvas.upperCanvasEl.focus();}}/>}{mediaLibrary&&<MediaLibraryDialog kind={mediaLibrary} monochrome={doc.colorMode!=='color'} busy={assetBusy} onClose={()=>setMediaLibrary(null)} onInsert={insertLibraryAsset}/>}<WorkspaceFrame showForm={formEntries(doc).length>0} mode={mode} actions={<>
       <span className="design-session-status" role="status">{sessionNotice||sourceRecord?.title||archiveTitle||'Nuovo design'} · {dirty?'Modifiche da confermare':'Nessuna modifica da salvare'}</span>
       {(mode!=='customer'||customerPdfEnabled)&&<EditorButton icon="download" badge="PDF" label="Scarica PDF" disabled={pdfBusy||editing||drawing||assetBusy} onClick={()=>void exportPdf()}/>}
       <EditorButton icon="refresh" label="Ricarica design originale" disabled={archiveBusy||editing||drawing||assetBusy} onClick={()=>setSessionDialog('reload')}/>
@@ -407,8 +422,9 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     layers={<LayersPanel customer={mode==='customer'} actions={<>
       <p className="caption layer-selection-status" role="status">{selectedIds.length > 1 ? `Selezionati: ${selectedIds.length} elementi${selectedGroups.length ? ` · ${selectedGroups.length} gruppi` : ''}` : selectedId ? `Selezionato: ${selectedId}` : doc.objects.length ? 'Seleziona un oggetto nel canvas o nell’elenco.' : 'Il progetto è vuoto. Aggiungi un testo o una forma per iniziare.'}</p>
       <div className="button-row layers-primary-actions"><EditorButton icon="multiSelect" label="Selezione multipla" aria-pressed={multiple} onClick={() => setMultiple(!multiple)}/><EditorButton icon="selectAll" label="Seleziona tutto" disabled={!doc.objects.length} onClick={() => { setDrawingTool(null); select(doc.objects.map(object => object.id)); adapter.current?.selectObjects(selectedRef.current); }}/><EditorButton icon="deselect" label="Deseleziona" disabled={!selectedIds.length} onClick={() => { setDrawingTool(null); select(null); adapter.current?.selectObjects([]); }}/><EditorButton disabled={!selectedIds.length} onClick={duplicate} icon="duplicate" label="Duplica selezionato"/><EditorButton disabled={!selectedIds.length} onClick={deleteSelection} icon="delete" label="Elimina selezionato"/></div>
-      <div className="button-row" role="group" aria-label="Appunti dell’editor"><EditorButton disabled={!selectedIds.length} onClick={() => copySelection()} icon="copy" label="Copia negli appunti dell’editor"/><EditorButton disabled={!selectedIds.length} onClick={() => copySelection(true)} icon="cut" label="Taglia negli appunti dell’editor"/><EditorButton disabled={!clipboardCount} onClick={pasteSelection} icon="paste" label="Incolla dagli appunti dell’editor"/></div>
-      {clipboardCount > 0 && <p className="caption" role="status">Appunti dell’editor: {clipboardCount} elementi. Conservati fino alla chiusura della pagina; incolla nelle stesse posizioni.</p>}
+      <div className="button-row" role="group" aria-label="Appunti dell’editor"><EditorButton disabled={!selectedIds.length||clipboardBusy} onClick={() => copySelection()} icon="copy" label="Copia negli appunti dell’editor"/><EditorButton disabled={!selectedIds.length||clipboardBusy} onClick={() => copySelection(true)} icon="cut" label="Taglia negli appunti dell’editor"/><EditorButton disabled={!clipboardCount||clipboardBusy} onClick={()=>void pasteSelection()} icon="paste" label="Incolla dagli appunti dell’editor"/></div>
+      {clipboardCount > 0 && <div className="button-row"><EditorButton disabled={clipboardBusy} onClick={()=>void pasteSelection(true)} icon="paste" label="Incolla adattando al foglio"/><EditorButton disabled={clipboardBusy} onClick={()=>{void clearGraphicClipboard().catch(error=>setError(error.message));}} icon="delete" label="Svuota appunti del configuratore"/></div>}
+      {clipboardCount > 0 && <p className="caption" role="status">Appunti dell’editor: {clipboardCount} elementi. Disponibili anche negli altri template e nelle altre schede di questo browser.</p>}
       <div className="button-row"><EditorButton icon="group" label="Raggruppa selezione" disabled={selectedIds.length < 2 || !!selectedGroups.length} onClick={() => selectionCommand('groupObjects', { objectIds: selectedRef.current, groupId: `group-${crypto.randomUUID()}` })}/><EditorButton icon="ungroup" label="Separa gruppi selezionati" disabled={!selectedGroups.length} onClick={() => selectionCommand('ungroupObjects', { groupIds: selectedGroups.map(group => group.id) }, selectedGroups[0]?.objectIds[0])}/></div>
       <details className="layers-help"><summary>Aiuto livelli</summary><p className="caption">Maiusc + clic o riquadro nel canvas per selezioni multiple; il pulsante Selezione multipla serve anche su touch. Le copie sono sovrapposte all’originale: trascinale per spostarle.</p></details>
     </>} document={doc} selectedIds={selectedIds} disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated} multiple={multiple}
@@ -432,7 +448,12 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     stage={<>
       {!!(fontRendering.blocked.length||fontRendering.pending.length)&&<div className="notice canvas-font-warning" role="status" data-testid="font-render-warning"><p>{fontRendering.blocked.length?'I riquadri con la croce indicano testi con font da correggere. Il contenuto originale è conservato: scegli un font compatibile nell’ispettore o usa «Font del progetto» negli strumenti.':'Controllo dei font in corso. Il testo originale è conservato; comparirà quando il controllo sarà terminato.'}</p>{!!fontRendering.blocked.length&&<button type="button" disabled={assetBusy} onClick={()=>adapter.current?.retryTextRendering()}>Ricontrolla visualizzazione font</button>}</div>}
       <InkPreviewFilter id={inkFilterId} color={doc.inkColor??'black'}/>
-      <div className="canvas-scroll" style={{'--editor-imprint-filter':doc.colorMode!=='color'&&doc.inkColor&&doc.inkColor!=='black'?`url(#${inkFilterId})`:'none'}as CSSProperties} inert={conflict || assetBusy || archiveBusy} onPointerDown={event => {
+      <div className="canvas-scroll" onContextMenu={event=>{
+        if(editing||drawing||assetBusy||archiveBusy||conflict)return;
+        const ids=adapter.current?.contextObjectIds(event.nativeEvent);if(ids===null)return;
+        event.preventDefault();setDrawingTool(null);if(ids?.length&&!ids.every(id=>selectedRef.current.includes(id))){select(ids);adapter.current?.selectObjects(selectedRef.current);}
+        setContextPoint({x:event.clientX||event.currentTarget.getBoundingClientRect().left+40,y:event.clientY||event.currentTarget.getBoundingClientRect().top+40});
+      }} style={{'--editor-imprint-filter':doc.colorMode!=='color'&&doc.inkColor&&doc.inkColor!=='black'?`url(#${inkFilterId})`:'none'}as CSSProperties} inert={conflict || assetBusy || archiveBusy} onPointerDown={event => {
         if (event.button !== 0 || assetBusy || conflict || (event.target instanceof Element && event.target.closest('.canvas-container'))) return;
         adapter.current?.activateSelectionTool(); setDrawingTool(null); setDrawing(false); setNodeMode(false); select(null); adapter.current?.selectObjects([]);
       }}><canvas ref={canvasRef} aria-label="Canvas grafico del laboratorio"/></div>
