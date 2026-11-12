@@ -1,0 +1,16 @@
+import{Path,util}from'fabric';import type{VectorCommand}from'../../src/editor/vector-geometry';
+type P={x:number;y:number};
+/** Test-only analytic normal offsets of one closed, tangent-continuous cubic
+ * frame. Does not call the importer, Ghostscript or its polygon union. */
+export function analyticFrameOutline(raw:Record<string,any>,area:{width:number;height:number},plane:{width:number;height:number}){
+ const native=new Path(raw.path,{...raw,originX:raw.originX??'left',originY:raw.originY??'top'}),commands=util.makePathSimpler(native.path),matrix=native.calcTransformMatrix(),offset=native.pathOffset,points:(P&{nx:number;ny:number})[]=[];let from:P={x:0,y:0};
+ try{for(const c of commands){if(c[0]==='M'){from={x:c[1],y:c[2]};continue;}if(c[0]==='Z')continue;if(c[0]!=='C'&&c[0]!=='L')throw Error('Reference supports cubic frames only');const end=c[0]==='C'?{x:c[5],y:c[6]}:{x:c[1],y:c[2]},count=c[0]==='C'?2048:1;
+  for(let i=0;i<count;i++){const t=i/count,u=1-t;let x:number,y:number,dx:number,dy:number;if(c[0]==='C'){x=u*u*u*from.x+3*u*u*t*c[1]+3*u*t*t*c[3]+t*t*t*end.x;y=u*u*u*from.y+3*u*u*t*c[2]+3*u*t*t*c[4]+t*t*t*end.y;dx=3*u*u*(c[1]-from.x)+6*u*t*(c[3]-c[1])+3*t*t*(end.x-c[3]);dy=3*u*u*(c[2]-from.y)+6*u*t*(c[4]-c[2])+3*t*t*(end.y-c[4]);}else{x=from.x;y=from.y;dx=end.x-from.x;dy=end.y-from.y;}const length=Math.hypot(dx,dy);if(!length)throw Error('Degenerate analytic tangent');points.push({x,y,nx:dy/length,ny:-dx/length});}from=end;}
+  const loop=(sign:number)=>points.map(p=>{const x=p.x+p.nx*raw.strokeWidth/2*sign-offset.x,y=p.y+p.ny*raw.strokeWidth/2*sign-offset.y;return{x:(matrix[0]*x+matrix[2]*y+matrix[4])*area.width/plane.width,y:(matrix[1]*x+matrix[3]*y+matrix[5])*area.height/plane.height};});
+  const loops=[loop(1),loop(-1).reverse()],svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${area.width}mm" height="${area.height}mm" viewBox="0 0 ${area.width} ${area.height}" preserveAspectRatio="none"><path fill="${raw.stroke}" fill-rule="nonzero" d="${loops.map(points=>points.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(' ')+' Z').join(' ')}"/></svg>`;return{loops,svg};
+ }finally{native.dispose();}
+}
+export function polylineContours(commands:readonly VectorCommand[],map:(x:number,y:number)=>P){const paths:P[][]=[];let points:P[]=[];for(const c of commands){if(c[0]==='M'){if(points.length)paths.push(points);points=[];}if(c[0]==='M'||c[0]==='L')points.push(map(c[1],c[2]));else if(c[0]==='Z'){paths.push(points);points=[];}else throw Error('Expected polygon outline');}if(points.length)paths.push(points);return paths;}
+/** Maximum distance from sampled analytic boundary to result segments, and
+ * conversely: physical evidence independent of pixel classification. */
+export function contourDistanceMm(probes:readonly P[][],target:readonly P[][]){const segments=target.flatMap(points=>points.map((p,i)=>[p,points[(i+1)%points.length]!]as const));let max=0,sum=0,count=0;for(const points of probes)for(const p of points){let squared=Infinity;for(const[a,b]of segments){const dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy,t=length?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/length)):0,d=(p.x-a.x-t*dx)**2+(p.y-a.y-t*dy)**2;if(d<squared)squared=d;}const d=Math.sqrt(squared);max=Math.max(max,d);sum+=d;count++;}return{maxMm:max,meanMm:sum/count,samples:count};}

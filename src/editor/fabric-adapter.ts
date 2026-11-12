@@ -1,3 +1,4 @@
+import{boxSampleRgba}from'./pixel-sampling';
 import{applyClipMasks}from'./clip-mask-view';
 import{ExternalCanvasControls}from'./external-controls';
 import{graphicPages,activeGraphicPageId}from'./pages';
@@ -211,7 +212,7 @@ async function renderDocumentPng(document: GraphicDocument, size: {width:number;
       context.save(); context.setTransform(1, 0, 0, 1, 0, 0); context.globalCompositeOperation = 'destination-over'; context.fillStyle = '#ffffff'; context.fillRect(0, 0, width, height); context.restore();
     }
     if(document.colorMode!=='color'&&document.inkColor&&document.inkColor!=='black'){const context=element.getContext('2d');if(!context)throw new Error('Anteprima colore non disponibile');const pixels=context.getImageData(0,0,width,height);tintImprintPixels(pixels.data,document.inkColor);context.putImageData(pixels,0,0);}
-    let target=element;if(samples>1){target=window.document.createElement('canvas');target.width=size.width;target.height=size.height;const context=target.getContext('2d');if(!context)throw Error('Riduzione PNG non disponibile');context.drawImage(element,0,0,size.width,size.height);}
+    let target=element;if(samples>1){target=window.document.createElement('canvas');target.width=size.width;target.height=size.height;const context=target.getContext('2d'),high=element.getContext('2d');if(!context||!high)throw Error('Riduzione PNG non disponibile');context.putImageData(new ImageData(boxSampleRgba(high.getImageData(0,0,width,height).data,width,height,samples),size.width,size.height),0,0);}
     const blob = await new Promise<Blob>((resolve, reject) => target.toBlob(value => value ? resolve(value) : reject(new Error('Il browser non ha generato il PNG')), 'image/png'));
     return blob;
   } finally { await output.dispose(); }

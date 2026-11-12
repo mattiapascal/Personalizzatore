@@ -196,3 +196,7 @@ Campione [JSON](../fixtures/illustrator/trailing-text-styles.TEST.json) / [SVG](
 ## SVG con bitmap e maschere intersecate — 12 novembre
 
 Campione [mixed-svg.TEST.json](../fixtures/illustrator/mixed-svg.TEST.json) / [SVG](../fixtures/illustrator/mixed-svg.TEST.svg), con [sorgente sintetico indipendente](../fixtures/illustrator/mixed-svg.source.TEST.svg). Generatore `node --import tsx scripts/capture-editor-mixed-svg.ts`; [contratti e limiti](iteration-editor-mixed-svg.md). In Illustrator verificare formato 100 × 70 mm, PNG originale ancora incorporato, foro ellittico, foro circolare e tutte le intersezioni, quindi separazione/modifica dei vettori. Esito Illustrator non ancora acquisito.
+
+## Cornici grandi e precisione del confronto — 12 novembre
+
+Campione [large-contours.TEST.json](../fixtures/illustrator/large-contours.TEST.json), [SVG verticale](../fixtures/illustrator/large-contours.TEST.svg) e [SVG orizzontale](../fixtures/illustrator/large-contours.page2.TEST.svg), da [sorgente sintetico](../fixtures/illustrator/large-contours.source.TEST.json). Due pagine indipendenti, 200 × 300 e 300 × 200 mm. Generatore `node --import tsx scripts/capture-editor-large-contours.ts`. [Diagnosi del confronto, misure e limiti](iteration-editor-contour-fidelity.md). In Illustrator verificare dimensioni, continuità dei bordi e mantenimento del foro; il tratto deformato è espanso in geometria. Esito umano ancora da acquisire.
