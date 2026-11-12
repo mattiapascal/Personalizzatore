@@ -1,3 +1,5 @@
+**Aggiornamento 12 novembre:** il limite storico di quattro immagini descritto sotto è superato da [32 posizionamenti con budget complessivi](iteration-editor-image-capacity.md). I limiti di 20 MB/24 MP per file e 120 MB per JSON restano validi.
+
 # Foto ad alta risoluzione e recupero Alida — 11 novembre 2026
 
 Il limite raster di 256 KB era una protezione del primo prototipo, inadatta alle foto reali. Il titolare ne richiede l’estensione. Sono ora accettati **20.000.000 byte per PNG/JPEG, 24.000.000 pixel e 12000 pixel per lato**, mantenendo quattro immagini per documento. Il progetto conserva tutti i byte originali: nessun ridimensionamento automatico viene presentato come sorgente originale.

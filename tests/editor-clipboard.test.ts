@@ -45,7 +45,7 @@ describe('appunti grafici e inserimento atomico', () => {
   it('rispetta il limite immagini e accetta lo stesso inserimento AI tipizzato', () => {
     const doc = createDocument(), image: SceneObject = { id: 'image', type: 'image', xMm: 10, yMm: 5, widthMm: 4, heightMm: 4, source: rasterSourceFromBytes('asset', testPng()), raster: { ...DEFAULT_RASTER } }; doc.objects = [image]; const store = new DocumentStore(doc, measure), clipboard = captureSelection(doc, ['image']); let n = 0;
     const makeId = (kind: 'object' | 'group') => `${kind}-${++n}`;
-    for (let i = 0; i < 3; i++) store.dispatch(clipboardInsertion(clipboard, store.document.revision, makeId), 'ai-simulation');
-    const before = cloneGraphicDocument(store.document); expect(() => store.dispatch(clipboardInsertion(clipboard, before.revision, makeId), 'manual')).toThrow('quattro immagini'); expect(store.document).toEqual(before); expect(store.events.map(event => event.source)).toEqual(['ai-simulation', 'ai-simulation', 'ai-simulation']);
+    for (let i = 0; i < 31; i++) store.dispatch(clipboardInsertion(clipboard, store.document.revision, makeId), 'ai-simulation');
+    const before = cloneGraphicDocument(store.document); expect(() => store.dispatch(clipboardInsertion(clipboard, before.revision, makeId), 'manual')).toThrow('32 immagini'); expect(store.document).toEqual(before); expect(before.objects).toHaveLength(32);expect(store.events).toHaveLength(31);expect(store.events.every(event=>event.source==='ai-simulation')).toBe(true);
   });
 });

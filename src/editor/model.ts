@@ -1,3 +1,4 @@
+import {rasterDocumentUsage,rasterDocumentIssues} from './raster-document-limits';
 import { OpacitySchema, PaintOpacityFields } from './paint-opacity';
 import {clearBackground,replaceBackgroundObjects,backgroundObjectIds} from './background';
 import {coverRasterReplacement} from './raster-replacement';
@@ -128,7 +129,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
   if (binding.some(v => v !== null) && binding.some(v => v === null)) ctx.addIssue({ code: 'custom', message: 'Associazione catalogo incompleta' });
   if (d.shape !== 'rectangle' && d.areaMm.width !== d.areaMm.height) ctx.addIssue({ code: 'custom', message: 'Area tonda o quadrata richiede lati uguali' });
   const images = d.objects.filter(o => o.type === 'image'), sources = new Map<string, string>();
-  if (images.length > 4) ctx.addIssue({ code: 'custom', message: 'Massimo quattro immagini nel laboratorio TEST' });
+  for(const message of rasterDocumentIssues(rasterDocumentUsage(images)))ctx.addIssue({code:'custom',message});
   for (const image of images) {
     const previous = sources.get(image.source.id); if (previous !== undefined && previous !== image.source.dataUrl) ctx.addIssue({ code: 'custom', message: 'ID sorgente immagine associato a dati diversi' }); sources.set(image.source.id, image.source.dataUrl);
     try {

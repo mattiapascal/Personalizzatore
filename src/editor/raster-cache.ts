@@ -26,7 +26,7 @@ function publishResource(source: RasterSource, image: DecodedRaster['image'], sv
   prepared.set(source.id, { source: { ...source }, resource });
 }
 const derived = new Map<string, HTMLCanvasElement>();
-// Decode large sources sequentially, including when a document prepares four images.
+// Decode large sources sequentially, including documents with many image placements.
 let preparationQueue: Promise<unknown> = Promise.resolve();
 function sameSource(a: RasterSource, b: RasterSource): boolean { return a.id === b.id && a.mime === b.mime && a.pixelWidth === b.pixelWidth && a.pixelHeight === b.pixelHeight && a.dataUrl === b.dataUrl; }
 export function assertRasterPrepared(source: RasterSource): void {
