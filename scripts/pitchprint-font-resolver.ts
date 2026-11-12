@@ -2,6 +2,7 @@ import {readFile,realpath,stat} from 'node:fs/promises';import {join,sep} from '
 import {verifiedPitchprintCssFace} from '../src/editor/pitchprint-css-faces';
 import {fontStyleContext} from '../src/editor/font-face-choice';import {FontAssetSchema,type FontAsset} from '../src/editor/font-assets';import {fontNameKey,type PitchprintFontRequest} from '../src/editor/pitchprint-fonts';import {PitchprintFontResolutionSchema,type PitchprintFontResolution} from '../src/editor/pitchprint-font-resolution';
 import {fontFileFormat} from './font-format';import {fontNames} from './font-names';import {assertExactFontIdentity} from './font-identity';import {validateFontFile} from './editor-font-upload';import {EditorAdminStore} from './editor-admin-store';
+export type PitchprintFontLibrary=Pick<EditorAdminStore,'readFonts'>;
 function publicSourceUrl(value:unknown):string|undefined{try{const url=new URL(String(value));return url.protocol==='https:'&&!url.username&&!url.password&&!url.search&&!url.hash&&url.href.length<=1000?url.href:undefined;}catch{return undefined;}}
 const sha256=(bytes:Buffer)=>createHash('sha256').update(bytes).digest('hex');
 const request=(family:string,weight:number,italic:boolean):PitchprintFontRequest=>({family,weight,italic});
@@ -30,8 +31,8 @@ export async function readCatalogPitchprintFont(directory:string,family:string,w
 }
 export async function readPitchprintFont(directory:string,family:string,weight=400,italic=false):Promise<FontAsset>{return (await readCatalogPitchprintFont(directory,family,weight,italic)).asset;}
 export class AmbiguousPitchprintFontError extends Error {}
-export async function readInstalledPitchprintFont(directory:string,family:string,weight:number,italic:boolean):Promise<FontAsset|null>{
- const fonts=await new EditorAdminStore(directory).readFonts(),candidates:{font:typeof fonts[number];score:number}[]=[];
+export async function readInstalledPitchprintFont(directory:string,family:string,weight:number,italic:boolean,library?:PitchprintFontLibrary):Promise<FontAsset|null>{
+ const fonts=await(library??new EditorAdminStore(directory)).readFonts(),candidates:{font:typeof fonts[number];score:number}[]=[];
  for(const font of fonts){if(font.archived)continue;const bytes=Buffer.from(font.dataBase64,'base64'),names=fontNames(bytes,font.format);if(names.weight!==weight||names.italic!==italic)continue;if(![font.family,font.familyGroup,names.family,names.familyGroup,names.fullName].some(name=>name&&fontNameKey(name)===fontNameKey(family)))continue;try{assertExactFontIdentity(bytes,font.format,family,weight,italic);}catch{continue;}const exact=[names.family,names.fullName].some(name=>name&&fontNameKey(name)===fontNameKey(family)),score=exact?0:fontStyleContext(names.styleName)===''?1:2;candidates.push({font,score});}
  const best=Math.min(...candidates.map(candidate=>candidate.score)),matches=candidates.filter(candidate=>candidate.score===best);if(!matches.length||best===2)return null;
  if(matches.some(({font})=>font.dataBase64!==matches[0]!.font.dataBase64))throw new AmbiguousPitchprintFontError(`Più file differenti dichiarano il font «${family}» con questo peso e stile. Occorre identificarlo esplicitamente; nessun fallback consentito.`);
@@ -57,13 +58,13 @@ async function readCatalogIdentityFont(directory:string,family:string,weight:num
  if(matches.size!==1)return null;const found=[...matches.values()][0]!,bytes=Buffer.from(found.asset.dataBase64,'base64'),names=fontNames(bytes,found.asset.format),declaredNames=[names.family,names.fullName,names.familyGroup].filter((name):name is string=>!!name);
  return PitchprintFontResolutionSchema.parse({kind:'pitchprint-font-resolution',requested:request(family,weight,italic),asset:found.asset,evidence:{kind:'file-metadata',declaredNames,sha256:sha256(bytes)}});
 }
-export async function resolvePitchprintFont(libraryDirectory:string,catalogDirectory:string,family:string,weight:number,italic:boolean):Promise<PitchprintFontResolution>{
+export async function resolvePitchprintFont(libraryDirectory:string,catalogDirectory:string,family:string,weight:number,italic:boolean,library?:PitchprintFontLibrary):Promise<PitchprintFontResolution>{
  let installed:FontAsset|null=null,ambiguity:AmbiguousPitchprintFontError|undefined;
- try{installed=await readInstalledPitchprintFont(libraryDirectory,family,weight,italic);}catch(cause){if(!(cause instanceof AmbiguousPitchprintFontError))throw cause;ambiguity=cause;}
+ try{installed=await readInstalledPitchprintFont(libraryDirectory,family,weight,italic,library);}catch(cause){if(!(cause instanceof AmbiguousPitchprintFontError))throw cause;ambiguity=cause;}
  if(installed){const bytes=Buffer.from(installed.dataBase64,'base64'),names=fontNames(bytes,installed.format),declaredNames=[names.family,names.fullName,names.familyGroup].filter((name):name is string=>!!name);return PitchprintFontResolutionSchema.parse({kind:'pitchprint-font-resolution',requested:request(family,weight,italic),asset:installed,evidence:{kind:'file-metadata',declaredNames,sha256:sha256(bytes)}});}
  // An original may survive on the public font server after its catalog entry
  // was removed. Only a pinned CSS face, active and byte-identical, can resolve it.
- const fonts=await new EditorAdminStore(libraryDirectory).readFonts();
+ const fonts=await(library??new EditorAdminStore(libraryDirectory)).readFonts();
  for(const font of fonts){if(font.archived)continue;const bytes=Buffer.from(font.dataBase64,'base64'),hash=sha256(bytes),names=fontNames(bytes,font.format);if(names.weight===undefined||names.italic===undefined||!verifiedPitchprintCssFace(request(family,weight,italic),hash,names.weight,names.italic,font.sourceUrl))continue;
   const actualFamily=names.familyGroup??names.family;if(!actualFamily)continue;assertExactFontIdentity(bytes,font.format,actualFamily,names.weight,names.italic);
   return PitchprintFontResolutionSchema.parse({kind:'pitchprint-font-resolution',requested:request(family,weight,italic),asset:{id:`font-${font.id}`,family:names.postscriptName??names.fullName??actualFamily,familyGroup:actualFamily,styleName:names.styleName,label:names.fullName??actualFamily,weight:names.weight,italic:names.italic,format:font.format,dataBase64:font.dataBase64,sourceUrl:font.sourceUrl,...(font.licenseText?{licenseText:font.licenseText}:{})},evidence:{kind:'original-css-face',sha256:hash,catalogFamily:family}});

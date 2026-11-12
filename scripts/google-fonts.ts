@@ -2,7 +2,6 @@ import {googleFontCategories} from '../src/editor-admin/font-categories';
 import {assertExactFontIdentity} from './font-identity';
 import { z } from 'zod';
 import type { EditorAdminStore } from './editor-admin-store';
-import { adminSnapshot } from './editor-admin-store';
 export interface GoogleFont { family:string;category:string;variants?:string[]; }
 const metadata=z.object({familyMetadataList:z.array(z.object({family:z.string().min(1).max(80),category:z.string(),isOpenSource:z.boolean().optional(),fonts:z.record(z.string(),z.unknown()).optional()})).max(10000)});
 const IMPORT_SOURCE='https://fonts.google.com/metadata/fonts';
@@ -21,7 +20,7 @@ export class GoogleFontLibrary {
   if(!licenseText.trim())throw new Error('Licenza della famiglia non recuperata: nessun font installato');const category=(await this.catalog()).find(font=>font.family===family)?.category,categories=googleFontCategories(category);return {family,format,categories,notes:`Google Fonts · ${variant}`,familyGroup:family,styleName:`${weight} ${italic?'Corsivo':'Normale'}`,weight,italic,source:'google' as const,sourceUrl:`https://fonts.google.com/specimen/${encodeURIComponent(family)}`,licenseText,dataBase64:bytes.toString('base64')};
  }
  async install(store:EditorAdminStore,family:string,expectedRevision:number,variant='400'){
-  const state=await store.read();if(state.revision!==expectedRevision)throw new Error('Archivio modificato: aggiorna prima di salvare');const existing=state.fonts.find(f=>f.source==='google'&&f.family===family&&(f.weight??400)===parseInt(variant,10)&&!!f.italic===variant.endsWith('i'));if(existing)return existing.archived?store.dispatch({tool:'archiveFont',expectedRevision,arguments:{id:existing.id,archived:false}}):adminSnapshot(state);
+  const state=await store.readFontLibrary();if(state.revision!==expectedRevision)throw new Error('Archivio modificato: aggiorna prima di salvare');const existing=state.fonts.find(f=>f.source==='google'&&f.family===family&&(f.weight??400)===parseInt(variant,10)&&!!f.italic===variant.endsWith('i'));if(existing)return existing.archived?store.dispatch({tool:'archiveFont',expectedRevision,arguments:{id:existing.id,archived:false}}):store.readSnapshot();
   return store.dispatch({tool:'uploadFont',expectedRevision,arguments:await this.prepare(family,variant)});
  }
 }

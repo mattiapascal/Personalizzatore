@@ -44,7 +44,8 @@
     "eval:knowledge": "node --import tsx scripts/eval-store-knowledge.ts",
     "editor:collaudo": "node --import tsx scripts/export-editor-acceptance.ts",
     "pitchprint:fonts": "node --import tsx scripts/pitchprint-font-inventory.ts",
-    "editor:storage": "node --max-old-space-size=6144 --import tsx scripts/editor-archive-storage.ts"
+    "editor:storage": "node --max-old-space-size=6144 --import tsx scripts/editor-archive-storage.ts",
+    "editor:storage-trial": "vite --config vite.storage-trial.config.ts --host 127.0.0.1"
   },
   "dependencies": {
     "fabric": "7.4.0",

@@ -7,5 +7,6 @@ export interface EditorAdminPersistence {
  readRecord(id:string):Promise<ArchiveRecord|undefined>;
  readFont(id:string):Promise<{format:string;dataBase64:string}|undefined>;
  readFonts():Promise<AdminState['fonts']>;
+ readFontLibrary():Promise<Pick<AdminState,'revision'|'fonts'>>;
  readSnapshot():Promise<AdminSnapshot>;
 }

@@ -4,9 +4,9 @@ import {parseGraphicDocument,type GraphicDocument} from '../src/editor/model';
 import {portableTestFixture} from '../tests/helpers/editor-fonts';
 const origin = 'http://127.0.0.1:5173', browser = await chromium.launch();
 try {
-  const page = await browser.newPage(), errors: string[] = [], external: string[] = [], results: { fixture: string; objects: number; images: number; revision: number }[] = [];
-  page.on('pageerror', error => { errors.push(error.message); console.error('Errore browser:', error.message); }); page.on('request', request => { if (/^https?:/.test(request.url()) && new URL(request.url()).origin !== origin) external.push(request.url()); });
-  await page.route('**/__editor-local/admin/',route=>route.fulfill({json:{schemaVersion:1,revision:0,settings:{editorName:'TEST',gridMm:1,gridVisible:false,snapEnabled:false},fonts:[],records:[]}}));await page.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort()); await page.route('**/api/**', route => route.abort()); await page.goto(`${origin}/editor`);
+  const page = await browser.newPage(), errors: string[] = [], external: string[] = [], libraryFontRequests: string[] = [], results: { fixture: string; objects: number; images: number; revision: number }[] = [];let adminFixtureReads=0;
+  page.on('pageerror', error => { errors.push(error.message); console.error('Errore browser:', error.message); }); page.on('request', request => { if (/^https?:/.test(request.url()) && new URL(request.url()).origin !== origin) external.push(request.url());if(new URL(request.url()).pathname.startsWith('/__editor-local/admin/font/'))libraryFontRequests.push(request.url()); });
+  await page.route('**/__editor-local/admin/',route=>{adminFixtureReads++;return route.fulfill({json:{schemaVersion:1,revision:0,settings:{editorName:'TEST',gridMm:1,gridVisible:false,snapEnabled:false},fonts:[],records:[]}});});await page.route('**/*', route => new URL(route.request().url()).origin === origin ? route.fallback() : route.abort()); await page.route('**/api/**', route => route.abort()); await page.goto(`${origin}/editor`);
   // Import through the running editor, not the initial font-recovery input
   // that intentionally opens a document with its saved revision unchanged.
   await expect(page.getByTestId('revision')).toBeVisible();
@@ -23,6 +23,6 @@ try {
     writeFileSync(`.local/verified-fixtures/${name}.TEST.svg`,source);
     results.push({ fixture: name, objects: current.objects.length, images: current.objects.filter(object => object.type === 'image').length, revision: current.revision });
   }
-  expect(errors).toEqual([]); expect(external).toEqual([]); mkdirSync('.local', { recursive: true }); writeFileSync('.local/editor-artifact-smoke.json', JSON.stringify({ test: 'reopen-and-export-local-editor-artifacts', results, browserErrors: errors, externalRequests: external }, null, 2));
-  console.log(JSON.stringify({ passed: results.length, fixtures: results.map(result => result.fixture), browserErrors: errors.length, externalRequests: external.length }));
+  expect(errors).toEqual([]); expect(external).toEqual([]);expect(adminFixtureReads).toBeGreaterThan(0);expect(libraryFontRequests).toEqual([]); mkdirSync('.local', { recursive: true }); writeFileSync('.local/editor-artifact-smoke.json', JSON.stringify({ test: 'reopen-and-export-local-editor-artifacts', results, browserErrors: errors, externalRequests: external,adminFixtureReads,libraryFontRequests }, null, 2));
+  console.log(JSON.stringify({ passed: results.length, fixtures: results.map(result => result.fixture), browserErrors: errors.length, externalRequests: external.length,adminFixtureReads,libraryFontRequests }));
 } finally { await browser.close(); }

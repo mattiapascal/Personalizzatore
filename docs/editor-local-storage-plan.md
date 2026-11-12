@@ -15,3 +15,7 @@ Nel frattempo i salvataggi mantengono il controllo di capacità esistente: super
 ## Misura sul volume reale
 
 Audit in sola lettura dopo il lotto di riferimenti: revisione 616, 326 template, JSON di **526.058.877 byte (circa 501,7 MiB)**. In 1.062 occorrenze di font/immagini sono presenti **289 risorse uniche**: 219 font e 70 immagini. Le stringhe codificate occupano 507.890.283 byte contando le ripetizioni, 66.556.626 byte contando ogni risorsa una volta; **441.333.657 byte sono ripetizioni**. Non è una stima del database finale: vanno aggiunti indici, metadati e transazioni, ma la deduplicazione per contenuto è la direzione da collaudare. Archivio identico prima/dopo; rapporto privato `.local/pitchprint-migration/archive-resource-size-audit.json`. Nessuna migrazione effettuata.
+
+## Collegamento al server di prova completato
+
+[Incremento e collaudo](iteration-editor-sqlite-server-trial.md): API reali, resolver font condiviso e copia in sola lettura sulla porta 5175. Il JSON principale resta predefinito e invariato; nessuna migrazione. Prima dell’attivazione restano procedura e strumenti di manutenzione da completare.
