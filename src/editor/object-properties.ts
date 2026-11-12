@@ -38,7 +38,7 @@ export function formEntries(document:GraphicDocument):FormEntry[]{
 export function productionDocument(document:GraphicDocument):GraphicDocument{
  const objects=document.objects.filter(object=>!effectiveObjectProperties(document,object.id).reference),ids=new Set(objects.map(object=>object.id));
  const groups=(document.groups??[]).map(group=>({...group,objectIds:group.objectIds.filter(id=>ids.has(id))})).filter(group=>group.objectIds.length>=2||group.objectIds.length===1&&(document.groups?.find(source=>source.id===group.id)?.objectIds.length===1||group.editor||document.groups?.some(child=>child.parentId===group.id)));
- const output={...document,objects,...(document.groups?{groups}:{})};if(output.backgroundImageId&&!ids.has(output.backgroundImageId))delete output.backgroundImageId;return output;
+ const output={...document,objects,...(document.groups?{groups}:{})};if(output.backgroundImageId&&!ids.has(output.backgroundImageId))delete output.backgroundImageId;if(output.backgroundGroupId&&!groups.some(group=>group.id===output.backgroundGroupId))delete output.backgroundGroupId;return output;
 }
 export function selectableObjectIds(document:GraphicDocument,ids:readonly string[],role:EditorRole):string[]{
  const requested=new Set(ids),blocked=new Set(document.objects.filter(object=>role==='customer'&&effectiveObjectProperties(document,object.id).selectionLocked).map(object=>object.id));

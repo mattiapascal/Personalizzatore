@@ -2795,6 +2795,2725 @@
         },
         "tool": {
           "type": "string",
+          "const": "setBackgroundObjects"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "objects": {
+              "maxItems": 200,
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "text"
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 8000
+                      },
+                      "fontSizePt": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 500
+                      },
+                      "fontFamily": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "Arial",
+                              "Helvetica",
+                              "Times New Roman",
+                              "Georgia",
+                              "Courier New",
+                              "Verdana",
+                              "Trebuchet MS"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^font-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                          }
+                        ]
+                      },
+                      "fill": {
+                        "type": "string",
+                        "pattern": "^#[0-9a-f]{6}$"
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "lineStyles": {
+                        "maxItems": 4001,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "start": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "end": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "alignment": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "center",
+                                "right",
+                                "justify-left"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "start",
+                            "end",
+                            "alignment"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "justification": {
+                        "type": "object",
+                        "properties": {
+                          "word": {
+                            "type": "object",
+                            "properties": {
+                              "min": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1000
+                              },
+                              "desired": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1000
+                              },
+                              "max": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1000
+                              }
+                            },
+                            "required": [
+                              "min",
+                              "desired",
+                              "max"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "letter": {
+                            "type": "object",
+                            "properties": {
+                              "min": {
+                                "type": "number",
+                                "minimum": -100,
+                                "maximum": 500
+                              },
+                              "desired": {
+                                "type": "number",
+                                "minimum": -100,
+                                "maximum": 500
+                              },
+                              "max": {
+                                "type": "number",
+                                "minimum": -100,
+                                "maximum": 500
+                              }
+                            },
+                            "required": [
+                              "min",
+                              "desired",
+                              "max"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "word",
+                          "letter"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "textPath": {
+                        "type": "object",
+                        "properties": {
+                          "guide": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "vector"
+                                  },
+                                  "widthMm": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1000
+                                  },
+                                  "heightMm": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1000
+                                  },
+                                  "commands": {
+                                    "minItems": 2,
+                                    "maxItems": 4096,
+                                    "type": "array",
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "type": "array",
+                                          "prefixItems": [
+                                            {
+                                              "type": "string",
+                                              "const": "M"
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            }
+                                          ],
+                                          "items": false,
+                                          "minItems": 3,
+                                          "maxItems": 3
+                                        },
+                                        {
+                                          "type": "array",
+                                          "prefixItems": [
+                                            {
+                                              "type": "string",
+                                              "const": "L"
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            }
+                                          ],
+                                          "items": false,
+                                          "minItems": 3,
+                                          "maxItems": 3
+                                        },
+                                        {
+                                          "type": "array",
+                                          "prefixItems": [
+                                            {
+                                              "type": "string",
+                                              "const": "C"
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            }
+                                          ],
+                                          "items": false,
+                                          "minItems": 7,
+                                          "maxItems": 7
+                                        },
+                                        {
+                                          "type": "array",
+                                          "prefixItems": [
+                                            {
+                                              "type": "string",
+                                              "const": "Z"
+                                            }
+                                          ],
+                                          "items": false,
+                                          "minItems": 1,
+                                          "maxItems": 1
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "fillOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "strokeOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "stroke": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff",
+                                      "none"
+                                    ]
+                                  },
+                                  "strokeMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "fill": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff",
+                                      "none"
+                                    ]
+                                  },
+                                  "strokeDash": {
+                                    "type": "string",
+                                    "enum": [
+                                      "solid",
+                                      "dashed",
+                                      "dotted"
+                                    ]
+                                  },
+                                  "fillRule": {
+                                    "type": "string",
+                                    "enum": [
+                                      "evenodd",
+                                      "nonzero"
+                                    ]
+                                  },
+                                  "strokeLineCap": {
+                                    "type": "string",
+                                    "enum": [
+                                      "butt",
+                                      "round",
+                                      "square"
+                                    ]
+                                  },
+                                  "strokeLineJoin": {
+                                    "type": "string",
+                                    "enum": [
+                                      "miter",
+                                      "round",
+                                      "bevel"
+                                    ]
+                                  },
+                                  "strokeMiterLimit": {
+                                    "type": "number",
+                                    "minimum": 1,
+                                    "maximum": 100
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "widthMm",
+                                  "heightMm",
+                                  "commands",
+                                  "stroke",
+                                  "strokeMm",
+                                  "fill",
+                                  "fillRule",
+                                  "strokeLineCap",
+                                  "strokeLineJoin",
+                                  "strokeMiterLimit"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "line"
+                                  },
+                                  "lengthMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 1000
+                                  },
+                                  "fillOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "strokeOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "stroke": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff"
+                                    ]
+                                  },
+                                  "strokeMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "fill": {
+                                    "type": "string",
+                                    "const": "none"
+                                  },
+                                  "strokeDash": {
+                                    "type": "string",
+                                    "enum": [
+                                      "solid",
+                                      "dashed",
+                                      "dotted"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "lengthMm",
+                                  "stroke",
+                                  "strokeMm"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "circle"
+                                  },
+                                  "radiusMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 500
+                                  },
+                                  "fillOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "strokeOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "stroke": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff",
+                                      "none"
+                                    ]
+                                  },
+                                  "strokeMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "fill": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff",
+                                      "none"
+                                    ]
+                                  },
+                                  "strokeDash": {
+                                    "type": "string",
+                                    "enum": [
+                                      "solid",
+                                      "dashed",
+                                      "dotted"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "radiusMm",
+                                  "stroke",
+                                  "strokeMm"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "ellipse"
+                                  },
+                                  "rxMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 500
+                                  },
+                                  "ryMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 500
+                                  },
+                                  "fillOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "strokeOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "stroke": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff",
+                                      "none"
+                                    ]
+                                  },
+                                  "strokeMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "fill": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff",
+                                      "none"
+                                    ]
+                                  },
+                                  "strokeDash": {
+                                    "type": "string",
+                                    "enum": [
+                                      "solid",
+                                      "dashed",
+                                      "dotted"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "rxMm",
+                                  "ryMm",
+                                  "stroke",
+                                  "strokeMm"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "path"
+                                  },
+                                  "widthMm": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1000
+                                  },
+                                  "heightMm": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1000
+                                  },
+                                  "points": {
+                                    "minItems": 2,
+                                    "maxItems": 512,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "closed": {
+                                    "type": "boolean"
+                                  },
+                                  "fillOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "strokeOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "stroke": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff"
+                                    ]
+                                  },
+                                  "strokeMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "fill": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff",
+                                      "none"
+                                    ]
+                                  },
+                                  "strokeDash": {
+                                    "type": "string",
+                                    "enum": [
+                                      "solid",
+                                      "dashed",
+                                      "dotted"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "widthMm",
+                                  "heightMm",
+                                  "points",
+                                  "closed",
+                                  "stroke",
+                                  "strokeMm"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "bezier"
+                                  },
+                                  "widthMm": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1000
+                                  },
+                                  "heightMm": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1000
+                                  },
+                                  "nodes": {
+                                    "minItems": 2,
+                                    "maxItems": 64,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "in": {
+                                          "type": "object",
+                                          "properties": {
+                                            "x": {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            "y": {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            }
+                                          },
+                                          "required": [
+                                            "x",
+                                            "y"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "out": {
+                                          "type": "object",
+                                          "properties": {
+                                            "x": {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            },
+                                            "y": {
+                                              "type": "number",
+                                              "minimum": -100,
+                                              "maximum": 100
+                                            }
+                                          },
+                                          "required": [
+                                            "x",
+                                            "y"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "closed": {
+                                    "type": "boolean"
+                                  },
+                                  "fillOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "strokeOpacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "stroke": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff"
+                                    ]
+                                  },
+                                  "strokeMm": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "fill": {
+                                    "type": "string",
+                                    "enum": [
+                                      "#000000",
+                                      "#ffffff",
+                                      "none"
+                                    ]
+                                  },
+                                  "strokeDash": {
+                                    "type": "string",
+                                    "enum": [
+                                      "solid",
+                                      "dashed",
+                                      "dotted"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "widthMm",
+                                  "heightMm",
+                                  "nodes",
+                                  "closed",
+                                  "stroke",
+                                  "strokeMm"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "originalPathId": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                          },
+                          "offsetMm": {
+                            "type": "number",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "normalOffsetMm": {
+                            "type": "number",
+                            "minimum": -1000,
+                            "maximum": 1000
+                          },
+                          "baseline": {
+                            "type": "string",
+                            "enum": [
+                              "baseline",
+                              "ascender",
+                              "descender"
+                            ]
+                          },
+                          "reversed": {
+                            "type": "boolean"
+                          },
+                          "showGuide": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "guide",
+                          "originalPathId",
+                          "offsetMm",
+                          "baseline",
+                          "reversed",
+                          "showGuide"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "textScaleX": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 10
+                      },
+                      "textScaleY": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 10
+                      },
+                      "fontWeight": {
+                        "type": "string",
+                        "enum": [
+                          "normal",
+                          "bold"
+                        ]
+                      },
+                      "fontStyle": {
+                        "type": "string",
+                        "enum": [
+                          "normal",
+                          "italic"
+                        ]
+                      },
+                      "underline": {
+                        "type": "boolean"
+                      },
+                      "linethrough": {
+                        "type": "boolean"
+                      },
+                      "overline": {
+                        "type": "boolean"
+                      },
+                      "textAlign": {
+                        "type": "string",
+                        "enum": [
+                          "left",
+                          "center",
+                          "right",
+                          "justify-left"
+                        ]
+                      },
+                      "lineHeight": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3
+                      },
+                      "letterSpacingPt": {
+                        "type": "number",
+                        "minimum": -20,
+                        "maximum": 100
+                      },
+                      "textBox": {
+                        "type": "object",
+                        "properties": {
+                          "widthMm": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 1000
+                          },
+                          "heightMm": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 1000
+                          },
+                          "autoWidth": {
+                            "type": "boolean"
+                          },
+                          "autoHeight": {
+                            "type": "boolean",
+                            "const": true
+                          }
+                        },
+                        "required": [
+                          "widthMm",
+                          "heightMm",
+                          "autoWidth",
+                          "autoHeight"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "characterStyles": {
+                        "maxItems": 4000,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "start": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "end": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "style": {
+                              "type": "object",
+                              "properties": {
+                                "fontSizePt": {
+                                  "type": "number",
+                                  "minimum": 0.1,
+                                  "maximum": 500
+                                },
+                                "fontFamily": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "Arial",
+                                        "Helvetica",
+                                        "Times New Roman",
+                                        "Georgia",
+                                        "Courier New",
+                                        "Verdana",
+                                        "Trebuchet MS"
+                                      ]
+                                    },
+                                    {
+                                      "type": "string",
+                                      "pattern": "^font-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                                    }
+                                  ]
+                                },
+                                "fill": {
+                                  "type": "string",
+                                  "pattern": "^#[0-9a-f]{6}$"
+                                },
+                                "fillOpacity": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                "kerningPt": {
+                                  "type": "number",
+                                  "minimum": -20,
+                                  "maximum": 100
+                                },
+                                "fontWeight": {
+                                  "type": "string",
+                                  "enum": [
+                                    "normal",
+                                    "bold"
+                                  ]
+                                },
+                                "fontStyle": {
+                                  "type": "string",
+                                  "enum": [
+                                    "normal",
+                                    "italic"
+                                  ]
+                                },
+                                "underline": {
+                                  "type": "boolean"
+                                },
+                                "linethrough": {
+                                  "type": "boolean"
+                                },
+                                "overline": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "start",
+                            "end",
+                            "style"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "text",
+                      "fontSizePt",
+                      "fontFamily",
+                      "fill"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "rect"
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "widthMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1000
+                      },
+                      "heightMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1000
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 100
+                      },
+                      "stroke": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "fill": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeDash": {
+                        "type": "string",
+                        "enum": [
+                          "solid",
+                          "dashed",
+                          "dotted"
+                        ]
+                      },
+                      "cornerRadiusMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 500
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "widthMm",
+                      "heightMm",
+                      "strokeMm",
+                      "stroke"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "circle"
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "const": 0
+                      },
+                      "radiusMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 500
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 100
+                      },
+                      "stroke": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "fill": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeDash": {
+                        "type": "string",
+                        "enum": [
+                          "solid",
+                          "dashed",
+                          "dotted"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "radiusMm",
+                      "strokeMm",
+                      "stroke"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "line"
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "lengthMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1000
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 100
+                      },
+                      "stroke": {
+                        "type": "string",
+                        "pattern": "^#[0-9a-f]{6}$"
+                      },
+                      "fill": {
+                        "type": "string",
+                        "const": "none"
+                      },
+                      "strokeDash": {
+                        "type": "string",
+                        "enum": [
+                          "solid",
+                          "dashed",
+                          "dotted"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "lengthMm",
+                      "strokeMm",
+                      "stroke"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "ellipse"
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "rxMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 500
+                      },
+                      "ryMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 500
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 100
+                      },
+                      "stroke": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "fill": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeDash": {
+                        "type": "string",
+                        "enum": [
+                          "solid",
+                          "dashed",
+                          "dotted"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "rxMm",
+                      "ryMm",
+                      "strokeMm",
+                      "stroke"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "path"
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "widthMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000
+                      },
+                      "heightMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000
+                      },
+                      "points": {
+                        "minItems": 2,
+                        "maxItems": 512,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "closed": {
+                        "type": "boolean"
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 100
+                      },
+                      "stroke": {
+                        "type": "string",
+                        "pattern": "^#[0-9a-f]{6}$"
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "fill": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeDash": {
+                        "type": "string",
+                        "enum": [
+                          "solid",
+                          "dashed",
+                          "dotted"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "widthMm",
+                      "heightMm",
+                      "points",
+                      "closed",
+                      "strokeMm",
+                      "stroke"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "image"
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "widthMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1000
+                      },
+                      "heightMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1000
+                      },
+                      "source": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                          },
+                          "mime": {
+                            "type": "string",
+                            "enum": [
+                              "image/png",
+                              "image/jpeg"
+                            ]
+                          },
+                          "pixelWidth": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 12000
+                          },
+                          "pixelHeight": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 12000
+                          },
+                          "dataUrl": {
+                            "type": "string",
+                            "maxLength": 26666700
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "mime",
+                          "pixelWidth",
+                          "pixelHeight",
+                          "dataUrl"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "raster": {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "binary",
+                              "original",
+                              "grayscale"
+                            ]
+                          },
+                          "threshold": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 255
+                          },
+                          "invert": {
+                            "type": "boolean"
+                          },
+                          "whiteTransparent": {
+                            "type": "boolean"
+                          },
+                          "method": {
+                            "type": "string",
+                            "enum": [
+                              "threshold",
+                              "ordered",
+                              "diffusion"
+                            ]
+                          },
+                          "brightness": {
+                            "type": "number",
+                            "minimum": -100,
+                            "maximum": 100
+                          },
+                          "contrast": {
+                            "type": "number",
+                            "minimum": -100,
+                            "maximum": 100
+                          },
+                          "backgroundRemoval": {
+                            "type": "string",
+                            "const": "luminance"
+                          },
+                          "tintColor": {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          }
+                        },
+                        "required": [
+                          "threshold",
+                          "invert",
+                          "whiteTransparent"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "pixelAspectRatio": {
+                        "type": "number",
+                        "minimum": 0.01,
+                        "maximum": 100
+                      },
+                      "crop": {
+                        "type": "object",
+                        "properties": {
+                          "leftPx": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 11999
+                          },
+                          "topPx": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 11999
+                          },
+                          "widthPx": {
+                            "type": "number",
+                            "minimum": 1,
+                            "maximum": 12000
+                          },
+                          "heightPx": {
+                            "type": "number",
+                            "minimum": 1,
+                            "maximum": 12000
+                          }
+                        },
+                        "required": [
+                          "leftPx",
+                          "topPx",
+                          "widthPx",
+                          "heightPx"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "flipX": {
+                        "type": "boolean"
+                      },
+                      "flipY": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "widthMm",
+                      "heightMm",
+                      "source",
+                      "raster"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "vector"
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "widthMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000
+                      },
+                      "heightMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000
+                      },
+                      "commands": {
+                        "minItems": 2,
+                        "maxItems": 32768,
+                        "type": "array",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "string",
+                                  "const": "M"
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 3,
+                              "maxItems": 3
+                            },
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "string",
+                                  "const": "L"
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 3,
+                              "maxItems": 3
+                            },
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "string",
+                                  "const": "C"
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 7,
+                              "maxItems": 7
+                            },
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "string",
+                                  "const": "Z"
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          ]
+                        }
+                      },
+                      "clipRect": {
+                        "type": "object",
+                        "properties": {
+                          "left": {
+                            "type": "number",
+                            "minimum": -100,
+                            "maximum": 100
+                          },
+                          "top": {
+                            "type": "number",
+                            "minimum": -100,
+                            "maximum": 100
+                          },
+                          "right": {
+                            "type": "number",
+                            "minimum": -100,
+                            "maximum": 100
+                          },
+                          "bottom": {
+                            "type": "number",
+                            "minimum": -100,
+                            "maximum": 100
+                          }
+                        },
+                        "required": [
+                          "left",
+                          "top",
+                          "right",
+                          "bottom"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "strokeDash": {
+                        "type": "string",
+                        "enum": [
+                          "solid",
+                          "dashed",
+                          "dotted"
+                        ]
+                      },
+                      "fillRule": {
+                        "type": "string",
+                        "enum": [
+                          "evenodd",
+                          "nonzero"
+                        ]
+                      },
+                      "fill": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "stroke": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 100
+                      },
+                      "strokeLineCap": {
+                        "type": "string",
+                        "enum": [
+                          "butt",
+                          "round",
+                          "square"
+                        ]
+                      },
+                      "strokeLineJoin": {
+                        "type": "string",
+                        "enum": [
+                          "miter",
+                          "round",
+                          "bevel"
+                        ]
+                      },
+                      "strokeMiterLimit": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 100
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "widthMm",
+                      "heightMm",
+                      "commands",
+                      "fillRule",
+                      "fill",
+                      "stroke",
+                      "strokeMm",
+                      "strokeLineCap",
+                      "strokeLineJoin",
+                      "strokeMiterLimit"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "bezier"
+                      },
+                      "xMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "yMm": {
+                        "type": "number",
+                        "minimum": -1000,
+                        "maximum": 1000
+                      },
+                      "editor": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          "order": {
+                            "type": "integer",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          },
+                          "textInputFormat": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "email",
+                              "phone",
+                              "digits",
+                              "cap-it"
+                            ]
+                          },
+                          "maxCharacters": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4000
+                          },
+                          "transformLocked": {
+                            "type": "boolean"
+                          },
+                          "selectionLocked": {
+                            "type": "boolean"
+                          },
+                          "deleteLocked": {
+                            "type": "boolean"
+                          },
+                          "hideMenus": {
+                            "type": "boolean"
+                          },
+                          "includeInForm": {
+                            "type": "boolean"
+                          },
+                          "reference": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "rotationDeg": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "widthMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000
+                      },
+                      "heightMm": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000
+                      },
+                      "nodes": {
+                        "minItems": 2,
+                        "maxItems": 64,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "in": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "out": {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                },
+                                "y": {
+                                  "type": "number",
+                                  "minimum": -100,
+                                  "maximum": 100
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "closed": {
+                        "type": "boolean"
+                      },
+                      "strokeMm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 100
+                      },
+                      "stroke": {
+                        "type": "string",
+                        "pattern": "^#[0-9a-f]{6}$"
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "strokeOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "fill": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}$"
+                          },
+                          {
+                            "type": "string",
+                            "const": "none"
+                          }
+                        ]
+                      },
+                      "strokeDash": {
+                        "type": "string",
+                        "enum": [
+                          "solid",
+                          "dashed",
+                          "dotted"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "type",
+                      "xMm",
+                      "yMm",
+                      "widthMm",
+                      "heightMm",
+                      "nodes",
+                      "closed",
+                      "strokeMm",
+                      "stroke"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "groups": {
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                  },
+                  "parentId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                  },
+                  "editor": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      "order": {
+                        "type": "integer",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      },
+                      "transformLocked": {
+                        "type": "boolean"
+                      },
+                      "selectionLocked": {
+                        "type": "boolean"
+                      },
+                      "deleteLocked": {
+                        "type": "boolean"
+                      },
+                      "hideMenus": {
+                        "type": "boolean"
+                      },
+                      "includeInForm": {
+                        "type": "boolean"
+                      },
+                      "reference": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "objectIds": {
+                    "minItems": 1,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "objectIds"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "backgroundGroupId": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+            },
+            "fontAssets": {
+              "maxItems": 16,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^font-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  },
+                  "familyGroup": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "styleName": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "weight": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "italic": {
+                    "type": "boolean"
+                  },
+                  "family": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "ttf",
+                      "otf",
+                      "woff",
+                      "woff2"
+                    ]
+                  },
+                  "dataBase64": {
+                    "type": "string",
+                    "maxLength": 1400000
+                  },
+                  "licenseText": {
+                    "type": "string",
+                    "maxLength": 30000
+                  },
+                  "sourceUrl": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "id",
+                  "family",
+                  "format",
+                  "dataBase64"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "objects",
+            "groups"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "objectId",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "objectId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
+        "tool": {
+          "type": "string",
           "const": "replaceImageSource"
         },
         "arguments": {
@@ -5731,6 +8450,10 @@
               }
             },
             "backgroundImageId": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+            },
+            "backgroundGroupId": {
               "type": "string",
               "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
             },

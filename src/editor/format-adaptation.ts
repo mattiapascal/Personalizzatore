@@ -1,14 +1,15 @@
 import { profileKey, type ProductProfile } from '../catalog/schema';
 import { cloneGraphicDocument, DocumentSchema, validateLayout, TEST_MARGIN_MM, type GraphicCommand, type GraphicDocument, type Measure } from './model';
-import { selectionBounds, transformSelection } from './selection';
+import { selectionBounds } from './selection';
 import { assertMinimumText, minimumFontForProduct } from './text-production';
+import {adaptCompositionObjects,foregroundObjects} from './background';
 
 export interface TemplateFit {document:GraphicDocument;scale:number;}
 function candidate(source:GraphicDocument,product:ProductProfile,catalogVersion:string,measure:Measure,scale:number):GraphicDocument {
   const document=cloneGraphicDocument(source);
   document.colorMode='monochrome';
   document.productId=product.productId;document.variantId=product.variantIds[0]!;document.catalogVersion=catalogVersion;document.catalogProductProfileVersion=product.profileVersion;document.areaMm={...product.nominalAreaMm};document.shape=product.shape;
-  document.objects=source.objects.length?transformSelection(source.objects,{scale,rotationDeg:0,center:{xMm:document.areaMm.width/2,yMm:document.areaMm.height/2}},measure):[];
+  document.objects=adaptCompositionObjects(source,document.areaMm,measure,scale);
   return document;
 }
 /** Local TEST compatibility: real nominal dimensions, conservative existing margin/geometry rules. */
@@ -17,7 +18,7 @@ export function fitComposition(source:GraphicDocument,product:ProductProfile,cat
   const original=candidate(source,product,catalogVersion,measure,1);
   assertMinimumText(original,minimumFontForProduct(product));
   try{validateLayout(original,measure);return{document:DocumentSchema.parse(original),scale:1};}catch(cause){if(!allowShrink)throw cause;}
-  const box=selectionBounds(source.objects,measure),width=product.nominalAreaMm.width-2*TEST_MARGIN_MM,height=product.nominalAreaMm.height-2*TEST_MARGIN_MM;
+  const box=selectionBounds(foregroundObjects(source),measure),width=product.nominalAreaMm.width-2*TEST_MARGIN_MM,height=product.nominalAreaMm.height-2*TEST_MARGIN_MM;
   if(width<=0||height<=0)throw new Error('Area del modello insufficiente nel profilo TEST');
   let upper=Math.min(1,width/box.widthMm,height/box.heightMm),lower=0;
   // Circular containment and rotated/text geometry use the same validator as the editor.
@@ -42,5 +43,5 @@ export function smallestTemplateMount(source:GraphicDocument,products:readonly P
   throw new Error('Nessun modello associato contiene questa composizione con i vincoli TEST. Modifica il template o le sue associazioni.');
 }
 export function templateCommand(fit:TemplateFit,templateId:string,templateVersion:number,expectedRevision:number):GraphicCommand {
-  return{schemaVersion:1,tool:'applyTemplate',expectedRevision,objectId:fit.document.objects[0]?.id??'canvas',arguments:{templateId,templateVersion,objects:fit.document.objects,...(fit.document.paperColor?{paperColor:fit.document.paperColor}:{}),...(fit.document.backgroundImageId?{backgroundImageId:fit.document.backgroundImageId}:{}),groups:fit.document.groups??[],...(fit.document.inkColor?{inkColor:fit.document.inkColor}:{}),...(fit.document.fontAssets?{fontAssets:fit.document.fontAssets}:{})}};
+  return{schemaVersion:1,tool:'applyTemplate',expectedRevision,objectId:fit.document.objects[0]?.id??'canvas',arguments:{templateId,templateVersion,objects:fit.document.objects,...(fit.document.paperColor?{paperColor:fit.document.paperColor}:{}),...(fit.document.backgroundImageId?{backgroundImageId:fit.document.backgroundImageId}:{}),...(fit.document.backgroundGroupId?{backgroundGroupId:fit.document.backgroundGroupId}:{}),groups:fit.document.groups??[],...(fit.document.inkColor?{inkColor:fit.document.inkColor}:{}),...(fit.document.fontAssets?{fontAssets:fit.document.fontAssets}:{})}};
 }

@@ -1,3 +1,5 @@
+**Aggiornamento fondi vettoriali, 12 novembre:** [nove cartelli recuperati e salvati](iteration-editor-page-vectors.md), archivio a **253 template**. Nel lotto dei 19 fondi nativi, dieci restano sospesi per font, risorsa esterna, primo piano, effetti, capacità o integrità/orientamento PNG; uno è già nell’archivio e non è stato sovrascritto. Questi conteggi del lotto non sostituiscono l’analisi complessiva di tutti i sorgenti.
+
 **Aggiornamento 12 novembre:** [107 nuove copie complete salvate](iteration-editor-pitchprint-comparison.md), archivio a **244 template**; tutte riaperte nel browser. Nel lotto di 135: 26 confronti oltre soglia e due originali mancanti restano sospesi. Altri 29 candidati richiedono classificazione/capacità. I conteggi storici del parser sotto non certificano una conversione completa degli sfondi e precedono la guardia sulle sole anteprime. Nessun font sostituito o soglia allentata.
 
 # Template esclusi: priorità aggiornate — 11 novembre 2026

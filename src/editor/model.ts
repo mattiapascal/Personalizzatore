@@ -1,4 +1,5 @@
 import { OpacitySchema, PaintOpacityFields } from './paint-opacity';
+import {clearBackground,replaceBackgroundObjects,backgroundObjectIds} from './background';
 import {coverRasterReplacement} from './raster-replacement';
 import { UnverifiedTextGeometryError } from './unverified-text-geometry';
 import { StrokeWidthSchema } from './stroke';
@@ -77,6 +78,7 @@ const documentFields = z.strictObject({
   templateOrigin: z.strictObject({id:z.string().uuid(),version:z.number().int().positive()}).optional(),
   fontAssets: FontAssetsSchema.optional(),
   backgroundImageId:id.optional(),
+  backgroundGroupId:id.optional(),
   paperColor:ColorSchema.optional(),
   schemaVersion: z.literal(2), documentId: z.string().uuid(), revision: z.number().int().nonnegative(),
   productId: z.string().regex(/^gid:\/\/shopify\/Product\/\d+$/).nullable(),
@@ -104,6 +106,8 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
   if(d.objects.reduce((count,object)=>count+(object.type==='text'?Array.from(object.text).length:0),0)>EDITOR_LIMITS.documentTextCharacters)ctx.addIssue({code:'custom',message:`Massimo ${EDITOR_LIMITS.documentTextCharacters} caratteri Unicode nell’intero documento`});
   if (new Set(d.objects.map(o => o.id)).size !== d.objects.length) ctx.addIssue({ code: 'custom', message: 'ID duplicati' });
   if(d.backgroundImageId&&!d.objects.some(o=>o.id===d.backgroundImageId&&o.type==='image'))ctx.addIssue({code:'custom',message:'Sfondo collegato a un’immagine inesistente'});
+  if(d.backgroundGroupId&&!d.groups?.some(g=>g.id===d.backgroundGroupId))ctx.addIssue({code:'custom',message:'Sfondo collegato a un gruppo inesistente'});
+  if(d.backgroundGroupId&&d.backgroundImageId)ctx.addIssue({code:'custom',message:'Lo sfondo deve riferirsi a un’immagine oppure a un gruppo'});
   const grouped = new Map<string,Set<string>>(), groupIds = new Set<string>();
   for (const group of d.groups ?? []) {
     const indices = group.objectIds.map(id => d.objects.findIndex(o => o.id === id)).sort((a, b) => a - b);
@@ -216,11 +220,12 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('setPaperColor'),arguments:z.strictObject({color:ColorSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('setBackgroundImage'),arguments:z.strictObject({object:SceneObjectSchema.nullable()})}),
+  z.strictObject({...base,tool:z.literal('setBackgroundObjects'),arguments:z.strictObject({objects:z.array(SceneObjectSchema).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundGroupId:id.optional(),fontAssets:FontAssetsSchema.optional()})}),
   z.strictObject({...base,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema,fit:z.enum(['contain','cover']).optional()})}),
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
   z.strictObject({...base,tool:z.literal('changeFormat'),arguments:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1),allowShrink:z.boolean()})}),
-  z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),objects:z.array(SceneObjectSchema).min(0).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundImageId:id.optional(),paperColor:ColorSchema.optional(),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
+  z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),objects:z.array(SceneObjectSchema).min(0).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundImageId:id.optional(),backgroundGroupId:id.optional(),paperColor:ColorSchema.optional(),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
   z.strictObject({ ...base, tool: z.literal('attachTextToPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...base, tool: z.literal('detachTextFromPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...base, tool: z.literal('setTextPath'), arguments: TextPathOptionsSchema }),
@@ -308,11 +313,12 @@ export function objectIntersectsArea(doc: Pick<GraphicDocument, 'areaMm' | 'shap
   });
 }
 export function validateLayout(doc: GraphicDocument, measure: Measure, mode: 'strict' | 'edit' = 'strict'): void {
+  const backgrounds=backgroundObjectIds(doc);
   const intersections=new Map<SceneObject,boolean>();
   const intersects = (object: SceneObject): boolean => {const previous=intersections.get(object);if(previous!==undefined)return previous;let visible:boolean;try { visible=objectIntersectsArea(doc, object, measure); } catch(error) { if(mode==='edit'&&object.type==='text'&&error instanceof UnverifiedTextGeometryError)visible=true;else throw error; }intersections.set(object,visible);return visible;};
   const visibleGroups = new Set((doc.groups ?? []).filter(group => group.objectIds.some(id => intersects(doc.objects.find(object => object.id === id)!))).flatMap(group => group.objectIds));
   for (const object of doc.objects) {
-    if (mode === 'edit') {
+    if (mode === 'edit'||backgrounds.has(object.id)) {
       const visible=intersects(object); // Every member is checked, even when a sibling already makes its group visible.
       if (!visibleGroups.has(object.id) && !visible) throw new Error('Oggetto completamente fuori dall’area di disegno');
       continue;
@@ -338,10 +344,10 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   if(command.tool==='setPaperColor'){if(command.arguments.color===null)delete next.paperColor;else next.paperColor=command.arguments.color;}
   else if(command.tool==='setBackgroundImage'){
     const image=command.arguments.object;if(image&&(image.type!=='image'||image.id!==command.objectId))throw new Error('Lo sfondo richiede un’immagine e un ID coerenti');
-    const previous=next.backgroundImageId;if(previous&&next.groups?.some(g=>g.objectIds.includes(previous)))throw new Error('Separa il gruppo dello sfondo prima di sostituirlo');
-    if(previous)next.objects=next.objects.filter(o=>o.id!==previous);delete next.backgroundImageId;
+    clearBackground(next);
     if(image){if(next.objects.some(o=>o.id===image.id))throw new Error('ID dello sfondo già presente');next.objects.unshift(cloneSceneObject(image));next.backgroundImageId=image.id;}
   }
+  else if(command.tool==='setBackgroundObjects')replaceBackgroundObjects(next,command.objectId,command.arguments);
   else if(command.tool==='configurePlaque'){if(!doc.plaque)throw new Error('Il documento non è una targa a misura.');plaqueMountingPoints(command.arguments.areaMm,command.arguments.mounting);const dx=(command.arguments.areaMm.width-doc.areaMm.width)/2,dy=(command.arguments.areaMm.height-doc.areaMm.height)/2;next.areaMm={...command.arguments.areaMm};next.plaque={...command.arguments.mounting};next.objects=next.objects.map(object=>({...object,xMm:object.xMm+dx,yMm:object.yMm+dy}));}
   else if(command.tool==='setInkColor') {
     const product=catalog?.products.find(item=>item.productId===doc.productId&&item.variantIds.includes(doc.variantId??''));
@@ -363,6 +369,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     if(command.arguments.fontAssets?.length)next.fontAssets=command.arguments.fontAssets.map(asset=>({...asset}));else delete next.fontAssets;
     if(command.arguments.paperColor)next.paperColor=command.arguments.paperColor;else delete next.paperColor;
     if(command.arguments.backgroundImageId)next.backgroundImageId=command.arguments.backgroundImageId;else delete next.backgroundImageId;
+    if(command.arguments.backgroundGroupId)next.backgroundGroupId=command.arguments.backgroundGroupId;else delete next.backgroundGroupId;
     next.templateOrigin={id:command.arguments.templateId,version:command.arguments.templateVersion};
     if(command.arguments.inkColor)next.inkColor=command.arguments.inkColor;
     validateLayout(next,measure);
@@ -454,6 +461,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     }
   }
   if(next.backgroundImageId&&!next.objects.some(o=>o.id===next.backgroundImageId))delete next.backgroundImageId;
+  if(next.backgroundGroupId&&!next.groups?.some(g=>g.id===next.backgroundGroupId))delete next.backgroundGroupId;
   next.revision++;
   const parsed = DocumentSchema.parse(next);
   validateLayout(parsed, measure, 'edit');

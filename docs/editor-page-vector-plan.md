@@ -1,3 +1,5 @@
+**Implementazione del 12 novembre:** [fondi vettoriali e nove nuove bozze](iteration-editor-page-vectors.md) completati come incremento locale testabile; archivio a 253 template. Comandi, applicazione template, riferimenti e confronto completo conservati; dieci sorgenti del lotto restano sospesi per blocchi distinti. Le sezioni sotto documentano l’analisi preliminare e il piano da cui è derivato l’incremento.
+
 # Prossimo incremento: fondi vettoriali PitchPrint
 
 Analisi locale dell’11 novembre 2026, successiva al riconoscimento dei descrittori inattivi. Questa nota è un piano, non una funzione già disponibile o un’autorizzazione commerciale.

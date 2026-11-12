@@ -41,7 +41,7 @@ function shapeCommands(object: FabricObject | NonNullable<FabricObject['clipPath
 const paint = canonicalPaint;
 
 export type ImportTextMode = 'outlines' | 'editable';
-export interface PreparedSvg { monochrome: boolean; objects: SceneObject[]; fontAssets?: FontAsset[]; widthMm: number; heightMm: number; expandedStrokes?:number; }
+export interface PreparedSvg { viewportMm?:{xMm:number;yMm:number;widthMm:number;heightMm:number}; monochrome: boolean; objects: SceneObject[]; fontAssets?: FontAsset[]; widthMm: number; heightMm: number; expandedStrokes?:number; }
 function expandedFill(commands:VectorCommand[],fill:string,fillRule:'nonzero'|'evenodd'):VectorObject{
  const box=vectorBounds(commands);if(!Number.isFinite(box.width)||!Number.isFinite(box.height)||box.width<=0||box.height<=0)throw Error('Contorno espanso privo di area');
  return{id:`svg-${crypto.randomUUID()}`,type:'vector',xMm:box.x,yMm:box.y,widthMm:box.width,heightMm:box.height,commands:VectorCommandsSchema.parse(mapVector(commands,(x,y)=>({x:(x-box.x)/box.width,y:(y-box.y)/box.height}))),fill,fillRule,stroke:'none',strokeMm:.25,strokeLineCap:'butt',strokeLineJoin:'miter',strokeMiterLimit:4};
@@ -105,7 +105,7 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
     objects.push({ id: `svg-${crypto.randomUUID()}`, type: 'vector', xMm: box.x - (stroke === 'none' ? 0 : strokeMm / 2), yMm: box.y - (stroke === 'none' ? 0 : strokeMm / 2), widthMm: box.width, heightMm: box.height, ...(clipRect ? { clipRect } : {}), commands: VectorCommandsSchema.parse(mapVector(commands, (x, y) => ({ x: box.width ? (x - box.x) / box.width : 0, y: box.height ? (y - box.y) / box.height : 0 }))), fill, fillRule: object.fillRule, stroke, strokeMm, strokeLineCap: object.strokeLineCap, strokeLineJoin: object.strokeLineJoin, strokeMiterLimit: object.strokeMiterLimit });
   }
   if (objects.length > EDITOR_LIMITS.objects && objects.every((o):o is VectorObject=>o.type==='vector')) objects = compactVectors(objects);
-  if (!objects.length) throw new Error('SVG senza elementi visibili'); const bounds=selectionBounds(objects,measureFabric);return { monochrome, objects, ...(fontAssets.length?{fontAssets}:{}),...(expandedStrokes?{expandedStrokes}:{}),widthMm:bounds.widthMm,heightMm:bounds.heightMm };
+  if (!objects.length) throw new Error('SVG senza elementi visibili'); const bounds=selectionBounds(objects,measureFabric);return { monochrome, objects, ...(typeof parsed.options.width==='number'&&typeof parsed.options.height==='number'&&parsed.options.width>0&&parsed.options.height>0?{viewportMm:{xMm:0,yMm:0,widthMm:parsed.options.width*PX_TO_MM,heightMm:parsed.options.height*PX_TO_MM}}:{}), ...(fontAssets.length?{fontAssets}:{}),...(expandedStrokes?{expandedStrokes}:{}),widthMm:bounds.widthMm,heightMm:bounds.heightMm };
 }
 export function svgInsertion(prepared: PreparedSvg, doc: GraphicDocument, measure: Measure, minimumFontPt: number | null = null): { command: Extract<GraphicCommand, { tool: 'insertObjects' }>; report: string } {
   if (doc.objects.length + prepared.objects.length > EDITOR_LIMITS.objects) throw new Error(`L’importazione supera i ${EDITOR_LIMITS.objects} oggetti del laboratorio`);

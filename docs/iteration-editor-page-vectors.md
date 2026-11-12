@@ -1,0 +1,39 @@
+# Sfondi vettoriali e template — 12 novembre 2026
+
+## Documento e comandi
+
+Il documento v2 conserva ora un collegamento opzionale `backgroundGroupId`, distinto dal precedente `backgroundImageId`. Il primo punta a un gruppo canonico, il secondo continua a identificare un’immagine raster. I collegamenti sono controllati dallo schema e non possono coesistere. I vecchi progetti rimangono leggibili senza migrazione.
+
+`setBackgroundObjects` inserisce o rimuove un intero fondo con un solo comando validato, condiviso da interfaccia manuale e simulazione AI. Controlla radice, appartenenza dei membri, gerarchia e collisioni degli ID; conserva copie indipendenti dei dati. Sostituzione raster → vettori → raster e rimozione eliminano soltanto il vecchio fondo e i suoi gruppi. Undo/Redo ripristinano integralmente geometria, proprietà e collegamento. I blocchi di eliminazione/selezione ereditati dai gruppi valgono anche per queste operazioni. Se il fondo è dentro un contenitore più grande, occorre prima separare quel contenitore, come per il vecchio sfondo raster raggruppato.
+
+Eliminare o separare esplicitamente il gruppo pulisce il collegamento; l’applicazione di un template lo conserva o lo sostituisce insieme alla grafica. I riferimenti materiale mantengono oggetti e gerarchia nel JSON, ma sono esclusi da SVG, PNG e miniature produttive, senza lasciare collegamenti a gruppi eliminati. Non esiste uno stato parallelo mantenuto soltanto da Fabric.
+
+## Libreria e importazione PitchPrint
+
+Gli SVG nella libreria Sfondi offrono **Applica sfondo vettoriale** e la scelta esplicita **Applica come immagine**. La prima conserva i vettori; la seconda usa il percorso raster già esistente. Non avviene una conversione automatica in pixel dopo un errore. Lo sfondo copre il foglio con adattamento proporzionale e ritaglio; il formato originale dello SVG, compresi gli spazi vuoti, viene conservato durante l’adattamento. Gradienti, maschere o altre caratteristiche non gestite dal convertitore vettoriale richiedono ancora la scelta raster esplicita.
+
+Il convertitore PitchPrint riconosce gruppi e primitive native di fondo/primo piano. Usa lo stesso albero, le stesse matrici fisiche per asse, i controlli delle proprietà e l’espansione dei contorni usati per il corpo. Gli ID del corpo conservano il loro significato. Il fondo viene collocato sotto il corpo e il primo piano sopra, con contenitori canonici che mantengono le proprietà e la gerarchia native. Il campo legacy `svg` non viene eseguito né usato per sostituire la geometria serializzata con un file ricollocato per ingombro.
+
+Per i vettori il riferimento originale può essere nel campo `url`; per i raster `src` continua a identificare la griglia pixel. Un URL vettoriale coerente col descrittore distingue la forma attiva da un vecchio `templateSource` rimasto nel sorgente. Descrittori discordanti o ambigui restano bloccanti. La scelta grafica/riferimento/esclusione è ancora esplicita; gli effetti non supportati fermano l’intera conversione prima di scaricare font o immagini del corpo.
+
+## Applicazione a un formato differente
+
+Nell’anteprima di applicazione del template, il fondo collegato copre il nuovo foglio senza deformazioni. Il corpo conserva le dimensioni fisiche e la posizione relativa al centro del foglio originale, salvo riduzione proporzionale necessaria per rispettare i vincoli. Il fondo non forza una riduzione del testo o una cornice bianca dovuta al margine TEST. I controlli del corpo e dei font restano attivi. La ricerca della riduzione verifica la geometria effettiva, anche quando il corpo è decentrato.
+
+Questo riguarda l’applicazione del template e il cambio montatura con anteprima. Il pannello Misure e fissaggio di un progetto già aperto conserva ancora il suo comportamento precedente di ricentratura: una gestione continua del fondo e l’adattamento responsivo delle cornici decorative richiedono una policy dedicata. Non è dichiarato un motore di layout responsivo completo.
+
+## Prove e sorgenti reali
+
+Campione sintetico `page-vector-background.source.TEST.json`, JSON editabile e SVG produttivo in `fixtures/illustrator/`; generatore `scripts/capture-editor-page-vectors.ts`. Formato 100 × 60 mm, cinque oggetti e quattro gruppi, fondo parzialmente fuori pagina, anello composto con foro, scala differente per asse, rotazione/riflessione e primo piano. Rimozione manuale e AI simulata, Undo e riapertura verificati; screenshot desktop ispezionato. Confronto indipendente: zero pixel oltre il delta fissato, errore medio 0,01121/255. Nessun file remoto letto o campo SVG eseguito. Illustrator richiede ancora collaudo umano.
+
+Verificati 794 unitari / 120 file, 141 browser pertinenti, poi sei percorsi browser aggiornati comprendenti l’applicazione del template dal frontend cliente su una targa 200 × 120 mm. Passati build locale/pubblica, 13 regressioni pubbliche locali e 40 campioni JSON/SVG. La prima esecuzione dei nuovi test ha individuato errori nei soli fixture/attese delle prove, corretti prima dei passaggi finali; non sono stati allentati i confronti grafici. Regressione completa aggiornata ancora da registrare.
+
+I diciannove sorgenti reali sono stati confrontati senza modificare l’archivio: nove conversioni complete conformi alle soglie precedenti (**rapporto <0,01; errore medio <0,25/255; campionamento 4×, lato massimo 1.000 px**) e dieci sospese. Una richiesta ha incontrato il servizio contorni occupato da un’altra prova; ripetuto soltanto quel caso dopo la conclusione del processo concorrente, con lo stesso confronto. Non è un errore di geometria eliminato allentando le soglie. Originali e rapporti precedenti conservati.
+
+Le nove copie appartengono alla categoria originale dei cartelli Attenti al cane; vengono preparate come targhe piatte TEST, con colori e misure canoniche in mm, senza associazioni a prodotti o prezzi. Il tipo di riempimento `shape` e la geometria nativa identificano il fondo grafico; i flag di riferimento originali restano rispettati, incluse le foto di esempio escluse dalla produzione. Nessun materiale fotografico è stato riclassificato dalla sola somiglianza del nome.
+
+**Nove copie salvate: archivio a 253 template**, due composizioni e 219 font, revisione 498 → 507. Backup verificato della revisione 498, SHA-256 `5b67f1be6961828b07aa6fac59f33d37ae936557f7ef3f6905ac5d802be449a8`. Controllati i digest di tutti i record preesistenti, font, impostazioni, profili e priorità dei tag: nessuna sovrascrittura. Tag «Da verificare», provenienza/hash, colori, mm e nessuna associazione prodotto. I due nomi che contenevano misure sono stati resi espliciti come 250 × 125 mm e 300 × 200 mm; i sorgenti originali restano invariati.
+
+**Tutti i nove record effettivi riaperti nel browser**, confrontando oggetti, gruppi, collegamento al fondo, impostazione della targa, font, formato e colore del foglio. Anche le nove miniature sono verificate dopo ricaricamento: zero richieste dei record dalla cache, errori o scritture; checksum dell’archivio invariato. Rapporti, backup e schermate privati in `.local/pitchprint-migration/native-page-vector-local-import/`. I dieci arresti restano distinti: Gloria Hallelujah 700, un’immagine su CDN non ancora ammessa, due primi piani da classificare, tre effetti/maschere, due sorgenti oltre 200 elementi e un PNG con orientamento EXIF. Uno dei due template con primo piano è già nell’archivio e non viene sovrascritto. Il solo superamento del parser non certifica una conversione completa o la produzione.
+
+Tutto locale: nessun deploy o modifica a Shopify, tema, PitchPrint, BSS, prezzi, carrello, checkout, ordini o chat pubblicata. Multipagina e nuove immagini AI esclusi. Font, template reali, sorgenti e backup restano privati in `.local`.

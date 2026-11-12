@@ -367,6 +367,10 @@
                   "type": "string",
                   "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                 },
+                "backgroundGroupId": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                },
                 "paperColor": {
                   "type": "string",
                   "pattern": "^#[0-9a-f]{6}$"
@@ -4374,6 +4378,10 @@
                   "type": "string",
                   "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                 },
+                "backgroundGroupId": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                },
                 "paperColor": {
                   "type": "string",
                   "pattern": "^#[0-9a-f]{6}$"
@@ -7337,6 +7345,10 @@
                   }
                 },
                 "backgroundImageId": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                },
+                "backgroundGroupId": {
                   "type": "string",
                   "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                 },

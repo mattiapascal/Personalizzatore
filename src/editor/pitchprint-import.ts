@@ -1,4 +1,4 @@
-import{pitchprintPageImages,convertPageImage,type PageImagePolicy}from'./pitchprint-page-images';
+import{pitchprintPageImages,convertPageImage,nativePageVector,type PageImagePolicy}from'./pitchprint-page-images';
 import { emptyPitchprintPrimitive, unstrokedPitchprintPrimitive } from './pitchprint-primitives';
 import { pitchprintImageGeometry, pitchprintImageUrl } from './pitchprint-image';
 import { pitchprintTextStyles } from './pitchprint-text-styles';
@@ -26,7 +26,7 @@ const color=canonicalPaint;
 export async function importPitchPrint(raw:unknown,options:PitchImportOptions):Promise<PitchImportResult>{
  if(raw&&typeof raw==='object'&&Array.isArray((raw as any).pages)&&(raw as any).pages.length!==1)throw new Error('Il configuratore importa soltanto template a pagina singola.');
  const source=sourceSchema.parse(raw);const unitMm=pitchprintUnitMm(source.unit),page=source.pages[0]!,data=page.pageData,clip=page.canvas.clipPath,width=numeric(data.fWidth,'Larghezza')*unitMm,height=numeric(data.fHeight,'Altezza')*unitMm,cw=numeric(clip.width,'Area canvas'),ch=numeric(clip.height,'Area canvas');if(width<=0||height<=0||width>1000||height>1000||cw<=0||ch<=0)throw new Error('Formato fuori dai limiti del laboratorio.');
- const left=numeric(clip.left??0,'Origine canvas'),top=numeric(clip.top??0,'Origine canvas'),sx=width/cw,sy=height/ch,tree=pitchprintTree(page.canvas.objects,properties),warnings:string[]=[...tree.warnings],objects:SceneObject[]=[],assets:FontAsset[]=[],fontCache=new Map<string,Promise<PitchprintFontResult>>(),groupMembers=new Map<string,string[]>(),expandedGroups:SceneGroup[]=[];
+ const left=numeric(clip.left??0,'Origine canvas'),top=numeric(clip.top??0,'Origine canvas'),sx=width/cw,sy=height/ch,warnings:string[]=[],objects:SceneObject[]=[],assets:FontAsset[]=[],fontCache=new Map<string,Promise<PitchprintFontResult>>(),groupMembers=new Map<string,string[]>(),expandedGroups:SceneGroup[]=[];
  const pageMatrix:PitchprintMatrix=[sx,0,0,sy,-left*sx,-top*sy];
  let paperColor:string|undefined;
  if(page.canvas.background!==undefined&&page.canvas.background!==null&&page.canvas.background!==''){
@@ -34,7 +34,14 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  }
  const pageImages=options.excludeBackground?[]:pitchprintPageImages(page.canvas,data,options.pageImages,warnings),pageObjects:SceneObject[]=[];
  if(options.excludeBackground){if(/https?:|data:image/.test(JSON.stringify([data.templateSource,data.foregroundSource,(data.fillData as any)?.assetData,page.canvas.backgroundImage,page.canvas.overlayImage]))||paperColor)warnings.push('Sfondo/materiale o primo piano escluso per scelta esplicita.');paperColor=undefined;}
- else{if(paperColor)warnings.push('Colore del foglio conservato nella grafica e nelle esportazioni.');for(const input of pageImages){const policy=options.pageImages?.[input.role]??'review',object=await convertPageImage(input,policy,{width,height},pageMatrix,options.monochrome,options.image,policy==='exclude'||policy==='review'?undefined:properties(input.native??{},warnings));if(object)pageObjects.push(object);warnings.push(`${input.role==='background'?'Sfondo':'Primo piano'}: ${policy==='print'?'conservato nella grafica produttiva':policy==='reference'?'conservato come riferimento materiale, escluso da esportazioni e miniature produttive':'escluso per scelta esplicita'}.`);}}
+ else if(paperColor)warnings.push('Colore del foglio conservato nella grafica e nelle esportazioni.');
+ // Append native page vectors for one common tree/geometry conversion. Body IDs
+ // remain unchanged. Their canonical layer order is restored after conversion.
+ const roots=[...page.canvas.objects],vectorPages:{role:'background'|'foreground';policy:PageImagePolicy;prefix:string}[]=[],rasterPages:typeof pageImages=[];
+ for(const input of pageImages){const policy=options.pageImages?.[input.role]??'review',label=input.role==='background'?'Sfondo':'Primo piano';if(!['review','print','reference','exclude'].includes(policy))throw Error('Utilizzo dell’immagine di pagina non riconosciuto.');if(policy==='review')throw Error(`${label}: scegli se è grafica da stampare, riferimento del materiale oppure da escludere.`);if(policy!=='exclude'&&input.native&&nativePageVector(input.native)){roots.push(input.native);vectorPages.push({role:input.role,policy,prefix:`pp-${roots.length}`});}else if(policy!=='exclude')rasterPages.push(input);warnings.push(`${label}: ${policy==='print'?'conservato nella grafica produttiva':policy==='reference'?'conservato come riferimento materiale, escluso da esportazioni e miniature produttive':'escluso per scelta esplicita'}.`);}
+ const tree=pitchprintTree(roots,properties);warnings.push(...tree.warnings);
+ for(const input of rasterPages){const object=await convertPageImage(input,options.pageImages![input.role],{width,height},pageMatrix,options.monochrome,options.image,properties(input.native??{},warnings));if(object)pageObjects.push(object);}
+
 
  for(const {item,name,id,parent} of tree.leaves){
   const type=item.type,editor=properties(item,warnings),firstObject=objects.length;
@@ -99,7 +106,16 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  }
  const backgroundObject=pageObjects.find(object=>object.id==='pp-background');if(backgroundObject)objects.unshift(backgroundObject);const foregroundObject=pageObjects.find(object=>object.id==='pp-foreground');if(foregroundObject)objects.push(foregroundObject);
  if(unitMm!==1)warnings.push(`Misure convertite da ${source.unit} a millimetri senza ridimensionare il formato fisico.`);if(options.monochrome)warnings.push('Colori della grafica convertiti nella palette nero/bianco per scelta esplicita.');if(!objects.length&&!paperColor)throw new Error('Il template non contiene elementi convertibili.');
- const groups:SceneGroup[]=[...tree.groups.map(({id,parentId,editor,leafIds})=>({id,...(parentId?{parentId}:{}),editor,objectIds:leafIds.flatMap(id=>groupMembers.get(id)??[])})),...expandedGroups];
+ let groups:SceneGroup[]=[...tree.groups.map(({id,parentId,editor,leafIds})=>({id,...(parentId?{parentId}:{}),editor,objectIds:leafIds.flatMap(id=>groupMembers.get(id)??[])})),...expandedGroups];
+ let backgroundGroupId:string|undefined;
+ for(const entry of vectorPages){
+  const leafIds=tree.leaves.filter(leaf=>leaf.id===entry.prefix||leaf.id.startsWith(entry.prefix+'-')).map(leaf=>leaf.id),ids=new Set(leafIds.flatMap(id=>groupMembers.get(id)??[])),members=objects.filter(object=>ids.has(object.id));
+  if(!members.length)throw Error('Sfondo/primo piano vettoriale privo di grafica convertibile.');
+  const nested=groups.filter(group=>group.objectIds.some(id=>ids.has(id))),nestedIds=new Set(nested.map(group=>group.id)),groupId=`pp-${entry.role}-group`,reference=entry.policy==='reference',wrapper:SceneGroup={id:groupId,objectIds:members.map(object=>object.id),editor:{label:`${entry.role==='background'?'Sfondo':'Primo piano'} · ${reference?'riferimento materiale':'grafica'}`,includeInForm:false,...(reference?{reference:true,selectionLocked:true,transformLocked:true,deleteLocked:true}:{})}},owned=[wrapper,...nested.map(group=>({...group,...(!group.parentId?{parentId:groupId}:{})}))],others=groups.filter(group=>!nestedIds.has(group.id)),remaining=objects.filter(object=>!ids.has(object.id));
+  objects.splice(0,objects.length,...(entry.role==='background'?[...members,...remaining]:[...remaining,...members]));groups=entry.role==='background'?[...owned,...others]:[...others,...owned];
+  if(entry.role==='background')backgroundGroupId=groupId;
+  warnings.push(`${entry.role==='background'?'Sfondo':'Primo piano'}: geometria vettoriale nativa e gerarchia conservate, senza rasterizzazione.`);
+ }
  if(groups.length)warnings.push(`${groups.length} gruppi grafici conservati come unità di selezione e trasformazione.`);
- const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),...(backgroundObject?{backgroundImageId:backgroundObject.id}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
+ const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),...(backgroundObject?{backgroundImageId:backgroundObject.id}:{}),...(backgroundGroupId?{backgroundGroupId}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
 }
