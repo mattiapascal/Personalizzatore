@@ -22,7 +22,7 @@ Campione portabile `fixtures/illustrator/large-scene.source.TEST.json`, `.TEST.j
 
 Le aspettative storiche ferme a 200 oggetti/256 KiB sono state aggiornate al nuovo confine mantenendo i controlli di rifiuto e atomicità. Il nuovo test UI usava inizialmente il nome inesistente «Duplica oggetto»: corretto al controllo reale «Duplica selezionato», selezionando esplicitamente l’oggetto dopo Undo. I timeout e le tolleranze grafiche non sono stati aumentati per nascondere quel fallimento. Log in `.local/capacity-*.log`.
 
-Avviata anche la regressione completa dei **529 scenari**, ancora in corso: `.local/capacity-full-browser.log`, handle exec **45243**. Durante questa esecuzione non modificare sorgenti/test o archivio reale; non dichiararla conclusa finché il processo non restituisce l’esito.
+Regressione completa dei **529 scenari conclusa**: **528 passati, uno fallito** in 18,3 minuti (`.local/capacity-full-browser.log`, processo terminale). Il vecchio caso di capacità attendeva ancora un errore duplicando 200 oggetti: ora l’operazione è correttamente consentita. Il test usa il campione effettivo da 1.000 oggetti, verifica il rifiuto atomico della duplicazione totale e mantiene esportazione/riapertura e soglia di caricamento precedenti. Ricontrollo successivo **3/3 passato** in 19,6 secondi: caso corretto, nuovo flusso manuale/AI da 1.000 oggetti e PDF grande (`.local/capacity-final-rerun.log`). Tutti i 529 scenari risultano verificati fra esecuzione e ricontrollo, senza descrivere come verde il primo comando completo. Nessuna modifica applicativa necessaria per questa correzione.
 
 ## Template reale recuperato
 
