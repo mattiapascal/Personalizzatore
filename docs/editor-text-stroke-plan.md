@@ -1,6 +1,6 @@
 # Contorno dei testi: diagnosi e prossimo incremento — 12 novembre 2026
 
-Questa è una diagnosi con prototipo privato, **non una capacità implementata**. Il collaudo completo delle maschere resta attivo sul codice applicativo `3e9f594`; durante l’esecuzione non modificare sorgenti, test o archivio reale.
+Questa è una diagnosi con prototipo privato, **non una capacità implementata**. Il collaudo completo delle maschere sul codice applicativo `3e9f594` è concluso: **532/532 passati**. Primo lavoro sul contorno in copia isolata `/private/tmp/personalizzatore-text-stroke`, branch `codex/text-stroke-local`; nessuna modifica applicativa portata nel laboratorio principale prima dei collaudi.
 
 ## Evidenza reale
 
