@@ -401,7 +401,6 @@
                         },
                         "text": {
                           "type": "string",
-                          "minLength": 1,
                           "maxLength": 8000
                         },
                         "fontSizePt": {
@@ -3297,7 +3296,6 @@
                               },
                               "text": {
                                 "type": "string",
-                                "minLength": 1,
                                 "maxLength": 8000
                               },
                               "fontSizePt": {

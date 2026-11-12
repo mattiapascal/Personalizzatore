@@ -28,6 +28,9 @@ export async function inspectDocumentFonts(doc: Pick<GraphicDocument, 'objects' 
       else runs.push({ fontId, synthetic, text: character });
     }
     const byFont = new Map<string, { synthetic: boolean; text: string[] }>();
+    // Empty fields still need the exact font for their caret, first line and
+    // subsequent input. Warm its coverage just as for a field with glyphs.
+    if (object.text.length === 0 && object.fontFamily.startsWith('font-')) byFont.set(object.fontFamily, { synthetic: object.fontWeight === 'bold' || object.fontStyle === 'italic', text: [] });
     for (const run of runs) { if (!run.fontId.startsWith('font-')) { if(!issues.some(issue=>issue.pageId===pageInfo.pageId&&issue.objectId===object.id&&issue.fontId===run.fontId&&issue.kind==='unembedded-font'))addIssue({objectId:object.id,fontId:run.fontId,fontLabel:run.fontId,kind:'unembedded-font'});continue; } const entry = byFont.get(run.fontId) ?? { synthetic: false, text: [] }; entry.synthetic ||= run.synthetic; entry.text.push(run.text.normalize('NFC')); byFont.set(run.fontId, entry); }
     for (const [fontId, entry] of byFont) {
       used.add(fontId);

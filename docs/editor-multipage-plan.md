@@ -20,3 +20,7 @@ Non confondere pagine del progetto, varianti di formato dello stesso modello e c
 ## Task di coda richiesto il 12 novembre
 
 Dopo il ridimensionamento e gli sblocchi prioritari, ripetere l’audit dei sorgenti e delle preparazioni storiche per individuare eventuali conversioni multipagina ridotte a monopagina. Per ciascuna corrispondenza provata, preparare la conversione completa e confrontare tutte le pagine; conservare copia precedente e modifiche manuali, senza sovrascrittura implicita. Verificare anche eventuali aggiornamenti del sorgente rispetto alle copie già acquisite. Non confondere gruppi di template con varianti di formato con le pagine di un singolo design.
+
+## Audit aggiornato — 12 novembre
+
+Dopo gli ultimi due viari, [audit delle 300 copie contro i sorgenti acquisiti](iteration-editor-refuse-cleanup.md): zero pagine mancanti o hash sorgente cambiati; otto libri e 44 pagine conservati. Nessuna copia di questo insieme richiede una reimportazione per appiattimento. Il task resta applicabile a eventuali sorgenti remoti aggiornati o ulteriori importazioni, con protezione delle modifiche locali.

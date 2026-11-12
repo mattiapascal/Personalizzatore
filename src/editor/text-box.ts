@@ -183,7 +183,7 @@ export class EditorTextBox extends Textbox {
     super.initDimensions();
     if (this.hasLineStyles() && !this.textAlign.includes('justify')) this.enlargeSpaces();
     this.contentWidth = this.calcTextWidth(); this.contentHeight = this.height;
-    if (!this.frame || this.frame.autoWidth) this.width = Math.max(0.001, this.contentWidth);
+    if (!this.frame || this.frame.autoWidth) this.width = this.text.length === 0 ? Math.max(0.001, this.frame?.width ?? 2) : Math.max(0.001, this.contentWidth);
     this.clipPath = this.frame && !this.frame.autoWidth
       ? new Rect({ width: this.width + this.strokeBoundsWidth(), height: this.height + this.strokeBoundsWidth(), left: 0, top: 0, originX: 'center', originY: 'center', strokeWidth: 0 }) : undefined;
   }
@@ -220,7 +220,7 @@ export function textBoxControls(object: EditorTextBox): void {
         const height=proportional?baseHeight*factor:y?Math.max(.08,Math.sign(y)*localY+baseHeight):baseHeight;
         const fontScale=Math.max(minimumFontScale,Math.min(maximumFontScale,height/(baseHeight/baseScaleY)));
         if(proportional)width=baseWidth*fontScale/baseScaleY;
-        if(!automatic&&baseFrame)target.frame={...baseFrame,width:baseFrame.width*fontScale,height:baseFrame.height*fontScale};
+        if((!automatic||object.text.length===0)&&baseFrame)target.frame={...baseFrame,width:baseFrame.width*fontScale,height:baseFrame.height*fontScale};
         const styles = structuredClone(baseStyles);
         for (const line of Object.values(styles)) for (const raw of Object.values(line)) {
           const style = raw as typeof raw & { editorKerningPt?: number };

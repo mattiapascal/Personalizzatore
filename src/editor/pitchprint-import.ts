@@ -1,4 +1,5 @@
 import{joinGraphicPages}from'./pages';
+import {pitchprintTextIsBlank,prunePitchprintRefuse} from './pitchprint-refuse';
 import {pitchprintTextStroke} from './pitchprint-text-stroke';
 import {DEFAULT_JUSTIFICATION} from './justification';
 import{clippedPitchprintImageGeometry}from'./pitchprint-image-clip';
@@ -61,6 +62,7 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
   if(type==='i-text'||type==='text'||type==='textbox'){
    if(determinant<=0||!orthogonal)throw new Error(`${name}: testo riflesso o inclinato dal gruppo non rappresentabile senza alterare i caratteri.`);
    if(typeof item.text!=='string'||typeof item.fontFamily!=='string')throw new Error(`${name}: testo/font mancante.`);
+   if(pitchprintTextIsBlank(item.text)){warnings.push(`${name}: box di testo senza caratteri visibili rimosso come refuso, secondo la regola di migrazione concordata.`);rememberGroup();continue;}
    if(item.textAlign&&!['left','right','center','justify'].includes(String(item.textAlign)))throw new Error(`${name}: allineamento testo da convertire.`);
    const justified=item.textAlign==='justify';
    const resolveFont=async(request:ReturnType<typeof pitchprintFontRequest>)=>{
@@ -127,8 +129,11 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
   if(entry.role==='background')backgroundGroupId=groupId;
   warnings.push(`${entry.role==='background'?'Sfondo':'Primo piano'}: geometria vettoriale nativa e gerarchia conservate, senza rasterizzazione.`);
  }
+ const cleaned=prunePitchprintRefuse({objects,groups,areaMm:{width,height}},measureFabric);objects.splice(0,objects.length,...cleaned.objects);groups=cleaned.groups??[];
+ for(const item of cleaned.removed)warnings.push(`${item.id}: ${item.reason}, rimosso come refuso secondo la regola di migrazione concordata.`);
+ if(backgroundGroupId&&!groups.some(g=>g.id===backgroundGroupId))backgroundGroupId=undefined;
  if(groups.length)warnings.push(`${groups.length} gruppi grafici conservati come unità di selezione e trasformazione.`);
- const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),...(backgroundObject?{backgroundImageId:backgroundObject.id}:{}),...(backgroundGroupId?{backgroundGroupId}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});validateLayout(document,measureFabric,'edit');warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
+ const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),...(backgroundObject&&objects.some(o=>o.id===backgroundObject.id)?{backgroundImageId:backgroundObject.id}:{}),...(backgroundGroupId?{backgroundGroupId}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});validateLayout(document,measureFabric,'edit');warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
 }
 
 /** Convert every source page before exposing a canonical project. */
