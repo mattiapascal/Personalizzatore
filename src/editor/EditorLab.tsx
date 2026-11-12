@@ -2,7 +2,7 @@ import{hasReferenceLayers}from'./reference-layers';
 import{exportReferenceSvg}from'./reference-export';
 import{exportProjectSvgZip,currentPageName}from'./page-export';
 import{graphicPageIds,graphicPages}from'./pages';
-import{PagesPanel}from'./PagesPanel';
+import{PageStrip}from'./PageStrip';
 import{allGraphicObjects}from'./pages';
 import{CanvasContextMenu}from'./CanvasContextMenu';
 import {PaperColorPanel} from './PaperColorPanel';
@@ -400,6 +400,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       return;
     }
     if (event.metaKey || event.ctrlKey || !ids.length) return;
+    if (target.closest('.page-strip')) return;
     if (key === 'delete' || key === 'backspace') { run(deleteSelection); return; }
     const direction = ({ arrowleft: [-1, 0], arrowright: [1, 0], arrowup: [0, -1], arrowdown: [0, 1] } as const)[key as 'arrowleft' | 'arrowright' | 'arrowup' | 'arrowdown'];
     if (!direction) return;
@@ -454,7 +455,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     stage={<>
       {!!(fontRendering.blocked.length||fontRendering.pending.length)&&<div className="notice canvas-font-warning" role="status" data-testid="font-render-warning"><p>{fontRendering.blocked.length?'I riquadri con la croce indicano testi con font da correggere. Il contenuto originale è conservato: scegli un font compatibile nell’ispettore o usa «Font del progetto» negli strumenti.':'Controllo dei font in corso. Il testo originale è conservato; comparirà quando il controllo sarà terminato.'}</p>{!!fontRendering.blocked.length&&<button type="button" disabled={assetBusy} onClick={()=>adapter.current?.retryTextRendering()}>Ricontrolla visualizzazione font</button>}</div>}
       <InkPreviewFilter id={inkFilterId} color={doc.inkColor??'black'}/>
-      <div className="canvas-scroll" onContextMenu={event=>{
+      <div className="canvas-scroll" role="tabpanel" id={inkFilterId+'-pages-canvas'} aria-labelledby={inkFilterId+'-pages-'+(doc.pageId??'page-1')} onContextMenu={event=>{
         if(editing||drawing||assetBusy||archiveBusy||conflict)return;
         const ids=adapter.current?.contextObjectIds(event.nativeEvent);if(ids===null)return;
         event.preventDefault();setDrawingTool(null);if(ids?.length&&!ids.every(id=>selectedRef.current.includes(id))){select(ids);adapter.current?.selectObjects(selectedRef.current);}
@@ -466,13 +467,14 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       {assetBusy && <div role="status" className="notice">Preparazione della risorsa locale…</div>}
       {trashVisible && <div className="drag-trash" role="status"><EditorIcon name="delete"/><strong>Rilascia per eliminare</strong><span>Esc annulla il trascinamento</span></div>}
       <div className="stage-messages">
+        <PageStrip id={inkFilterId+'-pages'} document={doc} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onCommand={(tool,args)=>{setNodeMode(false);setCropMode(false);setContextPoint(null);act(()=>storeRef.current!.dispatch({schemaVersion:1,tool,objectId:'pages',pageId:storeRef.current!.document.pageId??'page-1',expectedRevision:storeRef.current!.document.revision,arguments:args},'manual'),[]);}}/>
         <p className="caption" data-testid="revision">Revisione grafica: {doc.revision} · {doc.objects.length} oggetti · {doc.areaMm.width} × {doc.areaMm.height} mm · bozza TEST</p>
         {editing && <div role="status" className="notice editing-notice">Scrittura nel canvas in corso. Premi Esc o <EditorButton onClick={() => adapter.current?.finishEditing()} icon="apply" label="Termina modifica"/> per validare il testo.</div>}
         {conflict && product && <div className="notice"><p>Il documento è ancora associato al formato precedente. Puoi esportarne il JSON per conservarlo. Creando una nuova bozza sostituisci la composizione corrente.</p><EditorButton onClick={() => { setError(''); onKeepProduct(doc.productId!, doc.variantId!); }} icon="return" label="Torna al prodotto del progetto"/><EditorButton onClick={() => act(() => { const fresh = createEditorDocument(product, catalogVersion); fresh.revision = storeRef.current!.document.revision + 1; storeRef.current = new DocumentStore(fresh, measureFabric, graphicCatalog,policyRole); })} icon="newFile" label="Crea nuova bozza per questo formato"/></div>}
         {error && <p role="alert" className="error">{error}</p>}
       </div>
     </>}
-    tools={<><PagesPanel document={doc} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onCommand={(tool,args)=>{setNodeMode(false);setCropMode(false);setContextPoint(null);act(()=>storeRef.current!.dispatch({schemaVersion:1,tool,objectId:'pages',pageId:storeRef.current!.document.pageId??'page-1',expectedRevision:storeRef.current!.document.revision,arguments:args},'manual'),[]);}}/><h3 className="tools-title">Strumenti</h3><div className="tools-mode"><EditorButton icon="select" label="Strumento selezione" aria-pressed={!drawingTool && !editing && !nodeMode && !cropMode && !panTool && !temporaryPan} onClick={() => {
+    tools={<><h3 className="tools-title">Strumenti</h3><div className="tools-mode"><EditorButton icon="select" label="Strumento selezione" aria-pressed={!drawingTool && !editing && !nodeMode && !cropMode && !panTool && !temporaryPan} onClick={() => {
       adapter.current?.activateSelectionTool(); setDrawingTool(null); setDrawing(false); setMultiple(false); setNodeMode(false); setCropMode(false); setPanTool(false); setSelectionEpoch(value => value + 1);
     }}/><EditorButton icon="hand" label="Strumento Mano" aria-pressed={panTool || temporaryPan} onClick={() => { adapter.current?.activateSelectionTool(); setDrawingTool(null); setDrawing(false); setNodeMode(false); setCropMode(false); setSelectionEpoch(value => value + 1); setPanTool(value => !value); }}/>{drawingTool === 'polyline' || drawingTool === 'bezier' ? <div className="button-row path-drawing-actions" role="group" aria-label="Costruzione tracciato">
       <span className="caption" role="status" data-testid="pen-point-count">{polylineCount}/{drawingTool === 'bezier' ? 64 : 512} nodi</span>

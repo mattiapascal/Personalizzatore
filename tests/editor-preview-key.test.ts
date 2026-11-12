@@ -31,3 +31,13 @@ it('la griglia filtri originale invalida soltanto le miniature con immagini elab
 it('miniatura multipagina: usa la prima pagina logica, indipendente da pagina attiva e modifiche del retro',async()=>{
  const{multipageTestDocument}=await import('./helpers/multipage'),{graphicPages,selectGraphicPage}=await import('../src/editor/pages'),doc=multipageTestDocument(),key=await archivePreviewKey(doc);expect(key).toBe(await archivePreviewKey(graphicPages(doc)[0]!));const back=selectGraphicPage(doc,'page-2');expect(await archivePreviewKey(back)).toBe(key);back.objects[0]!.xMm+=1;expect(await archivePreviewKey(back)).toBe(key);back.otherPages![0]!.objects[0]!.xMm+=1;expect(await archivePreviewKey(back)).not.toBe(key);
 });
+
+it('miniature tecniche: riferimenti e fissaggi invalidano la propria cache, chiavi produttive e metadati restano stabili',async()=>{
+ const doc=createTestDocument(),original=await archivePreviewKey(doc);expect(await archivePreviewKey(doc,'technical')).toBe(original);
+ doc.colorMode='color';doc.objects.unshift({id:'material',type:'rect',xMm:0,yMm:0,widthMm:50,heightMm:20,fill:'#cccccc',stroke:'none',strokeMm:.1,editor:{reference:true}});doc.groups=[{id:'material-layer',objectIds:['material'],editor:{reference:true}}];doc.backgroundGroupId='material-layer';
+ const technical=await archivePreviewKey(doc,'technical'),productive=await archivePreviewKey(doc),changed=structuredClone(doc);changed.objects[0]!.xMm+=1;
+ expect(technical).not.toBe(productive);expect(await archivePreviewKey(changed,'technical')).not.toBe(technical);expect(await archivePreviewKey(changed)).toBe(productive);
+ const metadata=structuredClone(doc);metadata.pageName='Nuovo nome';metadata.revision=20;metadata.objects[0]!.editor!.label='Supporto';expect(await archivePreviewKey(metadata,'technical')).toBe(technical);
+ const{DEFAULT_PLAQUE_MOUNTING}=await import('../src/editor/plaque');const withMounting={...doc,plaque:{...DEFAULT_PLAQUE_MOUNTING,method:'holes' as const,pattern:'four-corners' as const,offsetXMm:5,offsetYMm:5,holeDiameterMm:2}};
+ expect(await archivePreviewKey(withMounting)).toBe(productive);expect(await archivePreviewKey(withMounting,'technical')).not.toBe(technical);
+});

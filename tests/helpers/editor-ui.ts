@@ -31,3 +31,7 @@ export async function setRasterCropPixels(page: Page, side: 'Sinistra'|'Destra'|
  const id=await page.locator('.object-inspector .object-identity-id').innerText(),doc=JSON.parse((await page.getByTestId('graphic-state').textContent())!),image=doc.objects.find((o:{id:string})=>o.id===id),horizontal=side==='Sinistra'||side==='Destra',scale=horizontal?image.widthMm/(image.crop?.widthPx??image.source.pixelWidth):image.heightMm/(image.crop?.heightPx??image.source.pixelHeight);
  await page.getByLabel(`${side} ritaglio (mm)`,{exact:true}).fill(String(pixels*scale));
 }
+
+export const editorPageTabs=(page:Page)=>page.getByRole('tablist',{name:'Pagine del progetto',exact:true});
+export const editorPageTab=(page:Page,id:string)=>editorPageTabs(page).locator(`[data-page-id="${id}"]`);
+export async function selectEditorPage(page:Page,id:string):Promise<void>{const tab=editorPageTab(page,id);await tab.click();await expect(tab).toHaveAttribute('aria-selected','true');}
