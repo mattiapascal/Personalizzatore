@@ -6,7 +6,7 @@ L’amministrazione ha due sezioni distinte: [Immagini](http://127.0.0.1:5173/ed
 
 Nell’editor, il pannello Strumenti contiene le icone **Apri libreria immagini** e **Apri libreria sfondi**. Si sceglie una miniatura, poi l’inserimento. Gli SVG possono entrare come vettori editabili oppure, per scelta esplicita, come immagine PNG; alcuni SVG con gradienti, maschere o caratteristiche non rappresentabili dal convertitore vettoriale richiedono questa seconda scelta. Nessun passaggio implicito ai pixel dopo un errore.
 
-Per le bandiere il titolare ha richiesto dimensioni adatte agli adesivi: **larghezza iniziale 50 mm**, proporzioni conservate e riduzione soltanto se il canvas non contiene la misura. Il valore è modificabile nel backend per risorsa e nell’ispettore dopo l’inserimento; non si altera il file originale. La capacità di inserimento non certifica misure, materiale, abbondanze o prezzo di un adesivo commerciale.
+Per le bandiere il titolare ha richiesto dimensioni adatte agli adesivi: **larghezza iniziale 100 mm** su indicazione del 12 novembre (prima 50 mm), proporzioni conservate e riduzione soltanto se il canvas non contiene la misura. Il valore è modificabile nel backend per risorsa e nell’ispettore dopo l’inserimento; non si altera il file originale. La capacità di inserimento non certifica misure, materiale, abbondanze o prezzo di un adesivo commerciale.
 
 Gli sfondi grafici riempiono il foglio con ritaglio centrale proporzionale. Vengono inseriti in fondo ai livelli e una scelta successiva sostituisce il precedente sfondo con un unico comando annullabile. Restano immagini normali, modificabili dall’ispettore; il pulsante **Rimuovi sfondo** ne rimuove soltanto l’oggetto collegato. I blocchi di eliminazione e i gruppi del template sono rispettati. SVG/PDF/progetti conservano gli oggetti, non collegamenti remoti a PitchPrint. La sagoma circolare usa il ritaglio già presente nel renderer.
 
@@ -39,3 +39,9 @@ Test in archivi temporanei: persistenza e originali, categorie incrociate, revis
 Campione `fixtures/illustrator/media-library.source.TEST.json`, `.TEST.json` e `.TEST.svg`, generatore `scripts/capture-editor-media-library.ts`: sfondo incorporato e bandiera vettoriale di prova, comando AI di rimozione + Undo. Illustrator da verificare: 120 × 80 mm, bandiera 50 × 30 mm, colori e proporzioni, gruppo editabile, immagine di fondo, JSON riapribile senza libreria.
 
 Nessun deploy, chiamata AI a pagamento o modifica a negozio, tema, BSS, prezzi, acquisti, font personali o archivio template. La chat pubblicata resta separata.
+
+## Larghezza delle bandiere — 12 novembre
+
+Il titolare ha precisato **100 mm di larghezza**, con proporzioni originali. Aggiornate le 254 risorse della categoria Bandiere tramite i comandi di metadati già esistenti: revisione della libreria **797 → 1051**. Solo `defaultWidthMm` cambia; categorie, altre risorse, originali e miniature verificati invariati, così come l’archivio dei template. Backup dell’indice SHA-256 `51d347589a07b8115a00eb6678df15e97b9a5ec62d4f5faca78cda80aab60f5f` e resoconto privati in `.local/pitchprint-migration/media/flags-100mm/`. Le dimensioni degli oggetti già presenti nei progetti non vengono riscritte.
+
+Prova nell’editor effettivo, canvas TEST 120 × 80 mm: Italia **100 × 66,666667 mm**, tre vettori, Undo/Redo ed esportazione JSON/SVG verificati. Zero errori o scritture di prova; rete esterna bloccata e indice/archivio invariati durante il controllo. Screenshot ispezionato; originali vettoriali conservati. Questa modifica dei metadati non cambia il codice applicativo o le fixture di prova a 50 mm.
