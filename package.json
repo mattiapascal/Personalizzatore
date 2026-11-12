@@ -43,7 +43,8 @@
     "check": "npm test && npm run build && npm run check:secrets && npm run test:e2e",
     "eval:knowledge": "node --import tsx scripts/eval-store-knowledge.ts",
     "editor:collaudo": "node --import tsx scripts/export-editor-acceptance.ts",
-    "pitchprint:fonts": "node --import tsx scripts/pitchprint-font-inventory.ts"
+    "pitchprint:fonts": "node --import tsx scripts/pitchprint-font-inventory.ts",
+    "editor:storage": "node --max-old-space-size=6144 --import tsx scripts/editor-archive-storage.ts"
   },
   "dependencies": {
     "fabric": "7.4.0",
