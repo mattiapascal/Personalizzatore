@@ -2,6 +2,8 @@ import{validateDocumentPngCopies}from'./png-copy-validation';
 import{EditorAdminReadCache,sharedEditorAdminReadCache,cloneArchiveValue,MAX_LOCAL_ARCHIVE_BYTES}from'./editor-admin-read-cache';
 export{MAX_LOCAL_ARCHIVE_BYTES}from'./editor-admin-read-cache';
 import { MAX_FONT_LIBRARY_BYTES } from '../src/editor-admin/font-library-limits';
+import {graphicPages} from '../src/editor/pages';
+import {hasReferenceLayers} from '../src/editor/reference-layers';
 import {archivePreviewContent} from '../src/editor-admin/preview-key';
 import {AdminRevisionConflictError} from '../src/editor-admin/errors';
 import {fontFamilyKey} from '../src/editor/font-family-key';
@@ -21,7 +23,7 @@ import { join } from 'node:path';
 import { randomUUID,createHash } from 'node:crypto';
 import { AdminStateSchema, AdminCommandSchema, type AdminSnapshot, type AdminState } from '../src/editor-admin/schema';
 export function adminSnapshot(state:AdminState):AdminSnapshot {
- return {...state,records:state.records.map(({document,...record})=>({...record,previewKey:createHash('sha256').update(archivePreviewContent(document)).digest('hex'),graphicFamily:document.plaque?'plaque' as const:'stamp-test' as const})),fonts:state.fonts.map(({dataBase64,...font})=>{const names=fontNames(Buffer.from(dataBase64,'base64'),font.format);return{...font,fileHash:createHash('sha256').update(Buffer.from(dataBase64,'base64')).digest('hex'),actualFamily:names.postscriptName??names.fullName??names.family,actualFullName:names.fullName,actualFamilyGroup:font.familyGroup??names.familyGroup,detectedFamilyGroup:names.familyGroup,detectedCategories:detectedFontCategories(Buffer.from(dataBase64,'base64'),font.format),actualStyleName:font.styleName??names.styleName,actualWeight:font.weight??names.weight,actualItalic:font.italic??names.italic};})};
+ return {...state,records:state.records.map(({document,...record})=>{const previewKey=createHash('sha256').update(archivePreviewContent(document)).digest('hex'),technicalPreviewKey=hasReferenceLayers(graphicPages(document)[0]!)?createHash('sha256').update(archivePreviewContent(document,'technical')).digest('hex'):previewKey;return{...record,previewKey,technicalPreviewKey,graphicFamily:document.plaque?'plaque' as const:'stamp-test' as const};}),fonts:state.fonts.map(({dataBase64,...font})=>{const names=fontNames(Buffer.from(dataBase64,'base64'),font.format);return{...font,fileHash:createHash('sha256').update(Buffer.from(dataBase64,'base64')).digest('hex'),actualFamily:names.postscriptName??names.fullName??names.family,actualFullName:names.fullName,actualFamilyGroup:font.familyGroup??names.familyGroup,detectedFamilyGroup:names.familyGroup,detectedCategories:detectedFontCategories(Buffer.from(dataBase64,'base64'),font.format),actualStyleName:font.styleName??names.styleName,actualWeight:font.weight??names.weight,actualItalic:font.italic??names.italic};})};
 }
 export class EditorAdminStore {
  private readonly readCache:EditorAdminReadCache;

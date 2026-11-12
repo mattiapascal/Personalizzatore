@@ -41,3 +41,11 @@ it('miniature tecniche: riferimenti e fissaggi invalidano la propria cache, chia
  const{DEFAULT_PLAQUE_MOUNTING}=await import('../src/editor/plaque');const withMounting={...doc,plaque:{...DEFAULT_PLAQUE_MOUNTING,method:'holes' as const,pattern:'four-corners' as const,offsetXMm:5,offsetYMm:5,holeDiameterMm:2}};
  expect(await archivePreviewKey(withMounting)).toBe(productive);expect(await archivePreviewKey(withMounting,'technical')).not.toBe(technical);
 });
+
+it('snapshot: chiave tecnica separata soltanto dove serve, prima pagina logica e invalidazione dei soli riferimenti',async()=>{
+ const{adminReferencePreviewBook}=await import('./helpers/admin-reference-preview'),{selectGraphicPage}=await import('../src/editor/pages'),document=adminReferencePreviewBook(),record={id:crypto.randomUUID(),title:'TEST supporto',kind:'template' as const,tags:[],clientRef:'',document,version:1,archived:false,createdAt:'2026-11-12T00:00:00Z',updatedAt:'2026-11-12T00:00:00Z'},state={schemaVersion:1 as const,revision:0,settings:DEFAULT_ADMIN_SETTINGS,fonts:[],records:[record]},before=JSON.stringify(state),snapshot=adminSnapshot(state).records[0]!;
+ expect(snapshot.previewKey).toBe(await archivePreviewKey(document));expect(snapshot.technicalPreviewKey).toBe(await archivePreviewKey(document,'technical'));expect(snapshot.technicalPreviewKey).not.toBe(snapshot.previewKey);expect(JSON.stringify(state)).toBe(before);expect(snapshot).not.toHaveProperty('document');
+ const front=selectGraphicPage(document,'page-1');expect(adminSnapshot({...state,records:[{...record,document:front}]}).records[0]!.technicalPreviewKey).toBe(snapshot.technicalPreviewKey);
+ if(front.objects[0]?.type!=='rect')throw Error('Supporto TEST');front.objects[0].fill='#0066cc';const changed=adminSnapshot({...state,records:[{...record,document:front}]}).records[0]!;expect(changed.previewKey).toBe(snapshot.previewKey);expect(changed.technicalPreviewKey).not.toBe(snapshot.technicalPreviewKey);
+ const plain=createTestDocument(),plainSummary=adminSnapshot({...state,records:[{...record,document:plain}]}).records[0]!;expect(plainSummary.technicalPreviewKey).toBe(plainSummary.previewKey);
+});
