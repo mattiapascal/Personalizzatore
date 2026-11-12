@@ -1,3 +1,4 @@
+import{pngSourceWarnings}from'./png-source';
 import{pitchprintPageImages,convertPageImage,nativePageVector,type PageImagePolicy}from'./pitchprint-page-images';
 import { emptyPitchprintPrimitive, unstrokedPitchprintPrimitive } from './pitchprint-primitives';
 import { pitchprintImageGeometry, pitchprintImageUrl } from './pitchprint-image';
@@ -40,7 +41,7 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  const roots=[...page.canvas.objects],vectorPages:{role:'background'|'foreground';policy:PageImagePolicy;prefix:string}[]=[],rasterPages:typeof pageImages=[];
  for(const input of pageImages){const policy=options.pageImages?.[input.role]??'review',label=input.role==='background'?'Sfondo':'Primo piano';if(!['review','print','reference','exclude'].includes(policy))throw Error('Utilizzo dell’immagine di pagina non riconosciuto.');if(policy==='review')throw Error(`${label}: scegli se è grafica da stampare, riferimento del materiale oppure da escludere.`);if(policy!=='exclude'&&input.native&&nativePageVector(input.native)){roots.push(input.native);vectorPages.push({role:input.role,policy,prefix:`pp-${roots.length}`});}else if(policy!=='exclude')rasterPages.push(input);warnings.push(`${label}: ${policy==='print'?'conservato nella grafica produttiva':policy==='reference'?'conservato come riferimento materiale, escluso da esportazioni e miniature produttive':'escluso per scelta esplicita'}.`);}
  const tree=pitchprintTree(roots,properties);warnings.push(...tree.warnings);
- for(const input of rasterPages){const object=await convertPageImage(input,options.pageImages![input.role],{width,height},pageMatrix,options.monochrome,options.image,properties(input.native??{},warnings));if(object)pageObjects.push(object);}
+ for(const input of rasterPages){const object=await convertPageImage(input,options.pageImages![input.role],{width,height},pageMatrix,options.monochrome,options.image,properties(input.native??{},warnings),warnings);if(object)pageObjects.push(object);}
 
 
  for(const {item,name,id,parent} of tree.leaves){
@@ -79,7 +80,7 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
    if(stroke>0&&color(item.stroke,options.monochrome)!=='none')throw new Error(`${name}: contorno immagine da convertire senza perderne l’aspetto.`);
    if(!orthogonal)throw new Error(`${name}: immagine inclinata dal gruppo, da convertire senza approssimare la geometria.`);
    if(item.resizeFilter||item.filters!=null&&(!Array.isArray(item.filters)||item.filters.length))throw new Error(`${name}: filtri immagine da convertire.`);
-   const url=pitchprintImageUrl(item),source=rasterSourceFromBytes(`pitch-${crypto.randomUUID()}`,url.startsWith('data:image/')?Uint8Array.from(atob(url.split(',')[1]??''),character=>character.charCodeAt(0)):await options.image(url));await prepareRasterSource(source);
+   const url=pitchprintImageUrl(item),source=rasterSourceFromBytes(`pitch-${crypto.randomUUID()}`,url.startsWith('data:image/')?Uint8Array.from(atob(url.split(',')[1]??''),character=>character.charCodeAt(0)):await options.image(url));await prepareRasterSource(source);if(source.mime==='image/png')warnings.push(...pngSourceWarnings(source.dataUrl));
    const geometry=pitchprintImageGeometry(item,source,axisX,axisY);
    objects.push(placeObjectAtCenter({id,type:'image',xMm:0,yMm:0,...geometry,rotationDeg:rotation,source,raster:{...DEFAULT_RASTER,...(!options.monochrome?{mode:'original' as const}:{})},flipY:determinant<0,editor},center,measureFabric));
   }else{

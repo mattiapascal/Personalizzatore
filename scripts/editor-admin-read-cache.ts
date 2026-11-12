@@ -1,3 +1,4 @@
+import{validateDocumentPngCopies}from'./png-copy-validation';
 import {readFile,stat} from 'node:fs/promises';
 import {join} from 'node:path';
 import {AdminStateSchema,DEFAULT_ADMIN_SETTINGS,type AdminState} from '../src/editor-admin/schema';
@@ -32,7 +33,7 @@ export class EditorAdminReadCache {
  private async stableSnapshot(key:string):Promise<ArchiveSnapshot>{
   for(let attempt=0;attempt<3;attempt++){
    let state:AdminState;
-   try{state=key==='absent'?{schemaVersion:1,revision:0,settings:{...DEFAULT_ADMIN_SETTINGS},records:[],fonts:[]}:AdminStateSchema.parse(JSON.parse(await this.loadText(this.file)));internArchiveResourceStrings(state);}
+   try{state=key==='absent'?{schemaVersion:1,revision:0,settings:{...DEFAULT_ADMIN_SETTINGS},records:[],fonts:[]}:AdminStateSchema.parse(JSON.parse(await this.loadText(this.file)));internArchiveResourceStrings(state);await validateDocumentPngCopies(state.records.map(record=>record.document));}
    catch(e){const next=await this.fileKey();if(next!==key){key=next;continue;}throw e;}
    const next=await this.fileKey();if(next===key)return{state,key};key=next;
   }

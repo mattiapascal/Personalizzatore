@@ -1,3 +1,5 @@
+**Seguito implementato:** [PNG canonici e copie equivalenti](iteration-editor-png-metadata.md). La diagnosi e il piano sotto sono storici; il collaudo aggiornato è nel resoconto.
+
 # Prossimo incremento: PNG con metadati e copie concatenate
 
 Diagnosi in sola lettura del 12 novembre 2026, successiva ai fondi vettoriali. Questa nota descrive prove e lavoro da implementare; il PNG non è stato corretto, importato o dichiarato pronto.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="120mm" height="70mm" viewBox="0 0 960 560" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#fff8ee"></rect>
+<g transform="matrix(112 0 0 112 208 152)"  >
+	<svg x="-1.5" y="-1" width="3" height="2" viewBox="0 0 3 2" preserveAspectRatio="none" overflow="hidden"><g><image x="0" y="0" width="3" height="2" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAFElEQVR4nGP4z8DwHwwZ/v9HRv8Bqm8O8smQ8ZMAAAAASUVORK5CYII=" /></g></svg>
+</g>
+<g transform="matrix(96 0 0 96 520 184)"  >
+	<svg x="-1" y="-1.5" width="2" height="3" viewBox="0 0 2 3" preserveAspectRatio="none" overflow="hidden"><g><image x="0" y="0" width="2" height="3" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAHElEQVR4nB3IsQ0AAAzDIOf/o6lURkZaTcxa/ByV6wn+cNo8OAAAAABJRU5ErkJggg==" /></g></svg>
+</g>
+<g transform="matrix(96 0 0 96 776 184)"  >
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAJElEQVR4AWJi6DxtxtBx5i0Tw3+mBgaG/zFMDGw/YxgYGBsAAAAA//+k4hpjAAAABklEQVQDAIBiCIrV3CItAAAAAElFTkSuQmCC" x="-1" y="-1.5" width="2" height="3"></image>
+</g>
+</svg>

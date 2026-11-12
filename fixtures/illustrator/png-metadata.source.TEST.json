@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 2,
+  "documentId": "98989898-9898-4898-a898-989898989898",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 120,
+    "height": 70
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "copies",
+      "type": "image",
+      "xMm": 5,
+      "yMm": 5,
+      "widthMm": 42,
+      "heightMm": 28,
+      "source": {
+        "id": "png-copies-TEST",
+        "mime": "image/png",
+        "pixelWidth": 3,
+        "pixelHeight": 2,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAFElEQVR4nGP4z8DwHwwZ/v9HRv8Bqm8O8smQ8ZMAAAAASUVORK5CYIKJUE5HDQoaCgAAAA1JSERSAAAAAwAAAAIIBgAAAJ10ZhoAAAAUSURBVHicY/jPwPAfDBn+/0dG/wGqbw7yyZDxkwAAABplWElmTU0AKgAAAAgAAQESAAMAAAABAAAAAAAAAAC1t35TAAAAAElFTkSuQmCC"
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "editor": {
+        "label": "Due copie equivalenti · EXIF 0"
+      }
+    },
+    {
+      "id": "oriented",
+      "type": "image",
+      "xMm": 53,
+      "yMm": 5,
+      "widthMm": 24,
+      "heightMm": 36,
+      "source": {
+        "id": "png-oriented-TEST",
+        "mime": "image/png",
+        "pixelWidth": 2,
+        "pixelHeight": 3,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAGmVYSWZNTQAqAAAACAABARIAAwAAAAEABgAAAAAAANZnS2kAAAAUSURBVHicY/jPwPAfDBn+/0dG/wGqbw7yyZDxkwAAAABJRU5ErkJggg=="
+      },
+      "raster": {
+        "mode": "original",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false
+      },
+      "editor": {
+        "label": "Orientamento 6 · nativo"
+      }
+    },
+    {
+      "id": "filtered",
+      "type": "image",
+      "xMm": 85,
+      "yMm": 5,
+      "widthMm": 24,
+      "heightMm": 36,
+      "source": {
+        "id": "png-filter-TEST",
+        "mime": "image/png",
+        "pixelWidth": 2,
+        "pixelHeight": 3,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAGmVYSWZNTQAqAAAACAABARIAAwAAAAEABwAAAAAAAHAQQN0AAAAUSURBVHicY/jPwPAfDBn+/0dG/wGqbw7yyZDxkwAAAABJRU5ErkJggg=="
+      },
+      "raster": {
+        "mode": "grayscale",
+        "threshold": 128,
+        "invert": false,
+        "whiteTransparent": false,
+        "backgroundRemoval": "luminance",
+        "tintColor": "#0088cc"
+      },
+      "editor": {
+        "label": "Orientamento 7 · monocolore/alpha"
+      }
+    }
+  ],
+  "fontAssets": [],
+  "colorMode": "color",
+  "paperColor": "#fff8ee"
+}

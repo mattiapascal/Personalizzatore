@@ -1,3 +1,4 @@
+import{originalPngSvgSource}from'./raster-cache';
 import type { FabricImage } from 'fabric';
 import type { RasterSource } from './raster-source';
 import { checkedRasterCrop, type RasterCrop } from './raster-geometry';
@@ -21,6 +22,7 @@ export function originalRasterSvg(image: FabricImage, source: RasterSource, rawC
         href = `data:image/jpeg;base64,${btoa(binary)}`;
         transform = ` transform="matrix(${jpegOrientationMatrix(info.orientation, width, height).join(' ')})"`;
       }
+      else href=originalPngSvgSource(source);
       original = `<svg x="${-image.width / 2}" y="${-image.height / 2}" width="${image.width}" height="${image.height}" viewBox="${crop.leftPx} ${crop.topPx} ${crop.widthPx} ${crop.heightPx}" preserveAspectRatio="none" overflow="hidden"><g${transform}><image x="0" y="0" width="${width}" height="${height}" xlink:href="${href}" /></g></svg>`;
     }
     const markup = serialize(), svg = markup.replace(/<image\b[^>]*(?:\/>|><\/image>)/, original);

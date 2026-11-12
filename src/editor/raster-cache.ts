@@ -1,10 +1,13 @@
-import { RasterSourceSchema, validatePngData, type RasterSource } from './raster-source';
+import{orientedPngFrameBytes}from'./png-orientation';
+import{pngDescriptor}from'./png-source';
+import{decodeCanonicalPng}from'./png-browser';
+import { RasterSourceSchema, type RasterSource } from './raster-source';
 import { rasterPixels, type RasterParameters } from './raster-processing';
 import { analyzeRasterPixels, type RasterAnalysis } from './raster-analysis';
 import { jpegInfo, jpegWithoutApp1, jpegOrientationMatrix } from './jpeg-source';
 interface DecodedRaster {
   cacheId: number; mime: RasterSource['mime']; width: number; height: number;
-  image: HTMLImageElement | HTMLCanvasElement; analysis: RasterAnalysis;
+  image: HTMLImageElement | HTMLCanvasElement; analysis: RasterAnalysis; svgPng?:string;
 }
 interface Prepared { source: RasterSource; resource: DecodedRaster; }
 const prepared = new Map<string, Prepared>(), pending = new Map<string, { source: RasterSource; promise: Promise<void> }>();
@@ -16,9 +19,9 @@ function sharedResource(source: RasterSource): DecodedRaster | undefined {
   const resource = contents.get(source.dataUrl);
   return resource?.mime === source.mime && resource.width === source.pixelWidth && resource.height === source.pixelHeight ? resource : undefined;
 }
-function publishResource(source: RasterSource, image: DecodedRaster['image']): void {
+function publishResource(source: RasterSource, image: DecodedRaster['image'], svgPng?:string): void {
   const analysis = analysisOf(image, source.pixelWidth, source.pixelHeight);
-  const resource = { cacheId: ++nextCacheId, mime: source.mime, width: source.pixelWidth, height: source.pixelHeight, image, analysis };
+  const resource = { cacheId: ++nextCacheId, mime: source.mime, width: source.pixelWidth, height: source.pixelHeight, image, analysis, ...(svgPng?{svgPng}:{}) };
   contents.set(source.dataUrl, resource);
   prepared.set(source.id, { source: { ...source }, resource });
 }
@@ -63,11 +66,7 @@ export async function prepareRasterSource(raw: RasterSource): Promise<void> {
     const shared = sharedResource(source);
     if (shared) { prepared.set(source.id, { source: { ...source }, resource: shared }); return; }
     if (source.mime === 'image/png') {
-      await validatePngData(source.dataUrl);
-      const image = new Image(); image.src = source.dataUrl;
-      try { await image.decode(); } catch { throw new Error('PNG non decodificabile: nessuna modifica applicata'); }
-      if (image.naturalWidth !== source.pixelWidth || image.naturalHeight !== source.pixelHeight) throw new Error('Dimensioni decodificate diverse dall’intestazione PNG');
-      publishResource(source, image);
+      const image=await decodeCanonicalPng(source.dataUrl);let svgPng:string|undefined;if(pngDescriptor(source.dataUrl).special){const bytes=await orientedPngFrameBytes(source.dataUrl);let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));svgPng='data:image/png;base64,'+btoa(binary);}publishResource(source,image,svgPng);
     } else {
       const info = jpegInfo(source.dataUrl), url = URL.createObjectURL(new Blob([jpegWithoutApp1(source.dataUrl)], { type: 'image/jpeg' }));
       try {
@@ -99,3 +98,6 @@ export function rasterCanvas(source: RasterSource, params: RasterParameters): HT
   while (derived.size > 1 && (derived.size > 8 || pixels > 32_000_000)) { const oldest = derived.keys().next().value!, entry = derived.get(oldest)!; pixels -= entry.width * entry.height; derived.delete(oldest); }
   return canvas;
 }
+
+/** Lossless oriented native PNG samples, prepared before synchronous SVG serialization. */
+export function originalPngSvgSource(source:RasterSource):string{assertRasterPrepared(source);return prepared.get(source.id)!.resource.svgPng??source.dataUrl;}

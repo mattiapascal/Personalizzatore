@@ -1,5 +1,6 @@
 import { MAX_RASTER_BYTES, MAX_RASTER_PIXELS, MAX_RASTER_SIDE, RASTER_PIXEL_LIMIT_LABEL } from './raster-limits';
-export type ExifOrientation = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+import{readExifOrientation,type ExifOrientation}from'./exif-orientation';
+export type{ExifOrientation}from'./exif-orientation';
 export interface JpegInfo { width: number; height: number; rawWidth: number; rawHeight: number; bytes: number; orientation: ExifOrientation; progressive: boolean; }
 interface Parsed { info: JpegInfo; app1: [number, number][]; }
 const prefix = 'data:image/jpeg;base64,', checked = new Map<string, Parsed>();
@@ -10,23 +11,6 @@ export function jpegBytes(dataUrl: string): Uint8Array {
   const length = encoded.length / 4 * 3 - (encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0);
   if (length > MAX_RASTER_BYTES) throw new Error('JPEG oltre 20 MB');
   return Uint8Array.from(atob(encoded), character => character.charCodeAt(0));
-}
-function exifOrientation(bytes: Uint8Array): ExifOrientation {
-  // bytes starts at the TIFF header, immediately after Exif\0\0.
-  if (bytes.length < 8) throw new Error('EXIF troncato');
-  const little = bytes[0] === 0x49 && bytes[1] === 0x49;
-  if (!little && !(bytes[0] === 0x4d && bytes[1] === 0x4d)) throw new Error('Ordine byte EXIF non valido');
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  if (view.getUint16(2, little) !== 42) throw new Error('Intestazione TIFF EXIF non valida');
-  const offset = view.getUint32(4, little); if (offset < 8 || offset + 2 > bytes.length) throw new Error('Offset EXIF fuori dal file');
-  const count = view.getUint16(offset, little); if (count > 256 || offset + 2 + count * 12 + 4 > bytes.length) throw new Error('Directory EXIF troncata o troppo complessa');
-  let orientation: ExifOrientation = 1, seen = false;
-  for (let i = 0; i < count; i++) {
-    const at = offset + 2 + i * 12; if (view.getUint16(at, little) !== 0x112) continue;
-    if (seen || view.getUint16(at + 2, little) !== 3 || view.getUint32(at + 4, little) !== 1) throw new Error('Tag orientamento EXIF non valido o duplicato');
-    const value = view.getUint16(at + 8, little); if (value < 1 || value > 8) throw new Error('Orientamento EXIF fuori da 1–8'); orientation = value as ExifOrientation; seen = true;
-  }
-  return orientation;
 }
 function parse(dataUrl: string,maxPixels=MAX_RASTER_PIXELS): Parsed {
   const cacheKey=`${maxPixels}:${dataUrl}`,cached = checked.get(cacheKey); if (cached) return cached;
@@ -52,7 +36,7 @@ function parse(dataUrl: string,maxPixels=MAX_RASTER_PIXELS): Parsed {
       }
     } else if (marker === 0xe1) {
       app1.push([start, end]);
-      if ([0x45, 0x78, 0x69, 0x66, 0, 0].every((value, i) => bytes[data + i] === value)) { if (exif) throw new Error('EXIF duplicato'); orientation = exifOrientation(bytes.subarray(data + 6, end)); exif = true; }
+      if ([0x45, 0x78, 0x69, 0x66, 0, 0].every((value, i) => bytes[data + i] === value)) { if (exif) throw new Error('EXIF duplicato'); orientation = readExifOrientation(bytes.subarray(data + 6, end)); exif = true; }
     } else if (marker === 0xdb) {
       let at = data; while (at < end) { const table = bytes[at++]!, precision = table >> 4; if (precision > 1 || (table & 15) > 3 || at + 64 * (precision + 1) > end) throw new Error('Tabella quantizzazione JPEG non valida'); for (let i = 0; i < 64; i++) { if ((precision ? view.getUint16(at) : bytes[at]) === 0) throw new Error('Quantizzazione JPEG nulla'); at += precision + 1; } } if (at === data) throw new Error('Tabella quantizzazione JPEG vuota'); quant = true;
     } else if (marker === 0xc4) {
