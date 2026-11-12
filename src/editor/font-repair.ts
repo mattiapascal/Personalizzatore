@@ -7,6 +7,7 @@ import { type GraphicDocument, type GraphicCommand } from './model';
  * its revision/permissions checks; this helper never edits the source document. */
 export async function missingCharacterFontCommand(doc: GraphicDocument, issue: FontIssue, asset: FontAsset): Promise<Extract<GraphicCommand, { tool: 'updateObject' }>> {
   if (issue.kind !== 'missing-characters' || !issue.characters?.length) throw Error('Seleziona una segnalazione di caratteri mancanti.');
+  if(issue.pageId&&issue.pageId!==(doc.pageId??'page-1'))throw Error('Apri la pagina del testo segnalato prima di correggerlo.');
   const object = doc.objects.find(object => object.id === issue.objectId);
   if (!object || object.type !== 'text') throw Error('Il testo segnalato non è più presente.');
   const current = await inspectDocumentFonts({ objects: [object], fontAssets: doc.fontAssets });
@@ -22,5 +23,5 @@ export async function missingCharacterFontCommand(doc: GraphicDocument, issue: F
   const changed = { ...object, characterStyles: compressStyles(styles) };
   const existing = doc.fontAssets?.find(font => font.id === asset.id);
   if (existing && (existing.dataBase64 !== asset.dataBase64 || existing.format !== asset.format || existing.family !== asset.family)) throw Error('La risorsa originale del font è immutabile.');
-  return { schemaVersion: 1, tool: 'updateObject', objectId: object.id, expectedRevision: doc.revision, arguments: { object: changed, ...(!existing ? { fontAssets: [asset] } : {}) } };
+  return { schemaVersion: 1,...(issue.pageId?{pageId:issue.pageId}:{}), tool: 'updateObject', objectId: object.id, expectedRevision: doc.revision, arguments: { object: changed, ...(!existing ? { fontAssets: [asset] } : {}) } };
 }

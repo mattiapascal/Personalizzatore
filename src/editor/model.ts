@@ -1,3 +1,4 @@
+import{isPageCommand,applyPageCommand,graphicPages,graphicPageIds,selectGraphicPage}from'./pages';
 import {rasterDocumentUsage,rasterDocumentIssues} from './raster-document-limits';
 import { OpacitySchema, PaintOpacityFields } from './paint-opacity';
 import {clearBackground,replaceBackgroundObjects,backgroundObjectIds} from './background';
@@ -172,7 +173,24 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
     }
   }
 }
-export const DocumentSchema = documentFields.superRefine(refineDocument);
+/** A page stores its scene once. Font files and project revision remain global. */
+export const GraphicPageSchema=documentFields.omit({schemaVersion:true,documentId:true,revision:true,fontAssets:true,productProfileVersion:true,fixture:true,validatedForProduction:true}).extend({id,name:z.string().trim().min(1).max(120)});
+export type GraphicPage=z.infer<typeof GraphicPageSchema>;
+export const MAX_GRAPHIC_PAGES=100;
+export const DocumentSchema = documentFields.extend({pageId:id.optional(),pageName:z.string().trim().min(1).max(120).optional(),otherPages:z.array(GraphicPageSchema).min(1).max(MAX_GRAPHIC_PAGES-1).optional(),pageOrder:z.array(id).min(1).max(MAX_GRAPHIC_PAGES).optional(),contentRevision:z.number().int().nonnegative().optional()}).superRefine((d,ctx)=>{
+ refineDocument(d,ctx);
+ if(d.contentRevision!==undefined&&d.contentRevision>d.revision)ctx.addIssue({code:'custom',message:'Revisione del contenuto oltre la revisione del progetto'});
+ const ids=[d.pageId??'page-1',...d.otherPages?.map(page=>page.id)??[]];
+ if(d.otherPages?.length&&(!d.pageId||!d.pageName||!d.pageOrder))ctx.addIssue({code:'custom',message:'Il progetto multipagina richiede identità, nomi e ordine delle pagine'});
+ if(new Set(ids).size!==ids.length||d.pageOrder&&(d.pageOrder.length!==ids.length||new Set(d.pageOrder).size!==ids.length||d.pageOrder.some(id=>!ids.includes(id))))ctx.addIssue({code:'custom',message:'ID o ordine delle pagine non validi'});
+ if(d.pageName&&!d.pageId)ctx.addIssue({code:'custom',message:'Il nome della pagina richiede un ID stabile'});
+ for(const page of d.otherPages??[]){const{id:_id,name:_name,...scene}=page;refineDocument({...scene,documentId:d.documentId,revision:d.revision,fontAssets:d.fontAssets,productProfileVersion:d.productProfileVersion,fixture:d.fixture,validatedForProduction:d.validatedForProduction},ctx);}
+ if(d.otherPages?.length){
+  const objects=[...d.objects,...d.otherPages.flatMap(page=>page.objects)],groups=[...d.groups??[],...d.otherPages.flatMap(page=>page.groups??[])];
+  if(objects.length>EDITOR_LIMITS.objects||groups.length>EDITOR_LIMITS.groups||objects.reduce((n,o)=>n+(o.type==='text'?Array.from(o.text).length:0),0)>EDITOR_LIMITS.documentTextCharacters||objects.reduce((n,o)=>n+(o.type==='vector'?o.commands.length:0),0)>EDITOR_LIMITS.vectorCommands)ctx.addIssue({code:'custom',message:'Il progetto multipagina supera i limiti complessivi di oggetti, gruppi, testi o segmenti'});
+  const images=objects.filter(o=>o.type==='image'),resources=new Map<string,string>();for(const message of rasterDocumentIssues(rasterDocumentUsage(images)))ctx.addIssue({code:'custom',message});for(const image of images){const previous=resources.get(image.source.id);if(previous!==undefined&&previous!==image.source.dataUrl)ctx.addIssue({code:'custom',message:'ID immagine associato a originali diversi fra pagine'});resources.set(image.source.id,image.source.dataUrl);}
+ }
+});
 const LegacySceneObjectSchema = z.discriminatedUnion('type', [
   SceneObjectSchema.options[0].omit({ rotationDeg: true, fontWeight: true, fontStyle: true, underline: true, linethrough: true, overline: true, textAlign: true, lineHeight: true, letterSpacingPt: true, textScaleX: true, textScaleY: true, lineStyles: true, justification: true, textPath: true, textBox: true, characterStyles: true }).extend({ fontFamily: z.literal('Arial') }),
   SceneObjectSchema.options[1].omit({ rotationDeg: true, fill: true, strokeDash: true, cornerRadiusMm: true }).extend({ stroke: color, strokeMm: z.number().positive().max(2) }),
@@ -199,7 +217,7 @@ export function cloneSceneObject<T extends SceneObject>(object: T): T {
   return object.type === 'image' ? { ...object, ...(object.editor?{editor:{...object.editor}}:{}), source: { ...object.source }, raster: { ...object.raster }, ...(object.crop ? { crop: { ...object.crop } } : {}) } : structuredClone(object);
 }
 export function cloneGraphicDocument(document: GraphicDocument): GraphicDocument {
-  return { ...document, ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
+  return { ...document, ...(document.pageOrder?{pageOrder:[...document.pageOrder]}:{}),...(document.otherPages?{otherPages:document.otherPages.map(page=>{const{objects,groups,areaMm,...rest}=page;return{...structuredClone(rest),areaMm:{...areaMm},objects:objects.map(cloneSceneObject),...(groups?{groups:groups.map(cloneSceneGroup)}:{})};})}:{}), ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
 }
 export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('vector'), widthMm: z.number().finite().nonnegative().max(1000), heightMm: z.number().finite().nonnegative().max(1000) }),
@@ -214,7 +232,7 @@ export const ObjectSizeSchema = z.discriminatedUnion('type', [
 ]);
 export const TransformArgumentsSchema = z.strictObject({ ...position, rotationDeg: rotation, size: ObjectSizeSchema });
 export type TransformArguments = z.infer<typeof TransformArgumentsSchema>;
-const base = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), objectId: id };
+const base = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), objectId: id,pageId:id.optional() };
 const ids = z.array(id).min(1).max(EDITOR_LIMITS.objects);
 const alignment = z.enum(['left', 'centerX', 'right', 'top', 'centerY', 'bottom']);
 export const SelectionTransformSchema = z.strictObject({ objectIds: ids.min(2), scale: z.number().finite().min(0.01).max(100), rotationDeg: rotation, center: z.strictObject(position) });
@@ -222,6 +240,12 @@ export type SelectionTransformArguments = z.infer<typeof SelectionTransformSchem
 export const SelectionStyleSchema = z.strictObject({ ...PaintOpacityFields, fill: paint.optional(), stroke: paint.optional(), strokeMm: textStrokeWidth.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }).refine(style => Object.values(style).some(value => value !== undefined), 'Scegli almeno una proprietà di stile');
 export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
+  z.strictObject({...base,tool:z.literal('selectPage'),arguments:z.strictObject({pageId:id})}),
+  z.strictObject({...base,tool:z.literal('addPage'),arguments:z.strictObject({page:GraphicPageSchema,fontAssets:FontAssetsSchema.optional()})}),
+  z.strictObject({...base,tool:z.literal('duplicatePage'),arguments:z.strictObject({pageId:id,newPageId:id,name:z.string().trim().min(1).max(120)})}),
+  z.strictObject({...base,tool:z.literal('removePage'),arguments:z.strictObject({pageId:id})}),
+  z.strictObject({...base,tool:z.literal('renamePage'),arguments:z.strictObject({pageId:id,name:z.string().trim().min(1).max(120)})}),
+  z.strictObject({...base,tool:z.literal('reorderPage'),arguments:z.strictObject({pageId:id,index:z.number().int().min(0).max(MAX_GRAPHIC_PAGES-1)})}),
   z.strictObject({...base,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('setPaperColor'),arguments:z.strictObject({color:ColorSchema.nullable()})}),
@@ -318,7 +342,8 @@ export function objectIntersectsArea(doc: Pick<GraphicDocument, 'areaMm' | 'shap
     return Math.max(...a) > Math.min(...b) + epsilon && Math.max(...b) > Math.min(...a) + epsilon;
   });
 }
-export function validateLayout(doc: GraphicDocument, measure: Measure, mode: 'strict' | 'edit' = 'strict'): void {
+export function validateLayout(doc: GraphicDocument, measure: Measure, mode: 'strict' | 'edit' = 'strict'): void {for(const page of graphicPages(doc))validateSinglePageLayout(page,measure,mode);}
+function validateSinglePageLayout(doc: GraphicDocument, measure: Measure, mode: 'strict' | 'edit'): void {
   const backgrounds=backgroundObjectIds(doc);
   const intersections=new Map<SceneObject,boolean>();
   const intersects = (object: SceneObject): boolean => {const previous=intersections.get(object);if(previous!==undefined)return previous;let visible:boolean;try { visible=objectIntersectsArea(doc, object, measure); } catch(error) { if(mode==='edit'&&object.type==='text'&&error instanceof UnverifiedTextGeometryError)visible=true;else throw error; }intersections.set(object,visible);return visible;};
@@ -345,6 +370,8 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   DocumentSchema.parse(doc);
   const command = GraphicCommandSchema.parse(raw);
   if (command.expectedRevision !== doc.revision) throw new Error('Revisione grafica obsoleta: rileggi il documento');
+  if(command.pageId!==undefined&&command.pageId!==(doc.pageId??'page-1'))throw Error('Pagina del comando diversa dalla pagina attiva');
+  if(isPageCommand(command))return applyPageCommand(doc,command,measure,role);
   const next = cloneGraphicDocument(doc);
   if ('fontAssets' in command.arguments && command.arguments.fontAssets?.length) { const resources = [...next.fontAssets ?? []]; for (const asset of command.arguments.fontAssets) { const old = resources.find(a=>a.id===asset.id); if (old && (old.dataBase64!==asset.dataBase64 || old.format!==asset.format || old.family!==asset.family)) throw new Error('La risorsa originale del font è immutabile'); if (!old) resources.push({...asset}); } next.fontAssets=resources; }
   if(command.tool==='setPaperColor'){if(command.arguments.color===null)delete next.paperColor;else next.paperColor=command.arguments.color;}
@@ -372,7 +399,9 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     if(command.objectId!==(command.arguments.objects[0]?.id??'canvas'))throw new Error('ID del comando diverso dal primo oggetto del template');
     next.objects=command.arguments.objects.map(cloneSceneObject);
     if(command.arguments.groups.length)next.groups=command.arguments.groups.map(cloneSceneGroup);else delete next.groups;
-    if(command.arguments.fontAssets?.length)next.fontAssets=command.arguments.fontAssets.map(asset=>({...asset}));else delete next.fontAssets;
+    // Other pages still refer to the shared font pool. Only a legacy single
+    // page replacement can discard the previous files.
+    if(!doc.otherPages){if(command.arguments.fontAssets?.length)next.fontAssets=command.arguments.fontAssets.map(asset=>({...asset}));else delete next.fontAssets;}
     if(command.arguments.paperColor)next.paperColor=command.arguments.paperColor;else delete next.paperColor;
     if(command.arguments.backgroundImageId)next.backgroundImageId=command.arguments.backgroundImageId;else delete next.backgroundImageId;
     if(command.arguments.backgroundGroupId)next.backgroundGroupId=command.arguments.backgroundGroupId;else delete next.backgroundGroupId;
@@ -469,7 +498,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   }
   if(next.backgroundImageId&&!next.objects.some(o=>o.id===next.backgroundImageId))delete next.backgroundImageId;
   if(next.backgroundGroupId&&!next.groups?.some(g=>g.id===next.backgroundGroupId))delete next.backgroundGroupId;
-  next.revision++;
+  next.revision++;if(next.contentRevision!==undefined)next.contentRevision++;
   const parsed = DocumentSchema.parse(next);
   validateLayout(parsed, measure, 'edit');
   assertObjectPolicies(doc,parsed,command,role,(a,b)=>{
@@ -513,7 +542,7 @@ export class DocumentStore {
   }
   dispatch(raw: unknown, source: 'manual' | 'ai-simulation'): void {
     const next = applyGraphicCommand(this.document, raw, this.measure, this.catalog,this.role);
-    this.past.push(cloneGraphicDocument(this.document)); this.future = [];
+    if(GraphicCommandSchema.parse(raw).tool!=='selectPage'){this.past.push(cloneGraphicDocument(this.document));this.future=[];}
     this.document = next;
     this.events.push({ source, revision: next.revision, objectId: GraphicCommandSchema.parse(raw).objectId });
   }
@@ -522,15 +551,16 @@ export class DocumentStore {
   redo(): void { this.travel(this.future, this.past, 'redo'); }
   private travel(from: GraphicDocument[], to: GraphicDocument[], source: 'undo' | 'redo'): void {
     const target = from.pop(); if (!target) return;
-    to.push(cloneGraphicDocument(this.document));
-    this.document = { ...target, revision: this.document.revision + 1 };
+    const active=target.pageId??'page-1',current=graphicPageIds(this.document).includes(active)?selectGraphicPage(this.document,active):this.document;
+    to.push(cloneGraphicDocument(current));
+    this.document = { ...target, revision: this.document.revision + 1,...(this.document.contentRevision!==undefined||target.contentRevision!==undefined?{contentRevision:(this.document.contentRevision??this.document.revision)+1}:{}) };
     this.events.push({ source, revision: this.document.revision });
   }
   /** Local workspace recovery: the file supplies its exact format/binding; never infer another product. */
   open(raw:unknown):void {
     const next=parseGraphicDocument(raw);validateLayout(next,this.measure,'edit');
     this.past.push(cloneGraphicDocument(this.document));this.future=[];
-    this.document={...next,revision:this.document.revision+1};this.events.push({source:'import',revision:this.document.revision});
+    this.document={...next,revision:this.document.revision+1,...(next.contentRevision!==undefined?{contentRevision:this.document.revision+1}:{})};this.events.push({source:'import',revision:this.document.revision});
   }
   import(raw: unknown): void {
     let next = parseGraphicDocument(raw);
@@ -543,12 +573,12 @@ export class DocumentStore {
     validateLayout(next, this.measure, 'edit');
     this.past.push(cloneGraphicDocument(this.document)); this.future = [];
     // Revisione locale monotona: una risposta AI precedente non diventa valida dopo import/undo.
-    this.document = { ...next, revision: this.document.revision + 1 };
+    this.document = { ...next, revision: this.document.revision + 1,...(next.contentRevision!==undefined?{contentRevision:this.document.revision+1}:{}) };
     this.events.push({ source: 'import', revision: this.document.revision });
   }
   changeProduct(product: ProductProfile, catalogVersion: string): void {
     if(this.document.plaque)throw new Error('Il formato di una targa si modifica dal pannello dedicato.');
-    const next = DocumentSchema.parse({ ...this.document, ...bindingFor(product, catalogVersion), areaMm: structuredClone(product.nominalAreaMm), shape: product.shape, revision: this.document.revision + 1 });
+    const next = DocumentSchema.parse({ ...this.document, ...bindingFor(product, catalogVersion), areaMm: structuredClone(product.nominalAreaMm), shape: product.shape, revision: this.document.revision + 1,...(this.document.contentRevision!==undefined?{contentRevision:this.document.revision+1}:{}) });
     validateLayout(next, this.measure);
     assertMinimumText(next,minimumFontForProduct(product));
     this.document = next;

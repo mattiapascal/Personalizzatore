@@ -1,3 +1,5 @@
+**Incremento realizzato il 12 novembre:** [stato e collaudo](iteration-editor-multipage-reference-layers.md). Modello, gestione pagine, esportazioni complete e importazione di sei sorgenti/40 pagine completati; restano proporzioni collegate, maniglie esterne, due cartelli con box vuoti e successivi gruppi a priorità bassa. Le fasi sotto costituiscono il piano originario.
+
 # Multipagina e trasferimento fra documenti — direttive del 12 novembre 2026
 
 Il titolare autorizza ora lo sviluppo multipagina: supera le precedenti esclusioni storiche. **Templates PitchPrint è escluso definitivamente dall’importazione**; Biglietti da Visita resta a bassa priorità. Non eliminare né migrare automaticamente copie esistenti. Nessun deploy o intervento commerciale; generazione immagini AI ancora esclusa.

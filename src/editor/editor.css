@@ -239,3 +239,5 @@
 .canvas-context-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:9px;border:0;border-radius:4px;background:transparent;color:inherit;text-align:left;font-size:13px}
 .canvas-context-menu button svg{width:18px;height:18px;flex:none}.canvas-context-menu button span{margin-left:auto;font-size:11px;opacity:.7}
 .canvas-context-menu button:hover:not(:disabled),.canvas-context-menu button:focus-visible{background:#e6f5fc;outline:2px solid #08c;outline-offset:-2px}.canvas-context-menu button:disabled{opacity:.4;cursor:default}
+
+.editor-pages{padding:10px 0 14px;margin-bottom:12px;border-bottom:1px solid #b3d9ef}.editor-pages label{display:grid;gap:5px}.editor-pages select,.editor-pages input{max-width:100%;min-width:0}.editor-pages details{margin-top:8px}.editor-pages details label{margin:8px 0}

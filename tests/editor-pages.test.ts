@@ -1,0 +1,40 @@
+import{expect,it}from'vitest';import{createTestDocument}from'./helpers/editor-fonts';import{DocumentSchema,DocumentStore,applyGraphicCommand,cloneGraphicDocument,type Measure}from'../src/editor/model';import{graphicPages,graphicPageIds,blankGraphicPage,joinGraphicPages,activeGraphicPageId}from'../src/editor/pages';
+const measure:Measure=object=>object.type==='rect'?{widthMm:object.widthMm,heightMm:object.heightMm}:{widthMm:10,heightMm:4};
+function source(width=60,height=30){const doc=createTestDocument();doc.areaMm={width,height};doc.objects=[{id:'same-id',type:'rect',xMm:2,yMm:2,widthMm:10,heightMm:5,stroke:'none',strokeMm:.25,fill:'#000000'}];return doc;}
+it('monopagina retrocompatibile; due pagine con ID oggetto locali e font condivisi non duplicano la scena attiva',()=>{
+ const single=source();expect(DocumentSchema.parse(single)).toEqual(single);expect(graphicPages(single)).toEqual([single]);const book=joinGraphicPages([single,source(100,50)],['Fronte','Retro']);expect(graphicPageIds(book)).toEqual(['page-1','page-2']);expect(book.objects).toEqual(single.objects);expect(book.otherPages).toHaveLength(1);expect(book.fontAssets).toEqual(single.fontAssets);expect(graphicPages(book).map(page=>page.areaMm.width)).toEqual([60,100]);expect(graphicPages(book).every(page=>!page.otherPages)).toBe(true);expect(DocumentSchema.parse(JSON.parse(JSON.stringify(book)))).toEqual(book);
+});
+it('cambio pagina protegge revisioni e target; modifica manuale e AI resta nella pagina corretta con Undo/Redo',()=>{
+ const book=joinGraphicPages([source(),source(100,50)]),before=cloneGraphicDocument(book),store=new DocumentStore(book,measure);
+ store.dispatch({schemaVersion:1,tool:'selectPage',objectId:'page-2',expectedRevision:0,arguments:{pageId:'page-2'}},'manual');expect(store.document.revision).toBe(1);expect(store.document.contentRevision).toBe(0);expect(activeGraphicPageId(store.document)).toBe('page-2');expect(store.document.areaMm.width).toBe(100);
+ expect(()=>store.dispatch({schemaVersion:1,tool:'moveObject',pageId:'page-1',objectId:'same-id',expectedRevision:1,arguments:{xMm:9,yMm:4}},'ai-simulation')).toThrow('Pagina');expect(()=>store.dispatch({schemaVersion:1,tool:'moveObject',objectId:'same-id',expectedRevision:0,arguments:{xMm:9,yMm:4}},'manual')).toThrow('obsoleta');
+ store.dispatch({schemaVersion:1,tool:'moveObject',pageId:'page-2',objectId:'same-id',expectedRevision:1,arguments:{xMm:9,yMm:4}},'ai-simulation');expect(graphicPages(store.document)[0]!.objects).toEqual(before.objects);expect(store.document.objects[0]!.xMm).toBe(9);store.dispatch({schemaVersion:1,tool:'selectPage',objectId:'page-1',expectedRevision:2,arguments:{pageId:'page-1'}},'manual');store.undo();expect(activeGraphicPageId(store.document)).toBe('page-2');expect(store.document.objects[0]!.xMm).toBe(2);store.redo();expect(activeGraphicPageId(store.document)).toBe('page-2');expect(store.document.objects[0]!.xMm).toBe(9);expect(book).toEqual(before);
+});
+it('aggiunta, duplicazione, nome, ordine ed eliminazione sono comandi validati; clonazione profonda fra pagine',()=>{
+ const store=new DocumentStore(source(),measure),dispatch=(tool:string,args:unknown)=>store.dispatch({schemaVersion:1,tool,objectId:'pages',expectedRevision:store.document.revision,arguments:args},'manual');
+ dispatch('addPage',{page:blankGraphicPage(store.document,'blank','Vuota')});expect(store.document.objects).toEqual([]);dispatch('duplicatePage',{pageId:'page-1',newPageId:'copy',name:'Copia'});expect(store.document.objects[0]!.id).toBe('same-id');dispatch('renamePage',{pageId:'copy',name:'Alternativa'});dispatch('reorderPage',{pageId:'copy',index:0});expect(graphicPages(store.document).map(page=>page.pageName)).toEqual(['Alternativa','Pagina 1','Vuota']);dispatch('removePage',{pageId:'page-1'});expect(graphicPageIds(store.document)).toEqual(['copy','blank']);store.undo();expect(graphicPageIds(store.document)).toEqual(['copy','page-1','blank']);const cloned=cloneGraphicDocument(store.document);cloned.otherPages![0]!.objects[0]!.xMm=77;expect(store.document.otherPages![0]!.objects[0]!.xMm).toBe(2);
+});
+it('errori delle altre pagine e limiti sono bloccanti senza mutare scena o redo; ultima pagina protetta',()=>{
+ const book=joinGraphicPages([source(),source()]),store=new DocumentStore(book,measure);store.dispatch({schemaVersion:1,tool:'renamePage',objectId:'pages',expectedRevision:0,arguments:{pageId:'page-2',name:'Nuovo'}},'manual');store.undo();const before=cloneGraphicDocument(store.document);
+ for(const change of [{...before,pageOrder:['page-1','page-1']},{...before,otherPages:[{...before.otherPages![0],id:'page-1'}]},{...before,otherPages:[{...before.otherPages![0],objects:[{...before.objects[0],widthMm:-1}]}]}])expect(()=>DocumentSchema.parse(change)).toThrow();expect(store.document).toEqual(before);store.redo();expect(graphicPages(store.document)[1]!.pageName).toBe('Nuovo');
+ expect(()=>applyGraphicCommand(source(),{schemaVersion:1,tool:'removePage',objectId:'pages',expectedRevision:0,arguments:{pageId:'page-1'}},measure)).toThrow('almeno una');
+ const many=source();many.objects=Array.from({length:501},(_,index)=>({...many.objects[0]!,id:'object-'+index}));expect(()=>joinGraphicPages([many,many])).toThrow('limiti complessivi');
+});
+
+it('riapertura di un libro salvato dopo molte revisioni ribasa entrambi i contatori senza perdere pagine',()=>{
+ const book=joinGraphicPages([source(),source()]);book.revision=20;book.contentRevision=15;const store=new DocumentStore(source(),measure);store.open(book);expect(store.document.revision).toBe(1);expect(store.document.contentRevision).toBe(1);expect(graphicPageIds(store.document)).toEqual(['page-1','page-2']);expect(()=>DocumentSchema.parse(store.document)).not.toThrow();store.dispatch({schemaVersion:1,tool:'selectPage',objectId:'pages',expectedRevision:1,arguments:{pageId:'page-2'}},'manual');expect(store.document.contentRevision).toBe(1);
+});
+
+it('le proprietà opzionali di una pagina non trapelano alle altre e applyTemplate conserva i font condivisi',()=>{
+ const first=source(),second=source();first.objects[0]!.editor={reference:true};first.groups=[{id:'background',objectIds:['same-id'],editor:{reference:true}}];first.backgroundGroupId='background';
+ const book=joinGraphicPages([first,second]);expect(()=>DocumentSchema.parse(book)).not.toThrow();expect(graphicPages(book)[1]).not.toHaveProperty('backgroundGroupId');
+ const store=new DocumentStore(book,measure,undefined,'admin');store.dispatch({schemaVersion:1,tool:'applyTemplate',objectId:'same-id',expectedRevision:0,arguments:{templateId:crypto.randomUUID(),templateVersion:1,objects:second.objects,groups:[]}},'manual');expect(store.document.fontAssets).toEqual(book.fontAssets);expect(graphicPages(store.document)[1]!.objects).toEqual(second.objects);
+});
+
+it('segnalazioni font su altre pagine identificano la pagina anche con ID testo uguali',async()=>{
+ const{multipageTestDocument}=await import('./helpers/multipage'),{inspectDocumentFonts}=await import('../src/editor/font-preflight'),{missingCharacterFontCommand}=await import('../src/editor/font-repair'),doc=multipageTestDocument();const back=doc.otherPages![0]!.objects[0]!;if(back.type!=='text')throw Error('Fixture');back.text='漢';const report=await inspectDocumentFonts(doc);expect(report.issues).toHaveLength(1);expect(report.issues[0]).toMatchObject({objectId:'same-text-id',pageId:'page-2',pageName:'Retro',kind:'missing-characters'});await expect(missingCharacterFontCommand(doc,report.issues[0]!,doc.fontAssets![0]!)).rejects.toThrow('Apri la pagina');
+});
+
+it('eliminare una pagina rispetta anche i blocchi ereditati del template per il cliente',()=>{
+ const first=source(),second=source();second.objects[0]!.editor={selectionLocked:true};const book=joinGraphicPages([first,second]),command={schemaVersion:1,tool:'removePage',objectId:'pages',expectedRevision:0,arguments:{pageId:'page-2'}};expect(()=>applyGraphicCommand(book,command,measure)).toThrow('protetti');expect(graphicPageIds(applyGraphicCommand(book,command,measure,undefined,'admin'))).toEqual(['page-1']);expect(graphicPageIds(book)).toHaveLength(2);
+});

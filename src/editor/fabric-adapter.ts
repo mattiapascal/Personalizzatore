@@ -1,3 +1,4 @@
+import{graphicPages,activeGraphicPageId}from'./pages';
 import {textStrokeFromFabric} from './paint-opacity';
 import { paintWithOpacity, textPaintFromFabric } from './paint-opacity';
 import {preciseIntermediateSvg} from './svg-precision';
@@ -157,7 +158,8 @@ export function measureTextFrame(object: TextObject) {
  * files are prepared, after the nominal glyph check and before Fabric renders. */
 async function prepareGraphicOutput(document: GraphicDocument): Promise<GraphicDocument> {
   DocumentSchema.parse(document);
-  const visible = productionDocument(document), ids = new Set(visible.objects.flatMap(object => object.type === 'text' ? [object.fontFamily, ...object.characterStyles?.flatMap(run => run.style.fontFamily ? [run.style.fontFamily] : []) ?? []] : []));
+  const scene=graphicPages(document).find(page=>activeGraphicPageId(page)===activeGraphicPageId(document))!;
+  const visible = productionDocument(scene), ids = new Set(visible.objects.flatMap(object => object.type === 'text' ? [object.fontFamily, ...object.characterStyles?.flatMap(run => run.style.fontFamily ? [run.style.fontFamily] : []) ?? []] : []));
   const output = { ...visible, ...(visible.fontAssets ? { fontAssets: visible.fontAssets.filter(asset => ids.has(asset.id)) } : {}) };
   await assertOutputFonts(output);
   await Promise.all([loadFontAssets(output.fontAssets), ...output.objects.filter(object => object.type === 'image').map(object => prepareRasterSource(object.source))]);
@@ -165,9 +167,9 @@ async function prepareGraphicOutput(document: GraphicDocument): Promise<GraphicD
 }
 /** Checked public SVG output. The adapter's synchronous serializer is only for
  * already prepared scenes and internal geometry/reference tests. */
-export async function exportDocumentSvg(document: GraphicDocument): Promise<string> {
+export async function exportDocumentSvg(document: GraphicDocument, transparentPaper=false): Promise<string> {
   const output = await prepareGraphicOutput(structuredClone(document)), adapter = new FabricAdapter(window.document.createElement('canvas'), () => 0, () => {});
-  try { return adapter.exportSvg(output); } finally { adapter.dispose(); }
+  try { return adapter.exportSvg(output,transparentPaper); } finally { adapter.dispose(); }
 }
 /** Canvas temporaneo: né overlay della vista né selezione entrano nel PNG. */
 export async function exportDocumentPng(document: GraphicDocument, dpi: PngDpi, transparent: boolean): Promise<Blob> {
@@ -711,12 +713,12 @@ export class FabricAdapter {
     this.publishObjectSelection();
   }
   /** Low-level serialization; runtime output callers use exportDocumentSvg. */
-  exportSvg(document: GraphicDocument): string {
+  exportSvg(document: GraphicDocument,transparentPaper=false): string {
     for(const object of productionDocument(document).objects)if(object.type==='text'){for(const id of [object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])assertFontAvailable(id);assertTextGeometry(object);}
     const zoom = this.zoom;
     const selected = [...this.selectedIds];
     try {
-      this.zoom = 1; this.render(productionDocument(document), null);
+      this.zoom = 1; this.render(productionDocument(document), null);if(transparentPaper&&!document.paperColor)this.canvas.backgroundColor='';
       // Both physical axes are explicit. Avoid a subpixel "meet" gutter from
       // rounding the intrinsic millimetre viewport to CSS pixels in SVG images.
       const svg=preciseIntermediateSvg(()=>this.canvas.toSVG({ width: `${document.areaMm.width}mm`, height: `${document.areaMm.height}mm`, viewBox: { x: 0, y: 0, width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM } })).replace('<svg ','<svg preserveAspectRatio="none" ');

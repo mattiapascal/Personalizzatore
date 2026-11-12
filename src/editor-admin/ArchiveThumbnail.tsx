@@ -1,3 +1,4 @@
+import{graphicPages}from'../editor/pages';
 import {archivePreviewError,ADMIN_PREVIEW_OUTDATED_EVENT} from './preview-errors';
 import { useEffect,useRef,useState } from 'react';
 import { readArchiveRecord } from './api';
@@ -8,7 +9,7 @@ const cache=new Map<string,Blob>();let queue=Promise.resolve();
 function queued<T>(job:()=>Promise<T>):Promise<T>{const work=queue.then(job);queue=work.then(()=>{},()=>{});return work;}
 async function renderRecord(record:ArchiveRecord):Promise<Blob>{
  const {exportDocumentThumbnail}=await import('../editor/fabric-adapter');
- return exportDocumentThumbnail(record.document, ARCHIVE_PREVIEW_SIDE);
+ return exportDocumentThumbnail(graphicPages(record.document)[0]!, ARCHIVE_PREVIEW_SIDE);
 }
 function remember(key:string,preview:Blob){cache.delete(key);cache.set(key,preview);let bytes=[...cache.values()].reduce((sum,value)=>sum+value.size,0);while(cache.size>128||bytes>16*1024*1024){const first=cache.keys().next().value;if(!first)break;bytes-=cache.get(first)!.size;cache.delete(first);}}
 export function ArchiveThumbnail({id,version,title,previewKey,record,large=false,attempt=0}:{id:string;version:number;title:string;previewKey?:string;record?:ArchiveRecord;large?:boolean;attempt?:number}){

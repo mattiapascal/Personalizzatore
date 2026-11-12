@@ -1,3 +1,4 @@
+import{graphicPages}from'../editor/pages';
 import{pngDescriptor,PNG_DECODING_POLICY}from'../editor/png-source';
 import type { GraphicDocument } from '../editor/model';
 import { productionDocument } from '../editor/object-properties';
@@ -8,6 +9,7 @@ export const ARCHIVE_PREVIEW_FONT_POLICY = 'strict-nominal-1';
 export const ARCHIVE_PREVIEW_ORIGINAL_RASTER_POLICY = 'direct-source-1';
 export const ARCHIVE_PREVIEW_PROCESSED_RASTER_POLICY = 'source-filter-grid-1';
 export function archivePreviewContent(document: GraphicDocument): string {
+  document=graphicPages(document)[0]!;
   const visible = productionDocument(document);
   const fontIds = new Set(visible.objects.flatMap(object => object.type === 'text' ? [object.fontFamily, ...object.characterStyles?.flatMap(run => run.style.fontFamily ? [run.style.fontFamily] : []) ?? []] : []));
   return JSON.stringify({ renderer: ARCHIVE_PREVIEW_RENDERER,...(visible.objects.some(o=>o.type==='image'&&o.source.mime==='image/png'&&pngDescriptor(o.source.dataUrl).special)?{pngPolicy:PNG_DECODING_POLICY}:{}), ...(visible.objects.some(object=>object.type==='image'&&object.raster.mode==='original')?{rasterPolicy:ARCHIVE_PREVIEW_ORIGINAL_RASTER_POLICY}:{}), ...(visible.objects.some(object=>object.type==='image'&&object.raster.mode!=='original')?{processedRasterPolicy:ARCHIVE_PREVIEW_PROCESSED_RASTER_POLICY}:{}), ...(fontIds.size ? { fontPolicy: ARCHIVE_PREVIEW_FONT_POLICY } : {}), side: ARCHIVE_PREVIEW_SIDE, area: document.areaMm, shape: document.shape,

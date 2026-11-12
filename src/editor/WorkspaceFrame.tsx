@@ -74,17 +74,17 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     area.scrollLeft=0;area.scrollTop=0;
     updateZoom(Math.min((area.clientWidth - 48) / (doc.areaMm.width * PX_PER_MM), (area.clientHeight - 48) / (doc.areaMm.height * PX_PER_MM)),undefined,true);
   };
-  useLayoutEffect(()=>{setViewReady(!expanded);},[expanded,doc.documentId,doc.areaMm.width,doc.areaMm.height]);
+  useLayoutEffect(()=>{setViewReady(!expanded);},[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   useEffect(()=>{
     if(!expanded)return;
     autoFit.current=true;
     const frame=requestAnimationFrame(()=>{fit();setViewReady(true);});
     return()=>cancelAnimationFrame(frame);
-  },[expanded,doc.documentId,doc.areaMm.width,doc.areaMm.height]);
+  },[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   useEffect(()=>{
     const area=viewport.current?.querySelector<HTMLElement>('.canvas-scroll');if(!expanded||!area)return;
     const observer=new ResizeObserver(()=>{if(autoFit.current&&!live.current.editing)fit();});observer.observe(area);return()=>observer.disconnect();
-  },[expanded,doc.documentId,doc.areaMm.width,doc.areaMm.height]);
+  },[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   const close = () => {
     if (document.fullscreenElement === root.current) void document.exitFullscreen();
     updateZoom(1); setExpanded(false);

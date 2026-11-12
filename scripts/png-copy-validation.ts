@@ -1,3 +1,4 @@
+import{allGraphicObjects}from'../src/editor/pages';
 import{pngDescriptor,pngFrameBytes,validatePngData}from'../src/editor/png-source';import{assertSamePngPixels,rawPngPixelOffset,type PngPixelRows}from'../src/editor/png-pixel-equivalence';import{MAX_RASTER_PIXELS}from'../src/editor/raster-limits';import type{GraphicDocument}from'../src/editor/model';
 const checked=new Map<string,Promise<void>>();let bytes=0,queue:Promise<unknown>=Promise.resolve();
 /** Decoder adapter stays in the local Node backend, never in the storefront.
@@ -12,4 +13,4 @@ export async function validatePngCopies(dataUrl:string):Promise<void>{
  };
  const pending=queue.then(work);queue=pending.catch(()=>{});checked.set(dataUrl,pending);bytes+=dataUrl.length;while(checked.size>16||bytes>64*1024*1024){const key=checked.keys().next().value!;bytes-=key.length;checked.delete(key);}try{await pending;}catch(error){if(checked.get(dataUrl)===pending){checked.delete(dataUrl);bytes-=dataUrl.length;}throw error;}
 }
-export async function validateDocumentPngCopies(documents:readonly Pick<GraphicDocument,'objects'>[]):Promise<void>{const seen=new Set<string>();for(const document of documents)for(const object of document.objects)if(object.type==='image'&&object.source.mime==='image/png'&&!seen.has(object.source.dataUrl)){seen.add(object.source.dataUrl);await validatePngCopies(object.source.dataUrl);}}
+export async function validateDocumentPngCopies(documents:readonly (Pick<GraphicDocument,'objects'>&Partial<Pick<GraphicDocument,'otherPages'>>)[]):Promise<void>{const seen=new Set<string>();for(const document of documents)for(const object of allGraphicObjects(document))if(object.type==='image'&&object.source.mime==='image/png'&&!seen.has(object.source.dataUrl)){seen.add(object.source.dataUrl);await validatePngCopies(object.source.dataUrl);}}

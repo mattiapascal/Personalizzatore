@@ -27,3 +27,7 @@ it('la griglia filtri originale invalida soltanto le miniature con immagini elab
  expect(JSON.parse(archivePreviewContent(doc)).processedRasterPolicy).toBe(ARCHIVE_PREVIEW_PROCESSED_RASTER_POLICY);
  doc.objects[0]!.editor={reference:true};expect(JSON.parse(archivePreviewContent(doc))).not.toHaveProperty('processedRasterPolicy');
 });
+
+it('miniatura multipagina: usa la prima pagina logica, indipendente da pagina attiva e modifiche del retro',async()=>{
+ const{multipageTestDocument}=await import('./helpers/multipage'),{graphicPages,selectGraphicPage}=await import('../src/editor/pages'),doc=multipageTestDocument(),key=await archivePreviewKey(doc);expect(key).toBe(await archivePreviewKey(graphicPages(doc)[0]!));const back=selectGraphicPage(doc,'page-2');expect(await archivePreviewKey(back)).toBe(key);back.objects[0]!.xMm+=1;expect(await archivePreviewKey(back)).toBe(key);back.otherPages![0]!.objects[0]!.xMm+=1;expect(await archivePreviewKey(back)).not.toBe(key);
+});

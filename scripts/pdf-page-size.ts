@@ -7,3 +7,9 @@ export async function exactPdfPageSize(bytes:Buffer,widthMm:number,heightMm:numb
  const stream=(data:string)=>({stream:{dict:{},data:Buffer.from(data).toString('base64')}});await writeFile(patch,JSON.stringify({qpdf:[{jsonversion:2,pdfversion:json.qpdf[0].pdfversion,calledgetallpages:true},{[key]:{value:page},[`obj:${first} 0 R`]:stream(`q\n1 0 0 1 0 ${height-oldHeight} cm\n`),[`obj:${last} 0 R`]:stream('Q\n')}]}),{mode:0o600});await run('qpdf',[input,`--update-from-json=${patch}`,output],{timeout:10000,maxBuffer:256*1024});return await readFile(output);
  }finally{await rm(directory,{recursive:true,force:true});}
 }
+
+/** Concatenate already normalized pages without rasterization or page scaling. */
+export async function mergeLocalPdfPages(pages:readonly Buffer[]):Promise<Buffer>{
+ if(!pages.length||pages.length>100)throw Error('Numero pagine PDF non valido');if(pages.length===1)return pages[0]!;
+ const directory=await mkdtemp(join(tmpdir(),'editor-pdf-pages-'));try{const inputs=[];for(const[index,bytes]of pages.entries()){const file=join(directory,`page-${index+1}.pdf`);await writeFile(file,bytes,{mode:0o600});inputs.push(file,'1-z');}const output=join(directory,'design.pdf');try{await run('qpdf',['--empty','--pages',...inputs,'--',output],{timeout:30000,maxBuffer:256*1024});}catch(cause){if((cause as NodeJS.ErrnoException).code==='ENOENT')throw Error('Esportazione multipagina locale: installare qpdf.');throw Error('Unione delle pagine PDF non riuscita.');}return await readFile(output);}finally{await rm(directory,{recursive:true,force:true});}
+}

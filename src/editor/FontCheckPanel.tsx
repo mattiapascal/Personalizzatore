@@ -1,3 +1,4 @@
+import{allGraphicObjects,activeGraphicPageId}from'./pages';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { GraphicDocument } from './model';
 import { fontIssueMessage, inspectDocumentFonts, type FontReport } from './font-preflight';
@@ -21,11 +22,11 @@ function FontRepairRow({ issue, revision, busy, onOpen, onRepair }: { issue: Fon
   </div>;
 }
 
-export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {}, onRepair }: { document: GraphicDocument; busy?: boolean; onOpen?: () => void; onRepair?: Repair }) {
+export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {}, onRepair,onPage }: { onPage?:(pageId:string)=>void;document: GraphicDocument; busy?: boolean; onOpen?: () => void; onRepair?: Repair }) {
   const coverageVersion=useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion);
   const [retry,setRetry]=useState(0);
   const [result, setResult] = useState<{ document: GraphicDocument; report: FontReport } | null>(null);
-  const relevant = doc.objects.some(object => object.type === 'text');
+  const relevant = allGraphicObjects(doc).some(object => object.type === 'text');
   useEffect(() => {
     if (!relevant) return;
     let active = true;
@@ -36,7 +37,7 @@ export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {},
   const report = result?.document === doc ? result.report : null;
   return <section aria-label="Controllo font del progetto" className="font-check-panel">
     <strong>Font del progetto</strong>
-    {!report ? <p className="caption">Controllo dei caratteri…</p> : report.issues.length ? <div><p className="caption" role="status">Controlla questi testi prima di confermare la grafica.</p><ul>{report.issues.map(issue=><li key={`${issue.objectId}:${issue.fontId}:${issue.kind}`}>{fontIssueMessage(issue)}{issue.kind === 'missing-characters' && onRepair && <FontRepairRow issue={issue} revision={doc.revision} busy={busy} onOpen={onOpen} onRepair={onRepair}/>}</li>)}</ul></div> : <p className="caption">I caratteri usati sono presenti nei {report.checkedFonts} file font controllati. Verifica comunque la resa nell’anteprima.</p>}
+    {!report ? <p className="caption">Controllo dei caratteri…</p> : report.issues.length ? <div><p className="caption" role="status">Controlla questi testi prima di confermare la grafica.</p><ul>{report.issues.map(issue=><li key={`${issue.pageId??''}:${issue.objectId}:${issue.fontId}:${issue.kind}`}>{fontIssueMessage(issue)}{issue.pageId&&issue.pageId!==activeGraphicPageId(doc)?<button type="button" disabled={busy} onClick={()=>onPage?.(issue.pageId!)}>Apri pagina {issue.pageName}</button>:issue.kind === 'missing-characters' && onRepair && <FontRepairRow issue={issue} revision={doc.revision} busy={busy} onOpen={onOpen} onRepair={onRepair}/>}</li>)}</ul></div> : <p className="caption">I caratteri usati sono presenti nei {report.checkedFonts} file font controllati. Verifica comunque la resa nell’anteprima.</p>}
     {report?.issues.some(issue=>issue.kind==='unknown-coverage')&&<button type="button" disabled={busy} onClick={()=>{setResult(null);setRetry(value=>value+1);}}>Ricontrolla i font</button>}
   </section>;
 }

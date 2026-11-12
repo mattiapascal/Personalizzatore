@@ -1,3 +1,4 @@
+import{joinGraphicPages}from'./pages';
 import {pitchprintTextStroke} from './pitchprint-text-stroke';
 import {DEFAULT_JUSTIFICATION} from './justification';
 import{clippedPitchprintImageGeometry}from'./pitchprint-image-clip';
@@ -28,7 +29,7 @@ function properties(raw:Record<string,unknown>,warnings:string[]):ObjectProperti
 }
 const color=canonicalPaint;
 /** Single-page native PitchPrint v10/Fabric 3 source. Never executes source scripts or silently drops objects. */
-export async function importPitchPrint(raw:unknown,options:PitchImportOptions):Promise<PitchImportResult>{
+async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Promise<PitchImportResult>{
  if(raw&&typeof raw==='object'&&Array.isArray((raw as any).pages)&&(raw as any).pages.length!==1)throw new Error('Il configuratore importa soltanto template a pagina singola.');
  const source=sourceSchema.parse(raw);const unitMm=pitchprintUnitMm(source.unit),page=source.pages[0]!,data=page.pageData,clip=page.canvas.clipPath,width=numeric(data.fWidth,'Larghezza')*unitMm,height=numeric(data.fHeight,'Altezza')*unitMm,cw=numeric(clip.width,'Area canvas'),ch=numeric(clip.height,'Area canvas');if(width<=0||height<=0||width>1000||height>1000||cw<=0||ch<=0)throw new Error('Formato fuori dai limiti del laboratorio.');
  const left=numeric(clip.left??0,'Origine canvas'),top=numeric(clip.top??0,'Origine canvas'),sx=width/cw,sy=height/ch,warnings:string[]=[],objects:SceneObject[]=[],assets:FontAsset[]=[],fontCache=new Map<string,Promise<PitchprintFontResult>>(),groupMembers=new Map<string,string[]>(),expandedGroups:SceneGroup[]=[];
@@ -128,4 +129,15 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  }
  if(groups.length)warnings.push(`${groups.length} gruppi grafici conservati come unità di selezione e trasformazione.`);
  const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),...(backgroundObject?{backgroundImageId:backgroundObject.id}:{}),...(backgroundGroupId?{backgroundGroupId}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});validateLayout(document,measureFabric,'edit');warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
+}
+
+/** Convert every source page before exposing a canonical project. */
+export async function importPitchPrint(raw:unknown,options:PitchImportOptions):Promise<PitchImportResult>{
+ const source=raw as {pages?:unknown[];title?:unknown};if(!Array.isArray(source?.pages)||source.pages.length<=1)return importSinglePitchPrint(raw,options);
+ if(source.pages.length>100)throw Error('Massimo 100 pagine per progetto');
+ const converted:PitchImportResult[]=[],images=new Map<string,Promise<Uint8Array>>(),read=options.image;
+ const shared={...options,image:(url:string)=>{let value=images.get(url);if(!value){value=read(url);images.set(url,value);}return value;}};
+ for(const[index,page]of source.pages.entries()){try{converted.push(await importSinglePitchPrint({...source,pages:[page]},shared));}catch(error){throw Error(`Pagina ${index+1}: ${error instanceof Error?error.message:'conversione non riuscita'}. Nessuna pagina viene importata parzialmente.`);}}
+ const names=source.pages.map((page:any,index)=>String(page.pageData?.name??page.pageData?.title??`Pagina ${index+1}`).slice(0,120)),document=joinGraphicPages(converted.map(page=>page.document),names);validateLayout(document,measureFabric,'edit');
+ return{document,title:converted[0]!.title,sourceObjects:converted.reduce((n,page)=>n+page.sourceObjects,0),warnings:[`${converted.length} pagine conservate con formati indipendenti.`,...converted.flatMap((page,index)=>page.warnings.map(warning=>`Pagina ${index+1}: ${warning}`))]};
 }

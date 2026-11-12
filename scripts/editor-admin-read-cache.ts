@@ -1,3 +1,4 @@
+import{allGraphicObjects}from'../src/editor/pages';
 import{validateDocumentPngCopies}from'./png-copy-validation';
 import {readFile,stat} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
@@ -16,7 +17,7 @@ export function cloneArchiveValue<T>(value:T):T {
 export function internArchiveResourceStrings(state:AdminState):{unique:number;aliases:number}{
  const pool=new Map<string,string>();let aliases=0;const share=(value:string)=>{const existing=pool.get(value);if(existing!==undefined){aliases++;return existing;}pool.set(value,value);return value;};
  for(const font of state.fonts)font.dataBase64=share(font.dataBase64);
- for(const record of state.records){for(const font of record.document.fontAssets??[])font.dataBase64=share(font.dataBase64);for(const object of record.document.objects)if(object.type==='image')object.source.dataUrl=share(object.source.dataUrl);}
+ for(const record of state.records){for(const font of record.document.fontAssets??[])font.dataBase64=share(font.dataBase64);for(const object of allGraphicObjects(record.document))if(object.type==='image')object.source.dataUrl=share(object.source.dataUrl);}
  return{unique:pool.size,aliases};
 }
 /** Internal validated snapshot. Never expose its mutable containers to callers. */
