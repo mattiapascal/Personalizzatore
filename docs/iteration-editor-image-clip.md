@@ -14,7 +14,7 @@ Curve, fori, più sottotracciati, rettangoli arrotondati, maschere assolute/inve
 
 ## Prove e campione
 
-**847 unitari / 125 file**, build laboratorio/pubblico e scansioni dei segreti superati. **76 regressioni browser pertinenti passate** in 2,3 minuti: PitchPrint, gruppi, immagini, crop e maniglie, più i tre nuovi casi. Dopo l’ultima correzione delle coordinate implicite, ricontrollati i tre nuovi casi: **3/3 passati**; il nuovo caso unitario e tutti gli altri unitari sono inclusi nell’esecuzione finale da 847. **13 browser pubblici** e **43 campioni JSON/SVG** riaperti/esportati senza errori o richieste esterne. Bundle pubblico invariato: `index-BG2r_x-8.js`, CSS `index-L8Ls1asZ.css`. Nessun nuovo controllo completo dell’intero laboratorio ancora dichiarato per questo incremento.
+**847 unitari / 125 file**, build laboratorio/pubblico e scansioni dei segreti superati. **76 regressioni browser pertinenti passate** in 2,3 minuti: PitchPrint, gruppi, immagini, crop e maniglie, più i tre nuovi casi. Dopo l’ultima correzione delle coordinate implicite, ricontrollati i tre nuovi casi: **3/3 passati**; il nuovo caso unitario e tutti gli altri unitari sono inclusi nell’esecuzione finale da 847. **13 browser pubblici** e **43 campioni JSON/SVG** riaperti/esportati senza errori o richieste esterne. Bundle pubblico invariato: `index-BG2r_x-8.js`, CSS `index-L8Ls1asZ.css`. Avviata poi la regressione completa di **532 scenari**, sul codice applicativo `3e9f594`: `.local/image-clip-full-browser.log`, handle exec **31565**. Esito ancora pendente: non dichiarare passata l’intera suite o modificare sorgenti/test/archivio durante l’esecuzione.
 
 Confronto indipendente a 4× tramite maschere native Fabric, senza usare i calcoli del convertitore:
 
