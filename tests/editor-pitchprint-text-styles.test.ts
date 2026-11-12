@@ -10,7 +10,7 @@ it('Textbox Fabric 3.4: gli stili delle righe assenti non cambiano caratteri e n
 });
 it('gli stili residui non autorizzano altre versioni, indici malformati, righe vuote o proprietà sconosciute',async()=>{
  const legacy={...base,type:'textbox',version:'3.4.0',text:'ABC'};let requests=0;const never=async()=>{requests++;throw Error('Non deve risolvere prima della validazione');};
- for(const input of[{...legacy,type:'i-text',styles:{1:{0:{fill:'red'}}}},{...legacy,version:'7.4.0',styles:{1:{0:{fill:'red'}}}},{...legacy,styles:{100:{0:{fill:'red'}}}},{...legacy,styles:{1:{4001:{fill:'red'}}}},{...legacy,styles:{1:{'-1':{fill:'red'}}}},{...legacy,styles:{1:{0:{futureProperty:true}}}},{...legacy,styles:{0:{4:{fill:'red'}}}},{...legacy,text:'A\n\nB',styles:{1:{0:{fill:'red'}}}}])await expect(pitchprintTextStyles(input,.2,false,never)).rejects.toThrow();expect(requests).toBe(0);
+ for(const input of[{...legacy,type:'i-text',styles:{1:{0:{fill:'red'}}}},{...legacy,version:'7.4.0',styles:{1:{0:{fill:'red'}}}},{...legacy,styles:{100:{0:{fill:'red'}}}},{...legacy,styles:{1:{4001:{fill:'red'}}}},{...legacy,styles:{1:{'-1':{fill:'red'}}}},{...legacy,styles:{1:{0:{futureProperty:true}}}},{...legacy,version:'3.3.0',styles:{0:{4:{fill:'red'}}}},{...legacy,text:'A\n\nB',styles:{1:{0:{fill:'red'}}}}])await expect(pitchprintTextStyles(input,.2,false,never)).rejects.toThrow();expect(requests).toBe(0);
 });
 it('segnala gli stili di inserimento esattamente a fine riga senza richiedere font non usati; indici vuoti o fuori riga restano bloccanti',async()=>{
  let requests=0;const result=await pitchprintTextStyles({...base,styles:{0:{3:{fontFamily:'Font mai dipinto',fontSize:9999}},1:{2:{fill:'red'}}}},.2,false,async()=>{requests++;throw Error('Non deve risolvere font senza caratteri');});
@@ -36,4 +36,23 @@ it('interlinea compatta con gli stessi comandi e storico, default invariato e ri
  for(const [index,source] of ['manual','ai-simulation'].entries())store.dispatch({schemaVersion:1,tool:'updateObject',objectId:doc.objects[0]!.id,expectedRevision:index,arguments:{object:{...doc.objects[0],lineHeight:index===0?.9:.1}}},source as 'manual'|'ai-simulation');
  expect(store.document.objects[0]).toMatchObject({lineHeight:.1});store.undo();expect(store.document.objects[0]).toMatchObject({lineHeight:.9});const before=structuredClone(store.document);
  for(const lineHeight of [0,NaN,Infinity,3.01])expect(()=>DocumentSchema.parse({...before,objects:[{...before.objects[0],lineHeight}]})).toThrow();expect(store.document).toEqual(before);store.redo();expect(store.document.objects[0]).toMatchObject({lineHeight:.1});
+});
+
+it('IText e Textbox 3.4: colonne residue non si riversano sulle righe successive né richiedono font',async()=>{
+ for(const type of ['i-text','textbox']){
+  const input={...base,type,version:'3.4.0',text:'ÈA\nBCD',styles:{0:{0:{fill:'red'},3:{fontFamily:'Inesistente TEST',fontSize:9999,deltaY:500},4000:{fontFamily:'Inesistente TEST'}},1:{0:{fontFamily:'Tinos'}}}},before=structuredClone(input),requests:any[]=[];
+  const result=await pitchprintTextStyles(input,.2,false,async request=>{requests.push(request);return resolve(request);});
+  expect(result.ignoredTrailingStyles).toBe(2);expect(result.ignoredInsertionStyles).toBe(0);expect(result.ignoredDetachedStyles).toBe(0);expect(requests).toEqual([{family:'Tinos',weight:400,italic:false}]);
+  expect(result.characterStyles).toEqual([{start:0,end:1,style:{fill:'#ff0000'}},{start:3,end:4,style:{fontFamily:TEST_FONT_ASSETS.find(f=>f.familyGroup==='Tinos'&&f.weight===400&&!f.italic)!.id,fontWeight:'normal',fontStyle:'normal'}}]);
+  expect(Object.keys(result.nativeStyles[0]!)).toEqual(['0']);expect(input).toEqual(before);
+ }
+});
+it('colonne residue: versioni e tipi ignoti, righe vuote, proprietà ignote e indici fuori budget rimangono bloccanti',async()=>{
+ const legacy={...base,type:'i-text',version:'3.4.0',text:'ABC'};let requests=0;const never=async()=>{requests++;throw Error('Non deve risolvere font');};
+ for(const input of [
+  {...legacy,type:'text',styles:{0:{4:{fill:'red'}}}}, {...legacy,version:'7.4.0',styles:{0:{4:{fill:'red'}}}},
+  {...legacy,styles:{0:{4001:{fill:'red'}}}}, {...legacy,styles:{0:{'04':{fill:'red'}}}},
+  {...legacy,styles:{0:{'4.5':{fill:'red'}}}}, {...legacy,styles:{0:{'9007199254740992':{fill:'red'}}}},
+  {...legacy,styles:{0:{4:{futureProperty:true}}}}, {...legacy,text:'A\n\nB',styles:{1:{4:{fontSize:99}}}},
+ ])await expect(pitchprintTextStyles(input,.2,false,never)).rejects.toThrow();expect(requests).toBe(0);
 });

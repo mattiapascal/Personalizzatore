@@ -28,15 +28,16 @@ function checkAppearance(style: Raw, alignment: unknown): void {
 /** Fabric 3 indices are code points within explicit lines. Validate all entries
  * before resolving fonts, so invalid indices cannot become a partial import. A style at the exact
  * end of a nonempty line is insertion metadata: Fabric 3 never paints/measures it.
- * Bounded detached hard-line rows are likewise inactive in verified 3.4.0 Textboxes. */
+ * Bounded detached Textbox rows and trailing IText/Textbox columns are likewise
+ * inactive in verified 3.4.0 sources. Empty existing lines remain significant. */
 export async function pitchprintTextStyles(item: Raw, axisY: number, monochrome: boolean, resolve: (request: PitchprintFontRequest) => Promise<FontAsset>) {
   if (typeof item.text !== 'string' || Array.from(item.text).length > EDITOR_LIMITS.textCharacters) throw Error('Testo PitchPrint oltre i limiti del laboratorio.');
   checkAppearance(item, item.textAlign);
   pitchprintTextStroke(item, axisY, monochrome);
-  let ignoredInsertionStyles = 0, ignoredDetachedStyles = 0;
+  let ignoredInsertionStyles = 0, ignoredDetachedStyles = 0, ignoredTrailingStyles = 0;
   const nativeStyles: IText['styles'] = {}, characters: CharacterStyle[] = Array.from(item.text, () => ({}));
   const raw = item.styles;
-  if (raw == null) return { nativeStyles, characterStyles: compressStyles(characters), ignoredInsertionStyles, ignoredDetachedStyles };
+  if (raw == null) return { nativeStyles, characterStyles: compressStyles(characters), ignoredInsertionStyles, ignoredDetachedStyles, ignoredTrailingStyles };
   if (!isRecord(raw)) throw Error('Struttura degli stili dei caratteri non riconosciuta.');
   const lines = item.text.split('\n').map(line => Array.from(line)), entries: { line: number; column: number; index: number; style: Raw }[] = [];
   let offset = 0; const offsets = lines.map(line => { const start = offset; offset += line.length + 1; return start; });
@@ -51,6 +52,7 @@ export async function pitchprintTextStyles(item: Raw, axisY: number, monochrome:
       for (const key of Object.keys(style)) if (!keys.has(key)) throw Error(`Proprietà del carattere «${key}» da convertire.`);
       if (inactive==='detached') { ignoredDetachedStyles++; continue; }
       if (inactive==='insertion') { ignoredInsertionStyles++; continue; }
+      if (inactive==='trailing') { ignoredTrailingStyles++; continue; }
       checkAppearance(style, item.textAlign ?? 'left');
       pitchprintTextStroke({...item,...style},axisY,monochrome);
       entries.push({ line, column: Number(col), index: offsets[line]! + Number(col), style });
@@ -82,5 +84,5 @@ export async function pitchprintTextStyles(item: Raw, axisY: number, monochrome:
     for (const key of ['underline', 'linethrough', 'overline'] as const) if (style[key] !== undefined) canonical[key] = native[key] = decoration(style[key], key);
     characters[index] = CharacterStyleSchema.parse(canonical); (nativeStyles[line] ??= {})[column] = native;
   }
-  return { nativeStyles, characterStyles: compressStyles(characters), ignoredInsertionStyles, ignoredDetachedStyles };
+  return { nativeStyles, characterStyles: compressStyles(characters), ignoredInsertionStyles, ignoredDetachedStyles, ignoredTrailingStyles };
 }

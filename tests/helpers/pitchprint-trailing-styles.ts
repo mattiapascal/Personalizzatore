@@ -1,0 +1,8 @@
+/** TEST source: stale columns cannot spill into the following hard line. */
+export function trailingTextStylesSource(){
+ const common={version:'3.4.0',originX:'center',originY:'top',fontFamily:'Arimo',fontWeight:'normal',fontStyle:'normal',fontSize:40,textAlign:'center',lineHeight:1.1,charSpacing:0,angle:0,fill:'#000000',stroke:null,strokeWidth:0};
+ return{title:'Stili oltre fine riga TEST',unit:'mm',pages:[{pageData:{fWidth:160,fHeight:100},canvas:{clipPath:{left:0,top:0,width:1600,height:1000},objects:[
+  {...common,type:'i-text',text:'È AVATAR\nCittà · TEST',width:300,height:100,left:420,top:180,scaleX:1.3,scaleY:1.4,styles:{0:{0:{fontFamily:'Tinos',fontStyle:'italic',fontSize:44,fill:'#0088cc'},1:{fontFamily:'Tinos',fontStyle:'italic',fontSize:44,fill:'#0088cc'},99:{fontFamily:'Font residuo non dipinto TEST',fontSize:9999,deltaY:500}},1:{0:{fontFamily:'Tinos',fontSize:36}}}},
+  {...common,type:'textbox',text:'ALFA BETA GAMMA\nDELTA EPSILON',width:190,height:226,left:1120,top:180,scaleX:1.2,scaleY:1.3,styles:{0:{0:{fontFamily:'Tinos',fontSize:36},99:{fontFamily:'Font residuo non dipinto TEST',fontSize:9999,textBackgroundColor:'red'}},1:{0:{fill:'#cc2200'}}}}
+ ]}}]};
+}

@@ -4334,3 +4334,15 @@ test('contorno assente sui caratteri: spessore residuo invisibile in SVG, colore
   }return rows;
  },doc);for(const row of result){expect(row.pixels.different).toBe(0);expect(row.pixels.meanChannelError).toBe(0);expect(row.noneStyle).toContain('stroke-opacity: 0');expect(row.undone).toEqual(doc.objects);expect(row.retained).toEqual([{start:0,end:5,style:{stroke:'none',strokeMm:.4}}]);expect(row.roundtrip).toMatchObject({stroke:'#cc2200',strokeOpacity:0});expect(row.sourceUnchanged).toBe(true);}
 });
+
+
+test('stili oltre fine riga: testo e ritorni a capo fedeli, font residui mai richiesti',async({page})=>{
+ const{trailingTextStylesSource}=await import('../helpers/pitchprint-trailing-styles'),source=trailingTextStylesSource();await page.goto('/editor');const result=await page.evaluate(async({source,assets})=>{const p='/tests/helpers/trailing-styles-reference.browser.ts';return(await import(p)).inspectTrailingTextStyles(source,assets);},{source,assets:TEST_FONT_ASSETS});
+ expect(result.historyInert).toBe(true);expect(result.sourceUnchanged).toBe(true);expect(result.lines).toEqual([2,5]);expect(result.pixels.ratio).toBeLessThan(.01);expect(result.pixels.meanChannelError).toBeLessThan(.25);expect(result.requests).not.toContain('Font residuo non dipinto TEST');expect(result.warnings.filter((w:string)=>w.includes('1 stili residui oltre fine riga'))).toHaveLength(2);
+ expect(result.document.objects.map((o:any)=>o.text)).toEqual(source.pages[0]!.canvas.objects.map(o=>o.text));
+ const object=result.document.objects[0];const nextLine=object.characterStyles.find((run:any)=>run.start===9).style;expect(nextLine.fontSizePt).toBeCloseTo(36*.14*72/25.4,10);expect(nextLine.fontStyle).toBe('normal');
+ const history=await page.evaluate(async doc=>{const h='/tests/helpers/browser-module.ts',{loadedEditorModule}=await import(h),{DocumentStore,DocumentSchema}=await import(loadedEditorModule('/src/editor/model.ts')),{measureFabric,exportDocumentSvg}=await import(loadedEditorModule('/src/editor/fabric-adapter.ts')),store=new DocumentStore(doc,measureFabric),original=JSON.stringify(doc.objects),svg=await exportDocumentSvg(doc);
+  for(const caller of ['manual','ai-simulation']){const object={...store.document.objects[0],xMm:43.25};store.dispatch({schemaVersion:1,tool:'updateObject',objectId:object.id,expectedRevision:store.document.revision,arguments:{object}},caller);if(JSON.stringify(store.document.objects[0].characterStyles)!==JSON.stringify(doc.objects[0].characterStyles))throw Error('Stili modificati');store.undo();store.redo();store.undo();}
+  const reopened=DocumentSchema.parse(JSON.parse(JSON.stringify(store.document)));return{objectsUnchanged:JSON.stringify(reopened.objects)===original,svgUnchanged:(await exportDocumentSvg(reopened)).replace(/CLIPPATH_\d+/g,'CLIPPATH_TEST')===svg.replace(/CLIPPATH_\d+/g,'CLIPPATH_TEST'),revision:reopened.revision};
+ },result.document);expect(history).toEqual({objectsUnchanged:true,svgUnchanged:true,revision:8});
+});

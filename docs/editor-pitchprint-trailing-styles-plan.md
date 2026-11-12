@@ -1,3 +1,5 @@
+**Completato il 12 novembre:** [implementazione generale, prove e salvataggio](iteration-editor-trailing-text-styles.md). Questo piano conserva la diagnosi iniziale.
+
 # Prossimo incremento: stili residui oltre fine riga — 12 novembre 2026
 
 ## Evidenza
