@@ -118,7 +118,8 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
    // rounded pixels. SVG's default "meet" would add margins and move paths,
    // while texts/images already use the exact page matrix. Nonuniform strokes
    // are expanded locally instead of replacing their affine shape with an average.
-   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}mm" height="${height}mm" viewBox="${left} ${top} ${cw} ${ch}" preserveAspectRatio="none"><g transform="matrix(${parent.join(' ')})">${preciseIntermediateSvg(()=>object.toSVG())}</g></svg>`;try{const prepared=await prepareSvg(svg,false,'editable'),entries=prepared.objects.map((entry,n)=>({...entry,id:n?`${id}-${n}`:id,editor:{...editor}}));
+   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}mm" height="${height}mm" viewBox="${left} ${top} ${cw} ${ch}" preserveAspectRatio="none"><g transform="matrix(${parent.join(' ')})">${preciseIntermediateSvg(()=>object.toSVG())}</g></svg>`;try{const prepared=await prepareSvg(svg,false,'editable',{preserveUnpainted:true}),entries=prepared.objects.map((entry,n)=>({...entry,id:n?`${id}-${n}`:id,editor:{...editor}}));
+    if(shapeFill==='none'&&shapeStroke==='none')warnings.push(`${name}: geometria senza riempimento e contorno conservata, modificabile dall’elenco livelli.`);
     if(prepared.expandedStrokes){warnings.push(`${name}: contorno deformato espanso in tracciati per conservarne l’aspetto; lo spessore è ora geometria.`);if(entries.length>1){const parentId=tree.groups.filter(group=>group.leafIds.includes(id)).at(-1)?.id;expandedGroups.push({id:`${id}-outline-group`,...(parentId?{parentId}:{}),editor,objectIds:entries.map(entry=>entry.id)});for(const entry of entries)entry.editor={};}}
     objects.push(...entries);}catch(cause){throw new Error(`${name}: ${cause instanceof Error?cause.message:'geometria non convertibile'}`);}finally{object.dispose();}
   }

@@ -1,3 +1,5 @@
+**13 novembre — geometrie trasparenti:** [incremento](iteration-editor-unpainted-geometry.md). Due etichette aggiunte, 333 template, revisione 623, 20 prioritari rimasti. Prossimo: [originali Passo Carrabile](editor-original-recovery-plan.md), con quattro prototipi già confrontati; ruolo del bordo sfumato delle sette etichette chiesto al titolare. Nessun deploy.
+
 **12 novembre — fedeltà dei contorni e ricampionamento:** [incremento verificato](iteration-editor-contour-fidelity.md). 331 template, revisione 621, 22 prioritari rimasti. Corretto il controllo delle immagini e il PNG delle maschere senza condizioni specifiche per template; nessuna modifica al motore dei contorni o migrazione.
 
 **12 novembre — SVG misti e maschere:** [incremento verificato](iteration-editor-mixed-svg.md). Altra sorgente prioritaria recuperata; archivio a 328 template/revisione 618, 25 prioritari rimasti. Nuovo campione portabile, stessi comandi manuali/AI e nessuna migrazione o pubblicazione.

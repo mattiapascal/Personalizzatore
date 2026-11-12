@@ -1,0 +1,157 @@
+{
+  "title": "Geometrie trasparenti TEST",
+  "unit": "mm",
+  "pages": [
+    {
+      "pageData": {
+        "fWidth": 100,
+        "fHeight": 70
+      },
+      "canvas": {
+        "clipPath": {
+          "type": "rect",
+          "left": 0,
+          "top": 0,
+          "width": 1000,
+          "height": 700
+        },
+        "objects": [
+          {
+            "originX": "left",
+            "originY": "top",
+            "scaleX": 1,
+            "scaleY": 1,
+            "angle": 0,
+            "strokeWidth": 0,
+            "stroke": null,
+            "includeInForm": false,
+            "type": "group",
+            "left": 100,
+            "top": 100,
+            "width": 800,
+            "height": 500,
+            "objects": [
+              {
+                "originX": "left",
+                "originY": "top",
+                "scaleX": 1,
+                "scaleY": 1,
+                "angle": 0,
+                "strokeWidth": 0,
+                "stroke": null,
+                "includeInForm": false,
+                "type": "rect",
+                "left": -400,
+                "top": -250,
+                "width": 800,
+                "height": 500,
+                "fill": "#ecf6fc"
+              },
+              {
+                "originX": "left",
+                "originY": "top",
+                "scaleX": 1,
+                "scaleY": 1,
+                "angle": 0,
+                "strokeWidth": 0,
+                "stroke": null,
+                "includeInForm": false,
+                "type": "rect",
+                "left": -350,
+                "top": -200,
+                "width": 200,
+                "height": 180,
+                "rx": 45,
+                "ry": 30,
+                "fill": null,
+                "title": "Area logo"
+              },
+              {
+                "originX": "left",
+                "originY": "top",
+                "scaleX": 1,
+                "scaleY": 1,
+                "angle": 0,
+                "strokeWidth": 0,
+                "stroke": null,
+                "includeInForm": false,
+                "type": "path",
+                "left": 0,
+                "top": -200,
+                "width": 200,
+                "height": 180,
+                "fill": null,
+                "fillRule": "evenodd",
+                "title": "Sagoma con foro",
+                "path": [
+                  [
+                    "M",
+                    0,
+                    0
+                  ],
+                  [
+                    "L",
+                    200,
+                    0
+                  ],
+                  [
+                    "L",
+                    200,
+                    180
+                  ],
+                  [
+                    "L",
+                    0,
+                    180
+                  ],
+                  [
+                    "Z"
+                  ],
+                  [
+                    "M",
+                    50,
+                    50
+                  ],
+                  [
+                    "L",
+                    150,
+                    50
+                  ],
+                  [
+                    "L",
+                    150,
+                    130
+                  ],
+                  [
+                    "L",
+                    50,
+                    130
+                  ],
+                  [
+                    "Z"
+                  ]
+                ]
+              },
+              {
+                "originX": "left",
+                "originY": "top",
+                "scaleX": 1,
+                "scaleY": 1,
+                "angle": 0,
+                "strokeWidth": 0,
+                "stroke": null,
+                "includeInForm": false,
+                "type": "rect",
+                "left": -350,
+                "top": 100,
+                "width": 550,
+                "height": 40,
+                "fill": "#0088cc"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

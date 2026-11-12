@@ -1,0 +1,249 @@
+{
+  "colorMode": "color",
+  "schemaVersion": 2,
+  "documentId": "769599b9-d68e-4ea3-bd1c-dcbd8669c3bf",
+  "revision": 0,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 100,
+    "height": 70
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "pp-1-1",
+      "type": "rect",
+      "xMm": 10,
+      "yMm": 10,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 80,
+      "heightMm": 50,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fill": "#ecf6fc"
+    },
+    {
+      "id": "pp-1-2",
+      "type": "vector",
+      "xMm": 15.000000000000002,
+      "yMm": 15.000000000000002,
+      "editor": {
+        "label": "Area logo",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "widthMm": 20,
+      "heightMm": 18,
+      "commands": [
+        [
+          "M",
+          0.2250000000000001,
+          0
+        ],
+        [
+          "L",
+          0.7749999999999999,
+          0
+        ],
+        [
+          "C",
+          0.8992640687119288,
+          0,
+          1,
+          0.07461920836153436,
+          1,
+          0.16666666666666677
+        ],
+        [
+          "L",
+          1,
+          0.8333333333333335
+        ],
+        [
+          "C",
+          1,
+          0.9253807916384658,
+          0.8992640687119288,
+          1,
+          0.7749999999999999,
+          1
+        ],
+        [
+          "L",
+          0.2250000000000001,
+          1
+        ],
+        [
+          "C",
+          0.10073593128807153,
+          1,
+          0,
+          0.9253807916384658,
+          0,
+          0.8333333333333335
+        ],
+        [
+          "L",
+          0,
+          0.16666666666666677
+        ],
+        [
+          "C",
+          0,
+          0.07461920836153436,
+          0.10073593128807153,
+          0,
+          0.2250000000000001,
+          0
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "none",
+      "stroke": "none",
+      "strokeMm": 0.25,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    },
+    {
+      "id": "pp-1-3",
+      "type": "vector",
+      "xMm": 50,
+      "yMm": 15.000000000000002,
+      "editor": {
+        "label": "Sagoma con foro",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "widthMm": 20,
+      "heightMm": 18,
+      "commands": [
+        [
+          "M",
+          0,
+          0
+        ],
+        [
+          "L",
+          1,
+          0
+        ],
+        [
+          "L",
+          1,
+          1
+        ],
+        [
+          "L",
+          0,
+          1
+        ],
+        [
+          "Z"
+        ],
+        [
+          "M",
+          0.25,
+          0.2777777777777779
+        ],
+        [
+          "L",
+          0.75,
+          0.2777777777777779
+        ],
+        [
+          "L",
+          0.75,
+          0.7222222222222223
+        ],
+        [
+          "L",
+          0.25,
+          0.7222222222222223
+        ],
+        [
+          "Z"
+        ]
+      ],
+      "fillRule": "evenodd",
+      "fill": "none",
+      "stroke": "none",
+      "strokeMm": 0.25,
+      "strokeLineCap": "butt",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4
+    },
+    {
+      "id": "pp-1-4",
+      "type": "rect",
+      "xMm": 15,
+      "yMm": 45,
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "rotationDeg": 0,
+      "widthMm": 55,
+      "heightMm": 4,
+      "strokeMm": 0.25,
+      "stroke": "none",
+      "fill": "#0088cc"
+    }
+  ],
+  "groups": [
+    {
+      "id": "pp-1-group",
+      "editor": {
+        "label": "",
+        "order": 0,
+        "transformLocked": false,
+        "selectionLocked": false,
+        "deleteLocked": false,
+        "hideMenus": false,
+        "includeInForm": false,
+        "reference": false
+      },
+      "objectIds": [
+        "pp-1-1",
+        "pp-1-2",
+        "pp-1-3",
+        "pp-1-4"
+      ]
+    }
+  ]
+}

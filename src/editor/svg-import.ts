@@ -47,6 +47,9 @@ function shapeCommands(object: FabricObject | NonNullable<FabricObject['clipPath
 const paint = canonicalPaint;
 
 export type ImportTextMode = 'outlines' | 'editable';
+/** Interchange adapters may need invisible geometry as an editable placeholder
+ * or group member. This never includes display:none/visibility:hidden nodes. */
+export interface SvgPreparationOptions { preserveUnpainted?: boolean; }
 export interface PreparedSvg { viewportMm?:{xMm:number;yMm:number;widthMm:number;heightMm:number}; monochrome: boolean; objects: SceneObject[]; fontAssets?: FontAsset[]; widthMm: number; heightMm: number; expandedStrokes?:number; }
 function expandedFill(commands:VectorCommand[],fill:string,fillRule:'nonzero'|'evenodd'):VectorObject{
  const box=vectorBounds(commands);if(!Number.isFinite(box.width)||!Number.isFinite(box.height)||box.width<=0||box.height<=0)throw Error('Contorno espanso privo di area');
@@ -55,9 +58,23 @@ function expandedFill(commands:VectorCommand[],fill:string,fillRule:'nonzero'|'e
 function canonicalMasks(clips:readonly SvgWorldClip[],map:(x:number,y:number)=>{x:number;y:number}):ClipMask[]|undefined{
  if(!clips.length)return;return ClipMasksSchema.parse(clips.map(clip=>{const commands=mapVector(clip.commands,map),box=vectorBounds(commands);if(!(box.width>0&&box.height>0))throw Error('Maschera SVG priva di area');return{fillRule:clip.fillRule,frame:{left:box.x,top:box.y,width:box.width,height:box.height},commands:mapVector(commands,(x,y)=>({x:(x-box.x)/box.width,y:(y-box.y)/box.height}))};}));
 }
-export async function prepareSvg(source: string, monochrome = false, textMode: ImportTextMode = 'outlines'): Promise<PreparedSvg> {
+/** Fabric's SVG attribute parser does not consistently retain visibility.
+ * display:none hides the whole subtree; visibility is inherited and may be
+ * restored on a child. Definitions are resources, not painted scene objects. */
+function discardHiddenSvgPaint(xml:Document):void{
+ for(const element of xml.querySelectorAll('path,rect,circle,ellipse,line,polyline,polygon,image,text')){
+  if(element.closest('defs,clipPath'))continue;
+  let visibility:string|undefined,hidden=false;
+  for(let node:Element|null=element;node;node=node.parentElement){
+   if(node.getAttribute('display')==='none')hidden=true;
+   visibility??=node.getAttribute('visibility')??undefined;
+  }
+  if(hidden||visibility==='hidden'||visibility==='collapse')element.remove();
+ }
+}
+export async function prepareSvg(source: string, monochrome = false, textMode: ImportTextMode = 'outlines', options:SvgPreparationOptions={}): Promise<PreparedSvg> {
   let safe = sanitizeSvg(source, monochrome, true);
-  const xml = new DOMParser().parseFromString(safe, 'image/svg+xml'), hasText = !!xml.querySelector('text');
+  const xml = new DOMParser().parseFromString(safe, 'image/svg+xml');discardHiddenSvgPaint(xml);const hasText = !!xml.querySelector('text');
   if(hasText&&textMode==='outlines'&&xml.querySelector('image'))throw Error('SVG con immagini e testo: scegli testo editabile per conservare i pixel originali; conversione dei soli testi in contorni ancora da aggiungere');
   const fontAssets: FontAsset[] = [],fontProbes: SceneObject[] = [];
   if (hasText) {
@@ -76,7 +93,7 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
     if (textMode === 'outlines') {
       const response = await fetch('/__editor-local/svg-outlines', { method:'POST',headers:{'Content-Type':'application/json','X-Editor-Local':'1'},body:JSON.stringify({svg:safe,fontAssets}) });
       const result = await response.json(); if (!response.ok) throw new Error(result.error ?? 'Conversione dei testi SVG in contorni non riuscita');
-      return { ...await prepareSvg(result.svg, false, 'editable'), monochrome };
+      return { ...await prepareSvg(result.svg, false, 'editable',options), monochrome };
     }
   }
   const bitmaps=new Map<string,ReturnType<typeof embeddedSvgRaster>>();for(const element of xml.querySelectorAll('image')){const href=element.getAttribute('xlink:href')!;if(!bitmaps.has(href))bitmaps.set(href,embeddedSvgRaster(href,`svg-${crypto.randomUUID()}`));}
@@ -84,10 +101,11 @@ export async function prepareSvg(source: string, monochrome = false, textMode: I
   const worldClips=await extractSvgClips(xml,shapeCommands);safe=new XMLSerializer().serializeToString(xml);
   const objectClips=new WeakMap<FabricObject,SvgWorldClip[]>(),objectSources=new WeakMap<FabricObject,ReturnType<typeof embeddedSvgRaster>>();
   const textLengths=new WeakMap<FabricObject,number>(),textAnchors=new WeakMap<FabricObject,string>();
-  const parsed = await loadSVGFromString(safe,(element,object)=>{objectClips.set(object,worldClips.get(element.id)??[]);if(object instanceof FabricImage){const source=bitmaps.get(element.getAttribute('xlink:href')!);if(!source)throw Error('Immagine SVG non verificata');objectSources.set(object,source);}if(object instanceof FabricText){for(let node:Element|null=element;node;node=node.parentElement)if(node.hasAttribute('text-anchor')){textAnchors.set(object,node.getAttribute('text-anchor')!);break;}}if(element.hasAttribute('textLength')){if(element.getAttribute('lengthAdjust')!=='spacingAndGlyphs'||!['start',null].includes(element.getAttribute('text-anchor')))throw new Error('Dilatazione SVG supportata solo con testo ancorato a sinistra');textLengths.set(object,Number(element.getAttribute('textLength')));}}); let objects: SceneObject[] = [],expandedStrokes=0;
+  // Only visible paint survived the DOM pass, including children restoring visibility.
+  const parsed = await loadSVGFromString(safe,(element,object)=>{object.set('visible',true);objectClips.set(object,worldClips.get(element.id)??[]);if(object instanceof FabricImage){const source=bitmaps.get(element.getAttribute('xlink:href')!);if(!source)throw Error('Immagine SVG non verificata');objectSources.set(object,source);}if(object instanceof FabricText){for(let node:Element|null=element;node;node=node.parentElement)if(node.hasAttribute('text-anchor')){textAnchors.set(object,node.getAttribute('text-anchor')!);break;}}if(element.hasAttribute('textLength')){if(element.getAttribute('lengthAdjust')!=='spacingAndGlyphs'||!['start',null].includes(element.getAttribute('text-anchor')))throw new Error('Dilatazione SVG supportata solo con testo ancorato a sinistra');textLengths.set(object,Number(element.getAttribute('textLength')));}}); let objects: SceneObject[] = [],expandedStrokes=0;
   if (parsed.objects.length > GRAPHIC_IMPORT_LIMITS.sourceElements) throw new Error(`SVG oltre il limite di elaborazione di ${GRAPHIC_IMPORT_LIMITS.sourceElements} elementi sorgente`);
   for (const object of parsed.objects) {
-    if (!object)throw Error('Il parser SVG non ha importato tutti gli elementi');if(!object.visible)continue; const fill = paint(object.fill), stroke = paint(object.stroke); if (!(object instanceof FabricImage)&&fill === 'none' && stroke === 'none') continue;
+    if (!object)throw Error('Il parser SVG non ha importato tutti gli elementi');if(!object.visible)continue; const fill = paint(object.fill), stroke = paint(object.stroke); if (!options.preserveUnpainted&&!(object instanceof FabricImage)&&fill === 'none' && stroke === 'none') continue;
     const m = object.calcTransformMatrix(), sx = Math.hypot(m[0], m[1]), sy = Math.hypot(m[2], m[3]);
     const clips=objectClips.get(object)??[];
     if(object instanceof FabricImage){

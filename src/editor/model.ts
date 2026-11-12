@@ -147,7 +147,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
     if (object.type === 'text' && [object.fontFamily,...object.characterStyles?.map(r=>r.style.fontFamily).filter((f):f is string=>!!f)??[]].some(f => f.startsWith('font-') && !assetIds.has(f))) ctx.addIssue({code:'custom',message:'Il documento non contiene la risorsa del font utilizzato'});
     if (object.type === 'vector') {
       const b = vectorBounds(object.commands), near = (a: number, b: number) => Math.abs(a - b) < 1e-7;
-      if (!near(b.x, 0) || !near(b.y, 0) || !near(b.width, object.widthMm ? 1 : 0) || !near(b.height, object.heightMm ? 1 : 0) || !object.widthMm && !object.heightMm || object.fill === 'none' && object.stroke === 'none') ctx.addIssue({ code: 'custom', message: 'Vettore non normalizzato, degenere o invisibile' });
+      if (!near(b.x, 0) || !near(b.y, 0) || !near(b.width, object.widthMm ? 1 : 0) || !near(b.height, object.heightMm ? 1 : 0) || !object.widthMm && !object.heightMm) ctx.addIssue({ code: 'custom', message: 'Vettore non normalizzato o degenere' });
     }
     if (object.type === 'text') {
       if (object.textPath && (object.text.includes('\n') || object.textBox || object.lineStyles?.length || object.textAlign === 'justify-left' || object.textScaleY !== undefined && object.textScaleY !== 1)) ctx.addIssue({ code: 'custom', message: 'Il testo su tracciato richiede una sola riga, senza box/giustificazione o scala verticale' });

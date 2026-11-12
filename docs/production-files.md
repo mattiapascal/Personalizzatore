@@ -200,3 +200,7 @@ Campione [mixed-svg.TEST.json](../fixtures/illustrator/mixed-svg.TEST.json) / [S
 ## Cornici grandi e precisione del confronto — 12 novembre
 
 Campione [large-contours.TEST.json](../fixtures/illustrator/large-contours.TEST.json), [SVG verticale](../fixtures/illustrator/large-contours.TEST.svg) e [SVG orizzontale](../fixtures/illustrator/large-contours.page2.TEST.svg), da [sorgente sintetico](../fixtures/illustrator/large-contours.source.TEST.json). Due pagine indipendenti, 200 × 300 e 300 × 200 mm. Generatore `node --import tsx scripts/capture-editor-large-contours.ts`. [Diagnosi del confronto, misure e limiti](iteration-editor-contour-fidelity.md). In Illustrator verificare dimensioni, continuità dei bordi e mantenimento del foro; il tratto deformato è espanso in geometria. Esito umano ancora da acquisire.
+
+## Campione di geometrie trasparenti — 12 novembre 2026
+
+`unpainted-geometry.TEST.json/svg` conserva forme senza riempimento né contorno dentro un gruppo: rettangolo con raggi differenti e tracciato con foro. In Illustrator verificare in vista contorni posizione, dimensioni, quattro oggetti e curva/foro; assegnare poi il riempimento e verificare il foro. Nell’editor selezionare dai livelli, separare il gruppo per modificare un membro, assegnare/rimuovere il riempimento e provare Undo/JSON. Nessun risultato Illustrator dichiarato dall’agente.
