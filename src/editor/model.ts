@@ -311,6 +311,7 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({ ...objectBase, tool: z.literal('inclineObjects'), arguments: z.strictObject({objectIds:ids,angleDeg:textSkew}) }),
   z.strictObject({ ...objectBase, tool: z.literal('reflectObjects'), arguments: z.strictObject({objectIds:ids,axis:z.enum(['horizontal','vertical'])}) }),
   z.strictObject({ ...base, tool: z.literal('distributeObjects'), arguments: z.strictObject({ objectIds: ids.min(3), axis: z.enum(['horizontal', 'vertical']) }) }),
+  z.strictObject({ ...base, tool: z.literal('spaceObjects'), arguments: z.strictObject({ objectIds: ids.min(2), axis: z.enum(['horizontal', 'vertical']), gapMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.coordinateMm), referenceObjectId: id.optional() }) }),
 ]);
 export type GraphicCommand = z.infer<typeof GraphicCommandSchema>;
 export type Measure = (object: SceneObject) => { widthMm: number; heightMm: number; textLayoutWidthMm?: number; textLayoutHeightMm?: number; pathCenterOffsetMm?: { x: number; y: number }; pathLengthMm?: number; textAdvanceMm?: number };

@@ -1,3 +1,5 @@
+**13 novembre — distanza precisa tra oggetti:** [Funzione e collaudi](docs/iteration-editor-object-spacing.md). Trasforma aggiunge distanza orizzontale/verticale in mm, gruppi indivisi e master fermo, stesso comando manuale/AI e Undo/Redo. Intestazione del pannello sempre accessibile durante lo scorrimento. Nessuna modifica ai dati personali o alla chat pubblicata.
+
 **13 novembre — inquadrare la selezione:** [Funzione e collaudi](docs/iteration-editor-selection-view.md). Nuovo pulsante accanto ad Adatta all’area, con margine per maniglie, gruppi/membri, mobile e limiti Retina. Solo zoom/PAN: documento e output invariati, font non misurabili senza stime. Nessuna modifica ai dati personali o alla chat online.
 
 **13 novembre — B/N nel ritaglio:** [Incremento e verifiche](docs/iteration-editor-binary-crop.md). Il controllo considera i campioni originali inclusi nel crop, anche ai bordi frazionari; file e filtri restano validati per intero. PNG/JPEG EXIF, cache e storico verificati, campione JSON/SVG portatile. Nessuna modifica ai dati personali o alla chat pubblicata.

@@ -8,10 +8,10 @@ import { areaAlignmentDelta } from './align-area';
 import {rootGroupFor,cloneSceneGroup,remapSceneGroups} from './scene-groups';
 import {objectIsVisible} from './scene-visibility';
 
-type SelectionTool = 'inclineObjects' | 'reflectObjects' | 'placeObjects' | 'alignObjectsToArea' | 'reorderObjects' | 'styleObjects' | 'groupObjects' | 'ungroupObjects' | 'moveObjects' | 'transformObjects' | 'deleteObjects' | 'duplicateObjects' | 'alignObjects' | 'distributeObjects';
+type SelectionTool = 'spaceObjects' | 'inclineObjects' | 'reflectObjects' | 'placeObjects' | 'alignObjectsToArea' | 'reorderObjects' | 'styleObjects' | 'groupObjects' | 'ungroupObjects' | 'moveObjects' | 'transformObjects' | 'deleteObjects' | 'duplicateObjects' | 'alignObjects' | 'distributeObjects';
 type SelectionCommand = Extract<GraphicCommand, { tool: SelectionTool }>;
 export function isSelectionCommand(command: GraphicCommand): command is SelectionCommand {
-  return ['inclineObjects', 'reflectObjects', 'placeObjects', 'alignObjectsToArea', 'reorderObjects', 'styleObjects', 'groupObjects', 'ungroupObjects', 'moveObjects', 'transformObjects', 'deleteObjects', 'duplicateObjects', 'alignObjects', 'distributeObjects'].includes(command.tool);
+  return ['spaceObjects', 'inclineObjects', 'reflectObjects', 'placeObjects', 'alignObjectsToArea', 'reorderObjects', 'styleObjects', 'groupObjects', 'ungroupObjects', 'moveObjects', 'transformObjects', 'deleteObjects', 'duplicateObjects', 'alignObjects', 'distributeObjects'].includes(command.tool);
 }
 export function expandSelection(doc: GraphicDocument, ids: readonly string[]): string[] {
   const selected = new Set(ids);
@@ -180,6 +180,26 @@ export function applySelectionCommand(doc: GraphicDocument, command: SelectionCo
         const x = alignment === 'left' ? bounds.xMm - box.xMm : alignment === 'right' ? bounds.xMm + bounds.widthMm - box.xMm - box.widthMm : alignment === 'centerX' ? bounds.xMm + bounds.widthMm / 2 - box.xMm - box.widthMm / 2 : 0;
         const y = alignment === 'top' ? bounds.yMm - box.yMm : alignment === 'bottom' ? bounds.yMm + bounds.heightMm - box.yMm - box.heightMm : alignment === 'centerY' ? bounds.yMm + bounds.heightMm / 2 - box.yMm - box.heightMm / 2 : 0;
         translate(unit, x, y);
+      }
+      break;
+    }
+    case 'spaceObjects': {
+      const {axis,gapMm,referenceObjectId}=command.arguments,horizontal=axis==='horizontal',coordinate=horizontal?'xMm':'yMm',dimension=horizontal?'widthMm':'heightMm';
+      const units=selectionUnits(doc,ids).map(unit=>({unit,bounds:selectionBounds(unit,measure)})).sort((a,b)=>a.bounds[coordinate]-b.bounds[coordinate]);
+      if(units.length<2)throw new Error('Seleziona almeno due oggetti o gruppi distinti');
+      const anchor=referenceObjectId?units.findIndex(({unit})=>unit.some(object=>object.id===referenceObjectId)):0;
+      if(anchor<0)throw new Error('L’oggetto master deve appartenere alla selezione');
+      // Compute all destinations from the original bounds. The master (or first
+      // unit) stays fixed; group members only receive the same translation.
+      let position=units[anchor]!.bounds[coordinate]+units[anchor]!.bounds[dimension]+gapMm;
+      for(let i=anchor+1;i<units.length;i++){
+        const {unit,bounds}=units[i]!,delta=position-bounds[coordinate];
+        translate(unit,horizontal?delta:0,horizontal?0:delta);position+=bounds[dimension]+gapMm;
+      }
+      position=units[anchor]!.bounds[coordinate]-gapMm;
+      for(let i=anchor-1;i>=0;i--){
+        const {unit,bounds}=units[i]!;position-=bounds[dimension];const delta=position-bounds[coordinate];
+        translate(unit,horizontal?delta:0,horizontal?0:delta);position-=gapMm;
       }
       break;
     }

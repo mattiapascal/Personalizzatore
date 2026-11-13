@@ -322,7 +322,7 @@
 
 .workspace-transform-popover { z-index: 100; padding: 12px; overflow: auto; background: var(--editor-mode-panel, #f6fbfe); color: #123c52; border: 1px solid #94b7c9; border-radius: 8px; box-shadow: 0 8px 30px #17374a30; }
 .workspace-transform-popover[hidden] { display: none; }
-.workspace-transform-popover .layers-popover-heading { margin-bottom: 12px; }
+.workspace-transform-popover .layers-popover-heading { position: sticky; top: -12px; z-index: 1; margin-bottom: 12px; padding: 8px 0; background: var(--editor-mode-panel, #f6fbfe); }
 .workspace-transform-popover fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .workspace-transform-popover legend, .workspace-transform-popover h3 { font-size: .85rem; margin: 12px 0 8px; font-weight: 700; }
 .workspace-transform-popover .button-row { flex-wrap: wrap; gap: 5px; }

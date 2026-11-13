@@ -3,17 +3,19 @@ import {useLayoutEffect,useRef,useState,useId,type CSSProperties} from 'react';
 import {EditorButton} from './EditorButton';
 import {NumberField} from './InspectorNumberField';
 import {objectInclination} from './object-affine';
-import {MAX_TEXT_SKEW_DEG} from './limits';
+import {GRAPHIC_GEOMETRY_LIMITS,MAX_TEXT_SKEW_DEG} from './limits';
+import {NumericStepper,steppedNumber} from './NumericStepper';
 import {selectionUnits} from './selection';
 import {effectiveObjectProperties} from './object-properties';
 import {textGeometryVerified} from './font-measurement';
 import type {GraphicDocument} from './model';
 import type {AreaAlignment} from './align-area';
 
-export function TransformPanel({document:doc,ids,masterId,page,customer,busy,onPage,onAlign,onIncline,onReflect,onDistribute}: {
+export function TransformPanel({document:doc,ids,masterId,page,customer,busy,onPage,onAlign,onIncline,onReflect,onDistribute,onSpace}: {
  document:GraphicDocument;ids:string[];masterId:string|null;page:boolean;customer:boolean;busy:boolean;
  onPage:(value:boolean)=>void;onAlign:(alignment:AreaAlignment)=>void;onIncline:(angle:number)=>void;
  onReflect:(axis:'horizontal'|'vertical')=>void;onDistribute:(axis:'horizontal'|'vertical')=>void;
+ onSpace:(axis:'horizontal'|'vertical',gapMm:number)=>void;
 }) {
  const [open,setOpen]=useState(false),anchor=useRef<HTMLDivElement>(null),panelId=useId(),[position,setPosition]=useState<CSSProperties>({});
  useLayoutEffect(()=>{
@@ -25,6 +27,8 @@ export function TransformPanel({document:doc,ids,masterId,page,customer,busy,onP
   return()=>{window.removeEventListener('pointerdown',outside,true);window.removeEventListener('keydown',key,true);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
  },[open]);
  const floating=useMovablePanel(open,position);
+ const [gapRaw,setGapRaw]=useState('2'),gap=gapRaw.trim()===''?null:Number(gapRaw),gapLimit=GRAPHIC_GEOMETRY_LIMITS.coordinateMm,validGap=gap!==null&&Number.isFinite(gap)&&gap>=0&&gap<=gapLimit;
+ const gapLabel='Distanza tra oggetti (mm)';
  const objects=doc.objects.filter(object=>ids.includes(object.id)),units=selectionUnits(doc,ids),angles=objects.map(objectInclination),angle=angles[0]??0,mixed=angles.some(value=>Math.abs(value-angle)>1e-7);
  const locked=busy||!objects.length||objects.some(object=>customer&&(effectiveObjectProperties(doc,object.id).transformLocked||effectiveObjectProperties(doc,object.id).hideMenus)||object.type==='text'&&!textGeometryVerified(object));
  const master=objects.find(object=>object.id===masterId),name=master?.editor?.label||master?.id;
@@ -44,6 +48,10 @@ export function TransformPanel({document:doc,ids,masterId,page,customer,busy,onP
     <p className="caption" role="status">{page?'Riferimento: bordi e centro della pagina.':master?`Oggetto master: ${name}`:'Riferimento: ingombro della selezione.'}</p>
     <div className="button-row">{([['left','Allinea a sinistra'],['centerX','Centra orizzontalmente'],['right','Allinea a destra'],['top','Allinea in alto'],['centerY','Centra verticalmente'],['bottom','Allinea in basso']] as const).map(([alignment,label])=><EditorButton key={alignment} icon={alignment} label={label} disabled={!page&&units.length<2} onClick={()=>onAlign(alignment)}/>)}</div>
     <div className="button-row"><EditorButton icon="distributeX" label="Distribuisci spazi orizzontali" disabled={units.length<3} onClick={()=>onDistribute('horizontal')}/><EditorButton icon="distributeY" label="Distribuisci spazi verticali" disabled={units.length<3} onClick={()=>onDistribute('vertical')}/></div>
+    <h3>Spaziatura</h3>
+    <label>{gapLabel}<NumericStepper label={gapLabel} value={validGap?gap:null} min={0} max={gapLimit} step={0.1} onStep={value=>setGapRaw(String(value))}><input type="number" aria-label={gapLabel} min={0} max={gapLimit} step="any" required value={gapRaw} onChange={event=>setGapRaw(event.target.value)} onKeyDown={event=>{if(event.key==='ArrowUp'||event.key==='ArrowDown'){event.preventDefault();setGapRaw(String(steppedNumber(validGap?gap:null,0,gapLimit,.1,event.key==='ArrowUp'?1:-1)));}}}/></NumericStepper></label>
+    <div className="button-row"><EditorButton icon="gapX" label="Imposta distanza orizzontale" disabled={units.length<2||!validGap} onClick={()=>{if(validGap)onSpace('horizontal',gap);}}/><EditorButton icon="gapY" label="Imposta distanza verticale" disabled={units.length<2||!validGap} onClick={()=>{if(validGap)onSpace('vertical',gap);}}/></div>
+    <p className="caption">Distanza tra i bordi degli ingombri, anche per i gruppi. {master?`Resta fermo il master: ${name}.`:'Resta fermo il primo oggetto a sinistra o in alto.'} Gli altri si spostano solo sull’asse scelto.</p>
    </fieldset>
    <p className="caption">Per scegliere il master, fai un clic senza trascinare su un oggetto già compreso nella selezione multipla. Il master resta fermo.</p>
   </aside>
