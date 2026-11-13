@@ -1,6 +1,6 @@
 # Maschere del testo: prossimo incremento — 13 novembre 2026
 
-Piano successivo all'[importazione affine](iteration-editor-pitchprint-affine-text.md). **Capacità canonica/manuale implementata:** [maschere locali del testo](iteration-editor-text-masks.md). Rimangono da completare l'adattatore PitchPrint e il confronto integrale dei due cartelli prioritari, ancora bloccati senza rimuovere maschere o modificare i sorgenti. I punti seguenti conservano il contratto e i criteri di accettazione; non dichiarano completata l'importazione.
+Piano successivo all'[importazione affine](iteration-editor-pitchprint-affine-text.md). **Capacità canonica/manuale e adattatore implementati:** [maschere locali del testo](iteration-editor-text-masks.md), [conversione PitchPrint e confronti completi](iteration-editor-pitchprint-text-masks.md). I due cartelli superano ora la conversione integrale, con testi e maschere conservati; sono ancora preparazioni private, senza salvataggi nel principale. I punti seguenti conservano contratto e criteri di accettazione; non dichiarano completata l'importazione nell'archivio o il collaudo Illustrator.
 
 ## Comportamento nativo verificato
 

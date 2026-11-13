@@ -1,4 +1,5 @@
 import{pitchprintImageClip}from'./pitchprint-image-clip';
+import{readPitchprintTextMasks}from'./pitchprint-text-masks';
 import { pitchprintLinear } from './pitchprint-affine';
 import{singleFillPitchprintOpacity}from'./pitchprint-opacity';
 import{EDITOR_LIMITS,GRAPHIC_IMPORT_LIMITS}from'./limits';
@@ -29,7 +30,7 @@ export function checkedPitchprintEffects(item:Record<string,unknown>,name:string
  if(Array.isArray(item.strokeDashArray)&&item.strokeDashArray.length)throw new Error(`${name}: tratteggio personalizzato da convertire. Il sorgente resta intatto.`);
  if(item.globalCompositeOperation&&item.globalCompositeOperation!=='source-over')throw new Error(`${name}: metodo di fusione non supportato.`);
  if(item.fillRule!==undefined&&!['evenodd','nonzero'].includes(String(item.fillRule)))throw new Error(`${name}: regola di riempimento non riconosciuta.`);
- if(item.clipPath!=null)pitchprintImageClip(item,name);
+ if(item.clipPath!=null){if(['text','i-text','textbox'].includes(String(item.type)))readPitchprintTextMasks(item,name);else pitchprintImageClip(item,name);}
  const skewX=number(item.skewX??0,name),skewY=number(item.skewY??0,name),hasSkew=skewX!==0||skewY!==0;
  if(hasSkew)pitchprintLinear(item,name);
  if(item.shadow||item.clipTo||item.transformMatrix||hasSkew&&!['group','text','i-text','textbox'].includes(String(item.type))||singleFillPitchprintOpacity(item)===null)throw new Error(`${name}: maschera, ombra, skew o opacità non supportati.`);

@@ -73,5 +73,5 @@ it('preflight blocca curve, fori, losanghe, rientranze, loop e semantiche non co
     await expect(convertPageImage({ role: 'background', native: raw, url: 'https://pitchprint.io/assets/TEST.png' }, 'print', { width: 100, height: 80 }, [1, 0, 0, 1, 0, 0], false, async () => { requests++; throw Error('Non leggere'); })).rejects.toThrow('maschera');
     expect(requests).toBe(0);
   }
-  expect(() => pitchprintTree([{ ...image, type: 'text' }], () => ({}))).toThrow('maschera');
+  expect(() => pitchprintTree([{ ...image, type: 'text',clipPath:{...clip,absolutePositioned:true} }], () => ({}))).toThrow('maschera');
 });

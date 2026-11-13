@@ -35,7 +35,7 @@ it('riflessioni singole, matrici degeneri/non finite e capacità eccessive resta
 it('preflight ammette lo skew soltanto per testi e gruppi; conserva i blocchi su maschere ed effetti', () => {
   const text={type:'i-text',left:0,top:0,width:20,height:10,strokeWidth:0,skewX:20};
   expect(()=>checkedPitchprintEffects(text,'TEST')).not.toThrow();
-  for(const extra of [{type:'image'},{type:'rect'},{clipPath:{type:'rect',width:10,height:10}},{shadow:{}},{transformMatrix:[1,0,0,1,0,0]},{opacity:.5}])expect(()=>checkedPitchprintEffects({...text,...extra},'TEST')).toThrow();
+  for(const extra of [{type:'image'},{type:'rect'},{clipPath:{type:'rect',width:10,height:10,absolutePositioned:true}},{shadow:{}},{transformMatrix:[1,0,0,1,0,0]},{opacity:.5}])expect(()=>checkedPitchprintEffects({...text,...extra},'TEST')).toThrow();
   const group={type:'group',left:100,top:100,width:80,height:60,skewY:-12,objects:[text]},before=structuredClone(group);
   const tree=pitchprintTree([group],()=>({label:'TEST'}));expect(tree.leaves).toHaveLength(1);expect(tree.groups[0]!.editor.label).toBe('TEST');expect(group).toEqual(before);
 });

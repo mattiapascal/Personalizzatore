@@ -1,0 +1,316 @@
+{
+  "title": "Maschere dei testi PitchPrint TEST",
+  "unit": "mm",
+  "pages": [
+    {
+      "pageData": {
+        "fWidth": 166,
+        "fHeight": 113
+      },
+      "canvas": {
+        "clipPath": {
+          "left": 25,
+          "top": -40,
+          "width": 1600,
+          "height": 1100
+        },
+        "objects": [
+          {
+            "type": "i-text",
+            "originX": "left",
+            "originY": "top",
+            "text": "TEST · Città",
+            "fontFamily": "Arimo",
+            "fontSize": 38,
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "width": 310,
+            "height": 55,
+            "left": 120,
+            "top": 100,
+            "scaleX": 1.7,
+            "scaleY": 2.2,
+            "angle": -12,
+            "skewX": 25,
+            "skewY": 0,
+            "stroke": null,
+            "strokeWidth": 1,
+            "fill": "#0088cc",
+            "textAlign": "center",
+            "lineHeight": 1,
+            "charSpacing": 15,
+            "styles": {
+              "0": {
+                "0": {
+                  "fill": "#aa3300",
+                  "fontSize": 44
+                },
+                "7": {
+                  "underline": true
+                }
+              }
+            },
+            "clipPath": {
+              "type": "rect",
+              "originX": "center",
+              "originY": "center",
+              "left": 0,
+              "top": 0,
+              "width": 145,
+              "height": 58,
+              "rx": 8,
+              "ry": 8,
+              "strokeWidth": 1,
+              "angle": 8
+            }
+          },
+          {
+            "type": "textbox",
+            "originX": "right",
+            "originY": "bottom",
+            "text": "ALFA BETA GAMMA\nCittà",
+            "fontFamily": "Arimo",
+            "fontSize": 38,
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "width": 230,
+            "height": 170,
+            "left": 1400,
+            "top": 520,
+            "scaleX": 1.7,
+            "scaleY": 1.5,
+            "angle": 8,
+            "skewX": 0,
+            "skewY": 12,
+            "stroke": "#000000",
+            "strokeWidth": 1.2,
+            "fill": "#0088cc",
+            "textAlign": "center",
+            "lineHeight": 1,
+            "charSpacing": 15,
+            "strokeLineJoin": "round",
+            "clipPath": {
+              "type": "path",
+              "originX": "center",
+              "originY": "center",
+              "left": 0,
+              "top": 5,
+              "strokeWidth": 2,
+              "scaleX": 1.1,
+              "scaleY": 0.9,
+              "angle": -12,
+              "skewX": 9,
+              "flipY": true,
+              "fillRule": "evenodd",
+              "path": [
+                [
+                  "M",
+                  -120,
+                  -55
+                ],
+                [
+                  "H",
+                  120
+                ],
+                [
+                  "V",
+                  55
+                ],
+                [
+                  "H",
+                  -120
+                ],
+                [
+                  "Z"
+                ],
+                [
+                  "M",
+                  -15,
+                  -25
+                ],
+                [
+                  "H",
+                  15
+                ],
+                [
+                  "V",
+                  25
+                ],
+                [
+                  "H",
+                  -15
+                ],
+                [
+                  "Z"
+                ]
+              ],
+              "clipPath": {
+                "type": "rect",
+                "originX": "center",
+                "originY": "center",
+                "left": 0,
+                "top": 0,
+                "width": 260,
+                "height": 100,
+                "strokeWidth": 0,
+                "angle": 12
+              }
+            }
+          },
+          {
+            "type": "group",
+            "left": 720,
+            "top": 720,
+            "width": 560,
+            "height": 240,
+            "originX": "center",
+            "originY": "center",
+            "scaleX": 1.2,
+            "scaleY": 0.9,
+            "angle": 18,
+            "skewX": -10,
+            "skewY": 5,
+            "strokeWidth": 0,
+            "title": "Gruppo inclinato TEST",
+            "objects": [
+              {
+                "type": "i-text",
+                "originX": "left",
+                "originY": "top",
+                "text": "Gruppo TEST",
+                "fontFamily": "Arimo",
+                "fontSize": 38,
+                "fontWeight": "normal",
+                "fontStyle": "normal",
+                "width": 310,
+                "height": 55,
+                "left": -220,
+                "top": -80,
+                "scaleX": 1.2,
+                "scaleY": 1.4,
+                "angle": -12,
+                "skewX": -15,
+                "skewY": 7,
+                "stroke": null,
+                "strokeWidth": 1,
+                "fill": "#0088cc",
+                "textAlign": "center",
+                "lineHeight": 1,
+                "charSpacing": 15,
+                "clipPath": {
+                  "type": "path",
+                  "originX": "center",
+                  "originY": "center",
+                  "left": 0,
+                  "top": 0,
+                  "strokeWidth": 1,
+                  "skewY": 5,
+                  "path": [
+                    [
+                      "m",
+                      -95,
+                      0
+                    ],
+                    [
+                      "q",
+                      20,
+                      -45,
+                      65,
+                      -20
+                    ],
+                    [
+                      "t",
+                      125,
+                      20
+                    ],
+                    [
+                      "l",
+                      0,
+                      25
+                    ],
+                    [
+                      "h",
+                      -190
+                    ],
+                    [
+                      "z"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "group",
+                "left": 240,
+                "top": 100,
+                "width": 230,
+                "height": 100,
+                "originX": "right",
+                "originY": "bottom",
+                "scaleX": 0.9,
+                "scaleY": 1.2,
+                "angle": -16,
+                "skewY": 9,
+                "flipX": true,
+                "flipY": true,
+                "strokeWidth": 0,
+                "objects": [
+                  {
+                    "type": "i-text",
+                    "originX": "center",
+                    "originY": "center",
+                    "text": "ABC DEF",
+                    "fontFamily": "Arimo",
+                    "fontSize": 38,
+                    "fontWeight": "normal",
+                    "fontStyle": "normal",
+                    "width": 310,
+                    "height": 55,
+                    "left": 0,
+                    "top": 0,
+                    "scaleX": 1.1,
+                    "scaleY": 1.3,
+                    "angle": 11,
+                    "skewX": 8,
+                    "skewY": 0,
+                    "stroke": null,
+                    "strokeWidth": 1,
+                    "fill": "#0088cc",
+                    "textAlign": "center",
+                    "lineHeight": 1,
+                    "charSpacing": 15,
+                    "clipPath": {
+                      "type": "rect",
+                      "originX": "right",
+                      "originY": "bottom",
+                      "left": 100,
+                      "top": 30,
+                      "width": 160,
+                      "height": 60,
+                      "strokeWidth": 2,
+                      "scaleX": 1.1,
+                      "scaleY": 1.3,
+                      "angle": -18,
+                      "flipY": true
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "rect",
+                "left": -220,
+                "top": 60,
+                "width": 280,
+                "height": 20,
+                "originX": "left",
+                "originY": "top",
+                "fill": "#0088cc",
+                "stroke": null,
+                "strokeWidth": 0
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

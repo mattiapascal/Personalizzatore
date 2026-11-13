@@ -1,5 +1,7 @@
 # Sorgenti prioritari rimasti — diagnosi del 12 novembre 2026
 
+**Aggiornamento 13 novembre:** [maschere sul testo e due cartelli verificati](iteration-editor-pitchprint-text-masks.md). Il principale conserva 337 template, due composizioni e 219 font (R627). Dei **16 sorgenti prioritari non importati**, i due «Esiste la morte dopo la vita?» ora superano la conversione completa, ma sono preparazioni private; gli altri 14 riguardano sette primi piani da classificare, sei simboli assenti nei font originali e Gloria Hallelujah 700. Prima dei salvataggi restano ruolo produttivo del supporto/foratura e capacità dell'archivio: SQLite non attivato senza il consenso già richiesto. I conteggi e i blocchi successivi sono lo storico del 12 novembre.
+
 Audit dei 65 sorgenti rimasti dopo Modello generico: convertitore generale, testo/colori e risorse complete, riferimento nativo indipendente. Nessun cambiamento di codice durante l’audit. Rapporto privato `.local/pitchprint-migration/remaining-priority-full-20261112/report.json`.
 
 Diciotto superano il confronto grafico. Dodici non hanno immagini di pagina e hanno superato anche formato/font e confronto dei quattro file immagine originali. Salvataggio e verifiche effettive del lotto descritti nel [resoconto dedicato](iteration-editor-remaining-template-batch.md). Due copie salvate conservano un rettangolo residuo totalmente fuori foglio: sono state archiviate integralmente in attesa del recupero, non considerate utilizzabili.

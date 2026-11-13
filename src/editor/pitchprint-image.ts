@@ -9,7 +9,9 @@ export function pitchprintImageGeometry(item: Record<string, unknown>, source: R
   const width = pitchprintNumber(item.width, 'Larghezza immagine'), height = pitchprintNumber(item.height, 'Altezza immagine');
   if (width <= 0 || height <= 0) throw Error('Immagine priva di dimensioni positive.');
   const crop = checkedRasterCrop(source, {
-    leftPx: pitchprintNumber(item.cropX ?? 0, 'Ritaglio X'), topPx: pitchprintNumber(item.cropY ?? 0, 'Ritaglio Y'),
+    // Native Fabric 3 _renderFill clamps negative starts before drawImage.
+    // Preserve those painted pixels, without relaxing canonical/manual crops.
+    leftPx: Math.max(0,pitchprintNumber(item.cropX ?? 0, 'Ritaglio X')), topPx: Math.max(0,pitchprintNumber(item.cropY ?? 0, 'Ritaglio Y')),
     widthPx: Math.min(width, source.pixelWidth), heightPx: Math.min(height, source.pixelHeight),
   });
   const widthMm = width * axisX, heightMm = height * axisY;

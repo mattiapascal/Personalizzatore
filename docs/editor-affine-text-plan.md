@@ -40,3 +40,7 @@ Le maschere sul testo continuano a bloccare i due cartelli. Il [piano specifico]
 ## Maschere canoniche implementate
 
 [Maschere locali del testo](iteration-editor-text-masks.md): proprietà fisica distinta dal frame di impaginazione, comandi e ispettore, cache aggiornata durante la scrittura, clip SVG e bitmap verificati separatamente. L'adattatore PitchPrint rifiuta ancora queste maschere: la conversione delle coordinate legacy e il confronto completo dei due cartelli sono il prossimo incremento. La sola disponibilità manuale della proprietà non li rende importabili.
+
+## Conversione completa dei due cartelli verificata
+
+[Adattatore delle maschere](iteration-editor-pitchprint-text-masks.md): 37 casi geometrici originali e composizione sintetica completa, poi entrambi i cartelli reali con nove testi ciascuno, sei mascherati. Superati foglio intero, soli testi e ogni testo isolato; corretta anche la regola generale del ritaglio raster negativo nativo. Copie preparate privatamente, nessun salvataggio nel principale; resta da impostare il ruolo del supporto/foratura e attendere l'eventuale attivazione autorizzata dell'archivio efficiente.

@@ -1,5 +1,7 @@
 # Maschere locali del testo — 13 novembre 2026
 
+**Seguito completato:** [importazione delle maschere PitchPrint e confronti dei due cartelli](iteration-editor-pitchprint-text-masks.md). Le indicazioni sotto sull'adattatore ancora da realizzare descrivono il checkpoint precedente; le copie reali restano preparazioni private, senza nuovi record nell'archivio.
+
 Segue l'[importazione dei testi affini](iteration-editor-pitchprint-affine-text.md). Il documento canonico conserva ora maschere vettoriali sul testo: stesso stato, comandi validati manuali/AI, cronologia e appunti. Nessuna condizione sul nome o sull'ID di un template. Questa fase implementa la capacità dell'editor; l'adattatore PitchPrint e il confronto completo dei due cartelli sono ancora da completare.
 
 ## Documento e comportamento

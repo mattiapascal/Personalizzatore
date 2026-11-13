@@ -1,4 +1,5 @@
 import { decomposePitchprintText } from './pitchprint-affine';
+import { readPitchprintTextMasks,canonicalPitchprintTextMasks } from './pitchprint-text-masks';
 import{svgImageText,convertPitchprintSvgImage}from'./pitchprint-svg-image';
 import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import{joinGraphicPages}from'./pages';
@@ -89,6 +90,7 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
    try{
     const measured=measureFabric({...object,rotationDeg:0}),layoutWidth=measured.textLayoutWidthMm??measured.widthMm,layoutHeight=measured.textLayoutHeightMm??measured.heightMm;object.textBox={widthMm:layoutWidth,heightMm:layoutHeight,autoWidth:type!=='textbox',autoHeight:true};
     const nativeCenter=native.getCenterPoint(),point=pitchprintPoint(space,nativeCenter.x,nativeCenter.y),dx=(layoutWidth-native.width*axisX)/2,dy=(layoutHeight-native.height*fontScale)/2,k=Math.tan(textTransform.textSkewXDeg*Math.PI/180),a=textTransform.rotationDeg*Math.PI/180,offsetX=dx+k*dy;
+    const masks=canonicalPitchprintTextMasks(readPitchprintTextMasks(item,name),fontScale,{x:dx/textTransform.textScaleX,y:dy});if(masks){object.textClipMasks=masks;warnings.push(`${name}: maschera del testo conservata come geometria editabile; controllare la visibilità dopo modifiche al contenuto.`);}
     objects.push(placeObjectAtCenter(object,{xMm:point.x+offsetX*Math.cos(a)-dy*Math.sin(a),yMm:point.y+offsetX*Math.sin(a)+dy*Math.cos(a)},measureFabric));
    }finally{native.dispose();}
    if(item.text.includes('\n')||type==='textbox')warnings.push('Box multiriga ricostruito: verificare interlinea e ritorni a capo.');
@@ -100,6 +102,7 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
    if(recoveredFrom)warnings.push(`${name}: originale recuperato dall’archivio PitchPrint (${url}); la preview non è usata come sorgente produttiva.`);
    if(svg){if(editor.includeInForm)throw Error(`${name}: SVG composto usato come campo foto: sostituzione del gruppo ancora da gestire`);const entries=(await convertPitchprintSvgImage(svg,item,matrix,options.monochrome)).map((object,n)=>({...object,id:n?`${id}-${n}`:id,editor:{includeInForm:false}}));const parentId=tree.groups.filter(group=>group.leafIds.includes(id)).at(-1)?.id;expandedGroups.push({id:`${id}-svg-group`,...(parentId?{parentId}:{}),editor,objectIds:entries.map(entry=>entry.id)});objects.push(...entries);warnings.push(`${name}: sorgente SVG riconosciuto nei byte e conservato come gruppo di vettori e immagini originali, con tutte le maschere.`);rememberGroup();continue;}
    const source=rasterSourceFromBytes(`pitch-${crypto.randomUUID()}`,bytes);await prepareRasterSource(source);if(source.mime==='image/png')warnings.push(...pngSourceWarnings(source.dataUrl));
+   if(numeric(item.cropX??0,name)<0||numeric(item.cropY??0,name)<0)warnings.push(`${name}: inizio del ritaglio negativo trattato come zero, secondo i pixel dipinti dal runtime originale; il sorgente resta invariato.`);
    const{center:imageCenter,...geometry}=clippedPitchprintImageGeometry(item,source,pitchprintImageGeometry(item,source,axisX,axisY),matrix);
    objects.push(placeObjectAtCenter({id,type:'image',xMm:0,yMm:0,...geometry,rotationDeg:rotation,source,raster:{...DEFAULT_RASTER,...(!options.monochrome?{mode:'original' as const}:{})},flipY:determinant<0,editor},imageCenter,measureFabric));
   }else{
