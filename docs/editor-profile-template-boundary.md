@@ -1,3 +1,5 @@
+**13 novembre:** [primo collegamento canonico](iteration-editor-production-profile-link.md) disponibile: snapshot/versione, misure fisse o della pagina, testo/immagini e guide visuali. Margini/zone non sono ancora blocchi geometrici; le indicazioni sotto descrivono la destinazione completa. Nessuna applicazione automatica ai template esistenti.
+
 # Profili produttivi e template: responsabilità
 
 Raccomandazione per la richiesta del titolare del 9 novembre 2026. Descrive la destinazione del modello: il canvas attuale mantiene ancora i profili TEST e non applica automaticamente i nuovi profili amministrativi.

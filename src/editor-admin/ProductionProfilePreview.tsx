@@ -33,6 +33,6 @@ export function ProductionProfilePreview({profile}:{profile:ProductionProfileDat
   <p className="caption">Bordo scuro: area utile. Azzurro tratteggiato: margine e rispetto dei fori. Arancione: zone riservate. Origine X/Y nell’angolo superiore sinistro.</p>
   {selected&&!selected.drilling&&<p>Questo kit non richiede foratura.</p>}
   {!!warnings.length&&<ul className="production-preview-warnings" aria-label="Dati dello schema da completare">{warnings.map((warning,index)=><li key={index}>{warning}</li>)}</ul>}
-  <p className="caption">Anteprima dei dati inseriti; proporzioni conservate, dimensione a schermo variabile. Il profilo non governa ancora il canvas e non è certificato per produzione.</p>
+  <p className="caption">Anteprima dei dati inseriti; proporzioni conservate, dimensione a schermo variabile. Il salvataggio non collega automaticamente il profilo al canvas. Il collegamento esplicito attiva i controlli di testo/immagini; margine e zone restano guide visuali. Nessuna certificazione produttiva.</p>
  </section>;
 }

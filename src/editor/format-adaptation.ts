@@ -1,7 +1,7 @@
 import { profileKey, type ProductProfile } from '../catalog/schema';
 import { cloneGraphicDocument, DocumentSchema, validateLayout, TEST_MARGIN_MM, type GraphicCommand, type GraphicDocument, type Measure } from './model';
 import { selectionBounds } from './selection';
-import { assertMinimumText, minimumFontForProduct } from './text-production';
+import { assertMinimumText, minimumFontForDocument } from './text-production';
 import {adaptCompositionObjects,foregroundObjects} from './background';
 
 export interface TemplateFit {document:GraphicDocument;scale:number;}
@@ -16,7 +16,7 @@ function candidate(source:GraphicDocument,product:ProductProfile,catalogVersion:
 export function fitComposition(source:GraphicDocument,product:ProductProfile,catalogVersion:string,measure:Measure,allowShrink=false):TemplateFit {
   DocumentSchema.parse(source);
   const original=candidate(source,product,catalogVersion,measure,1);
-  assertMinimumText(original,minimumFontForProduct(product));
+  assertMinimumText(original,minimumFontForDocument(original,{version:catalogVersion,products:[product]}));
   try{validateLayout(original,measure);return{document:DocumentSchema.parse(original),scale:1};}catch(cause){if(!allowShrink)throw cause;}
   const box=selectionBounds(foregroundObjects(source),measure),width=product.nominalAreaMm.width-2*TEST_MARGIN_MM,height=product.nominalAreaMm.height-2*TEST_MARGIN_MM;
   if(width<=0||height<=0)throw new Error('Area del modello insufficiente nel profilo TEST');
@@ -29,7 +29,7 @@ export function fitComposition(source:GraphicDocument,product:ProductProfile,cat
   if(lower<.00001)throw new Error('La composizione non può essere adattata a questo modello');
   const scale=lower*(1-1e-8),document=candidate(source,product,catalogVersion,measure,scale),parsed=DocumentSchema.safeParse(document);
   if(!parsed.success)throw new Error('La riduzione richiederebbe valori fuori dai limiti grafici del laboratorio. Modifica la grafica o scegli un modello più grande.');
-  assertMinimumText(parsed.data,minimumFontForProduct(product));
+  assertMinimumText(parsed.data,minimumFontForDocument(parsed.data,{version:catalogVersion,products:[product]}));
   validateLayout(parsed.data,measure);return{document:parsed.data,scale};
 }
 export function fitTemplate(source:GraphicDocument,product:ProductProfile,catalogVersion:string,measure:Measure,allowShrink=false):TemplateFit {

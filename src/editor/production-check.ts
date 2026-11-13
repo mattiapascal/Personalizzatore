@@ -27,12 +27,12 @@ export async function assertDocumentProduction(document:GraphicDocument,catalog:
   try{
    assertDocumentTextProduction(page,catalog,requireKnownBinding);
    const product=documentTextProduct(page,catalog);
-   if(!product||product.mechanism==='emboss')continue;
+   if((!product||product.mechanism==='emboss')&&page.productionProfile?.rasterMode!=='binary')continue;
    for(const object of productionDocument(page).objects){
     if(object.type!=='image')continue;
     let variants=checked.get(object.source.dataUrl);if(!variants){variants=new Map();checked.set(object.source.dataUrl,variants);}
     const key=JSON.stringify(object.raster);let result=variants.get(key);if(!result){result=checkRaster(object);variants.set(key,result);}
-    if(!await result)throw Error(`Il timbro richiede immagini in bianco/nero senza grigi, colori o trasparenze parziali: converti «${object.editor?.label||object.id}» in B/N nell’ispettore prima di confermare. Il controllo considera l’immagine completa, anche fuori dal ritaglio.`);
+    if(!await result)throw Error(`${page.productionProfile&&!page.productionProfile.kind.startsWith('stamp-')?'Il profilo tecnico':'Il timbro'} richiede immagini in bianco/nero senza grigi, colori o trasparenze parziali: converti «${object.editor?.label||object.id}» in B/N nell’ispettore prima di confermare. Il controllo considera l’immagine completa, anche fuori dal ritaglio.`);
    }
   }catch(error){if(pages.length===1)throw error;throw Error(`${page.pageName??'Pagina'}: ${error instanceof Error?error.message:'Controllo produttivo non riuscito'}`);}
  }

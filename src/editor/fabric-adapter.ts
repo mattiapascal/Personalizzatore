@@ -24,6 +24,7 @@ import { RasterCropControls } from './raster-crop-controls';
 import { checkedRasterCrop, type ImageObject } from './raster-geometry';
 import { Canvas, StaticCanvas, IText, Rect, Path as FabricPath, Circle, Ellipse, Line, Polyline, Polygon, FabricImage, Control, Group, ActiveSelection, controlsUtils, util, type FabricObject, type TPointerEvent } from 'fabric';
 import type { GraphicDocument, Measure, SceneObject, TransformArguments, SelectionTransformArguments } from './model';
+import {profileForPage} from './production-profile-link';
 import { DocumentSchema, validateLayout, objectGeometry, objectIntersectsArea, objectCenter, placeObjectAtCenter, type CharacterStyle } from './model';
 import { lineAlignments, compressLineAlignments, lineSelection, applyLineAlignment } from './text-lines';
 import { EditorTextBox, textBoxControls } from './text-box';
@@ -372,7 +373,7 @@ export class FabricAdapter {
     };
     this.canvas.on('text:selection:changed', this.publishSelection);
     this.canvas.on('text:changed', () => { this.publishFontRenderStatus(); this.publishSelection(); });
-    this.canvas.on('after:render', () => { this.drawGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide();this.drawMasterObject();this.externalControls.render(); });
+    this.canvas.on('after:render', () => { this.drawGuides(); this.drawProductionProfileGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide();this.drawMasterObject();this.externalControls.render(); });
     let gestureRevision = revision(), gestureBounds = { left: 0, top: 0 }, gestureAngle = 0, gestureScale = 1;
     this.canvas.on('before:transform', ({ transform }) => { gestureRevision = revision(); gestureBounds = transform.target.getBoundingRect(); gestureAngle = transform.target.angle; gestureScale = transform.target.scaleX; this.cancelled = false; });
     const delta = (object: FabricObject) => {
@@ -682,6 +683,17 @@ export class FabricAdapter {
       context.beginPath(); context.moveTo(node.x * PX_PER_MM, node.y * PX_PER_MM); context.lineTo(point.x * PX_PER_MM, point.y * PX_PER_MM); context.stroke();
     }
     nodes.forEach((point, i) => { if (i === index) return; const size = 5 / this.zoom; context.fillStyle = '#ffffff'; context.fillRect(point.x * PX_PER_MM - size / 2, point.y * PX_PER_MM - size / 2, size, size); context.strokeRect(point.x * PX_PER_MM - size / 2, point.y * PX_PER_MM - size / 2, size, size); }); context.restore();
+  }
+  /** Visual technical guides only. No Fabric objects are added, so these
+   * never enter SVG, PNG/PDF production or persistent archive thumbnails. */
+  private drawProductionProfileGuides():void{
+    const doc=this.document;if(!doc?.productionProfile)return;const profile=profileForPage(doc.productionProfile,doc),context=this.canvas.getContext(),scale=this.canvas.getRetinaScaling()*this.zoom;
+    context.save();context.setTransform(scale,0,0,scale,0,0);const width=doc.areaMm.width*PX_PER_MM,height=doc.areaMm.height*PX_PER_MM;
+    context.beginPath();if(doc.shape==='round')context.arc(width/2,height/2,width/2,0,Math.PI*2);else context.rect(0,0,width,height);context.clip();context.lineWidth=1/this.zoom;context.strokeStyle='#0088cc';context.setLineDash([4/this.zoom,3/this.zoom]);
+    const margin=profile.safeMarginMm;if(margin!==null&&margin>0){const inset=margin*PX_PER_MM;context.beginPath();if(doc.shape==='round')context.arc(width/2,height/2,width/2-inset,0,Math.PI*2);else context.rect(inset,inset,width-2*inset,height-2*inset);context.stroke();}
+    context.fillStyle='rgba(255,183,99,.22)';context.strokeStyle='#a95b16';
+    for(const region of profile.reservedAreas){const x=region.xMm*PX_PER_MM,y=region.yMm*PX_PER_MM,w=region.widthMm*PX_PER_MM,h=region.heightMm*PX_PER_MM;context.beginPath();if(region.shape==='ellipse')context.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);else context.rect(x,y,w,h);context.fill();context.stroke();}
+    context.restore();
   }
   private drawPlaqueMounting():void{
     const doc=this.document;if(!doc?.plaque)return;const points=plaqueMountingPoints(doc.areaMm,doc.plaque),context=this.canvas.getContext(),scale=this.canvas.getRetinaScaling()*this.zoom;

@@ -1,3 +1,4 @@
+import {ProductionProfilePanel} from './ProductionProfilePanel';
 import {ToolbarMenu} from './ToolbarMenu';
 import {TransformPanel} from './TransformPanel';
 import {withObjectTargetScope} from './group-member';
@@ -477,7 +478,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       <div className="section-heading"><div><span className="eyebrow">02 / Personalizzazione nel canvas</span><h2 id="lab-title" tabIndex={-1}>{conflict ? 'Cambio modello da risolvere' : displayedProduct?.title??(doc.plaque?'Targa a misure personalizzate':'Documento recuperato')}</h2></div><span className="badge">Bozza TEST</span></div>
       <p data-testid="editor-product">Area nominale del progetto: {doc.shape === 'round' ? `Ø ${doc.areaMm.width}` : `${doc.areaMm.width} × ${doc.areaMm.height}`} mm. {product?.variantLabel && <>Variante: {product?.variantLabel}. </>}{conflict && <>Modello richiesto: {product?.title}, {product?.nominalAreaMm.width} × {product?.nominalAreaMm.height} mm.</>}</p>
       <p>Doppio clic sul testo per scrivere direttamente nel canvas; Invio aggiunge una riga, Esc termina la modifica. Puoi trascinare testo e forme.</p>
-      <p className="caption">Area utile da confermare. Margine TEST 1 mm, testo ≥ 7 pt e nero/bianco sono vincoli di laboratorio, non specifiche produttive del modello.</p>
+      <p className="caption">{doc.productionProfile?`Profilo tecnico: ${doc.productionProfile.label} · v${doc.productionProfile.version}. Limiti testo/immagini attivi alla conferma; margine e zone come guide, collisioni e lavorabilità ancora da verificare.`:'Area utile da confermare. Margine TEST 1 mm, testo ≥ 7 pt e nero/bianco sono vincoli di laboratorio, non specifiche produttive del modello.'}</p>
     </>}
     stage={<>
       {!!(fontRendering.blocked.length||fontRendering.pending.length)&&<div className="notice canvas-font-warning" role="status" data-testid="font-render-warning"><p>{fontRendering.blocked.length?'I riquadri con la croce indicano testi con font da correggere. Il contenuto originale è conservato: scegli un font compatibile nell’ispettore o usa «Font del progetto» negli strumenti.':'Controllo dei font in corso. Il testo originale è conservato; comparirà quando il controllo sarà terminato.'}</p>{!!fontRendering.blocked.length&&<button type="button" disabled={assetBusy} onClick={()=>adapter.current?.retryTextRendering()}>Ricontrolla visualizzazione font</button>}</div>}
@@ -594,6 +595,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       {import.meta.env.DEV && (new URLSearchParams(window.location.search).has('configurations') || new URLSearchParams(window.location.search).has('configuration')) && <ConfigurationPanel api={workflowApi}/>}
     </>}
     project={<>
+      <ProductionProfilePanel document={doc} catalog={graphicCatalog} admin={mode!=='customer'} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onSet={(profile,expectedRevision)=>act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'setProductionProfile',objectId:'page',expectedRevision,arguments:{profile}},'manual'))}/>
       {projectFonts.dialog}{(mode!=='customer'||!!fontRendering.blocked.length)&&<FontCheckPanel onPage={pageId=>{setNodeMode(false);setCropMode(false);setContextPoint(null);act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'selectPage',objectId:pageId,expectedRevision:storeRef.current!.document.revision,arguments:{pageId}},'manual'),[]);}} document={doc} busy={editing || drawing || assetBusy || archiveBusy} onOpen={() => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).catch(cause => setError(cause.message)); }} onRepair={(issue, fontId, expectedRevision) => prepareAndAct(async store => {
         if (store.document.revision !== expectedRevision) throw new Error('Revisione grafica obsoleta: rileggi la segnalazione.');
         const asset = registeredFontAsset(fontId); if (!asset) throw new Error('File font non caricato dalla libreria.');

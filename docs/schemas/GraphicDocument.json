@@ -2,6 +2,459 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "productionProfile": {
+      "type": "object",
+      "properties": {
+        "plaqueFamily": {
+          "type": "string",
+          "enum": [
+            "flat-plaque",
+            "doorplate",
+            "boxed-sign"
+          ]
+        },
+        "sizeMode": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "document"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "stamp-ink",
+            "stamp-emboss",
+            "engraved-plaque",
+            "printed-plaque"
+          ]
+        },
+        "binding": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "profileKey": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "catalogVersion": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "profileKey",
+                "catalogVersion"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shopBinding": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "shopify",
+                    "test"
+                  ]
+                },
+                "productId": {
+                  "type": "string",
+                  "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"
+                },
+                "variantId": {
+                  "type": "string",
+                  "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                },
+                "productTitle": {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                "variantTitle": {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                "variantIds": {
+                  "minItems": 1,
+                  "maxItems": 2000,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                  }
+                },
+                "variantTitles": {
+                  "minItems": 1,
+                  "maxItems": 2000,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "allVariants": {
+                  "type": "boolean"
+                },
+                "checkedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                }
+              },
+              "required": [
+                "source",
+                "productId",
+                "variantId",
+                "productTitle",
+                "variantTitle",
+                "checkedAt"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "usableArea": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "widthMm": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 3000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "heightMm": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 3000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "shape": {
+                  "type": "string",
+                  "enum": [
+                    "rectangle",
+                    "square",
+                    "round"
+                  ]
+                }
+              },
+              "required": [
+                "widthMm",
+                "heightMm",
+                "shape"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "safeMarginMm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minFontSizePt": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minEngravedFeatureMm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minDifferentPaintGapMm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rasterMode": {
+          "type": "string",
+          "enum": [
+            "binary",
+            "color",
+            "unconfigured"
+          ]
+        },
+        "reservedAreas": {
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "xMm": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 3000
+              },
+              "yMm": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 3000
+              },
+              "widthMm": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 3000
+              },
+              "heightMm": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 3000
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "rectangle",
+                  "ellipse"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "xMm",
+              "yMm",
+              "widthMm",
+              "heightMm",
+              "shape"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "fixings": {
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "holes-only",
+                  "kit"
+                ]
+              },
+              "drilling": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "diameterMm": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 3000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "offsetXMm": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 3000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "offsetYMm": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 3000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "clearanceMm": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "pattern": {
+                        "type": "string",
+                        "enum": [
+                          "top-pair",
+                          "bottom-pair",
+                          "four-corners"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "diameterMm",
+                      "offsetXMm",
+                      "offsetYMm",
+                      "clearanceMm",
+                      "pattern"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "kind",
+              "drilling"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "archived": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "validatedForProduction": {
+          "type": "boolean",
+          "const": false
+        }
+      },
+      "required": [
+        "label",
+        "kind",
+        "binding",
+        "usableArea",
+        "safeMarginMm",
+        "minFontSizePt",
+        "minEngravedFeatureMm",
+        "minDifferentPaintGapMm",
+        "rasterMode",
+        "reservedAreas",
+        "fixings",
+        "notes",
+        "id",
+        "version",
+        "archived",
+        "createdAt",
+        "updatedAt",
+        "validatedForProduction"
+      ],
+      "additionalProperties": false
+    },
     "plaque": {
       "type": "object",
       "properties": {
@@ -3582,6 +4035,459 @@
       "items": {
         "type": "object",
         "properties": {
+          "productionProfile": {
+            "type": "object",
+            "properties": {
+              "plaqueFamily": {
+                "type": "string",
+                "enum": [
+                  "flat-plaque",
+                  "doorplate",
+                  "boxed-sign"
+                ]
+              },
+              "sizeMode": {
+                "type": "string",
+                "enum": [
+                  "fixed",
+                  "document"
+                ]
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "stamp-ink",
+                  "stamp-emboss",
+                  "engraved-plaque",
+                  "printed-plaque"
+                ]
+              },
+              "binding": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "profileKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "catalogVersion": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "profileKey",
+                      "catalogVersion"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "shopBinding": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "shopify",
+                          "test"
+                        ]
+                      },
+                      "productId": {
+                        "type": "string",
+                        "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"
+                      },
+                      "variantId": {
+                        "type": "string",
+                        "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                      },
+                      "productTitle": {
+                        "type": "string",
+                        "maxLength": 1000
+                      },
+                      "variantTitle": {
+                        "type": "string",
+                        "maxLength": 1000
+                      },
+                      "variantIds": {
+                        "minItems": 1,
+                        "maxItems": 2000,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                        }
+                      },
+                      "variantTitles": {
+                        "minItems": 1,
+                        "maxItems": 2000,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "maxLength": 1000
+                        }
+                      },
+                      "allVariants": {
+                        "type": "boolean"
+                      },
+                      "checkedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "productId",
+                      "variantId",
+                      "productTitle",
+                      "variantTitle",
+                      "checkedAt"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "usableArea": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "widthMm": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 3000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "heightMm": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 3000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "shape": {
+                        "type": "string",
+                        "enum": [
+                          "rectangle",
+                          "square",
+                          "round"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "widthMm",
+                      "heightMm",
+                      "shape"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "safeMarginMm": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minFontSizePt": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minEngravedFeatureMm": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 3000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minDifferentPaintGapMm": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rasterMode": {
+                "type": "string",
+                "enum": [
+                  "binary",
+                  "color",
+                  "unconfigured"
+                ]
+              },
+              "reservedAreas": {
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 120
+                    },
+                    "xMm": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 3000
+                    },
+                    "yMm": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 3000
+                    },
+                    "widthMm": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 3000
+                    },
+                    "heightMm": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 3000
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "rectangle",
+                        "ellipse"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "xMm",
+                    "yMm",
+                    "widthMm",
+                    "heightMm",
+                    "shape"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "fixings": {
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 120
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "holes-only",
+                        "kit"
+                      ]
+                    },
+                    "drilling": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "diameterMm": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 3000
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "offsetXMm": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 3000
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "offsetYMm": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 3000
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "clearanceMm": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 100
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "pattern": {
+                              "type": "string",
+                              "enum": [
+                                "top-pair",
+                                "bottom-pair",
+                                "four-corners"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "diameterMm",
+                            "offsetXMm",
+                            "offsetYMm",
+                            "clearanceMm",
+                            "pattern"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "kind",
+                    "drilling"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "notes": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "version": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "archived": {
+                "type": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              "validatedForProduction": {
+                "type": "boolean",
+                "const": false
+              }
+            },
+            "required": [
+              "label",
+              "kind",
+              "binding",
+              "usableArea",
+              "safeMarginMm",
+              "minFontSizePt",
+              "minEngravedFeatureMm",
+              "minDifferentPaintGapMm",
+              "rasterMode",
+              "reservedAreas",
+              "fixings",
+              "notes",
+              "id",
+              "version",
+              "archived",
+              "createdAt",
+              "updatedAt",
+              "validatedForProduction"
+            ],
+            "additionalProperties": false
+          },
           "plaque": {
             "type": "object",
             "properties": {

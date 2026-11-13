@@ -25,6 +25,8 @@ import { attachTextPath, detachTextPath, updateTextPath, preserveTextPathGuide }
 import { TextPathSchema, TextPathOptionsSchema } from './text-path-spec';
 import { JustificationSchema } from './justification';
 import { z } from 'zod';
+import {ProductionProfileSchema} from './production-profile';
+import {assertProfileForPage} from './production-profile-link';
 import { ShapeSchema, profileKey, type ProductProfile } from '../catalog/schema';
 import { applySelectionCommand, isSelectionCommand, selectionUnits } from './selection';
 import { ellipseIntersectsArea } from './ellipse-intersection';
@@ -89,6 +91,7 @@ export type SceneObject = z.infer<typeof SceneObjectSchema>;
 export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
 export type SceneGroup=z.infer<typeof SceneGroupSchema>;
 const documentFields = z.strictObject({
+  productionProfile:ProductionProfileSchema.optional(),
   plaque:PlaqueMountingSchema.optional(),
   inkColor:InkColorSchema.optional(),
   colorMode:z.enum(['monochrome','color']).optional(),
@@ -108,6 +111,7 @@ const documentFields = z.strictObject({
   groups: z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups).optional(),
 });
 function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>, ctx: z.RefinementCtx) {
+  if(d.productionProfile)try{assertProfileForPage(d.productionProfile,d);}catch(error){ctx.addIssue({code:'custom',message:error instanceof Error?error.message:'Profilo tecnico non valido'});}
   // The typed catalog currently contains stamp mounts only. Commercial plaque
   // associations live in the archive adapter, not in these stamp binding fields.
   if (d.colorMode === 'color' && d.productId !== null) ctx.addIssue({ code: 'custom', message: 'Le montature timbro richiedono un documento monocromatico; i colori non vengono convertiti automaticamente.' });
@@ -230,7 +234,7 @@ export function cloneSceneObject<T extends SceneObject>(object: T): T {
   return object.type === 'image' ? { ...object, ...(object.editor?{editor:{...object.editor}}:{}), source: { ...object.source }, raster: { ...object.raster }, ...(object.crop ? { crop: { ...object.crop } } : {}),...(object.clipMasks?{clipMasks:structuredClone(object.clipMasks)}:{}) } : structuredClone(object);
 }
 export function cloneGraphicDocument(document: GraphicDocument): GraphicDocument {
-  return { ...document, ...(document.pageOrder?{pageOrder:[...document.pageOrder]}:{}),...(document.otherPages?{otherPages:document.otherPages.map(page=>{const{objects,groups,areaMm,...rest}=page;return{...structuredClone(rest),areaMm:{...areaMm},objects:objects.map(cloneSceneObject),...(groups?{groups:groups.map(cloneSceneGroup)}:{})};})}:{}), ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
+  return { ...document, ...(document.productionProfile?{productionProfile:structuredClone(document.productionProfile)}:{}), ...(document.pageOrder?{pageOrder:[...document.pageOrder]}:{}),...(document.otherPages?{otherPages:document.otherPages.map(page=>{const{objects,groups,areaMm,...rest}=page;return{...structuredClone(rest),areaMm:{...areaMm},objects:objects.map(cloneSceneObject),...(groups?{groups:groups.map(cloneSceneGroup)}:{})};})}:{}), ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
 }
 export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('vector'), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
@@ -254,6 +258,7 @@ export type SelectionTransformArguments = z.infer<typeof SelectionTransformSchem
 export const SelectionStyleSchema = z.strictObject({ ...PaintOpacityFields, fill: paint.optional(), stroke: paint.optional(), strokeMm: textStrokeWidth.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }).refine(style => Object.values(style).some(value => value !== undefined), 'Scegli almeno una proprietà di stile');
 export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
+  z.strictObject({...base,tool:z.literal('setProductionProfile'),arguments:z.strictObject({profile:ProductionProfileSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('selectPage'),arguments:z.strictObject({pageId:id})}),
   z.strictObject({...base,tool:z.literal('addPage'),arguments:z.strictObject({page:GraphicPageSchema,fontAssets:FontAssetsSchema.optional()})}),
   z.strictObject({...base,tool:z.literal('duplicatePage'),arguments:z.strictObject({pageId:id,newPageId:id,name:z.string().trim().min(1).max(120)})}),
@@ -398,7 +403,11 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   if(isPageCommand(command))return applyPageCommand(doc,command,measure,role);
   const next = cloneGraphicDocument(doc);
   if ('fontAssets' in command.arguments && command.arguments.fontAssets?.length) { const resources = [...next.fontAssets ?? []]; for (const asset of command.arguments.fontAssets) { const old = resources.find(a=>a.id===asset.id); if (old && (old.dataBase64!==asset.dataBase64 || old.format!==asset.format || old.family!==asset.family)) throw new Error('La risorsa originale del font è immutabile'); if (!old) resources.push({...asset}); } next.fontAssets=resources; }
-  if(command.tool==='setPaperColor'){if(command.arguments.color===null)delete next.paperColor;else next.paperColor=command.arguments.color;}
+  if(command.tool==='setProductionProfile'){
+    if(role!=='admin')throw Error('Il profilo produttivo si collega in modalità amministrativa.');
+    if(command.arguments.profile){assertProfileForPage(command.arguments.profile,doc,catalog,true);next.productionProfile=structuredClone(command.arguments.profile);}else delete next.productionProfile;
+  }
+  else if(command.tool==='setPaperColor'){if(command.arguments.color===null)delete next.paperColor;else next.paperColor=command.arguments.color;}
   else if(command.tool==='setBackgroundImage'){
     const image=command.arguments.object;if(image&&(image.type!=='image'||image.id!==command.objectId))throw new Error('Lo sfondo richiede un’immagine e un ID coerenti');
     clearBackground(next);
@@ -596,6 +605,10 @@ export class DocumentStore {
   }
   import(raw: unknown): void {
     let next = parseGraphicDocument(raw);
+    if(this.document.productionProfile&&this.role==='customer'){
+      if(next.productionProfile&&JSON.stringify(next.productionProfile)!==JSON.stringify(this.document.productionProfile))throw Error('Il JSON usa un altro profilo tecnico: aprilo come nuovo progetto.');
+      next={...next,productionProfile:structuredClone(this.document.productionProfile)};
+    }
     if (this.document.productId) {
       if (next.areaMm.width !== this.document.areaMm.width || next.areaMm.height !== this.document.areaMm.height || next.shape !== this.document.shape) throw new Error('Area del JSON diversa dal prodotto corrente');
       if (next.productId && (next.productId !== this.document.productId || next.variantId !== this.document.variantId || next.catalogVersion !== this.document.catalogVersion || next.catalogProductProfileVersion !== this.document.catalogProductProfileVersion)) throw new Error('JSON associato a un altro prodotto o versione catalogo');

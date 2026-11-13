@@ -2,6 +2,7 @@ import type { ProductProfile } from '../catalog/schema';
 import type { GraphicCatalogContext, GraphicDocument, SceneObject } from './model';
 import { productionDocument } from './object-properties';
 import { characterStyles } from './text-style';
+import {assertProfileForPage} from './production-profile-link';
 
 export const INK_STAMP_MIN_FONT_PT = 7;
 /** Confirmed ink-stamp rule, distinct from the editor's technical capacity.
@@ -17,7 +18,9 @@ export function documentTextProduct(document: GraphicDocument, catalog?: Graphic
     && product.variantIds.includes(document.variantId ?? '') && product.profileVersion === document.catalogProductProfileVersion);
 }
 export function minimumFontForDocument(document: GraphicDocument, catalog?: GraphicCatalogContext): number | null {
-  return minimumFontForProduct(documentTextProduct(document, catalog));
+  const catalogMinimum=minimumFontForProduct(documentTextProduct(document,catalog)),profile=document.productionProfile;
+  const profileMinimum=profile?.kind==='stamp-ink'?Math.max(INK_STAMP_MIN_FONT_PT,profile.minFontSizePt??INK_STAMP_MIN_FONT_PT):profile?.minFontSizePt??null;
+  const values=[catalogMinimum,profileMinimum].filter((value):value is number=>value!==null);return values.length?Math.max(...values):null;
 }
 /** Inspect only printed code points. An unused base size or a newline's style
  * must not reject a larger visible run. Legacy vertical compression counts. */
@@ -40,11 +43,12 @@ export function assertMinimumText(document: GraphicDocument, minimumPt: number |
   if (issue) throw Error(`Il testo «${issue.label}» è sotto ${issue.minimumPt} pt (${Number(issue.actualPt.toFixed(3))} pt). Correggi il corpo prima di confermare questo modello.`);
 }
 export function assertDocumentTextProduction(document: GraphicDocument, catalog?: GraphicCatalogContext, requireKnownBinding = false): void {
+  if(document.productionProfile)assertProfileForPage(document.productionProfile,document,catalog,requireKnownBinding);
   const product = documentTextProduct(document, catalog);
   if (requireKnownBinding && document.productId && !product) throw Error('Il profilo del modello non è disponibile o è cambiato: riapri il progetto prima della conferma.');
   if (requireKnownBinding && product && document.plaque) throw Error('La configurazione della targa non è compatibile con una montatura timbro.');
-  assertMinimumText(document, minimumFontForProduct(product));
-  if (product && product.mechanism !== 'emboss') {
+  assertMinimumText(document, minimumFontForDocument(document,catalog));
+  if (product && product.mechanism !== 'emboss' || document.productionProfile?.kind==='stamp-ink') {
     const partial = (value: number | undefined) => value !== undefined && value > 0 && value < 1;
     const issue = productionDocument(document).objects.find(object => {
       if (object.type === 'image') return object.raster.mode === 'grayscale';
