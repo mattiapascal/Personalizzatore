@@ -1,22 +1,23 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { fontCatalogVersion, registeredFontAsset, subscribeFonts } from './fonts';
 import { inspectDocumentFonts, fontIssueMessage, type FontReport } from './font-preflight';
-import { textFontKey } from './text-render-guard';
+import { textFontDiagnosticKey } from './font-diagnostic-key';
 import type { TextObject } from './text-style';
 import { fontCoverageVersion, subscribeFontCoverage } from './font-coverage-cache';
 import { FontProblemText } from './FontProblemText';
 
 /** Diagnostics only: no font substitution, measurements, commands or revisions. */
 export function SelectedTextFontNotice({ object }: { object: TextObject }) {
-  const version = useSyncExternalStore(subscribeFonts, fontCatalogVersion);
-  const coverageVersion = useSyncExternalStore(subscribeFontCoverage, fontCoverageVersion);
+  useSyncExternalStore(subscribeFonts, fontCatalogVersion);
+  useSyncExternalStore(subscribeFontCoverage, fontCoverageVersion);
   const [attempt, setAttempt] = useState(0), [state, setState] = useState<{ key: string; report: FontReport } | null>(null);
-  const key = JSON.stringify([textFontKey(object), version, coverageVersion, attempt]);
+  const ids = new Set([object.fontFamily, ...object.characterStyles?.flatMap(run => run.style.fontFamily ? [run.style.fontFamily] : []) ?? []]);
+  const assets = [...ids].flatMap(id => { const asset = registeredFontAsset(id); return asset ? [asset] : []; });
+  const key = JSON.stringify([textFontDiagnosticKey(object, assets), attempt]);
   useEffect(() => {
     let active = true;
-    const snapshot = structuredClone(object), ids = new Set([snapshot.fontFamily, ...snapshot.characterStyles?.flatMap(run => run.style.fontFamily ? [run.style.fontFamily] : []) ?? []]);
-    const assets = [...ids].flatMap(id => { const asset = registeredFontAsset(id); return asset ? [{ ...asset }] : []; });
-    void inspectDocumentFonts({ objects: [snapshot], fontAssets: assets }).then(report => { if (active) setState({ key, report }); });
+    const snapshot = structuredClone(object), files = assets.map(asset => ({ ...asset }));
+    void inspectDocumentFonts({ objects: [snapshot], fontAssets: files }).then(report => { if (active) setState({ key, report }); });
     return () => { active = false; };
   }, [key]);
   const report = state?.key === key ? state.report : null;

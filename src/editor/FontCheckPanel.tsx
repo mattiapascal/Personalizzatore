@@ -15,14 +15,15 @@ import{ObjectIdentity}from'./ObjectIdentity';
 import { FontProblemText } from './FontProblemText';
 import { FontSupportFinder } from './FontSupportFinder';
 import { fontProblemSegments } from './font-problem-text';
+import { fontDiagnosticAssetKey } from './font-diagnostic-key';
 
 type Repair = (issue: FontIssue, fontId: string, revision: number) => Promise<boolean>;
 function FontRepairRow({ issue, document:doc, busy, onOpen, onRepair }: { issue: FontIssue; document:GraphicDocument; busy: boolean; onOpen: () => void; onRepair: Repair }) {
-  const revision=doc.revision,fontVersion=useSyncExternalStore(subscribeFonts, fontCatalogVersion);
+  const revision=doc.revision;useSyncExternalStore(subscribeFonts, fontCatalogVersion);useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion);
   const [choice, setChoice] = useState(''), [pending, setPending] = useState(false), [error, setError] = useState('');
   const [preparing,setPreparing]=useState(false);
   const [attempt,setAttempt]=useState(0),[candidate,setCandidate]=useState<{key:string;ready:boolean;message:string;glyphs:string[]}|null>(null);
-  const key=JSON.stringify([doc.documentId,revision,doc.pageId,issue.objectId,issue.fontId,issue.characters,choice,fontVersion,attempt]);
+  const key=JSON.stringify([doc.documentId,revision,doc.pageId,issue.objectId,issue.fontId,issue.characters,choice,fontDiagnosticAssetKey(registeredFontAsset(choice)),isFontAvailable(choice),attempt]);
   const current=candidate?.key===key?candidate:null,ready=!!current?.ready;
   const variants = fontVariantChoices(choice);
   useEffect(() => { setChoice(''); setError('');setPreparing(false); }, [revision]);
