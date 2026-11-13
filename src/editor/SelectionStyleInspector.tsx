@@ -1,3 +1,5 @@
+import {StrokeCapControl} from './StrokeCapControl';
+import {hasEditableStrokeCap,effectiveStrokeCap} from './stroke-cap';
 import {documentPaintColors} from './document-paints';
 import { OpacityControls } from './OpacityControls';
 import { EDITOR_LIMITS } from './limits';
@@ -46,6 +48,7 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
       <NumberField label="Spessore contorno selezione (mm)" value={pending.current?.style.strokeMm ?? width ?? strokes[0]?.strokeMm ?? .25} mixed={width === null && !pending.current?.style.strokeMm} revision={document.revision} min={objects.every(o=>o.type==='text')?0:.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={stroke === 'none'} onChange={strokeMm => change({ strokeMm }, false)}/>
       {!hasText && <label>Tipo contorno selezione<select aria-label="Tipo contorno selezione" value={dash ?? ''} disabled={stroke === 'none'} onChange={event => change({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' })}>{dash === null && <option value="" disabled>Misto</option>}<option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>}
     </>}
+    {objects.length>0&&objects.every(hasEditableStrokeCap)&&<StrokeCapControl value={common(objects.map(effectiveStrokeCap))} dotted={objects.some(object=>object.strokeDash==='dotted')} disabled={stroke==='none'} onChange={strokeLineCap=>change({strokeLineCap})}/>}
     <OpacityControls canFill={canFill} canStroke={canStroke} linked={linked} onLinkedChange={setLinked} revision={document.revision} selection
       fill={common(objects.map(object => {
         if (object.type === 'image') return 1;

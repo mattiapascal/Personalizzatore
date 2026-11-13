@@ -1249,11 +1249,15 @@
                                         "maximum": 1
                                       },
                                       "stroke": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeMm": {
@@ -1262,11 +1266,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -1345,10 +1353,7 @@
                                       },
                                       "stroke": {
                                         "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff"
-                                        ]
+                                        "pattern": "^#[0-9a-f]{6}$"
                                       },
                                       "strokeMm": {
                                         "type": "number",
@@ -1365,6 +1370,14 @@
                                           "solid",
                                           "dashed",
                                           "dotted"
+                                        ]
+                                      },
+                                      "strokeLineCap": {
+                                        "type": "string",
+                                        "enum": [
+                                          "butt",
+                                          "round",
+                                          "square"
                                         ]
                                       }
                                     },
@@ -1399,11 +1412,15 @@
                                         "maximum": 1
                                       },
                                       "stroke": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeMm": {
@@ -1412,11 +1429,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -1464,11 +1485,15 @@
                                         "maximum": 1
                                       },
                                       "stroke": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeMm": {
@@ -1477,11 +1502,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -1559,10 +1588,7 @@
                                       },
                                       "stroke": {
                                         "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff"
-                                        ]
+                                        "pattern": "^#[0-9a-f]{6}$"
                                       },
                                       "strokeMm": {
                                         "type": "number",
@@ -1570,11 +1596,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -1694,10 +1724,7 @@
                                       },
                                       "stroke": {
                                         "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff"
-                                        ]
+                                        "pattern": "^#[0-9a-f]{6}$"
                                       },
                                       "strokeMm": {
                                         "type": "number",
@@ -1705,11 +1732,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -2586,6 +2617,14 @@
                               "solid",
                               "dashed",
                               "dotted"
+                            ]
+                          },
+                          "strokeLineCap": {
+                            "type": "string",
+                            "enum": [
+                              "butt",
+                              "round",
+                              "square"
                             ]
                           }
                         },
@@ -5289,11 +5328,15 @@
                                               "maximum": 1
                                             },
                                             "stroke": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeMm": {
@@ -5302,11 +5345,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -5385,10 +5432,7 @@
                                             },
                                             "stroke": {
                                               "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff"
-                                              ]
+                                              "pattern": "^#[0-9a-f]{6}$"
                                             },
                                             "strokeMm": {
                                               "type": "number",
@@ -5405,6 +5449,14 @@
                                                 "solid",
                                                 "dashed",
                                                 "dotted"
+                                              ]
+                                            },
+                                            "strokeLineCap": {
+                                              "type": "string",
+                                              "enum": [
+                                                "butt",
+                                                "round",
+                                                "square"
                                               ]
                                             }
                                           },
@@ -5439,11 +5491,15 @@
                                               "maximum": 1
                                             },
                                             "stroke": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeMm": {
@@ -5452,11 +5508,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -5504,11 +5564,15 @@
                                               "maximum": 1
                                             },
                                             "stroke": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeMm": {
@@ -5517,11 +5581,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -5599,10 +5667,7 @@
                                             },
                                             "stroke": {
                                               "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff"
-                                              ]
+                                              "pattern": "^#[0-9a-f]{6}$"
                                             },
                                             "strokeMm": {
                                               "type": "number",
@@ -5610,11 +5675,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -5734,10 +5803,7 @@
                                             },
                                             "stroke": {
                                               "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff"
-                                              ]
+                                              "pattern": "^#[0-9a-f]{6}$"
                                             },
                                             "strokeMm": {
                                               "type": "number",
@@ -5745,11 +5811,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -6626,6 +6696,14 @@
                                     "solid",
                                     "dashed",
                                     "dotted"
+                                  ]
+                                },
+                                "strokeLineCap": {
+                                  "type": "string",
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
                                   ]
                                 }
                               },
@@ -9534,11 +9612,15 @@
                                         "maximum": 1
                                       },
                                       "stroke": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeMm": {
@@ -9547,11 +9629,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -9630,10 +9716,7 @@
                                       },
                                       "stroke": {
                                         "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff"
-                                        ]
+                                        "pattern": "^#[0-9a-f]{6}$"
                                       },
                                       "strokeMm": {
                                         "type": "number",
@@ -9650,6 +9733,14 @@
                                           "solid",
                                           "dashed",
                                           "dotted"
+                                        ]
+                                      },
+                                      "strokeLineCap": {
+                                        "type": "string",
+                                        "enum": [
+                                          "butt",
+                                          "round",
+                                          "square"
                                         ]
                                       }
                                     },
@@ -9684,11 +9775,15 @@
                                         "maximum": 1
                                       },
                                       "stroke": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeMm": {
@@ -9697,11 +9792,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -9749,11 +9848,15 @@
                                         "maximum": 1
                                       },
                                       "stroke": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeMm": {
@@ -9762,11 +9865,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -9844,10 +9951,7 @@
                                       },
                                       "stroke": {
                                         "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff"
-                                        ]
+                                        "pattern": "^#[0-9a-f]{6}$"
                                       },
                                       "strokeMm": {
                                         "type": "number",
@@ -9855,11 +9959,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -9979,10 +10087,7 @@
                                       },
                                       "stroke": {
                                         "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff"
-                                        ]
+                                        "pattern": "^#[0-9a-f]{6}$"
                                       },
                                       "strokeMm": {
                                         "type": "number",
@@ -9990,11 +10095,15 @@
                                         "maximum": 100
                                       },
                                       "fill": {
-                                        "type": "string",
-                                        "enum": [
-                                          "#000000",
-                                          "#ffffff",
-                                          "none"
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^#[0-9a-f]{6}$"
+                                          },
+                                          {
+                                            "type": "string",
+                                            "const": "none"
+                                          }
                                         ]
                                       },
                                       "strokeDash": {
@@ -10871,6 +10980,14 @@
                               "solid",
                               "dashed",
                               "dotted"
+                            ]
+                          },
+                          "strokeLineCap": {
+                            "type": "string",
+                            "enum": [
+                              "butt",
+                              "round",
+                              "square"
                             ]
                           }
                         },
@@ -13574,11 +13691,15 @@
                                               "maximum": 1
                                             },
                                             "stroke": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeMm": {
@@ -13587,11 +13708,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -13670,10 +13795,7 @@
                                             },
                                             "stroke": {
                                               "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff"
-                                              ]
+                                              "pattern": "^#[0-9a-f]{6}$"
                                             },
                                             "strokeMm": {
                                               "type": "number",
@@ -13690,6 +13812,14 @@
                                                 "solid",
                                                 "dashed",
                                                 "dotted"
+                                              ]
+                                            },
+                                            "strokeLineCap": {
+                                              "type": "string",
+                                              "enum": [
+                                                "butt",
+                                                "round",
+                                                "square"
                                               ]
                                             }
                                           },
@@ -13724,11 +13854,15 @@
                                               "maximum": 1
                                             },
                                             "stroke": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeMm": {
@@ -13737,11 +13871,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -13789,11 +13927,15 @@
                                               "maximum": 1
                                             },
                                             "stroke": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeMm": {
@@ -13802,11 +13944,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -13884,10 +14030,7 @@
                                             },
                                             "stroke": {
                                               "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff"
-                                              ]
+                                              "pattern": "^#[0-9a-f]{6}$"
                                             },
                                             "strokeMm": {
                                               "type": "number",
@@ -13895,11 +14038,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -14019,10 +14166,7 @@
                                             },
                                             "stroke": {
                                               "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff"
-                                              ]
+                                              "pattern": "^#[0-9a-f]{6}$"
                                             },
                                             "strokeMm": {
                                               "type": "number",
@@ -14030,11 +14174,15 @@
                                               "maximum": 100
                                             },
                                             "fill": {
-                                              "type": "string",
-                                              "enum": [
-                                                "#000000",
-                                                "#ffffff",
-                                                "none"
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "pattern": "^#[0-9a-f]{6}$"
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "const": "none"
+                                                }
                                               ]
                                             },
                                             "strokeDash": {
@@ -14911,6 +15059,14 @@
                                     "solid",
                                     "dashed",
                                     "dotted"
+                                  ]
+                                },
+                                "strokeLineCap": {
+                                  "type": "string",
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
                                   ]
                                 }
                               },

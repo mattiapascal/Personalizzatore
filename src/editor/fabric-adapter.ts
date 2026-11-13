@@ -1,3 +1,5 @@
+import {effectiveStrokeCap,scaledLineLength} from './stroke-cap';
+import {EditorLine} from './line-view';
 import {affineFrameView} from './affine-frame-view';
 import {GeometryPointMarker} from './geometry-point-marker';
 import type {GeometryFocus} from './geometry-focus';
@@ -26,7 +28,7 @@ import { prepareRasterSource } from './raster-cache';
 export { prepareRasterSource } from './raster-cache';
 import { RasterCropControls } from './raster-crop-controls';
 import { checkedRasterCrop, type ImageObject } from './raster-geometry';
-import { Canvas, StaticCanvas, IText, Rect, Path as FabricPath, Circle, Ellipse, Line, Polyline, Polygon, FabricImage, Control, Group, ActiveSelection, controlsUtils, util, type FabricObject, type TPointerEvent } from 'fabric';
+import { Canvas, StaticCanvas, IText, Rect, Path as FabricPath, Circle, Ellipse, Polyline, Polygon, FabricImage, Control, Group, ActiveSelection, controlsUtils, util, type FabricObject, type TPointerEvent } from 'fabric';
 import type { GraphicDocument, Measure, SceneObject, TransformArguments, SelectionTransformArguments } from './model';
 import {profileForPage} from './production-profile-link';
 import { DocumentSchema, validateLayout, objectGeometry, objectIntersectsArea, objectCenter, placeObjectAtCenter, type CharacterStyle } from './model';
@@ -139,7 +141,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
       : o.type === 'vector' ? new FabricPath(mapVector(o.commands, (x, y) => ({ x: x * o.widthMm * PX_PER_MM, y: y * o.heightMm * PX_PER_MM })), { ...common, ...appearance, fillRule: o.fillRule, perPixelTargetFind: true, strokeLineCap: o.strokeDash === 'dotted' ? 'round' : o.strokeLineCap, strokeLineJoin: o.strokeLineJoin, strokeMiterLimit: o.strokeMiterLimit, lockScalingX: o.widthMm === 0, lockScalingY: o.heightMm === 0 })
       : o.type === 'bezier' ? new FabricPath(bezierCommands(o.nodes, o.closed, o.widthMm * PX_PER_MM, o.heightMm * PX_PER_MM), { ...common, ...appearance, fillRule: 'evenodd', strokeLineCap: 'round', strokeLineJoin: 'round', lockScalingX: o.widthMm === 0, lockScalingY: o.heightMm === 0 })
       : o.type === 'path' ? new (o.closed ? Polygon : Polyline)(o.points.map(p => ({ x: p.x * o.widthMm * PX_PER_MM, y: p.y * o.heightMm * PX_PER_MM })), { ...common, ...appearance, fillRule: 'evenodd', strokeLineCap: 'round', strokeLineJoin: 'round', lockScalingX: o.widthMm === 0, lockScalingY: o.heightMm === 0 })
-      : o.type === 'line' ? new Line([0, 0, o.lengthMm * PX_PER_MM, 0], { ...common, ...appearance, strokeLineCap: 'round', lockScalingY: true })
+      : o.type === 'line' ? new EditorLine([0, 0, o.lengthMm * PX_PER_MM, 0], { ...common, ...appearance, strokeLineCap: effectiveStrokeCap(o), lockScalingY: true })
       : new Rect({ ...common, ...appearance, width: o.widthMm * PX_PER_MM, height: o.heightMm * PX_PER_MM, rx: (o.cornerRadiusMm ?? 0) * PX_PER_MM, ry: (o.cornerRadiusMm ?? 0) * PX_PER_MM });
   }
   if(o.type!=='text')object.set('skewX',fabricTextSkew(o.skewXDeg??0,object.scaleX*(object.flipX?-1:1),object.scaleY*(object.flipY?-1:1)));
@@ -500,7 +502,7 @@ export class FabricAdapter {
           : source.type === 'image' ? transformedImageSize(source,object)
           : source.type === 'circle'
             ? Math.abs(object.scaleX-object.scaleY)>1e-9 ? {type:'ellipse',rxMm:((source.radiusMm*2+strokeMm)*object.scaleX-strokeMm)/2,ryMm:((source.radiusMm*2+strokeMm)*object.scaleY-strokeMm)/2} : { type: 'circle', radiusMm: ((source.radiusMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2 }
-            : source.type === 'line' ? { type: 'line', lengthMm: (source.lengthMm + strokeMm) * object.scaleX - strokeMm }
+            : source.type === 'line' ? { type: 'line', lengthMm: scaledLineLength(source,object.scaleX) }
             : source.type === 'ellipse' ? { type: 'ellipse', rxMm: ((source.rxMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2, ryMm: ((source.ryMm * 2 + strokeMm) * object.scaleY - strokeMm) / 2 }
             : source.type === 'path' || source.type === 'bezier' || source.type === 'vector' ? { type: source.type, widthMm: source.widthMm === 0 ? 0 : (source.widthMm + strokeMm) * object.scaleX - strokeMm, heightMm: source.heightMm === 0 ? 0 : (source.heightMm + strokeMm) * object.scaleY - strokeMm }
             : { type: 'rect', widthMm: (source.widthMm + strokeMm) * object.scaleX - strokeMm, heightMm: (source.heightMm + strokeMm) * object.scaleY - strokeMm };

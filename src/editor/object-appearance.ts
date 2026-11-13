@@ -1,9 +1,11 @@
+import {hasEditableStrokeCap} from './stroke-cap';
 import {preserveTextPathGuide} from './text-path-model';
 import { cloneSceneObject, objectCenter, placeObjectAtCenter, type Measure, type SceneObject, type SelectionStyle } from './model';
 import { applyCharacterStyle } from './text-style';
 /** Proprietà comuni valide per ogni membro: mai saltare gli incompatibili. */
 export function objectWithAppearance(object: SceneObject, style: SelectionStyle, measure: Measure): SceneObject {
   if (object.type === 'image') throw new Error('Le immagini non hanno riempimento o contorno modificabili');
+  if(style.strokeLineCap!==undefined&&!hasEditableStrokeCap(object))throw new Error('Le estremità comuni richiedono soltanto linee o vettori SVG');
   if (object.type === 'text') {
     if (style.strokeDash !== undefined || style.fill === 'none') throw new Error('Stile incompatibile con un testo della selezione');
     const next = applyCharacterStyle(object, { ...(style.fill === undefined ? {} : { fill: style.fill }), ...(style.fillOpacity === undefined ? {} : { fillOpacity: style.fillOpacity }), ...(style.stroke === undefined ? {} : { stroke: style.stroke }), ...(style.strokeMm === undefined ? {} : { strokeMm: style.strokeMm }), ...(style.strokeOpacity === undefined ? {} : { strokeOpacity: style.strokeOpacity }) });

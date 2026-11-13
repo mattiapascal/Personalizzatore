@@ -1,6 +1,9 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const icons = {
+  capButt:<><path d="M6 5v14M18 5v14" strokeDasharray="2 2"/><rect x="6" y="9" width="12" height="6"/></>,
+  capRound:<><path d="M6 5v14M18 5v14" strokeDasharray="2 2"/><rect x="3" y="9" width="18" height="6" rx="3"/></>,
+  capSquare:<><path d="M6 5v14M18 5v14" strokeDasharray="2 2"/><rect x="3" y="9" width="18" height="6"/></>,
   gapX:<><path d="M3 3h4v18H3zM17 3h4v18h-4zM8 12h8M10 10l-2 2 2 2M14 10l2 2-2 2"/></>,
   gapY:<><path d="M3 3h18v4H3zM3 17h18v4H3zM12 8v8M10 10l2-2 2 2M10 14l2 2 2-2"/></>,
   zoomSelection:<><path d="M3 8V3h5M13 3h5v5M3 13v5h5"/><circle cx="14" cy="14" r="5"/><path d="M18 18l4 4"/></>,

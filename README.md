@@ -1,3 +1,5 @@
+**13 novembre — estremità delle linee:** [Funzione e collaudi](docs/iteration-editor-stroke-caps.md). Tre icone per linee e vettori SVG, anche in selezione multipla; centri/lunghezza nominale e maniglie coerenti, stesso comando manuale/AI e Undo. Guide del testo RGB ammesse nei progetti a colori e controlli timbro conservati. Nessuna modifica agli archivi personali o alla chat pubblicata.
+
 **13 novembre — tonalità delle immagini:** [Funzione e collaudi](docs/iteration-editor-raster-hue.md). Rotazione delle tinte RGB da −180° a +180°, confrontata con Fabric 2D; alpha e grigi invariati, stessi comandi manuali/AI, cache, Undo e output portabili. Nessuna elaborazione automatica degli originali o modifica ai dati personali/chat pubblicata.
 
 **13 novembre — regolazioni delle foto a colori:** [Funzione e collaudi](docs/iteration-editor-raster-color.md). Luminosità, contrasto e saturazione RGB live, reset all’originale, alpha e crop conservati, stessi comandi manuali/AI e Undo. Cache, output e controlli B/N condivisi; nessun filtro applicato automaticamente ai progetti esistenti. Nessuna modifica ai dati personali o alla chat pubblicata.

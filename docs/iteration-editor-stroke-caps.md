@@ -1,0 +1,27 @@
+# Estremità delle linee — 13 novembre 2026
+
+La scheda **Contorno** offre tre pulsanti grafici per le estremità **piatte**, **arrotondate** o **quadrate**. Il controllo riguarda linee rette e vettori SVG, anche insieme nello stile comune di una selezione/gruppo compatibile. Mantiene fermo il centro di ogni elemento e conserva lunghezza nominale, spessore, colore e trasformazioni. Le estremità rotonde/quadrate sporgono di metà spessore oltre ciascun estremo della linea; quelle piatte terminano all’estremo nominale.
+
+Le linee precedenti, prive di `strokeLineCap`, rimangono arrotondate. I vettori mantengono il parametro già presente nel documento. Nel punteggiato le estremità sono rotonde per disegnare i punti: i pulsanti risultano disabilitati e la preferenza salvata torna attiva ripristinando continuo/tratteggiato. Per i tracciati a punti/Bézier e le giunzioni rimane il seguito della roadmap; non sono dichiarati completati da questo incremento.
+
+Stessi `updateObject` e `styleObjects` revisionati della simulazione AI; rifiuto atomico di selezioni incompatibili, valori errati e revisioni obsolete, Undo/Redo, gruppi e blocchi cliente conservati. SVG, PNG, miniature e JSON mantengono la scelta. Non è una conversione del tratto in contorni.
+
+## Correzioni generali emerse dal collaudo
+
+Il confronto con un disegno Canvas2D indipendente ha individuato un’incoerenza di Fabric: `Line` toglie lo sbordo piatto nelle dimensioni non trasformate, mentre le dimensioni scalate generiche lo aggiungono di nuovo. L’adattatore `EditorLine` rende coerenti misura e riquadri ordinari/affini, mantenendo la lunghezza del segmento. Questo evita spostamenti fra oggetto, selezione e output quando la linea piatta è inclinata. La conversione della scala trascinata in lunghezza nominale considera lo sbordo soltanto per cap rotondi/quadrati, mantenendo lo spessore invariato. Le linee storiche rotonde restano inalterate.
+
+L’applicazione di un testo a una linea RGB era impedita da un vecchio schema B/N delle guide. Le guide ora accettano i colori del documento e conservano le estremità anche dopo separazione; Le estremità scelte vengono rispettate anche sulla guida mostrata, nel canvas e nello SVG. La palette include il loro colore soltanto quando visibili. I documenti monocromatici rifiutano anche i colori annidati nelle guide nascoste, e la conferma dei timbri rifiuta alpha parziale nel tratto di una guida visibile. Nessuna estensione automatica delle regole timbro alle targhe a colori. Il punteggiato delle guide ora usa segmenti di lunghezza zero con cap rotondi, come gli oggetti liberi. La politica `guideStrokePolicy: cap-and-dots-1` aggiorna le chiavi delle sole miniature con guide mostrate e dipinte che richiedono questa correzione; metadati, grafica senza guide e guide nascoste/trasparenti non ricevono l’invalidazione aggiuntiva.
+
+## Campione e verifiche
+
+- **1.312 unitari / 185 file passati** (`.local/stroke-caps-all-units-last.log`), con sedici nuovi casi. Estremi, ingombri Fabric effettivi/scalati, centri, stessa UI/AI, JSON, gruppi, blocchi, selezioni incompatibili e Redo; associazione/separazione testo, guide RGB, alpha timbro e palette.
+- **Undici nuovi browser passati** (`.local/stroke-caps-browser-last.log`): desktop/telefono, controllo singolo e multiplo, stessi comandi AI, centri fermi, punteggiato, Undo, SVG/PNG/miniature e riapertura JSON; tre maniglie con cap differenti a zoom esatto, più linea inclinata/riflessa con ancoraggio opposto e lunghezza coerente con gli eventi nativi del mouse. Il riferimento Canvas2D usa i segmenti/comandi e i cap nativi, con tre confronti di continuo/tratteggio/punti su linee e vettore aperto anche ruotati/inclinati/riflessi: nessun pixel dipinto con differenza premoltiplicata sopra 12/255, errore medio inferiore a 0,04/255. Non è una certificazione di stampa.
+- **42 regressioni aggiuntive passate**, per **53 browser pertinenti distinti**: 35 su disegno/maniglie/testo su tracciato/Trasforma/stile (`.local/stroke-caps-regression-last.log`) e sette sulla palette (`stroke-caps-palette-last.log`). Non è una nuova esecuzione della suite browser generale.
+- Campione [JSON](../fixtures/illustrator/stroke-caps.TEST.json) e [SVG](../fixtures/illustrator/stroke-caps.TEST.svg), **100 × 70 mm**, sei oggetti con solo Arimo OFL: tre linee di pari lunghezza nominale, linea affine, vettore aperto e testo TEST. Generatore `scripts/capture-editor-stroke-caps.ts`; `.local/stroke-caps-capture.json` registra zero errori/richieste esterne/scritture amministrative. Catture desktop/mobile ispezionate visivamente.
+
+- **82 campioni JSON/SVG riaperti ed esportati**, senza errori browser, richieste esterne o font personali (`.local/stroke-caps-artifacts-last.log`).
+- Build locale/pubblica, schemi e scansioni dei segreti passati; **13 browser pubblici passati** (`.local/stroke-caps-public-last.log`). JavaScript della chat invariato: `index-BG2r_x-8.js`.
+
+Archivio principale letto senza scritture: **SQLite R638, 346 template, due composizioni, 219 font e un profilo** (`.local/stroke-caps-archive-final.json`). Nessuna migrazione, deploy o modifica a negozio, tema, PitchPrint, BSS, prezzi, carrello o checkout.
+
+Illustrator non collaudato: verificare lunghezza nominale e sporgenza dei cap, spessore fisico, geometria affine, resa del vettore aperto e testo editabile. Nessuna migrazione o elaborazione automatica degli archivi personali, deploy, nuova funzione multipagina o generazione immagini AI.
