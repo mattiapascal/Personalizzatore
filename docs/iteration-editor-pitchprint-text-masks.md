@@ -1,5 +1,7 @@
 # Importazione delle maschere sul testo — 13 novembre 2026
 
+**Salvataggio successivo completato:** [entrambi i cartelli sono ora nell’archivio locale](iteration-editor-text-mask-template-import.md), con supporto/fori come sfondo di riferimento. Le indicazioni sotto sulle sole copie private appartengono al checkpoint precedente.
+
 **Aggiornamenti successivi:** [controllo del testo nascosto nell’ispettore](iteration-editor-text-mask-inspection.md) e [attivazione SQLite autorizzata](iteration-editor-sqlite-activation.md). Le copie dei due cartelli restano private; le indicazioni sul principale JSON sotto descrivono il checkpoint di questa conversione.
 
 L'adattatore PitchPrint ora converte le maschere relative dei testi nella [proprietà canonica già disponibile nell'editor](iteration-editor-text-masks.md). È una regola generale per la geometria sorgente, senza condizioni su nome o ID del template. L'ispettore, la scrittura manuale, i comandi AI simulati e le esportazioni continuano a usare lo stesso documento.
