@@ -22,7 +22,7 @@ const schema=`
  CREATE INDEX record_resources_hash ON record_resources(hash);
  CREATE INDEX font_resources_hash ON font_resources(hash);
 `;
-/** Isolated opt-in backend. No discovery or automatic conversion of state.json. */
+/** Explicit backend. No discovery or automatic conversion of state.json. */
 export class EditorAdminSqlite implements EditorAdminPersistence {
  private entry:AdminPersistenceSnapshot|null=null;
  private counters=zero();

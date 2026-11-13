@@ -1,6 +1,6 @@
 import type {AdminState,AdminSnapshot,ArchiveRecord} from '../src/editor-admin/schema';
 export interface AdminPersistenceSnapshot {state:AdminState;key:string;}
-/** Explicit opt-in for isolated storage trials. The running editor keeps JSON. */
+/** Backend contract shared by the default JSON and explicitly selected SQLite. */
 export interface EditorAdminPersistence {
  get():Promise<AdminPersistenceSnapshot>;
  commit(before:AdminPersistenceSnapshot,state:AdminState):Promise<void>;
