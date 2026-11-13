@@ -36,3 +36,7 @@ Rimangono da completare trasformazioni e origini nell’adattatore PitchPrint, m
 [Matrici, gruppi e decorazioni SVG](iteration-editor-pitchprint-affine-text.md): l’adattatore conserva ora lo skew proprio del testo e quello dei genitori, usando l’angolo fisico canonico e la scala verticale corretta del font. Confrontate 216 matrici nel runtime originale 3.4.0; il campione completo con decorazioni Canvas rese esplicite nello SVG coincide nei pixel. Risolto anche un difetto generale dell’SVG delle decorazioni, conservando i segmenti dei glifi.
 
 Le maschere sul testo continuano a bloccare i due cartelli. Il [piano specifico](editor-text-mask-plan.md) si basa anche su dieci prove native del comportamento durante modifica di testo/corpo/larghezza e scala: frame locale stabile, trasformato geometricamente con l’oggetto. Non riutilizzare il frame relativo variabile delle immagini senza questo contratto. Nessuna nuova importazione o migrazione effettiva.
+
+## Maschere canoniche implementate
+
+[Maschere locali del testo](iteration-editor-text-masks.md): proprietà fisica distinta dal frame di impaginazione, comandi e ispettore, cache aggiornata durante la scrittura, clip SVG e bitmap verificati separatamente. L'adattatore PitchPrint rifiuta ancora queste maschere: la conversione delle coordinate legacy e il confronto completo dei due cartelli sono il prossimo incremento. La sola disponibilità manuale della proprietà non li rende importabili.

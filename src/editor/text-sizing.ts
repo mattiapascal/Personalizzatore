@@ -1,3 +1,4 @@
+import { scaleTextClipMasks } from './text-clip-masks';
 import { EDITOR_LIMITS } from './limits';
 import { objectCenter, placeObjectAtCenter, type Measure } from './model';
 import type { TextObject } from './text-style';
@@ -12,6 +13,7 @@ export function resizeTextHeight(object: TextObject, heightMm: number, measure: 
   const size = measure(object), layoutHeight = size.textLayoutHeightMm ?? size.heightMm, limits = textHeightLimits(object, layoutHeight);
   if (!Number.isFinite(heightMm) || heightMm < limits.min - 1e-8 || heightMm > limits.max + 1e-8) throw new Error('Altezza fuori dai limiti di corpo/dilatazione del laboratorio');
   const factor = heightMm / layoutHeight * (object.textScaleY ?? 1), next = { ...object, fontSizePt: object.fontSizePt * factor, textScaleX: (object.textScaleX ?? 1) / factor, textScaleY: 1,
+    ...(object.textClipMasks?{textClipMasks:scaleTextClipMasks(object.textClipMasks,factor)}:{}),
     ...(object.strokeMm === undefined ? {} : { strokeMm: object.strokeMm * factor }),
     ...(object.letterSpacingPt === undefined ? {} : { letterSpacingPt: object.letterSpacingPt * factor }),
     ...(object.textBox ? { textBox: { ...object.textBox, heightMm } } : {}),

@@ -1,3 +1,4 @@
+import { TextMaskPanel } from './TextMaskPanel';
 import{GRAPHIC_GEOMETRY_LIMITS,MAX_TEXT_SKEW_DEG}from'./limits';
 import{AspectRatioControl}from'./AspectRatioControl';
 import{resizeObjectDimension}from'./resize-object';
@@ -121,6 +122,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
       <h3>{title}</h3>
       {section==='template'&&onProperties&&<ObjectPropertiesPanel object={object} revision={revision} onChange={onProperties}/>}
       {current.type === 'text' && <p className="caption" data-testid="character-scope">{characterSelection ? noCharacters ? 'Seleziona i caratteri da formattare. Esc torna al box.' : `${characterSelection.end - characterSelection.start} caratteri selezionati${characterSelection.mixed.length ? ' · stile misto' : ''}` : 'Box selezionato · le modifiche ai caratteri agiscono su tutto il testo.'}</p>}
+      {current.type==='text'&&current.textClipMasks&&<p role="status" className="caption">Maschera attiva: il disegno può mostrare solo parte del testo.</p>}
       {section === 'geometry' && <>{geometryLocked&&<p className="caption">Posizione e dimensioni bloccate dal template.</p>}
         <fieldset disabled={geometryLocked} className="inspector-arrangement"><div className="property-grid">
           <NumberField {...fields} label="X (mm)" value={draft.center.xMm} min={-GRAPHIC_GEOMETRY_LIMITS.coordinateMm} max={GRAPHIC_GEOMETRY_LIMITS.coordinateMm} onChange={xMm => moveCenter({ ...draft.center, xMm })}/>
@@ -168,6 +170,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
           <NumberField {...fields} label="Inclinazione orizzontale (°)" value={current.textSkewXDeg ?? 0} min={-MAX_TEXT_SKEW_DEG} max={MAX_TEXT_SKEW_DEG} step={0.1} disabled={geometryLocked} onChange={textSkewXDeg => patch({ textSkewXDeg })}/>
           <p className="caption">Inclina l’intero box, conservando testo e stili. Zero ripristina il box diritto.</p>
         </details>}
+        {!current.textPath&&frame&&<TextMaskPanel object={current} frame={frame} revision={draft.revision} disabled={geometryLocked} onChange={textClipMasks=>patch({textClipMasks})}/>}
         {minimumFontPt!==null&&<p role="status" data-testid="minimum-font-notice" className="caption">{(smallestPrintedFontPt(current)??Infinity)<minimumFontPt-1e-7?`Questo testo contiene caratteri sotto ${minimumFontPt} pt: correggili prima di confermare il timbro.`:`Per questo modello il corpo minimo è ${minimumFontPt} pt.`}</p>}
         <div className="property-grid">{!current.textPath && <NumberField {...fields} label="Interlinea" value={current.lineHeight ?? 1} min={EDITOR_LIMITS.minLineHeight} max={EDITOR_LIMITS.maxLineHeight} step={0.1} onChange={lineHeight => patch({ lineHeight })}/> }
         <NumberField {...fields} label={characterSelection ? 'Crenatura (pt)' : 'Spaziatura (pt)'} value={characterSelection?.spacing?.value ?? current.letterSpacingPt ?? 0} min={EDITOR_LIMITS.minTrackingPt} max={EDITOR_LIMITS.maxTrackingPt} step={0.1} mixed={characterSelection?.spacing?.mixed} disabled={!!characterSelection && !characterSelection.spacing?.indices.length} onChange={value => { if (value >= EDITOR_LIMITS.minTrackingPt && value <= EDITOR_LIMITS.maxTrackingPt) { if (characterSelection) onKerning(value); else patch({ letterSpacingPt: value }); } }}/>

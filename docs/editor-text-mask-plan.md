@@ -1,6 +1,6 @@
 # Maschere del testo: prossimo incremento — 13 novembre 2026
 
-Piano successivo all'[importazione affine](iteration-editor-pitchprint-affine-text.md). **Non ancora implementato**. I due cartelli prioritari rimangono bloccati, senza rimuovere maschere o modificare i sorgenti.
+Piano successivo all'[importazione affine](iteration-editor-pitchprint-affine-text.md). **Capacità canonica/manuale implementata:** [maschere locali del testo](iteration-editor-text-masks.md). Rimangono da completare l'adattatore PitchPrint e il confronto integrale dei due cartelli prioritari, ancora bloccati senza rimuovere maschere o modificare i sorgenti. I punti seguenti conservano il contratto e i criteri di accettazione; non dichiarano completata l'importazione.
 
 ## Comportamento nativo verificato
 
@@ -8,7 +8,7 @@ Prova sintetica nel runtime originale Fabric 3.4.0, font Arimo TEST esatto, ness
 
 Script diagnostico privato `.local/probe-text-mask-edit-behavior.ts`, risultato `.local/text-mask-behavior/report.json`. La prova riguarda rettangoli relativi: non certifica maschere assolute/invertite o gruppi di maschere. Conferma che normalizzare la maschera rispetto alla larghezza/altezza variabile del testo ne cambierebbe il comportamento.
 
-## Contratto da realizzare
+## Contratto dell'editor
 
 1. **Geometria locale esplicita:** mantenere curve normalizzate e regole di riempimento già usate dalle maschere vettoriali, con un frame fisico in mm nel piano locale del testo, prima di dilatazione/inclinazione/rotazione. Non derivare il frame da `textBox.widthMm` o dal testo corrente. Una proprietà distinta evita di reinterpretare le maschere relative delle immagini già salvate.
 2. **Modifiche del contenuto/font:** conservare il frame della maschera quando si digita, si cambia font/corpo o si modifica la larghezza di impaginazione. La maschera segue il centro grafico stabilito dai comandi dell'editor; non modifica l'altezza automatica o i ritorni a capo.

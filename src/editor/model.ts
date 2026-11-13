@@ -1,3 +1,4 @@
+import { TextClipMasksSchema,scaleTextClipMasks,textClipExtent } from './text-clip-masks';
 import{ClipMasksSchema,maskedCommandCount}from'./clip-masks';
 import{isPageCommand,applyPageCommand,graphicPages,graphicPageIds,selectGraphicPage}from'./pages';
 import {rasterDocumentUsage,rasterDocumentIssues} from './raster-document-limits';
@@ -61,6 +62,7 @@ const textAppearance = {
   textScaleX: textScale.optional(),
   textScaleY: textScale.optional(),
   textSkewXDeg: textSkew.optional(),
+  textClipMasks: TextClipMasksSchema.optional(),
   fontWeight: z.enum(['normal', 'bold']).optional(), fontStyle: z.enum(['normal', 'italic']).optional(), underline: z.boolean().optional(), linethrough: z.boolean().optional(), overline: z.boolean().optional(),
   textAlign: TextAlignmentSchema.optional(), lineHeight: z.number().finite().min(EDITOR_LIMITS.minLineHeight).max(EDITOR_LIMITS.maxLineHeight).optional(),
   letterSpacingPt: z.number().finite().min(EDITOR_LIMITS.minTrackingPt).max(EDITOR_LIMITS.maxTrackingPt).optional(),
@@ -152,7 +154,8 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
       if (!near(b.x, 0) || !near(b.y, 0) || !near(b.width, object.widthMm ? 1 : 0) || !near(b.height, object.heightMm ? 1 : 0) || !object.widthMm && !object.heightMm) ctx.addIssue({ code: 'custom', message: 'Vettore non normalizzato o degenere' });
     }
     if (object.type === 'text') {
-      if (object.textPath && (object.text.includes('\n') || object.textBox || object.lineStyles?.length || object.textAlign === 'justify-left' || object.textScaleY !== undefined && object.textScaleY !== 1 || !!object.textSkewXDeg)) ctx.addIssue({ code: 'custom', message: 'Il testo su tracciato richiede una sola riga, senza box/giustificazione, scala verticale o inclinazione del box' });
+      if(textClipExtent(object)>EDITOR_LIMITS.maxObjectExtentMm)ctx.addIssue({code:'custom',message:'Maschera del testo oltre il limite geometrico locale di 10 m'});
+      if (object.textPath && (object.text.includes('\n') || object.textBox || object.lineStyles?.length || object.textAlign === 'justify-left' || object.textScaleY !== undefined && object.textScaleY !== 1 || !!object.textSkewXDeg || !!object.textClipMasks)) ctx.addIssue({ code: 'custom', message: 'Il testo su tracciato richiede una sola riga, senza box/giustificazione, scala verticale, inclinazione o maschere del box' });
       if ((object.textAlign === 'justify-left' || object.lineStyles?.some(run => run.alignment === 'justify-left')) && (object.textBox?.autoWidth ?? true) && object.justification?.distribution!=='word-space') ctx.addIssue({ code: 'custom', message: 'Il testo giustificato richiede un box a larghezza fissa' });
       let lineEnd = -1, emptyEnd = -1;
       for (const run of object.lineStyles ?? []) {
@@ -197,7 +200,7 @@ export const DocumentSchema = documentFields.extend({pageId:id.optional(),pageNa
  }
 });
 const LegacySceneObjectSchema = z.discriminatedUnion('type', [
-  SceneObjectSchema.options[0].omit({ rotationDeg: true, fontWeight: true, fontStyle: true, underline: true, linethrough: true, overline: true, textAlign: true, lineHeight: true, letterSpacingPt: true, textScaleX: true, textScaleY: true, textSkewXDeg: true, lineStyles: true, justification: true, textPath: true, textBox: true, characterStyles: true }).extend({ fontFamily: z.literal('Arial') }),
+  SceneObjectSchema.options[0].omit({ rotationDeg: true, fontWeight: true, fontStyle: true, underline: true, linethrough: true, overline: true, textAlign: true, lineHeight: true, letterSpacingPt: true, textScaleX: true, textScaleY: true, textSkewXDeg: true, textClipMasks: true, lineStyles: true, justification: true, textPath: true, textBox: true, characterStyles: true }).extend({ fontFamily: z.literal('Arial') }),
   SceneObjectSchema.options[1].omit({ rotationDeg: true, fill: true, strokeDash: true, cornerRadiusMm: true }).extend({ stroke: color, strokeMm: z.number().positive().max(2) }),
   SceneObjectSchema.options[2].omit({ rotationDeg: true, fill: true, strokeDash: true }).extend({ stroke: color, strokeMm: z.number().positive().max(2) }),
 ]);
@@ -486,6 +489,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
         if (object.type !== size.type) throw new Error('Dimensioni incompatibili con il tipo di oggetto');
         if (object.type === 'text' && size.type === 'text') {
           const factor = size.fontSizePt / object.fontSizePt;
+          if(object.textClipMasks)object.textClipMasks=scaleTextClipMasks(object.textClipMasks,factor);
           if (object.strokeMm !== undefined) object.strokeMm *= factor;
           if (object.letterSpacingPt !== undefined) object.letterSpacingPt = Math.round(object.letterSpacingPt * factor * 1e9) / 1e9;
           if (object.characterStyles) object.characterStyles = object.characterStyles.map(run => ({ ...run, style: { ...run.style, ...(run.style.strokeMm === undefined ? {} : { strokeMm: run.style.strokeMm * factor }), ...(run.style.fontSizePt === undefined ? {} : { fontSizePt: Math.round(run.style.fontSizePt * factor * 1e9) / 1e9 }), ...(run.style.kerningPt === undefined ? {} : { kerningPt: Math.round(run.style.kerningPt * factor * 1e9) / 1e9 }) } }));
@@ -512,7 +516,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   const parsed = DocumentSchema.parse(next);
   validateLayout(parsed, measure, 'edit');
   assertObjectPolicies(doc,parsed,command,role,(a,b)=>{
-    const keys=['rotationDeg','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textSkewXDeg','textBox','points','nodes','commands','textPath'];
+    const keys=['rotationDeg','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textSkewXDeg','textClipMasks','clipMasks','textBox','points','nodes','commands','textPath'];
     if(keys.some(key=>JSON.stringify((a as unknown as Record<string,unknown>)[key])!==JSON.stringify((b as unknown as Record<string,unknown>)[key])))return false;
     if(a.type==='text'&&b.type==='text'){try{const ac=objectCenter(a,measure),bc=objectCenter(b,measure);return Math.abs(ac.xMm-bc.xMm)<1e-6&&Math.abs(ac.yMm-bc.yMm)<1e-6;}catch(error){if(!(error instanceof UnverifiedTextGeometryError))throw error;return a.xMm===b.xMm&&a.yMm===b.yMm;}}return Math.abs(a.xMm-b.xMm)<1e-6&&Math.abs(a.yMm-b.yMm)<1e-6;
   });

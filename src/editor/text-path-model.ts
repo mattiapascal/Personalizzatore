@@ -20,6 +20,7 @@ function assertUngrouped(doc: GraphicDocument, ids: string[]) { if (doc.groups?.
 export function attachTextPath(doc: GraphicDocument, textId: string, pathId: string, measure: Measure): SceneObject[] {
   const text = doc.objects.find(object => object.id === textId), path = doc.objects.find(object => object.id === pathId);
   if (text?.type !== 'text' || text.textPath || !path || !isTextPathGuide(path) || textId === pathId) throw new Error('Seleziona un testo libero e un tracciato, linea, cerchio o ellisse'); assertUngrouped(doc, [textId, pathId]);
+  if(text.textClipMasks)throw new Error('Rimuovi la maschera del testo prima di applicarlo al tracciato');
   if (text.textSkewXDeg) throw new Error('Azzera l’inclinazione del box prima di applicare il testo al tracciato');
   const { id: _id, xMm: _x, yMm: _y, rotationDeg: _rotation, ...rawGuide } = path, guide = TextPathGuideSchema.parse(rawGuide), firstAlignment = text.lineStyles?.find(run => run.start === 0)?.alignment ?? text.textAlign ?? 'left';
   const next = cloneSceneObject(text), vertical = next.textScaleY ?? 1;

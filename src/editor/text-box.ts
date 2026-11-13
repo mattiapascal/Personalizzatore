@@ -1,3 +1,5 @@
+import { setClipGeometry } from './clip-mask-view';
+import { textClipCommands,scaleTextClipMasks,type TextClipMask } from './text-clip-masks';
 import {textStrokeEnvelope} from './text-stroke';
 import { decorationRects, decorationSvg } from './text-decoration-svg';
 import { fabricTextSkew, physicalTextSkew } from './text-skew';
@@ -71,14 +73,15 @@ export class EditorTextBox extends Textbox {
     }
     context.restore();
   }
+  textClipMasks?: TextClipMask[];
   frame?: TextFrame;
   justificationSettings?: JustificationSettings;
   justificationResults: ReturnType<typeof justifySpacing>[] = [];
   contentWidth = 0;
   contentHeight = 0;
-  constructor(text: string, options: TOptions<TextboxProps>, frame?: TextFrame, justificationSettings?: JustificationSettings) {
+  constructor(text: string, options: TOptions<TextboxProps>, frame?: TextFrame, justificationSettings?: JustificationSettings, textClipMasks?: readonly TextClipMask[]) {
     super(text, { ...options, minWidth: 0.001 });
-    this.frame = frame; this.justificationSettings = justificationSettings; this.initDimensions();
+    this.frame = frame; this.justificationSettings = justificationSettings; this.textClipMasks=textClipMasks?structuredClone([...textClipMasks]):undefined; this.initDimensions();
   }
   visualLineRanges(): VisualTextLine[] {
     let start = 0; const length = Array.from(this.text).length;
@@ -224,8 +227,9 @@ export class EditorTextBox extends Textbox {
     if (this.hasLineStyles() && !this.textAlign.includes('justify')) this.enlargeSpaces();
     this.contentWidth = this.calcTextWidth(); this.contentHeight = this.height;
     if (!this.frame || this.frame.autoWidth) this.width = this.text.length === 0 ? Math.max(0.001, this.frame?.width ?? 2) : Math.max(0.001, this.contentWidth);
-    this.clipPath = this.frame && !this.frame.autoWidth
+    const clipFrame = this.frame && !this.frame.autoWidth
       ? new Rect({ width: this.width + this.strokeBoundsWidth(), height: this.height + this.strokeBoundsWidth(), left: 0, top: 0, originX: 'center', originY: 'center', strokeWidth: 0 }) : undefined;
+    setClipGeometry(this,(this.textClipMasks??[]).map(mask=>({fillRule:mask.fillRule,commands:textClipCommands(mask,8)})),clipFrame);
   }
   get overflow(): boolean { return this.contentWidth > this.width + 1e-6 || this.contentHeight > this.height + 1e-6; }
   resizeFrame(width: number, height: number, autoWidth = false): void {
@@ -239,7 +243,7 @@ export function textBoxControls(object: EditorTextBox): void {
   // Layout axes, before the shear. A skew must not change wrapping or the
   // horizontal stretch requested by dragging an edge.
   const baseWidth = baseRawWidth * baseScale, baseHeight = baseRawHeight * baseScaleY, automatic = object.frame?.autoWidth ?? true;
-  const baseFrame=object.frame&&{...object.frame};
+  const baseFrame=object.frame&&{...object.frame},baseMasks=object.textClipMasks&&structuredClone(object.textClipMasks);
   const baseStroke = object.strokeWidth, baseFont = object.fontSize, baseStyles = structuredClone(object.styles), fonts = [baseFont, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.fontSize ?? baseFont))];
   const spacings = [object.charSpacing / 1000 * baseFont / (25.4 / 72 * 8), ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => (style as { editorKerningPt?: number }).editorKerningPt ?? 0))], spacingScale = Math.min(Infinity, ...spacings.filter(value => value !== 0).map(value => value > 0 ? EDITOR_LIMITS.maxTrackingPt / value : EDITOR_LIMITS.minTrackingPt / value));
   const strokes = [baseStroke, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.strokeWidth ?? 0))], strokeScale = Math.min(Infinity, ...strokes.filter(value => value > 0).map(value => EDITOR_LIMITS.maxStrokeMm * 8 / value));
@@ -280,6 +284,7 @@ export function textBoxControls(object: EditorTextBox): void {
           if (style.strokeWidth !== undefined) style.strokeWidth *= fontScale;
           if (style.editorKerningPt !== undefined) style.editorKerningPt *= fontScale;
         }
+        if(baseMasks)target.textClipMasks=scaleTextClipMasks(baseMasks,fontScale);
         target.set({ fontSize: baseFont * fontScale, strokeWidth: baseStroke * fontScale, styles, scaleY: 1 }); target.initDimensions();
         target.set('scaleX', Math.max(.1, Math.min(10, width / (target.width + target.strokeBoundsWidth()))));
       } else target.resizeFrame(Math.max(.001, width / baseScale - target.strokeBoundsWidth()), object.height, false);

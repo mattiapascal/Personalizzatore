@@ -1429,6 +1429,168 @@
                             "minimum": -85,
                             "maximum": 85
                           },
+                          "textClipMasks": {
+                            "minItems": 1,
+                            "maxItems": 8,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "commands": {
+                                  "minItems": 2,
+                                  "maxItems": 32768,
+                                  "type": "array",
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "M"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 3,
+                                        "maxItems": 3
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "L"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 3,
+                                        "maxItems": 3
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "C"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 7,
+                                        "maxItems": 7
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "Z"
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 1,
+                                        "maxItems": 1
+                                      }
+                                    ]
+                                  }
+                                },
+                                "fillRule": {
+                                  "type": "string",
+                                  "enum": [
+                                    "nonzero",
+                                    "evenodd"
+                                  ]
+                                },
+                                "frameMm": {
+                                  "type": "object",
+                                  "properties": {
+                                    "x": {
+                                      "type": "number",
+                                      "minimum": -1000000,
+                                      "maximum": 1000000
+                                    },
+                                    "y": {
+                                      "type": "number",
+                                      "minimum": -1000000,
+                                      "maximum": 1000000
+                                    },
+                                    "width": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 1000000
+                                    },
+                                    "height": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 1000000
+                                    }
+                                  },
+                                  "required": [
+                                    "x",
+                                    "y",
+                                    "width",
+                                    "height"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "commands",
+                                "fillRule",
+                                "frameMm"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
                           "fontWeight": {
                             "type": "string",
                             "enum": [
@@ -4652,6 +4814,168 @@
                                   "type": "number",
                                   "minimum": -85,
                                   "maximum": 85
+                                },
+                                "textClipMasks": {
+                                  "minItems": 1,
+                                  "maxItems": 8,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "commands": {
+                                        "minItems": 2,
+                                        "maxItems": 32768,
+                                        "type": "array",
+                                        "items": {
+                                          "anyOf": [
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "M"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 3,
+                                              "maxItems": 3
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "L"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 3,
+                                              "maxItems": 3
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "C"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 7,
+                                              "maxItems": 7
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "Z"
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 1,
+                                              "maxItems": 1
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "fillRule": {
+                                        "type": "string",
+                                        "enum": [
+                                          "nonzero",
+                                          "evenodd"
+                                        ]
+                                      },
+                                      "frameMm": {
+                                        "type": "object",
+                                        "properties": {
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": -1000000,
+                                            "maximum": 1000000
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": -1000000,
+                                            "maximum": 1000000
+                                          },
+                                          "width": {
+                                            "type": "number",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 1000000
+                                          },
+                                          "height": {
+                                            "type": "number",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 1000000
+                                          }
+                                        },
+                                        "required": [
+                                          "x",
+                                          "y",
+                                          "width",
+                                          "height"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "commands",
+                                      "fillRule",
+                                      "frameMm"
+                                    ],
+                                    "additionalProperties": false
+                                  }
                                 },
                                 "fontWeight": {
                                   "type": "string",
@@ -9112,6 +9436,168 @@
                             "minimum": -85,
                             "maximum": 85
                           },
+                          "textClipMasks": {
+                            "minItems": 1,
+                            "maxItems": 8,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "commands": {
+                                  "minItems": 2,
+                                  "maxItems": 32768,
+                                  "type": "array",
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "M"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 3,
+                                        "maxItems": 3
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "L"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 3,
+                                        "maxItems": 3
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "C"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 7,
+                                        "maxItems": 7
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "Z"
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 1,
+                                        "maxItems": 1
+                                      }
+                                    ]
+                                  }
+                                },
+                                "fillRule": {
+                                  "type": "string",
+                                  "enum": [
+                                    "nonzero",
+                                    "evenodd"
+                                  ]
+                                },
+                                "frameMm": {
+                                  "type": "object",
+                                  "properties": {
+                                    "x": {
+                                      "type": "number",
+                                      "minimum": -1000000,
+                                      "maximum": 1000000
+                                    },
+                                    "y": {
+                                      "type": "number",
+                                      "minimum": -1000000,
+                                      "maximum": 1000000
+                                    },
+                                    "width": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 1000000
+                                    },
+                                    "height": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 1000000
+                                    }
+                                  },
+                                  "required": [
+                                    "x",
+                                    "y",
+                                    "width",
+                                    "height"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "commands",
+                                "fillRule",
+                                "frameMm"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
                           "fontWeight": {
                             "type": "string",
                             "enum": [
@@ -12335,6 +12821,168 @@
                                   "type": "number",
                                   "minimum": -85,
                                   "maximum": 85
+                                },
+                                "textClipMasks": {
+                                  "minItems": 1,
+                                  "maxItems": 8,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "commands": {
+                                        "minItems": 2,
+                                        "maxItems": 32768,
+                                        "type": "array",
+                                        "items": {
+                                          "anyOf": [
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "M"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 3,
+                                              "maxItems": 3
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "L"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 3,
+                                              "maxItems": 3
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "C"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 7,
+                                              "maxItems": 7
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "Z"
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 1,
+                                              "maxItems": 1
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "fillRule": {
+                                        "type": "string",
+                                        "enum": [
+                                          "nonzero",
+                                          "evenodd"
+                                        ]
+                                      },
+                                      "frameMm": {
+                                        "type": "object",
+                                        "properties": {
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": -1000000,
+                                            "maximum": 1000000
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": -1000000,
+                                            "maximum": 1000000
+                                          },
+                                          "width": {
+                                            "type": "number",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 1000000
+                                          },
+                                          "height": {
+                                            "type": "number",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 1000000
+                                          }
+                                        },
+                                        "required": [
+                                          "x",
+                                          "y",
+                                          "width",
+                                          "height"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "commands",
+                                      "fillRule",
+                                      "frameMm"
+                                    ],
+                                    "additionalProperties": false
+                                  }
                                 },
                                 "fontWeight": {
                                   "type": "string",
@@ -15754,6 +16402,168 @@
                             "minimum": -85,
                             "maximum": 85
                           },
+                          "textClipMasks": {
+                            "minItems": 1,
+                            "maxItems": 8,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "commands": {
+                                  "minItems": 2,
+                                  "maxItems": 32768,
+                                  "type": "array",
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "M"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 3,
+                                        "maxItems": 3
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "L"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 3,
+                                        "maxItems": 3
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "C"
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          },
+                                          {
+                                            "type": "number",
+                                            "minimum": -100,
+                                            "maximum": 100
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 7,
+                                        "maxItems": 7
+                                      },
+                                      {
+                                        "type": "array",
+                                        "prefixItems": [
+                                          {
+                                            "type": "string",
+                                            "const": "Z"
+                                          }
+                                        ],
+                                        "items": false,
+                                        "minItems": 1,
+                                        "maxItems": 1
+                                      }
+                                    ]
+                                  }
+                                },
+                                "fillRule": {
+                                  "type": "string",
+                                  "enum": [
+                                    "nonzero",
+                                    "evenodd"
+                                  ]
+                                },
+                                "frameMm": {
+                                  "type": "object",
+                                  "properties": {
+                                    "x": {
+                                      "type": "number",
+                                      "minimum": -1000000,
+                                      "maximum": 1000000
+                                    },
+                                    "y": {
+                                      "type": "number",
+                                      "minimum": -1000000,
+                                      "maximum": 1000000
+                                    },
+                                    "width": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 1000000
+                                    },
+                                    "height": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 1000000
+                                    }
+                                  },
+                                  "required": [
+                                    "x",
+                                    "y",
+                                    "width",
+                                    "height"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "commands",
+                                "fillRule",
+                                "frameMm"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
                           "fontWeight": {
                             "type": "string",
                             "enum": [
@@ -18977,6 +19787,168 @@
                                   "type": "number",
                                   "minimum": -85,
                                   "maximum": 85
+                                },
+                                "textClipMasks": {
+                                  "minItems": 1,
+                                  "maxItems": 8,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "commands": {
+                                        "minItems": 2,
+                                        "maxItems": 32768,
+                                        "type": "array",
+                                        "items": {
+                                          "anyOf": [
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "M"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 3,
+                                              "maxItems": 3
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "L"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 3,
+                                              "maxItems": 3
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "C"
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                },
+                                                {
+                                                  "type": "number",
+                                                  "minimum": -100,
+                                                  "maximum": 100
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 7,
+                                              "maxItems": 7
+                                            },
+                                            {
+                                              "type": "array",
+                                              "prefixItems": [
+                                                {
+                                                  "type": "string",
+                                                  "const": "Z"
+                                                }
+                                              ],
+                                              "items": false,
+                                              "minItems": 1,
+                                              "maxItems": 1
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "fillRule": {
+                                        "type": "string",
+                                        "enum": [
+                                          "nonzero",
+                                          "evenodd"
+                                        ]
+                                      },
+                                      "frameMm": {
+                                        "type": "object",
+                                        "properties": {
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": -1000000,
+                                            "maximum": 1000000
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": -1000000,
+                                            "maximum": 1000000
+                                          },
+                                          "width": {
+                                            "type": "number",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 1000000
+                                          },
+                                          "height": {
+                                            "type": "number",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 1000000
+                                          }
+                                        },
+                                        "required": [
+                                          "x",
+                                          "y",
+                                          "width",
+                                          "height"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "commands",
+                                      "fillRule",
+                                      "frameMm"
+                                    ],
+                                    "additionalProperties": false
+                                  }
                                 },
                                 "fontWeight": {
                                   "type": "string",

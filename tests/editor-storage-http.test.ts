@@ -1,9 +1,10 @@
 import{it,expect,beforeEach,afterEach,vi}from'vitest';import{createServer,type ViteDevServer}from'vite';import{mkdtemp,mkdir,rm,readFile}from'node:fs/promises';import{join}from'node:path';import{tmpdir}from'node:os';
 import{editorLabConfig}from'../scripts/editor-lab-config';import{EditorAdminSqlite}from'../scripts/editor-admin-sqlite';import{EditorAdminStore}from'../scripts/editor-admin-store';import{editorAdminRuntime}from'../scripts/editor-admin-runtime';import{DEFAULT_ADMIN_SETTINGS}from'../src/editor-admin/schema';import{createTestDocument}from'./helpers/editor-fonts';
+import{rectangularTextMask}from'../src/editor/text-clip-masks';
 let directory:string,server:ViteDevServer|undefined;beforeEach(async()=>{directory=await mkdtemp(join(tmpdir(),'storage-http-'));vi.stubEnv('PITCHPRINT_LAB_DIR',join(directory,'missing-catalog'));});afterEach(async()=>{if(server){await editorAdminRuntime(server).close();await server.close();server=undefined;}vi.unstubAllEnvs();await rm(directory,{recursive:true,force:true,maxRetries:3,retryDelay:100});},30000);
 for(const mode of ['json','full-sqlite'] as const)it(`testo inclinato HTTP ${mode}: salvataggio/riapertura esatti e rifiuto atomico del valore invalido`,async()=>{
  const {request}=await start(mode),document=createTestDocument(),text=document.objects.find(object=>object.type==='text')!;
- if(text.type!=='text')throw Error('Fixture');text.textSkewXDeg=-23.5;text.rotationDeg=17;text.textScaleX=1.3;
+ if(text.type!=='text')throw Error('Fixture');text.textSkewXDeg=-23.5;text.rotationDeg=17;text.textScaleX=1.3;text.textClipMasks=[rectangularTextMask(20,8)];
  const saved=await request('',{tool:'saveRecord',expectedRevision:0,arguments:{kind:'template',title:'Box inclinato HTTP TEST',tags:[],clientRef:'',document}});
  expect(saved.status).toBe(200);const id=saved.body.records[0].id;
  expect((await request('record/'+id)).body.document).toEqual(document);

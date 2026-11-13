@@ -1,3 +1,4 @@
+import { scaleTextClipMasks } from './text-clip-masks';
 import { scaledTextPath } from './text-path-spec';
 import { TEST_MARGIN_MM, cloneSceneObject, objectGeometry, objectCenter, placeObjectAtCenter, type GraphicDocument, type GraphicCommand, type Measure, type SceneObject, type SelectionTransformArguments } from './model';
 
@@ -58,6 +59,7 @@ export function transformSelection(objects: readonly SceneObject[], args: Omit<S
     if (scale !== 1) {
       if (object.type === 'text') {
         object.fontSizePt = scalePoints(object.fontSizePt, scale);
+        if(object.textClipMasks)object.textClipMasks=scaleTextClipMasks(object.textClipMasks,scale);
         if (object.strokeMm !== undefined) object.strokeMm *= scale;
         if (object.letterSpacingPt !== undefined) object.letterSpacingPt = scalePoints(object.letterSpacingPt, scale);
         if (object.textPath) object.textPath = scaledTextPath(object.textPath, scale);

@@ -113,7 +113,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
       if (character === '\n') { line++; column = 0; } else column++;
     });
     if (alignments[Array.from(o.text).length]) (styles[line] ??= {})[column] = { ...styles[line]?.[column], editorLineAlign: alignments[Array.from(o.text).length] } as IText['styles'][number][number];
-    const box = o.textPath ? new EditorPathText(o.text, { ...options, styles }, o.textPath, o.textScaleX ?? 1) : new EditorTextBox(o.text, { ...options, styles }, o.textBox && { width: o.textBox.widthMm * PX_PER_MM / (o.textScaleX ?? 1), height: o.textBox.heightMm * PX_PER_MM / (o.textScaleY ?? 1), autoWidth: o.textBox.autoWidth, autoHeight: o.textBox.autoHeight }, o.justification);
+    const box = o.textPath ? new EditorPathText(o.text, { ...options, styles }, o.textPath, o.textScaleX ?? 1) : new EditorTextBox(o.text, { ...options, styles }, o.textBox && { width: o.textBox.widthMm * PX_PER_MM / (o.textScaleX ?? 1), height: o.textBox.heightMm * PX_PER_MM / (o.textScaleY ?? 1), autoWidth: o.textBox.autoWidth, autoHeight: o.textBox.autoHeight }, o.justification, o.textClipMasks);
     if (editable) { if (box instanceof EditorPathText) selectionControls(box); else textBoxControls(box); }
     object = box;
   } else if (o.type === 'image') {
@@ -157,11 +157,13 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
 }
 export const measureFabric: Measure = object => {
   if (object.type === 'image') { assertRasterParameters(object.source, object.raster); return { widthMm: object.widthMm, heightMm: object.heightMm }; }
-  const f = renderObject(object);
+  // A local text mask never defines layout. Avoid rebuilding its curves for
+  // every inspector, cursor and validation measurement.
+  const f = renderObject(object.type==='text'&&object.textClipMasks?{...object,textClipMasks:undefined}:object);
   return { widthMm: f.getScaledWidth() / PX_PER_MM, heightMm: f.getScaledHeight() / PX_PER_MM, ...(f instanceof EditorTextBox && (f.strokeBoundsWidth() > 0 || f.skewX !== 0) ? { textLayoutWidthMm: f.width * f.scaleX / PX_PER_MM, textLayoutHeightMm: f.height * f.scaleY / PX_PER_MM } : {}), ...(f instanceof EditorPathText ? { pathCenterOffsetMm: { x: f.pathCenterOffset.x / PX_PER_MM, y: f.pathCenterOffset.y / PX_PER_MM }, pathLengthMm: f.pathLength / PX_PER_MM, textAdvanceMm: f.textAdvance / PX_PER_MM } : {}) };
 };
 export function measureTextFrame(object: TextObject) {
-  const box = renderObject(object) as EditorTextBox;
+  const box = renderObject(object.textClipMasks?{...object,textClipMasks:undefined}:object) as EditorTextBox;
   return { widthMm: box.width * box.scaleX / PX_PER_MM, heightMm: box.height * box.scaleY / PX_PER_MM, overflow: box.overflow, justificationLimited: box.justificationResults.some(line => line.underfull || line.overfull), lines: box.textLines.length };
 }
 /** The canonical project stays untouched. Only its productive objects and used
@@ -194,7 +196,7 @@ export async function exportDocumentThumbnail(document: GraphicDocument, side = 
 }
 async function renderDocumentPng(document: GraphicDocument, size: {width:number;height:number;pixelsPerMm:number}, transparent: boolean): Promise<Blob> {
   document = await prepareGraphicOutput(structuredClone(document)); validateLayout(document, measureFabric, 'edit');
-  const element = window.document.createElement('canvas'),masked=document.objects.some(object=>'clipMasks'in object&&object.clipMasks?.length);
+  const element = window.document.createElement('canvas'),masked=document.objects.some(object=>'clipMasks'in object&&object.clipMasks?.length||object.type==='text'&&object.textClipMasks?.length);
   // Intersecting bitmap masks otherwise multiply edge coverage at the output
   // pixel grid. Sample them together before reducing, within the same bitmap
   // ceilings as the visible canvas. Large outputs keep the bounded base scale.
