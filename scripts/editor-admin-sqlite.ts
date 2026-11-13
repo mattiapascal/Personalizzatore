@@ -47,6 +47,7 @@ export class EditorAdminSqlite implements EditorAdminPersistence {
  close(){this.entry=null;this.db.close();}
  diagnostics(){return{...this.counters};}
  resetDiagnostics(){this.counters=zero();}
+ snapshotVersion(){return this.key();}
  private transaction<T>(work:()=>T,write=true):T{
   if(write&&this.readOnly)throw Error('Archivio SQLite aperto in sola lettura');this.db.exec(write?'BEGIN IMMEDIATE':'BEGIN');
   try{const result=work();this.db.exec('COMMIT');return result;}catch(error){try{this.db.exec('ROLLBACK');}catch{}throw error;}
@@ -93,5 +94,18 @@ export class EditorAdminSqlite implements EditorAdminPersistence {
  }
  async exportState():Promise<AdminState>{return cloneArchiveValue((await this.get()).state);}
  resourceCounts(){return this.transaction(()=>({resources:Number(this.db.prepare('SELECT COUNT(*) AS n FROM resources').get()!.n),records:Number(this.db.prepare('SELECT COUNT(*) AS n FROM records').get()!.n),fonts:Number(this.db.prepare('SELECT COUNT(*) AS n FROM fonts').get()!.n),resourceBytes:Number(this.db.prepare('SELECT COALESCE(SUM(length(CAST(data AS BLOB))),0) AS n FROM resources').get()!.n)}),false);}
- verifyDatabase(){const result=this.db.prepare('PRAGMA integrity_check').all();if(result.length!==1||result[0]!.integrity_check!=='ok'||this.db.prepare('PRAGMA foreign_key_check').all().length)throw Error('Database SQLite non integro');}
+ verifyDatabase(){
+  const result=this.db.prepare('PRAGMA integrity_check').all();if(result.length!==1||result[0]!.integrity_check!=='ok'||this.db.prepare('PRAGMA foreign_key_check').all().length)throw Error('Database SQLite non integro');
+  for(const row of this.db.prepare('SELECT hash,data FROM resources').iterate())if(typeof row.data!=='string'||resourceHash(row.data)!==row.hash)throw Error('Risorsa SQLite non integra');
+  for(const[table,links]of[['records','record_resources'],['fonts','font_resources']]as const){
+   let index=0;for(const row of this.db.prepare(`SELECT id,position,payload,checksum FROM ${table} ORDER BY position`).iterate()){
+    if(row.position!==index++)throw Error('Ordine delle righe SQLite non integro');
+    const expected=new Set<string>(),collect=(hash:string)=>{expected.add(hash);return '';},payload=this.checked(row,'payload');
+    if(table==='records')decodeArchiveRecord(payload,collect);else decodeArchiveFont(payload,collect);
+    const actual=this.db.prepare(`SELECT hash FROM ${links} WHERE owner=?`).all(row.id as string).map(link=>link.hash);
+    if(actual.length!==expected.size||actual.some(hash=>typeof hash!=='string'||!expected.has(hash)))throw Error('Riferimenti delle risorse SQLite non integri');
+   }
+  }
+  if(this.db.prepare('SELECT hash FROM resources WHERE NOT EXISTS(SELECT 1 FROM record_resources WHERE hash=resources.hash) AND NOT EXISTS(SELECT 1 FROM font_resources WHERE hash=resources.hash) LIMIT 1').get())throw Error('Risorsa SQLite non referenziata');
+ }
 }

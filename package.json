@@ -45,6 +45,7 @@
     "editor:collaudo": "node --import tsx scripts/export-editor-acceptance.ts",
     "pitchprint:fonts": "node --import tsx scripts/pitchprint-font-inventory.ts",
     "editor:storage": "node --max-old-space-size=6144 --import tsx scripts/editor-archive-storage.ts",
+    "editor:storage:volume": "node --max-old-space-size=4096 --import tsx scripts/check-editor-storage-volume.ts",
     "editor:storage-trial": "vite --config vite.storage-trial.config.ts --host 127.0.0.1"
   },
   "dependencies": {
