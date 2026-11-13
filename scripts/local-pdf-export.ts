@@ -7,21 +7,11 @@ import { productionDocument } from '../src/editor/object-properties';
 import {LocalRenderFontCoverage} from './local-render-font-coverage';
 import {exactPdfPageSize,mergeLocalPdfPages} from './pdf-page-size';
 import type {Plugin} from 'vite';
-import {chromium} from '@playwright/test';
+import {withLocalGraphicRenderer} from './local-graphic-renderer';
 import {parseGraphicDocument,type GraphicDocument} from '../src/editor/model';
 async function renderSinglePagePdf(raw:unknown,origin:string,inspection:LocalRenderFontCoverage,transparentPaper=false):Promise<Buffer>{
- const doc=parseGraphicDocument(raw),url=new URL(origin);if(url.protocol!=='http:'||url.hostname!=='127.0.0.1')throw new Error('Renderer PDF disponibile solo su loopback.');
- await assertOutputFonts(productionDocument(doc), {resolveWoff2:inspection.resolveWoff2});
- const browser=await chromium.launch({timeout:15000}),deadline=setTimeout(()=>void browser.close(),45000);
- try{
-  const context=await browser.newContext({extraHTTPHeaders:{'X-Editor-Local':'1'}});await context.route('**/*',route=>{
-   const request=route.request(),target=new URL(request.url());
-   if(target.origin===origin&&target.pathname==='/__editor-local/admin/font-coverage'&&request.method()==='POST'&&request.headers()['content-type']==='font/woff2'){
-    const result=inspection.response(request.postDataBuffer());return result?route.fulfill({json:result}):route.abort();
-   }
-   return target.origin===origin&&request.method()==='GET'&&!target.pathname.startsWith('/api/')?route.continue():route.abort();
-  });
-  const page=await context.newPage();page.setDefaultTimeout(20000);await page.goto(`${origin}/__editor-local/pdf-renderer`,{waitUntil:'domcontentloaded'});
+ const doc=parseGraphicDocument(raw);await assertOutputFonts(productionDocument(doc), {resolveWoff2:inspection.resolveWoff2});
+ return withLocalGraphicRenderer(origin,inspection,async(page,context)=>{
   await page.evaluate(async({document,transparentPaper}:{document:GraphicDocument;transparentPaper:boolean})=>{
    const adapterPath='/src/editor/fabric-adapter.ts',{exportDocumentSvg}=await import(adapterPath);
    const svg=await exportDocumentSvg(document,transparentPaper);
@@ -29,7 +19,7 @@ async function renderSinglePagePdf(raw:unknown,origin:string,inspection:LocalRen
   },{document:doc,transparentPaper});
   if(transparentPaper){const cdp=await context.newCDPSession(page);await cdp.send('Emulation.setDefaultBackgroundColorOverride',{color:{r:0,g:0,b:0,a:0}});}
   return await exactPdfPageSize(await page.pdf({width:`${doc.areaMm.width+1}mm`,height:`${doc.areaMm.height+1}mm`,preferCSSPageSize:true,printBackground:true,pageRanges:'1',margin:{top:0,right:0,bottom:0,left:0}}),doc.areaMm.width,doc.areaMm.height);
- }finally{clearTimeout(deadline);await browser.close();}
+ });
 }
 export async function renderLocalDesignPdf(raw:unknown,origin:string,includeReferences=false):Promise<Buffer>{
  const project=parseGraphicDocument(raw),pages=graphicPages(project),inspection=new LocalRenderFontCoverage(project.fontAssets);

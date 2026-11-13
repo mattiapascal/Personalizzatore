@@ -1,4 +1,5 @@
 import {affineFrameView} from './affine-frame-view';
+import type {GeometryTile} from './production-geometry';
 import {hasObjectAffine,withoutObjectAffine,objectInclination} from './object-affine';
 import { fabricTextSkew,physicalTextSkew } from './text-skew';
 import{boxSampleRgba}from'./pixel-sampling';
@@ -207,6 +208,31 @@ export async function exportDocumentThumbnail(document: GraphicDocument, side = 
   if (!Number.isInteger(side) || side < 32 || side > 1024) throw new Error('Dimensione miniatura non valida');
   const pixelsPerMm = side / Math.max(document.areaMm.width, document.areaMm.height);
   return renderDocumentPng(document, { width: Math.max(1, Math.round(document.areaMm.width * pixelsPerMm)), height: Math.max(1, Math.round(document.areaMm.height * pixelsPerMm)), pixelsPerMm }, true);
+}
+/** Read-only bounded tile renderer, using the very same objects, exact fonts,
+ * clips and raster filters as the editor. Never allocate the full page at the
+ * inspection resolution, or add guides/selection/reference objects to it. */
+export async function createGraphicTileRenderer(source:GraphicDocument){
+ const document=await prepareGraphicOutput(structuredClone(source)),element=window.document.createElement('canvas'),output=new StaticCanvas(element,{width:1,height:1,enableRetinaScaling:false,renderOnAddRemove:false,skipOffscreen:false});
+ try{
+  output.backgroundColor=document.paperColor??'';
+  const objects=document.objects.map(object=>({id:object.id,view:renderObject(object)}));for(const object of objects)output.add(object.view);
+  let disposed=false;
+  return{
+   read(tile:GeometryTile):Uint8ClampedArray{
+    if(disposed||!Number.isInteger(tile.width)||!Number.isInteger(tile.height)||tile.width<1||tile.height<1||tile.width>2048||tile.height>2048||!Number.isFinite(tile.pixelsPerMm)||tile.pixelsPerMm<=0||!Number.isFinite(tile.x)||!Number.isFinite(tile.y))throw Error('Riquadro di controllo non valido');
+    output.setDimensions({width:tile.width,height:tile.height});const scale=tile.pixelsPerMm/PX_PER_MM;output.setViewportTransform([scale,0,0,scale,-tile.x,-tile.y]);
+    const context=element.getContext('2d',{willReadFrequently:true});if(!context)throw Error('Lettura della grafica non disponibile');
+    // Native tile clipping avoids rasterizing a 3000 mm page/circle into a
+    // full-page Fabric clip cache at a lower, implicit physical resolution.
+    context.save();context.setTransform(scale,0,0,scale,-tile.x,-tile.y);context.beginPath();
+    if(document.shape==='round')context.arc(document.areaMm.width*PX_PER_MM/2,document.areaMm.height*PX_PER_MM/2,document.areaMm.width*PX_PER_MM/2,0,Math.PI*2);else context.rect(0,0,document.areaMm.width*PX_PER_MM,document.areaMm.height*PX_PER_MM);
+    context.clip();context.setTransform(1,0,0,1,0,0);try{output.renderAll();}finally{context.restore();}return context.getImageData(0,0,tile.width,tile.height).data;
+   },
+   candidates(xMm:number,yMm:number):string[]{const x=xMm*PX_PER_MM,y=yMm*PX_PER_MM;return objects.filter(({view})=>{const box=view.getBoundingRect();return x>=box.left&&y>=box.top&&x<=box.left+box.width&&y<=box.top+box.height;}).map(object=>object.id);},
+   async dispose(){if(!disposed){disposed=true;await output.dispose();}},
+  };
+ }catch(error){await output.dispose();throw error;}
 }
 async function renderDocumentPng(document: GraphicDocument, size: {width:number;height:number;pixelsPerMm:number}, transparent: boolean): Promise<Blob> {
   document = await prepareGraphicOutput(structuredClone(document)); validateLayout(document, measureFabric, 'edit');

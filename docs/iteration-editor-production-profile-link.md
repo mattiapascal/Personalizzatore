@@ -2,6 +2,8 @@
 
 Primo incremento del collegamento tra amministrazione e canvas. Non è ancora l’applicazione completa dei vincoli produttivi: corpo minimo e immagini entrano nel controllo finale; margine e zone riservate sono guide visuali. Le collisioni con tali zone, gli ingombri dei fissaggi, la finezza dell’incisione e le distanze tra vernici restano da verificare con i prossimi incrementi.
 
+**Incremento successivo:** [controllo visuale di margini e zone](iteration-editor-production-geometry.md), disponibile dal pulsante del pannello. È una diagnostica campionata della pittura, con backend e report legato al contenuto; non ancora una regola bloccante di conferma o una certificazione produttiva.
+
 ## Contratto canonico e versioni
 
 Il campo opzionale `productionProfile` conserva per ogni pagina una copia completa del profilo, con ID e versione. Il medesimo schema e validatore sono stati spostati in `src/editor/production-profile.ts`; il percorso amministrativo precedente li riesporta. Non esistono due schemi divergenti.

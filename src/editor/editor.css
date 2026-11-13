@@ -302,3 +302,7 @@
 .layers-section-title { font-size: .78rem; margin: 8px 0 5px; color: #456678; }
 .workspace-transform-popover .panel-close { width: 28px; height: 28px; min-width: 28px; min-height: 28px; padding: 4px; border: 0; background: transparent; }
 .workspace-transform-popover .panel-close > svg { width: 16px; height: 16px; }
+.production-geometry-check { margin-top: 12px; padding-top: 12px; border-top: 1px solid #b7d3e3; }
+.production-geometry-check > button { background: #08c; color: #fff; border: 1px solid #0075af; border-radius: 5px; padding: 9px 12px; }
+.production-geometry-check > button:disabled { opacity: .55; }
+.production-geometry-check details { margin-top: 12px; }

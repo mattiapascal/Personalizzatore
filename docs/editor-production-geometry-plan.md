@@ -1,6 +1,6 @@
 # Controlli geometrici dei profili — diagnosi e ordine di implementazione
 
-13 novembre 2026. Preparazione in sola lettura durante il collaudo generale del [collegamento dei profili](iteration-editor-production-profile-link.md). Questo documento non dichiara implementati nuovi vincoli: i margini e le zone rimangono guide visuali. Nessuna modifica ai sorgenti durante la suite generale.
+13 novembre 2026. Preparazione iniziale in sola lettura durante il collaudo generale del [collegamento dei profili](iteration-editor-production-profile-link.md); nessuna modifica ai sorgenti durante quella suite. Dopo il prerequisito PDF è stato implementato il [primo controllo visuale di margini e zone](iteration-editor-production-geometry.md): analisi della pittura per riquadri, report diagnostico e API locale, senza blocco della conferma. Le guide restano distinte dalle regole finali di produzione. Il piano sotto riguarda anche il lavoro ancora necessario, non dichiara completato il motore produttivo.
 
 ## Evidenze che determinano il prossimo lavoro
 
@@ -23,6 +23,8 @@ Dopo l’esito terminale della suite generale è stato completato il [prerequisi
 - nuovo campione JSON/SVG/PDF, 1.131 unitari, 13 browser pertinenti e 68 campioni passati. Illustrator resta da collaudare.
 
 ## Motore di analisi geometrica
+
+**Stato dopo il primo incremento:** protocollo per documento/revisione, analisi della pittura a 0,025 mm, profilo per pagina, margini/zone, riferimenti, sfondi espliciti, risorse limitate, backend e risposta obsoleta sono [implementati e collaudati come diagnostica](iteration-editor-production-geometry.md). Il passo della griglia non è una prova matematica di precisione: non usare ancora il report come approvazione automatica. Restano il collegamento alla conferma atomica con la gestione esplicita delle incertezze, i fissaggi selezionati e i controlli di incisione/vernici.
 
 ### Dati e risultato
 
@@ -52,7 +54,7 @@ Preservare la richiesta di poter lavorare temporaneamente con oggetti parzialmen
 
 Riutilizzare il renderer locale già presente, dopo la correzione dei font, con risorse incorporate e rete limitata al laboratorio. Non fidarsi di una misura o di una maschera dichiarata dal client come prova per l’API di conferma: il backend deve poter ripetere il controllo.
 
-Per eventuali scansioni raster, misurare prima risoluzione, memoria, tempo e precisione su piccoli timbri e grandi targhe. Usare ritagli/tile e limiti espliciti, non una bitmap dell’intera tavola da 3000 mm. Se non si raggiunge la precisione richiesta entro i limiti, riportarlo. La precisione numerica del controllo non è una nuova distanza produttiva né un nuovo minimo fisico imposto al cliente.
+Per le scansioni raster usare riquadri e limiti espliciti, non una bitmap dell’intera tavola da 3000 mm. Il primo controllo diagnostico legge a passi di 0,025 mm, con tetto di 64 MP/20 s e sorgenti distinte fino a 48 MP; provati formati fino a 3000 mm. Questi limiti non certificano il massimo errore dei contorni, i dettagli sotto griglia o la memoria totale delle cache Fabric. Prima del blocco produttivo completare tali verifiche e trattare le incertezze esplicitamente. La precisione numerica del controllo non è una nuova distanza produttiva né un nuovo minimo fisico imposto al cliente.
 
 ## Regole di lavorazione successive
 
