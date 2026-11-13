@@ -1,0 +1,15 @@
+# Testi del modulo, righelli e bozze — 13 novembre 2026
+
+Richiesta: conservare l’allineamento quando si modifica un testo da Compila i dati; riparare il pulsante dei righelli; consentire la pulizia di tutte le bozze di un template da editor/amministrazione e di quelle vecchie da amministrazione; rendere configurabile la rotazione.
+
+Incrementi e assunzioni:
+
+1. Correggere `setText`, condiviso da modulo manuale e comandi AI, conservando l’ancoraggio superiore sinistro/centrale/destro anche con rotazioni/riflessioni/inclinazioni. Mantenere il comportamento già previsto per testi su tracciato e blocchi produttivi. Ricostruire gli intervalli di allineamento per paragrafo, senza offset obsoleti.
+2. Riprodurre il righello dall’apertura diretta di un template, oltre al percorso di importazione JSON. Inizializzare l’overlay dopo l’assegnazione del ref del contenitore. Nessuna guida o modifica del documento creata dal solo pulsante di vista. Aggiornamento richiesto durante il collaudo: cancellazione trascinando fuori dal foglio (non soltanto fuori dal viewport), menu tasto destro/Shift+F10, Esc per chiudere, Canc e Undo. Una pressione senza trascinamento nel margine non cancella una guida. Le guide bloccate restano protette e magnetiche.
+3. Riutilizzare IndexedDB, già usato dalle bozze di recupero, con metadato opzionale del template; nessuna migrazione dell’archivio SQLite. Le bozze storiche si riconoscono dall’origine nel documento oppure dal suo identificativo originale, senza dedurre associazioni dal solo prodotto.
+4. Limite per template/browser da 1 a 100, predefinito 20; applicazione dalle nuove aperture. Una nuova bozza fa ruotare le più vecchie, in una sola transazione con scrittura del documento e controllo della quota. Aggiornare una bozza esistente non genera una nuova versione nella lista. Abbassare il limite non cancella immediatamente le bozze esistenti: si applica al prossimo nuovo salvataggio.
+5. Pulizia esplicita con conteggio e conferma: tutto un template, oppure precedenti alla soglia in giorni impostata. Verifica atomica delle versioni prima di cancellare indice e contenuto. Notificare le altre schede: la composizione aperta resta sul canvas e viene salvata di nuovo solo alla successiva modifica.
+
+Limiti dichiarati: queste sono bozze di recupero del browser locale, distinte da template e composizioni salvati nell’archivio. L’amministrazione non può cancellare IndexedDB su altri dispositivi/clienti. La pulizia globale futura lato server richiede persistenza delle bozze lato server. Quota totale del browser invariata a 256 MiB; nessuna cancellazione automatica di altri template per liberare spazio.
+
+Prove con font e dati TEST e contesti browser separati: ancoraggio, allineamenti, storico manuale/AI, primo caricamento righelli desktop/mobile, rotazione, quota, età, conflitti atomici, due schede, eliminazione da editor/admin e ripartenza del salvataggio. Nessuna pulizia delle bozze personali durante lo sviluppo, nessun deploy o intervento online.

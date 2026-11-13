@@ -386,3 +386,5 @@
 .paint-palette-search input{width:100%;min-width:0}
 .paint-palette-paging{display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:12px}
 .paint-palette-paging button{min-width:32px;width:32px;height:32px;padding:2px}
+
+.ruler-help{position:absolute;left:30px;top:28px;max-width:calc(100% - 50px);margin:0;padding:4px 7px;border:1px solid #abc5d4;border-radius:4px;background:#eaf4fa;color:#15455e;font-size:11px;pointer-events:none;z-index:6}

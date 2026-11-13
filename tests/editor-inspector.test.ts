@@ -20,7 +20,8 @@ describe('ispettore atomico sul documento comune', () => {
     const object = text(); store.dispatch(update(0, object), 'manual');
     expect(store.document.objects[1]).toEqual(object); expect(store.document.revision).toBe(1); expect(store.events).toHaveLength(1);
     store.dispatch({ schemaVersion: 1, tool: 'setText', objectId: 'text-1', expectedRevision: 1, arguments: { text: 'AI TEST' } }, 'ai-simulation');
-    expect(store.document.objects[1]).toEqual({ ...object, text: 'AI TEST' });
+    const changed=store.document.objects[1]!;expect({...changed,xMm:object.xMm}).toEqual({ ...object, text: 'AI TEST' });
+    expect(changed.xMm+measure(changed).widthMm/2).toBeCloseTo(object.xMm+measure(object).widthMm/2,8);
     store.undo(); expect(store.document.objects[1]).toEqual(object);
     store.undo(); expect(store.document).toEqual({ ...before, revision: 4 });
     store.redo(); expect(store.document.objects[1]).toEqual(object);

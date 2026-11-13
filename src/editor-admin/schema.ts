@@ -5,7 +5,7 @@ import { ShopProfileBindingSchema } from './shop-catalog';
 export const MAX_LIBRARY_FONTS=500;
 export const MAX_ARCHIVE_RECORDS=2000;
 const title = z.string().trim().min(1).max(120), tags = z.array(z.string().trim().min(1).max(40)).max(20), id = z.string().uuid();
-export const AdminSettingsSchema = z.strictObject({ editorName: title, gridMm: z.number().finite().min(.1).max(10), gridVisible: z.boolean(), snapEnabled: z.boolean(), customerPdfEnabled:z.boolean().optional() });
+export const AdminSettingsSchema = z.strictObject({ editorName: title, gridMm: z.number().finite().min(.1).max(10), gridVisible: z.boolean(), snapEnabled: z.boolean(), customerPdfEnabled:z.boolean().optional(), maxDraftsPerTemplate:z.number().int().min(1).max(100).optional() });
 export const DEFAULT_ADMIN_SETTINGS = { editorName: 'Configuratore locale', gridMm: 1, gridVisible: false, snapEnabled: false, customerPdfEnabled:false };
 const base = { id, title, archived: z.boolean(), createdAt: z.string().datetime(), updatedAt: z.string().datetime() };
 export const TemplateProductsSchema = z.strictObject({profileKeys:z.array(z.string().min(1).max(200)).min(1).max(200),initialMount:z.literal('smallest-compatible'),adaptation:z.literal('confirm-proportional')}).refine(value=>new Set(value.profileKeys).size===value.profileKeys.length,'Modelli duplicati');

@@ -180,7 +180,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
         }}/>}
         <EditorButton className="workspace-close" disabled={editing} onClick={close} icon="return" label="Torna al laboratorio"/>
       </> : <EditorButton onClick={() => setExpanded(true)} disabled={editing} icon="workspace" label="Apri area di disegno a tutto schermo"/>}
-      {onLayoutGuides&&<EditorButton icon="ruler" label="Mostra righelli" aria-pressed={rulersVisible} onClick={()=>setRulersVisible(!rulersVisible)}/>}
+      {onLayoutGuides&&<EditorButton icon="ruler" label={rulersVisible?"Nascondi righelli":"Mostra righelli"} aria-pressed={rulersVisible} onClick={()=>setRulersVisible(!rulersVisible)}/>}
       {edit}{transforms}
       <div ref={layerAnchor} className="workspace-layers-toggle">
         <EditorButton aria-pressed={layersOpen} aria-expanded={layersOpen} aria-controls={layerId} onClick={() => {setLayersOpen(!layersOpen);setWorkflowOpen(false);}} icon="layers" label="Pannello livelli"/>
@@ -194,7 +194,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     </div>
     {!expanded && context}
     <div className="workspace-layout" data-objects-open={objectsOpen} data-properties-open={propertiesOpen} data-layers-open={layersOpen}>
-      <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
+      <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{rulersVisible&&<p className="ruler-help" role="status">Righelli in mm · trascina dal righello verso il foglio per aggiungere una guida.</p>}{screenError && <p role="status">{screenError}</p>}</div>
       <aside className="workspace-panel objects-panel" aria-label="Strumenti" hidden={expanded && !objectsOpen}>{mode==='test'&&workflow}{tools}{project}{diagnostics}</aside>
       <div className="workspace-right-panels" hidden={expanded && !propertiesOpen}>
         <aside className="workspace-panel properties-panel" aria-label="Ispettore oggetto" hidden={expanded && !propertiesOpen}>{properties}</aside>

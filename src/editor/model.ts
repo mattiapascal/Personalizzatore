@@ -1,3 +1,4 @@
+import {replacementLineStyles,lineAlignments} from './text-lines';
 import {LayoutGuidesSchema,assertGuideChange} from './layout-guides';
 import {affinePathIntersects} from './affine-intersection';
 import {hasObjectAffine,withoutObjectAffine,frameToWorld} from './object-affine';
@@ -506,8 +507,22 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
       case 'setText': {
         const before = cloneSceneObject(object);
         if (object.type !== 'text') throw new Error('Il comando richiede un testo');
-        object.text = object.textPath ? command.arguments.text.replace(/\n/g, ' ') : command.arguments.text; delete object.characterStyles; delete object.lineStyles;
-        try { if (object.textPath && before.type === 'text') Object.assign(object, preserveTextPathGuide(before, object, measure)); else if(role==='customer'&&effectiveObjectProperties(doc,before.id).transformLocked)Object.assign(object,placeObjectAtCenter(object,objectCenter(before,measure),measure)); } catch(error) {if(!(error instanceof UnverifiedTextGeometryError))throw error;} break;
+        if (before.type !== 'text') throw new Error('Il comando richiede un testo');
+        const text = object.textPath ? command.arguments.text.replace(/\n/g, ' ') : command.arguments.text;
+        const lineStyles = replacementLineStyles(before, text);
+        object.text = text; delete object.characterStyles; delete object.lineStyles;
+        if (lineStyles?.length) object.lineStyles = lineStyles;
+        try {
+          if (object.textPath) Object.assign(object, preserveTextPathGuide(before, object, measure));
+          else if(role==='customer'&&effectiveObjectProperties(doc,before.id).transformLocked) Object.assign(object,placeObjectAtCenter(object,objectCenter(before,measure),measure));
+          else {
+            const alignment = lineAlignments(before)[0] ?? before.textAlign ?? 'left';
+            const factor = alignment === 'center' ? .5 : alignment === 'right' ? 1 : 0;
+            const previous = objectGeometry(before, measure).corners, current = objectGeometry(object, measure).corners;
+            object.xMm += previous[0]!.x + factor * (previous[1]!.x - previous[0]!.x) - current[0]!.x - factor * (current[1]!.x - current[0]!.x);
+            object.yMm += previous[0]!.y + factor * (previous[1]!.y - previous[0]!.y) - current[0]!.y - factor * (current[1]!.y - current[0]!.y);
+          }
+        } catch(error) {if(!(error instanceof UnverifiedTextGeometryError))throw error;} break;
       }
       case 'setObjectStyle': {
         const before = cloneSceneObject(object);

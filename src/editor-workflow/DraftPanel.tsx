@@ -1,20 +1,21 @@
+import {DraftCleanupPanel} from './DraftCleanupPanel';
 import {DraftThumbnail} from './DraftThumbnail';
 import { useEffect, useId, useRef, useState,type RefObject } from 'react';
 import type { WorkflowEditorApi } from './ConfigurationPanel';
-import { deleteDraft, draftBinding, listDrafts, readDraft, writeDraft, type DraftSummary } from './drafts';
+import { deleteDraft, draftBinding, listDrafts, readDraft, writeDraft, subscribeDrafts,type DraftContext, type DraftSummary } from './drafts';
 
 export interface DraftControl{discard:()=>Promise<void>;}
 type Active = {id:string;version:number;documentId:string;binding:string};
 const signature=(id:string,doc:WorkflowEditorApi['document'])=>`${id}:${doc.documentId}:${doc.revision}`;
-export function DraftPanel({api,leaving,emergency=false,dirty=true,control}:{api:WorkflowEditorApi;leaving?:RefObject<boolean>;emergency?:boolean;dirty?:boolean;control?:RefObject<DraftControl|null>}) {
+export function DraftPanel({api,leaving,emergency=false,dirty=true,control,templateContext={}}:{api:WorkflowEditorApi;leaving?:RefObject<boolean>;emergency?:boolean;dirty?:boolean;control?:RefObject<DraftControl|null>;templateContext?:DraftContext}) {
   const [active,setActive]=useState<Active|null>(null),[recovery,setRecovery]=useState<DraftSummary|null>(null),[drafts,setDrafts]=useState<DraftSummary[]>([]);
   const [phase,setPhase]=useState<'loading'|'offer'|'ready'|'blocked'>('loading'),[status,setStatus]=useState(''),[error,setError]=useState(''),[working,setWorking]=useState(false),[retry,setRetry]=useState(0);
   const [visible,setVisible]=useState(false),[removing,setRemoving]=useState<DraftSummary|null>(null),modal=useRef<HTMLDialogElement>(null),heading=useId();
-  const binding=draftBinding(api.document),savedKey=useRef(''),saving=useRef(false),generation=useRef(0),initialRevision=useRef(api.document.revision);
+  const binding=draftBinding({...api.document,templateId:templateContext.templateId}),savedKey=useRef(''),saving=useRef(false),generation=useRef(0),initialRevision=useRef(api.document.revision);
   const pendingSave=useRef<Promise<DraftSummary>|null>(null),writingId=useRef<string|null>(null);
   const previousBinding=useRef<string|null>(null);
   const live=useRef({api,active,phase,binding,dirty});live.current={api,active,phase,binding,dirty};
-  const startNew=()=>{const doc=live.current.api.peek();savedKey.current='';setRecovery(null);setError('');setActive({id:crypto.randomUUID(),version:0,documentId:doc.documentId,binding:draftBinding(doc)});setPhase('ready');setStatus('La bozza precedente resta conservata. Le nuove modifiche saranno salvate separatamente.');};
+  const startNew=()=>{const doc=live.current.api.peek();savedKey.current='';setRecovery(null);setError('');setActive({id:crypto.randomUUID(),version:0,documentId:doc.documentId,binding:live.current.binding});setPhase('ready');setStatus('Le nuove modifiche saranno salvate in una nuova bozza, nel limite impostato.');};
   useEffect(()=>{
     const switched=previousBinding.current!==null&&previousBinding.current!==binding;previousBinding.current=binding;
     const epoch=++generation.current;setPhase('loading');setActive(null);setRecovery(null);setError('');savedKey.current='';initialRevision.current=api.document.revision;
@@ -33,7 +34,7 @@ export function DraftPanel({api,leaving,emergency=false,dirty=true,control}:{api
     if(savedKey.current===key)return true;
     const epoch=generation.current;saving.current=true;setWorking(true);setStatus('Salvataggio della bozza…');
     try {
-      writingId.current=id;pendingSave.current=writeDraft(doc,id,fork?0:current.active.version);const summary=await pendingSave.current;
+      writingId.current=id;pendingSave.current=writeDraft(doc,id,fork?0:current.active.version,templateContext);const summary=await pendingSave.current;
       if(generation.current!==epoch)return;
       savedKey.current=key;setActive({id,version:summary.version,documentId:doc.documentId,binding:current.binding});setError('');setStatus(`Bozza salvata su questo browser · ${new Date(summary.savedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`);
       return true;
@@ -58,7 +59,7 @@ export function DraftPanel({api,leaving,emergency=false,dirty=true,control}:{api
     ++generation.current;live.current.phase='blocked';setPhase('blocked');
     if(pendingSave.current)await pendingSave.current.catch(()=>{});
     if(ids.size){const items=await listDrafts();for(const item of items.filter(item=>ids.has(item.id)))await deleteDraft(item.id,item.version);}
-    savedKey.current='';setRecovery(null);const doc=live.current.api.peek();setActive({id:crypto.randomUUID(),version:0,documentId:doc.documentId,binding:draftBinding(doc)});setPhase('ready');setError('');setStatus('Nessuna modifica da recuperare.');
+    savedKey.current='';setRecovery(null);const doc=live.current.api.peek();setActive({id:crypto.randomUUID(),version:0,documentId:doc.documentId,binding:live.current.binding});setPhase('ready');setError('');setStatus('Nessuna modifica da recuperare.');
   };
   const discardRef=useRef(discard);discardRef.current=discard;
   useEffect(()=>{if(control)control.current={discard:()=>discardRef.current()};return()=>{if(control)control.current=null;};},[control]);
@@ -71,6 +72,15 @@ export function DraftPanel({api,leaving,emergency=false,dirty=true,control}:{api
     if(!await api.open(draft.document))throw new Error('Bozza non aperta. Controlla il formato e la versione del catalogo; il file salvato è conservato.');
     savedKey.current='';setActive({id:summary.id,version:draft.summary.version,documentId:draft.document.documentId,binding});setRecovery(null);setPhase('ready');setVisible(false);setStatus('Bozza recuperata. Le prossime modifiche saranno salvate su questo browser.');
   };
+  // A cleanup in another tab must not resurrect an unchanged draft or block the next edit.
+  useEffect(()=>subscribeDrafts(()=>{void listDrafts().then(items=>{
+    setDrafts(items);const current=live.current;
+    if(current.active?.version&&!items.some(item=>item.id===current.active!.id)&&!saving.current){
+      const doc=current.api.peek(),id=crypto.randomUUID();savedKey.current=signature(id,doc);
+      setActive({id,version:0,documentId:doc.documentId,binding:current.binding});setPhase('ready');setRecovery(null);
+      setStatus('Bozze eliminate. Le prossime modifiche saranno salvate in una nuova bozza.');
+    }
+  }).catch(()=>{});}),[]);
   const openList=()=>void run(async()=>{await persistRef.current();setDrafts(await listDrafts());setRemoving(null);setVisible(true);});
   return <section className="draft-panel" aria-label="Bozze su questo browser">{emergency&&<p className="caption">Recupero d’emergenza del browser. Il progetto viene salvato soltanto con Conferma design.</p>}
     {recovery&&phase==='offer'?<><strong>Hai una bozza da recuperare</strong><p>{recovery.title} · {new Date(recovery.savedAt).toLocaleString('it-IT')}</p><button type="button" disabled={working||api.busy} onClick={()=>void run(()=>recover(recovery))}>Riprendi la bozza</button><button type="button" disabled={working||api.busy} onClick={startNew}>Continua con una nuova bozza</button></>:<p className="caption">{phase==='loading'?'Controllo bozze salvate…':emergency?(dirty?'Copia di recupero automatica; modifiche ancora da confermare.':'Nessuna modifica da confermare.'):status}</p>}
@@ -81,6 +91,7 @@ export function DraftPanel({api,leaving,emergency=false,dirty=true,control}:{api
       <div className="configuration-dialog-heading"><div><p className="configuration-kicker">Archivio di questo browser · nessun account online</p><h2 id={heading}>{removing?'Eliminare questa bozza?':'Bozze salvate'}</h2></div><button type="button" aria-label="Chiudi elenco bozze" disabled={working} onClick={()=>setVisible(false)}>×</button></div>
       {error&&<p role="alert" className="error">{error}</p>}
       {removing?<><p>Eliminerai soltanto «{removing.title}» da questo browser. Le configurazioni confermate nel carrello di prova restano indipendenti.</p><div className="configuration-dialog-actions"><button type="button" disabled={working} onClick={()=>setRemoving(null)}>Mantieni bozza</button><button type="button" disabled={working} onClick={()=>void run(async()=>{await deleteDraft(removing.id,removing.version);setDrafts(await listDrafts());setRemoving(null);})}>Conferma eliminazione bozza</button></div></>:<>
+      {templateContext.templateId&&<DraftCleanupPanel context={templateContext} disabled={working||api.busy}/>}
       <p>Riprendi un lavoro oppure scaricane il JSON. Le bozze restano su questo browser e possono essere perse cancellando i dati del browser.</p>
       {!drafts.length&&<p>Nessuna bozza salvata.</p>}
       <div className="draft-list">{drafts.map(item=><article key={item.id} data-testid="local-draft"><DraftThumbnail summary={item}/><h3>{item.title}</h3><p>{item.widthMm} × {item.heightMm} mm · {new Date(item.savedAt).toLocaleString('it-IT')}{active?.id===item.id?' · Bozza aperta':''}</p><div className="button-row"><button type="button" disabled={working||api.busy} onClick={()=>void run(()=>recover(item))}>Riprendi questa bozza</button><button type="button" disabled={working} onClick={()=>void run(async()=>{const draft=await readDraft(item.id),url=URL.createObjectURL(new Blob([JSON.stringify(draft.document,null,2)],{type:'application/json'})),anchor=document.createElement('a');anchor.href=url;anchor.download='bozza.TEST.json';anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);})}>Scarica JSON</button><button type="button" disabled={working||item.id===active?.id} onClick={()=>setRemoving(item)}>Elimina bozza</button></div>{draftBinding(item)!==binding&&<p className="caption">Il formato della bozza sarà recuperato dal documento.</p>}</article>)}</div>

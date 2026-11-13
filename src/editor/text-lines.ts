@@ -24,3 +24,14 @@ export function applyLineAlignment(object: TextObject, alignment: TextAlignment,
   const next = { ...object, lineStyles: compressLineAlignments(values, Array.from(object.text).length, object.text.endsWith('\n')) };
   if (alignment === 'justify-left' && (object.textBox?.autoWidth ?? true) && object.justification?.distribution!=='word-space') next.textBox = { ...frame, autoWidth: false, autoHeight: true }; return next;
 }
+
+/** Replacing a form field keeps paragraph alignment without carrying stale character offsets. */
+export function replacementLineStyles(object: TextObject, text: string): TextObject['lineStyles'] {
+  if (!object.lineStyles?.length) return undefined;
+  const old = lineAlignments(object), alignments: (TextAlignment | undefined)[] = [];
+  let offset = 0;
+  for (const line of object.text.split('\n')) { alignments.push(old[offset]); offset += Array.from(line).length + 1; }
+  const values: (TextAlignment | undefined)[] = []; offset = 0;
+  text.split('\n').forEach((line, index) => { const length = Array.from(line).length; for (let i = 0; i <= length; i++) values[offset + i] = alignments[index]; offset += length + 1; });
+  return compressLineAlignments(values, Array.from(text).length, text.endsWith('\n'));
+}
