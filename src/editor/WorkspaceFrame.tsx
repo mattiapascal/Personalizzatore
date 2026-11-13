@@ -1,3 +1,4 @@
+import {selectionViewFit,type SelectionViewBounds} from './selection-view';
 import {LayoutGuidesOverlay} from './LayoutGuidesOverlay';
 import type {LayoutGuides} from './layout-guides';
 import {useMovablePanel} from './use-movable-panel';
@@ -10,8 +11,9 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,layoutGuidesDisabled }: {
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds }: {
   layoutGuidesDisabled?:boolean;
+  selectionKey?:string;getSelectionBounds?:()=>SelectionViewBounds|null;
   onLayoutGuides?:(guides:LayoutGuides,revision:number)=>void;
   edit?:ReactNode;transforms?:ReactNode;context: ReactNode; stage: ReactNode; tools: ReactNode; properties: ReactNode; project: ReactNode; diagnostics: ReactNode;
   document: GraphicDocument; editing: boolean; onZoom: (zoom: number) => void;
@@ -40,13 +42,15 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const maximumZoom=canvasZoomLimit(doc.areaMm,Math.max(fabricConfig.devicePixelRatio??window.devicePixelRatio??1,1));
   const [zoom, setZoom] = useState(()=>Math.min(1,maximumZoom)), [screenError, setScreenError] = useState('');
   const [viewReady,setViewReady]=useState(false),autoFit=useRef(true);
-  const [rulersVisible,setRulersVisible]=useState(false);
+  const [rulersVisible,setRulersVisible]=useState(false),[selectionViewMessage,setSelectionViewMessage]=useState('');
+  const pendingSelectionView=useRef<number|null>(null);
+  const cancelSelectionView=()=>{if(pendingSelectionView.current!==null)cancelAnimationFrame(pendingSelectionView.current);pendingSelectionView.current=null;};
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
   const focus=geometryFocus&&geometryFocusCurrent(geometryFocus,doc)?geometryFocus:null;
-  const view = useRef({ zoom: Math.min(1,maximumZoom), panX: 0, panY: 0 }), live = useRef({ onZoom, editing,focus }); live.current = { onZoom, editing,focus };
+  const view = useRef({ zoom: Math.min(1,maximumZoom), panX: 0, panY: 0 }), live = useRef({ onZoom, editing,focus,selectionKey,documentKey:`${doc.documentId}:${doc.pageId??'page-1'}:${doc.revision}` }); live.current = { onZoom, editing,focus,selectionKey,documentKey:`${doc.documentId}:${doc.pageId??'page-1'}:${doc.revision}` };
   useCanvasPan(viewport, view, panTool, editing, onTemporaryPan);
   const updateZoom = (value: number, anchor?: { x: number; y: number }, fitting=false) => {
-    autoFit.current=fitting;
+    cancelSelectionView();setSelectionViewMessage('');autoFit.current=fitting;
     const next = Math.max(0.01, Math.min(maximumZoom, value)), container = viewport.current?.querySelector<HTMLElement>('.canvas-container'), before = container?.getBoundingClientRect(), previous = view.current.zoom;
     if (anchor && Math.abs(next - previous) < 1e-9) return;
     const point = anchor && before ? { x: (anchor.x - before.left) / previous, y: (anchor.y - before.top) / previous } : null;
@@ -61,6 +65,33 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     }
   };
   useEffect(()=>{if(view.current.zoom>maximumZoom)updateZoom(maximumZoom);},[maximumZoom]);
+  useEffect(()=>{cancelSelectionView();setSelectionViewMessage('');return cancelSelectionView;},[doc.documentId,doc.pageId,doc.revision,selectionKey,editing]);
+  const fitSelection=()=>{
+    cancelSelectionView();setSelectionViewMessage('');onClearGeometryFocus?.();
+    let bounds:SelectionViewBounds|null;
+    try{bounds=getSelectionBounds?.()??null;if(!bounds)return;}catch{setSelectionViewMessage('Impossibile misurare la selezione. Controlla i font e seleziona nuovamente gli oggetti.');return;}
+    autoFit.current=false;
+    const key=live.current.documentKey,selection=live.current.selectionKey;
+    setLayersOpen(false);setWorkflowOpen(false);
+    if(innerWidth<900){setObjectsOpen(false);setPropertiesOpen(false);}
+    pendingSelectionView.current=requestAnimationFrame(()=>{
+      pendingSelectionView.current=null;
+      const area=viewport.current?.querySelector<HTMLElement>('.canvas-scroll'),container=area?.querySelector<HTMLElement>('.canvas-container');
+      if(!area||!container||live.current.editing||live.current.documentKey!==key||live.current.selectionKey!==selection||area.dataset.panDragging==='true')return;
+      try{
+        const fit=selectionViewFit(bounds!,{width:area.clientWidth,height:area.clientHeight},maximumZoom);
+        updateZoom(fit.zoom,undefined,false);
+        area.scrollLeft=0;area.scrollTop=0;
+        for(let i=0;i<3;i++){
+          const box=area.getBoundingClientRect(),delta=geometryFocusTranslation(container.getBoundingClientRect(),{left:box.left+area.clientLeft,top:box.top+area.clientTop,width:area.clientWidth,height:area.clientHeight},doc.areaMm,fit.center);
+          view.current.panX+=delta.x;view.current.panY+=delta.y;container.style.transform=`translate(${view.current.panX}px, ${view.current.panY}px)`;
+        }
+        if(!fit.fits)setSelectionViewMessage('La selezione supera lo spazio disponibile anche allo zoom minimo.');
+        container.querySelector<HTMLCanvasElement>('.upper-canvas')?.focus({preventScroll:true});
+      }catch{setSelectionViewMessage('Spazio insufficiente per inquadrare la selezione.');}
+    });
+  };
+
   useEffect(() => {
     const parent=viewport.current,area = parent?.querySelector<HTMLElement>('.canvas-scroll'); if (!area||!parent) return;
     const wheel = (event: WheelEvent) => {
@@ -106,7 +137,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     return()=>cancelAnimationFrame(frame);
   },[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   useLayoutEffect(()=>{
-    if(!focus||!viewReady)return;autoFit.current=false;
+    if(!focus||!viewReady)return;cancelSelectionView();autoFit.current=false;
     if(innerWidth<900){setObjectsOpen(false);setPropertiesOpen(false);setLayersOpen(false);setWorkflowOpen(false);}
     const frame=requestAnimationFrame(()=>{
       const area=viewport.current?.querySelector<HTMLElement>('.canvas-scroll'),container=area?.querySelector<HTMLElement>('.canvas-container');if(!area||!container)return;
@@ -174,6 +205,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
         </div>
         <label className="workspace-zoom">Zoom<input aria-label="Zoom canvas (%)" type="range" min="1" max={Math.round(maximumZoom*100)} step="1" disabled={editing} value={Math.round(zoom * 100)} onChange={event => updateZoom(Number(event.target.value) / 100)}/><output>{Math.round(zoom * 100)}%</output></label>
         <EditorButton disabled={editing} onClick={fit} icon="fit" label="Adatta all’area"/>
+        {getSelectionBounds&&<EditorButton disabled={editing||!viewReady||!selectionKey} onClick={fitSelection} icon="zoomSelection" label="Adatta alla selezione"/>}
         {document.fullscreenEnabled && <EditorButton disabled={editing} icon={nativeFullscreen ? 'collapse' : 'expand'} label={nativeFullscreen ? 'Riduci finestra browser' : 'Schermo intero browser'} onClick={() => {
           if (nativeFullscreen) void document.exitFullscreen();
           else void root.current?.requestFullscreen().catch(() => setScreenError('Il browser non ha consentito lo schermo intero. La vista espansa resta disponibile.'));
@@ -194,7 +226,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     </div>
     {!expanded && context}
     <div className="workspace-layout" data-objects-open={objectsOpen} data-properties-open={propertiesOpen} data-layers-open={layersOpen}>
-      <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{rulersVisible&&<p className="ruler-help" role="status">Righelli in mm · trascina dal righello verso il foglio per aggiungere una guida.</p>}{screenError && <p role="status">{screenError}</p>}</div>
+      <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{rulersVisible&&<p className="ruler-help" role="status">Righelli in mm · trascina dal righello verso il foglio per aggiungere una guida.</p>}{selectionViewMessage&&<div className="geometry-focus-status selection-view-status" role="status"><span>{selectionViewMessage}</span><EditorButton className="panel-close" icon="close" label="Nascondi avviso zoom" onClick={()=>setSelectionViewMessage('')}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
       <aside className="workspace-panel objects-panel" aria-label="Strumenti" hidden={expanded && !objectsOpen}>{mode==='test'&&workflow}{tools}{project}{diagnostics}</aside>
       <div className="workspace-right-panels" hidden={expanded && !propertiesOpen}>
         <aside className="workspace-panel properties-panel" aria-label="Ispettore oggetto" hidden={expanded && !propertiesOpen}>{properties}</aside>

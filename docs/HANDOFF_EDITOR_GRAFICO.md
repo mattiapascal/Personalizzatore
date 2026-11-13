@@ -1,3 +1,5 @@
+**13 novembre — inquadrare la selezione:** [Funzione e collaudi](iteration-editor-selection-view.md). Nuovo pulsante accanto ad Adatta all’area, con margine per maniglie, gruppi/membri, mobile e limiti Retina. Solo zoom/PAN: documento e output invariati, font non misurabili senza stime. Nessuna modifica ai dati personali o alla chat online.
+
 **13 novembre — B/N nel ritaglio:** [Incremento e verifiche](iteration-editor-binary-crop.md). Il controllo considera i campioni originali inclusi nel crop, anche ai bordi frazionari; file e filtri restano validati per intero. PNG/JPEG EXIF, cache e storico verificati, campione JSON/SVG portatile. Nessuna modifica ai dati personali o alla chat pubblicata.
 
 **13 novembre — modulo, righelli e bozze:** [Correzioni e collaudi](iteration-editor-drafts-and-guides.md). Testi centrati stabili, righelli funzionanti al primo caricamento, guide eliminabili fuori foglio o dal tasto destro. Pulizia bozze per template/età e rotazione configurabile (20 iniziali, da 1 a 100), limitate a questo browser. Archivio SQLite e chat online preservati.

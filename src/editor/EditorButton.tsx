@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const icons = {
+  zoomSelection:<><path d="M3 8V3h5M13 3h5v5M3 13v5h5"/><circle cx="14" cy="14" r="5"/><path d="M18 18l4 4"/></>,
   lock:<><rect x="5" y="10" width="14" height="12" rx="2"/><path d="M8 10V6a4 4 0 018 0v4M12 15v3"/></>,
   ruler:<><path d="M3 4h18v16H3zM6 4v6M10 4v3M14 4v6M18 4v3M3 14h6M3 18h3"/></>,
   guideVertical:<><path d="M12 2v20" strokeDasharray="3 2"/><path d="M3 7h5M5 5l3 2-3 2M21 17h-5M19 15l-3 2 3 2"/></>,

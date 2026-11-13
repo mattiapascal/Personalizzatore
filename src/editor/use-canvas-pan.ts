@@ -9,7 +9,7 @@ export function useCanvasPan(viewport: RefObject<HTMLDivElement | null>, view: R
     const active = () => !live.current.blocked && (held || live.current.persistent);
     const stop = () => { if (drag && area.hasPointerCapture(drag.id)) area.releasePointerCapture(drag.id); drag = null; delete area.dataset.panDragging; };
     const update = () => { if (live.current.blocked) stop(); area.dataset.panActive = active() ? 'true' : 'false'; }; refresh.current = update;
-    const editable = (target: EventTarget | null) => target instanceof Element && !!target.closest('input, textarea, select, [contenteditable=true], [role=combobox], [role=listbox], .paint-document-palette, [role=tab], .page-manager, dialog[open]');
+    const editable = (target: EventTarget | null) => target instanceof Element && !!target.closest('input, textarea, select, [contenteditable=true], [role=combobox], [role=listbox], .paint-document-palette, .workspace-toolbar, [role=tab], .page-manager, dialog[open]');
     const downKey = (event: KeyboardEvent) => {
       if (event.code !== 'Space' || editable(event.target) || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
       const root = area.closest('[data-testid="editor-workspace"]'); if (event.target instanceof Node && event.target !== document.body && !root?.contains(event.target)) return;
