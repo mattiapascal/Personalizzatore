@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="58mm" height="22mm" viewBox="0 0 464 176" xml:space="preserve">
+<desc>Created with Fabric.js 7.4.0</desc>
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
+<g transform="matrix(1 0 0 1 64 64)"  >
+<clipPath id="imageCrop_26">
+	<rect x="-32" y="-32" width="64" height="64" />
+</clipPath>
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABACAYAAADlNHIOAAABRUlEQVR4AeyTUQrCQAwFiyf35lohn4H3UZLROtCysIs7dMY8juN4we+JR5/nScfeT4CT70MZMABlvrgGKBHUYgDKfHENUCKoxQCU+eIaoERQiwEo88U1QImglv8MQNluuAZopGxuGWDTdsMyQCNlc8sAm7YblgEaKZtbBti03bAM0EjZ3DLApu2GZYBGyuaWATZtN6zFAA3drcMA8J/AAAaADcB4J8AAsAEY7wQYADYA450AA8AGYLwTMBwgXW+AZGj43ADDgtP1BkiGhs8NMCw4XW+AZGj43ADDgtP1BkiGhs8NMCw4XW+AZGj43ADDgtP19wyQvvqLzg0AxzCAAWADMN4JMABsAMY7AQaADcB4J8AAsAEY7wTcJwD8JT+KdwLgcAYwAGwAxjsBBoANwHgnwACwARjvBBgANgDjnYCLAa7+/A0AAP//ClFi2QAAAAZJREFUAwB+kzBhJyTdVQAAAABJRU5ErkJggg==" x="-32" y="-32" width="96" height="64" clip-path="url(#imageCrop_26)" ></image>
+</g>
+<g transform="matrix(1 0 0 1 144 64)"  >
+<clipPath id="imageCrop_27">
+	<rect x="-32" y="-32" width="64" height="64" />
+</clipPath>
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;"  xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABACAYAAADlNHIOAAABRUlEQVR4AeyTUQrCQAwFiyf35lohn4H3UZLROtCysIs7dMY8juN4we+JR5/nScfeT4CT70MZMABlvrgGKBHUYgDKfHENUCKoxQCU+eIaoERQiwEo88U1QImglv8MQNluuAZopGxuGWDTdsMyQCNlc8sAm7YblgEaKZtbBti03bAM0EjZ3DLApu2GZYBGyuaWATZtN6zFAA3drcMA8J/AAAaADcB4J8AAsAEY7wQYADYA450AA8AGYLwTMBwgXW+AZGj43ADDgtP1BkiGhs8NMCw4XW+AZGj43ADDgtP1BkiGhs8NMCw4XW+AZGj43ADDgtP19wyQvvqLzg0AxzCAAWADMN4JMABsAMY7AQaADcB4J8AAsAEY7wTcJwD8JT+KdwLgcAYwAGwAxjsBBoANwHgnwACwARjvBBgANgDjnYCLAa7+/A0AAP//ClFi2QAAAAZJREFUAwB+kzBhJyTdVQAAAABJRU5ErkJggg==" x="-32" y="-32" width="96" height="64" clip-path="url(#imageCrop_27)" ></image>
+</g>
+</svg>

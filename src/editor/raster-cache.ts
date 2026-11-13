@@ -38,7 +38,7 @@ export function originalRasterImage(source: RasterSource): HTMLImageElement | HT
 export function rasterAnalysis(source: RasterSource): RasterAnalysis { assertRasterPrepared(source); return { ...prepared.get(source.id)!.resource.analysis }; }
 export function assertRasterParameters(source: RasterSource, params: RasterParameters): void {
   assertRasterPrepared(source);
-  if (params.backgroundRemoval && params.mode !== 'grayscale' && rasterAnalysis(source).kind !== 'grayscale') throw new Error('Rimozione del bianco disponibile solo per originali in scala di grigi; canali RGB differenti richiedono una conversione esplicita');
+  if (params.backgroundRemoval && params.mode !== 'grayscale' && !['grayscale','empty'].includes(rasterAnalysis(source).kind)) throw new Error('Rimozione del bianco disponibile solo per originali in scala di grigi; canali RGB differenti richiedono una conversione esplicita');
 }
 function analysisOf(image: HTMLImageElement | HTMLCanvasElement, width: number, height: number): RasterAnalysis {
   // Scan every original pixel in strips; never allocate a second full-size RGBA

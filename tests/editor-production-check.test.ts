@@ -60,13 +60,13 @@ it('tutte le pagine controllate con binding proprio e nome della pagina errata; 
  const first={...document([]),productId:null,variantId:null,catalogVersion:null,catalogProductProfileVersion:null},second=document(),book=joinGraphicPages([first,second],['Targa','Impronta']);const before=structuredClone(book);await expect(check(book)).rejects.toThrow('Impronta: Il timbro richiede immagini');expect(book).toEqual(before);
  second.objects[0]!.editor={reference:true};await expect(check(joinGraphicPages([first,second]))).resolves.toBeUndefined();
 });
-it('risultati riutilizzati per contenuto e parametri, non per ID, nome o ritaglio',async()=>{
+it('risultati riutilizzati per contenuto e parametri, non per ID o nome',async()=>{
  const first=image([0,0,0,255]),second={...first,id:'other',source:{...first.source,id:'alias'}},third={...second,id:'invert',raster:{...second.raster,invert:true}},doc=document([first,second,third]),decode=vi.fn(serverBinaryRasterCheck);
  await expect(assertDocumentProduction(doc,catalog,decode,true)).resolves.toBeUndefined();expect(decode).toHaveBeenCalledTimes(2);
 });
-it('controllo di ogni pixel oltre la prima striscia, compresi quelli fuori dal ritaglio',async()=>{
+it('controllo oltre la prima striscia: campioni rimossi ignorati, ritaglio ampliato ricontrollato',async()=>{
  const pixels=new Uint8Array(1*260*4);for(let i=0;i<pixels.length;i+=4)pixels.set([0,0,0,255],i);pixels.set([127,127,127,255],4*259);
- const object={...image(),source:rasterSourceFromBytes('tall',testPng(1,260,pixels)),crop:{leftPx:0,topPx:0,widthPx:1,heightPx:1}};await expect(check(document([object]))).rejects.toThrow('immagine completa');
+ const object={...image(),source:rasterSourceFromBytes('tall',testPng(1,260,pixels)),crop:{leftPx:0,topPx:0,widthPx:1,heightPx:1}};await expect(check(document([object]))).resolves.toBeUndefined();object.crop={leftPx:0,topPx:0,widthPx:1,heightPx:260};object.widthMm=8/260;await expect(check(document([object]))).rejects.toThrow('pixel del ritaglio');
 });
 it('manuale/AI correggono lo stesso documento; Undo recupera anche il problema, Redo la confermabilità',async()=>{
  const doc=document(),store=new DocumentStore(doc,()=>({widthMm:8,heightMm:8}));await expect(check(store.document)).rejects.toThrow('B/N');
