@@ -1,3 +1,4 @@
+import {documentPaintColors} from './document-paints';
 import {LayoutGuidesPanel} from './LayoutGuidesPanel';
 import {ProductionProfilePanel} from './ProductionProfilePanel';
 import {geometryFocusCurrent,geometryFocusFromReport,type GeometryFocus} from './geometry-focus';
@@ -50,7 +51,7 @@ import { readAdminSnapshot, readArchiveRecord, localAdminRequest } from '../edit
 import { prepareSvg, svgInsertion } from './svg-import';
 import { MAX_SVG_BYTES,SVG_SIZE_LABEL } from './svg-sanitize';
 import { EditorButton, EditorIcon } from './EditorButton';
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, useState, useMemo, type CSSProperties } from 'react';
 import { FabricAdapter, measureFabric, measureTextFrame } from './fabric-adapter';
 import { createDocument, DocumentStore, GraphicCommandSchema, parseGraphicDocument, cloneGraphicDocument, type GraphicDocument, type SceneObject } from './model';
 import type { ProductProfile } from '../catalog/schema';
@@ -121,6 +122,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const adapter = useRef<FabricAdapter | null>(null);
   const storeRef = useRef<DocumentStore | null>(null);
   const [doc, setDoc] = useState<GraphicDocument>(() => initialDocument?parseGraphicDocument(initialDocument):createEditorDocument(product, catalogVersion));
+  const documentColors=useMemo(()=>documentPaintColors(doc),[doc]);
   const [geometryFocus,setGeometryFocus]=useState<GeometryFocus|null>(null),geometryFocusSequence=useRef(0);
   const [inspectorRequest,setInspectorRequest]=useState<InspectorRequest|null>(null),inspectorSequence=useRef(0);
   const currentGeometryFocus=geometryFocus&&geometryFocusCurrent(geometryFocus,doc)?geometryFocus:null;
@@ -573,7 +575,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         return act(() => dispatch(store,{ schemaVersion: 1, tool: 'transformObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { ...args, objectIds: selectedRef.current } }, 'manual')) ? store.document.revision : null;
       }} onStyle={(style, expectedRevision) => act(() => {
         const store = storeRef.current!; dispatch(store,{ schemaVersion: 1, tool: 'styleObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, style } }, 'manual');
-      })}/> : selectedObject ? <ObjectInspector sectionMemory={inspectorSection} minimumFontPt={effectiveObjectProperties(doc,selectedObject.id).reference?null:minimumFontForDocument(doc,graphicCatalog)} allowColor={doc.colorMode==='color'} key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} effectiveProperties={effectiveObjectProperties(doc,selectedObject.id)} revision={doc.revision}
+      })}/> : selectedObject ? <ObjectInspector documentColors={documentColors} sectionMemory={inspectorSection} minimumFontPt={effectiveObjectProperties(doc,selectedObject.id).reference?null:minimumFontForDocument(doc,graphicCatalog)} allowColor={doc.colorMode==='color'} key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} effectiveProperties={effectiveObjectProperties(doc,selectedObject.id)} revision={doc.revision}
         onReplaceImage={(file,expectedRevision)=>{const objectId=selectedObject.id,documentId=doc.documentId;void prepareAndAct(async store=>{
           if(store.document.documentId!==documentId||store.document.revision!==expectedRevision)throw new Error('Documento cambiato durante la scelta del file: sostituzione annullata.');
           if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');

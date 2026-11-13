@@ -62,7 +62,7 @@
 .png-export-panel > label { display: block; margin-top: 12px; }
 .png-export-panel select { display: block; width: 100%; margin-top: 6px; padding: 10px; font: inherit; border: 1px solid #c1d9e8; border-radius: 5px; background: #fff; color: #163b52; }
 .inspector-measure { padding: 8px; background: #e8f4fb; border-radius: 5px; font-size: 11px; }
-.inspector-paints { display: flex; gap: 8px; margin: 14px 0; }
+.inspector-paints { display: flex; flex-wrap:wrap; gap: 8px; margin: 14px 0; }
 .paint-swatch { display: block; width: 22px; height: 22px; border: 1px solid #89958d; border-radius: 2px; }
 .paint-none { background: linear-gradient(135deg, #fff 45%, #b9362a 47%, #b9362a 53%, #fff 55%); }
 .inspector-arrangement { border: 0; padding: 0; margin: 0; min-width: 0; }
@@ -375,3 +375,14 @@
 .font-picker-list > button { min-height: 46px; align-items: center; line-height: 1.4; }
 .font-picker-family-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .font-picker-list small { flex-shrink: 0; }
+
+.paint-document-palette{flex:1 0 100%;min-width:0;border:0;padding:4px 0;margin:0;background:transparent}
+.paint-document-palette>summary{font-size:12px;cursor:pointer;color:#006699}
+.paint-palette-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:8px 0}
+.paint-palette-grid .paint-button{width:100%;min-width:0;height:44px;min-height:44px;padding:4px;display:grid;place-items:center}
+.paint-palette-grid [aria-selected=true]{border-color:#08c;background:#d8eef9;box-shadow:inset 0 0 0 1px #08c}
+.paint-palette-grid button:focus-visible{outline:2px solid #08c;outline-offset:1px}
+.paint-palette-search{display:block;margin:8px 0}
+.paint-palette-search input{width:100%;min-width:0}
+.paint-palette-paging{display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:12px}
+.paint-palette-paging button{min-width:32px;width:32px;height:32px;padding:2px}
