@@ -49,7 +49,7 @@ import { FabricAdapter, measureFabric, measureTextFrame } from './fabric-adapter
 import { createDocument, DocumentStore, GraphicCommandSchema, parseGraphicDocument, cloneGraphicDocument, type GraphicDocument, type SceneObject } from './model';
 import type { ProductProfile } from '../catalog/schema';
 import './editor.css';
-import { ObjectInspector } from './ObjectInspector';
+import { ObjectInspector,type InspectorSection } from './ObjectInspector';
 import { assertDocumentTextProduction, minimumFontForDocument } from './text-production';
 import { WorkspaceFrame } from './WorkspaceFrame';
 import { LayersPanel } from './LayersPanel';
@@ -124,6 +124,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const [assetBusy, setAssetBusy] = useState(false);
   const [drawingTool, setDrawingTool] = useState<DrawingPrimitive | 'freehand' | 'polyline' | 'bezier' | null>(null), [drawing, setDrawing] = useState(false);
   const [selectionEpoch, setSelectionEpoch] = useState(0), [nodeMode, setNodeMode] = useState(false), [cropMode, setCropMode] = useState(false);
+  const inspectorSection=useRef<InspectorSection>('geometry');
   const cropContentsFocus = useRef<string | null>(null);
   const [polylineCount, setPolylineCount] = useState(0);
   const [error, setError] = useState('');
@@ -541,7 +542,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         return act(() => dispatch(store,{ schemaVersion: 1, tool: 'transformObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { ...args, objectIds: selectedRef.current } }, 'manual')) ? store.document.revision : null;
       }} onStyle={(style, expectedRevision) => act(() => {
         const store = storeRef.current!; dispatch(store,{ schemaVersion: 1, tool: 'styleObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, style } }, 'manual');
-      })}/> : selectedObject ? <ObjectInspector minimumFontPt={effectiveObjectProperties(doc,selectedObject.id).reference?null:minimumFontForDocument(doc,graphicCatalog)} allowColor={doc.colorMode==='color'} key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} effectiveProperties={effectiveObjectProperties(doc,selectedObject.id)} revision={doc.revision}
+      })}/> : selectedObject ? <ObjectInspector sectionMemory={inspectorSection} minimumFontPt={effectiveObjectProperties(doc,selectedObject.id).reference?null:minimumFontForDocument(doc,graphicCatalog)} allowColor={doc.colorMode==='color'} key={`${selectedObject.id}-${selectionEpoch}`} object={selectedObject} effectiveProperties={effectiveObjectProperties(doc,selectedObject.id)} revision={doc.revision}
         onReplaceImage={(file,expectedRevision)=>{const objectId=selectedObject.id,documentId=doc.documentId;void prepareAndAct(async store=>{
           if(store.document.documentId!==documentId||store.document.revision!==expectedRevision)throw new Error('Documento cambiato durante la scelta del file: sostituzione annullata.');
           if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');

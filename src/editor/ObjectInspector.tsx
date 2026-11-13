@@ -35,20 +35,32 @@ import { ObjectIdentity } from './ObjectIdentity';
 import { smallestPrintedFontPt } from './text-production';
 import { SelectedTextFontNotice } from './SelectedTextFontNotice';
 
-type Section = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'template';
+export type InspectorSection = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'template';
 
-function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, effectiveProperties, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { minimumFontPt?:number|null;allowColor?:boolean;effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
+function inspectorTabs(current:SceneObject,admin:boolean){
+  const tabs: { id: InspectorSection; label: string; icon: EditorIconName }[] = [
+    { id: 'geometry', label: 'Geometria', icon: 'geometry' },
+    ...(current.type === 'text' ? [{ id: 'text' as const, label: 'Testo', icon: 'text' as const }] : []),
+    ...(current.type === 'image' || current.type === 'line' || (current.type === 'path' || current.type === 'bezier') && !current.closed ? [] : [{ id: 'fill' as const, label: 'Riempimento', icon: 'fill' as const }]),
+    ...(current.type !== 'image' ? [{ id: 'stroke' as const, label: 'Contorno', icon: 'stroke' as const }] : []),
+    ...(current.type === 'path' || current.type === 'bezier' ? [{ id: 'nodes' as const, label: 'Nodi', icon: 'nodes' as const }] : []),
+    ...(current.type === 'image' ? [{ id: 'image' as const, label: 'Immagine', icon: 'image' as const }, { id: 'crop' as const, label: 'Ritaglio', icon: 'crop' as const }] : []),
+    ...(admin?[{id:'template' as const,label:'Proprietà template',icon:'properties' as const}]:[]),
+  ];
+  return tabs;
+}
+
+function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, effectiveProperties, sectionMemory, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { sectionMemory?:{current:InspectorSection};minimumFontPt?:number|null;allowColor?:boolean;effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
   const form = useRef<HTMLFormElement>(null);
   const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
-  const [section, setSection] = useState<Section>('geometry');
+  const [preferredSection,setPreferredSection]=useState<InspectorSection>(()=>sectionMemory?.current??'geometry');
+  const tabs=inspectorTabs(object,!!onProperties),section=tabs.some(tab=>tab.id===preferredSection)?preferredSection:'geometry';
+  const setSection=(value:InspectorSection)=>{if(sectionMemory)sectionMemory.current=value;setPreferredSection(value);};
   const [opacityLinked, setOpacityLinked] = useState(true);
   useEffect(() => setOpacityLinked(true), [object.id]);
   const [ratioLocked, setRatioLocked] = useState(true),[cropContents,setCropContents]=useState(false);
   useEffect(()=>setRatioLocked(true),[object.id]);
   useEffect(()=>setCropContents(false),[object.id,section]);
-  useEffect(() => {
-    if (object.type === 'image' && section === 'stroke' || object.type !== 'text' && section === 'text' || (object.type === 'line' || (object.type === 'path' || object.type === 'bezier') && !object.closed) && section === 'fill' || object.type !== 'path' && object.type !== 'bezier' && section === 'nodes' || object.type === 'image' && section === 'fill' || object.type !== 'image' && (section === 'image' || section === 'crop')) setSection('geometry');
-  }, [object, revision]);
   useEffect(() => { onCropFocus(section === 'crop' && object.type === 'image' ? object.id : null,cropContents); return () => onCropFocus(null); }, [object.id, object.type, section,cropContents]);
   const current = characterSelection?.object ?? draft.object;
   const analysis = current.type === 'image' ? rasterAnalysis(current.source) : null;
@@ -90,15 +102,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
   const fixedJustification=justified&&current.type==='text'&&current.justification?.distribution!=='word-space';
   const geometryLocked=!onProperties&&!!(effectiveProperties??object.editor)?.transformLocked;
   const fields = { revision: draft.revision };
-  const tabs: { id: Section; label: string; icon: EditorIconName }[] = [
-    { id: 'geometry', label: 'Geometria', icon: 'geometry' },
-    ...(current.type === 'text' ? [{ id: 'text' as const, label: 'Testo', icon: 'text' as const }] : []),
-    ...(current.type === 'image' || current.type === 'line' || (current.type === 'path' || current.type === 'bezier') && !current.closed ? [] : [{ id: 'fill' as const, label: 'Riempimento', icon: 'fill' as const }]),
-    ...(current.type !== 'image' ? [{ id: 'stroke' as const, label: 'Contorno', icon: 'stroke' as const }] : []),
-    ...(current.type === 'path' || current.type === 'bezier' ? [{ id: 'nodes' as const, label: 'Nodi', icon: 'nodes' as const }] : []),
-    ...(current.type === 'image' ? [{ id: 'image' as const, label: 'Immagine', icon: 'image' as const }, { id: 'crop' as const, label: 'Ritaglio', icon: 'crop' as const }] : []),
-    ...(onProperties?[{id:'template' as const,label:'Proprietà template',icon:'properties' as const}]:[]),
-  ];
+
   const title = tabs.find(tab => tab.id === section)?.label ?? 'Geometria';
   const opacityControls = current.type !== 'image' && <OpacityControls
     fill={current.type === 'text' ? characterScope?.mixed.includes('fillOpacity') ? null : character?.fillOpacity ?? current.fillOpacity ?? 1 : current.fillOpacity ?? 1}

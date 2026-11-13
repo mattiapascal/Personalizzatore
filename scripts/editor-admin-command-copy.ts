@@ -5,7 +5,7 @@ import {cloneArchiveValue} from './editor-admin-read-cache';
 export function copyAdminCommandState(state:AdminState,command:AdminCommand):AdminState {
  const recordIds=new Set<string>(),fontIds=new Set<string>();
  switch(command.tool){
-  case'bulkTemplateAssociations':case'bulkTemplateAssociationMap':for(const row of command.arguments.targets)recordIds.add(row.id);break;
+  case'normalizePitchprintFormOrders':case'bulkTemplateAssociations':case'bulkTemplateAssociationMap':for(const row of command.arguments.targets)recordIds.add(row.id);break;
   case'replaceRecord':case'updateRecord':case'archiveRecord':case'templateProducts':recordIds.add(command.arguments.id);break;
   case'archiveFont':case'updateFontMetadata':fontIds.add(command.arguments.id);break;
   case'setFontCategories':case'setFontFamilies':for(const id of command.arguments.ids)fontIds.add(id);break;

@@ -1,3 +1,4 @@
+import {pitchprintAscendingFormOrder,PITCHPRINT_FORM_ORDER_VERSION} from './pitchprint-form-order';
 import { decomposePitchprintText } from './pitchprint-affine';
 import { readPitchprintTextMasks,canonicalPitchprintTextMasks } from './pitchprint-text-masks';
 import{svgImageText,convertPitchprintSvgImage}from'./pitchprint-svg-image';
@@ -26,7 +27,7 @@ import {createDocument,DocumentSchema,validateLayout,placeObjectAtCenter,type Gr
 const record=z.record(z.string(),z.unknown()),sourceSchema=z.object({title:z.string().max(1000).optional(),unit:z.string(),pages:z.array(z.object({canvas:z.object({objects:z.array(record).max(EDITOR_LIMITS.objects),clipPath:record}).passthrough(),pageData:record}).passthrough()).length(1)}).passthrough();
 export interface PitchImportOptions {monochrome:boolean;excludeBackground:boolean;family?:'flat-plaque'|'doorplate'|'boxed-sign';pageImages?:{background:PageImagePolicy;foreground:PageImagePolicy};font:(family:string,weight:number,italic:boolean)=>Promise<PitchprintFontResult>;image:(url:string)=>Promise<Uint8Array>;}
 export type PitchprintConversionOptions=Pick<PitchImportOptions,'monochrome'|'excludeBackground'|'family'|'pageImages'>;
-export interface PitchImportResult {document:GraphicDocument;title:string;warnings:string[];sourceObjects:number;}
+export interface PitchImportResult {document:GraphicDocument;title:string;warnings:string[];sourceObjects:number;formOrderVersion:typeof PITCHPRINT_FORM_ORDER_VERSION;}
 function properties(raw:Record<string,unknown>,warnings:string[]):ObjectProperties{
  const order=Number(raw.index??raw.idx??0);if(!Number.isInteger(order)||Math.abs(order)>10000)throw new Error('Ordine del campo non valido.');
  if(raw.dLocked||raw.eLocked)warnings.push('Blocchi dLocked/eLocked trasferiti in modo conservativo a selezione/eliminazione: ricontrollali.');
@@ -146,7 +147,7 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
  for(const item of cleaned.removed)warnings.push(`${item.id}: ${item.reason}, rimosso come refuso secondo la regola di migrazione concordata.`);
  if(backgroundGroupId&&!groups.some(g=>g.id===backgroundGroupId))backgroundGroupId=undefined;
  if(groups.length)warnings.push(`${groups.length} gruppi grafici conservati come unità di selezione e trasformazione.`);
- const document=DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),...(backgroundObject&&objects.some(o=>o.id===backgroundObject.id)?{backgroundImageId:backgroundObject.id}:{}),...(backgroundGroupId?{backgroundGroupId}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})});validateLayout(document,measureFabric,'edit');warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length};
+ const document=pitchprintAscendingFormOrder(DocumentSchema.parse({...createDocument(),colorMode:options.monochrome?'monochrome':'color',areaMm:{width,height},...(paperColor?{paperColor}:{}),...(backgroundObject&&objects.some(o=>o.id===backgroundObject.id)?{backgroundImageId:backgroundObject.id}:{}),...(backgroundGroupId?{backgroundGroupId}:{}),objects,...(groups.length?{groups}:{}),...(options.family?{plaque:defaultMountingFor(options.family)}:{}),...(assets.length?{fontAssets:assets}:{})})).document;warnings.push('Ordini del modulo convertiti da priorità PitchPrint decrescente a crescente: 1, 2, 3…; parità conservate.');validateLayout(document,measureFabric,'edit');warnings.push('Controllare l’anteprima: la ricostruzione dei testi fra Fabric 3 e il nuovo motore richiede collaudo visivo.');return{document,title:source.title?.slice(0,120)||'Template PitchPrint importato',warnings:[...new Set(warnings)],sourceObjects:page.canvas.objects.length,formOrderVersion:PITCHPRINT_FORM_ORDER_VERSION};
 }
 
 /** Convert every source page before exposing a canonical project. */
@@ -157,5 +158,5 @@ export async function importPitchPrint(raw:unknown,options:PitchImportOptions):P
  const shared={...options,image:(url:string)=>{let value=images.get(url);if(!value){value=read(url);images.set(url,value);}return value;}};
  for(const[index,page]of source.pages.entries()){try{converted.push(await importSinglePitchPrint({...source,pages:[page]},shared));}catch(error){throw Error(`Pagina ${index+1}: ${error instanceof Error?error.message:'conversione non riuscita'}. Nessuna pagina viene importata parzialmente.`);}}
  const names=source.pages.map((page:any,index)=>String(page.pageData?.name??page.pageData?.title??`Pagina ${index+1}`).slice(0,120)),document=joinGraphicPages(converted.map(page=>page.document),names);validateLayout(document,measureFabric,'edit');
- return{document,title:converted[0]!.title,sourceObjects:converted.reduce((n,page)=>n+page.sourceObjects,0),warnings:[`${converted.length} pagine conservate con formati indipendenti.`,...converted.flatMap((page,index)=>page.warnings.map(warning=>`Pagina ${index+1}: ${warning}`))]};
+ return{document,formOrderVersion:PITCHPRINT_FORM_ORDER_VERSION,title:converted[0]!.title,sourceObjects:converted.reduce((n,page)=>n+page.sourceObjects,0),warnings:[`${converted.length} pagine conservate con formati indipendenti.`,...converted.flatMap((page,index)=>page.warnings.map(warning=>`Pagina ${index+1}: ${warning}`))]};
 }

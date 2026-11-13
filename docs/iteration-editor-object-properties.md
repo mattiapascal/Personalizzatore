@@ -1,3 +1,5 @@
+**13 novembre — adattamento delle priorità native completato:** l’ordine canonico resta crescente. I 339 template importati sono stati rinumerati e l’importatore ora converte gli indici PitchPrint decrescenti in ranghi 1, 2, 3… , conservando le parità. [Regola, backup e verifica dell’archivio](iteration-editor-pitchprint-form-order.md). Non è una conversione eseguita ogni volta che si apre un documento.
+
 # Proprietà degli oggetti nei template — 10 novembre 2026
 
 Richiesta del titolare sulla schermata PitchPrint. Proprietà configurabili nella nuova scheda **Proprietà template** dell’ispettore amministrativo; salvate nell’oggetto del documento canonico, nelle copie e nello storico Undo/Redo. La vista cliente non può modificarle.
