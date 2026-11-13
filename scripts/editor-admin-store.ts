@@ -48,6 +48,8 @@ export class EditorAdminStore {
  async read():Promise<AdminState>{return cloneArchiveValue((await(this.persistence??this.readCache).get()).state);}
  async readRecord(id:string){return this.persistence?this.persistence.readRecord(id):(await this.read()).records.find(record=>record.id===id);}
  async readSnapshot():Promise<AdminSnapshot>{return this.persistence?this.persistence.readSnapshot():adminSnapshot(await this.read());}
+ /** Metadata only: font search must not clone projects or load unrelated files. */
+ async readFontSearchIndex(){const state=this.persistence?await this.persistence.readSnapshot():(await this.readCache.get()).state;return{revision:state.revision,fonts:state.fonts.map(({id,archived,format})=>({id,archived,format}))};}
  async readFonts():Promise<AdminState['fonts']>{return this.persistence?this.persistence.readFonts():cloneArchiveValue((await this.readCache.get()).state.fonts);}
  async readFontLibrary():Promise<Pick<AdminState,'revision'|'fonts'>>{if(this.persistence)return this.persistence.readFontLibrary();const state=(await this.readCache.get()).state;return{revision:state.revision,fonts:cloneArchiveValue(state.fonts)};}
  async dispatch(raw:unknown):Promise<AdminSnapshot>{const work=async()=>{const command=AdminCommandSchema.parse(raw),snapshot=await(this.persistence??this.readCache).get(),state=this.persistence?copyAdminCommandState(snapshot.state,command):cloneArchiveValue(snapshot.state);if(state.revision!==command.expectedRevision)throw new AdminRevisionConflictError();if('document'in command.arguments)await validateDocumentPngCopies([command.arguments.document]);const now=new Date().toISOString();

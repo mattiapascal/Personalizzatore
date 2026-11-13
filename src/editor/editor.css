@@ -324,3 +324,20 @@
 .font-issue-target { margin: 10px 0; padding-bottom: 8px; border-bottom: 1px solid #b7dbee; }
 .font-issue-target > button { width: 100%; margin-top: 6px; background: #08c; color: #fff; border-color: #0075af; }
 .font-issue-target > button:hover:not(:disabled) { background: #0075af; }
+.font-problem-text { margin: 8px 0; }
+.font-problem-text > .caption { margin: 0 0 4px; }
+.font-problem-source { margin: 0; padding: 8px; white-space: pre-wrap; overflow-wrap: anywhere; background: #fff; border: 1px solid #b7dbee; border-radius: 4px; color: #163b52; font: 15px/1.6 Arial, sans-serif; }
+.font-problem-source mark { background: rgb(220 38 38 / 24%); color: inherit; box-shadow: 0 0 0 1px rgb(185 28 28 / 36%); border-radius: 2px; }
+.font-support-finder { padding: 8px; border: 1px solid #b7dbee; border-radius: 5px; background: #fff; }
+.font-support-finder > button, .font-support-finder li button { background: #edf7fd; color: #163b52; border-color: #9bcae2; }
+.font-support-finder > button { width: 100%; }
+.font-support-finder button:hover:not(:disabled) { background: #d4ecfa; }
+.font-support-finder ul { max-height: 230px; overflow: auto; list-style: none; margin: 8px 0 0; padding: 0; }
+.font-support-finder li { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid #dbeaf3; }
+.font-support-finder li > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.font-support-finder li small { display: block; color: #496b80; }
+.font-support-finder li button { flex: none; padding: 6px 8px; font-size: 11px; }
+
+.font-picker-list > button { min-height: 46px; align-items: center; line-height: 1.4; }
+.font-picker-family-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.font-picker-list small { flex-shrink: 0; }

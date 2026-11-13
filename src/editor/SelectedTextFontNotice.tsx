@@ -4,6 +4,7 @@ import { inspectDocumentFonts, fontIssueMessage, type FontReport } from './font-
 import { textFontKey } from './text-render-guard';
 import type { TextObject } from './text-style';
 import { fontCoverageVersion, subscribeFontCoverage } from './font-coverage-cache';
+import { FontProblemText } from './FontProblemText';
 
 /** Diagnostics only: no font substitution, measurements, commands or revisions. */
 export function SelectedTextFontNotice({ object }: { object: TextObject }) {
@@ -22,6 +23,7 @@ export function SelectedTextFontNotice({ object }: { object: TextObject }) {
   if (!report?.issues.length) return null;
   return <div className="notice" data-testid="selected-text-font-issue" role="status">
     <p>{fontIssueMessage(report.issues[0]!)}</p>
+    <FontProblemText object={object} issues={report.issues}/>
     <p className="caption">Il testo originale è conservato. Puoi correggere i soli caratteri interessati in «Font del progetto».</p>
     {report.issues.some(issue => issue.kind === 'unknown-coverage') && <button type="button" onClick={() => setAttempt(value => value + 1)}>Ricontrolla caratteri del testo</button>}
   </div>;

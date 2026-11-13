@@ -1,6 +1,6 @@
 import { readFontCoverage as coverage, type FontInspectionOptions } from './font-coverage-cache';
 export type { FontInspectionOptions } from './font-coverage-cache';
-import { hasUnicode } from './font-cmap';
+import { fontSupportsCharacter } from './font-support';
 import type { GraphicDocument } from './model';
 
 export interface FontIssue {
@@ -38,8 +38,7 @@ export async function inspectDocumentFonts(doc: Pick<GraphicDocument, 'objects' 
       if (entry.synthetic) addIssue({ ...base, kind: 'synthetic-style' });
       const ranges = asset ? await coverage(asset,options) : undefined;
       if (!ranges) { addIssue({ ...base, kind: 'unknown-coverage' }); continue; }
-      const supported = (character: string) => hasUnicode(ranges, character.codePointAt(0)!) || Array.from(character.normalize('NFD')).every(part => hasUnicode(ranges, part.codePointAt(0)!));
-      const characters = [...new Set(entry.text.flatMap(text => Array.from(text)))].filter(character => !/[\n\p{Cf}\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/u.test(character) && !supported(character));
+      const characters = [...new Set(entry.text.flatMap(text => Array.from(text)))].filter(character => !/[\n\p{Cf}\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/u.test(character) && !fontSupportsCharacter(ranges, character));
       if (characters.length) addIssue({ ...base, kind: 'missing-characters', characters });
     }
   }

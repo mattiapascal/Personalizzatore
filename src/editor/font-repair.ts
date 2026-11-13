@@ -2,6 +2,7 @@ import { inspectDocumentFonts, type FontIssue } from './font-preflight';
 import type { FontAsset } from './font-assets';
 import { characterStyles, compressStyles } from './text-style';
 import { type GraphicDocument, type GraphicCommand } from './model';
+import { fontProblemSegments } from './font-problem-text';
 
 /** Explicit repair proposal. The caller still commits through updateObject and
  * its revision/permissions checks; this helper never edits the source document. */
@@ -13,7 +14,7 @@ export async function missingCharacterFontCommand(doc: GraphicDocument, issue: F
   const current = await inspectDocumentFonts({ objects: [object], fontAssets: doc.fontAssets });
   const actual = current.issues.find(item => item.kind === 'missing-characters' && item.fontId === issue.fontId);
   const characters = Array.from(object.text), styles = characterStyles(object), missing = new Set(issue.characters.filter(character => actual?.characters?.includes(character)));
-  const indices = characters.flatMap((character, index) => missing.has(character) && (styles[index]?.fontFamily ?? object.fontFamily) === issue.fontId ? [index] : []);
+  const indices = fontProblemSegments(object,[{...issue,characters:[...missing]}]).filter(segment=>segment.problem).flatMap(segment=>Array.from({length:segment.end-segment.start},(_value,index)=>segment.start+index));
   if (!indices.length) throw Error('La segnalazione non corrisponde più al testo corrente.');
   const report = await inspectDocumentFonts({ fontAssets: [asset], objects: [{ ...object, text: indices.map(index => characters[index]!).join(''), fontFamily: asset.id, fontWeight: 'normal', fontStyle: 'normal', characterStyles: undefined }] });
   if (report.issues.length) throw Error(report.issues.some(issue => issue.kind === 'unknown-coverage') ? 'La copertura del file scelto non è verificabile: scegli un altro file per questi caratteri.' : 'Il file scelto non contiene tutti i caratteri da correggere. Scegli un altro file della libreria.');

@@ -43,7 +43,7 @@ import { profileKey } from '../catalog/schema';
 import { FontCheckPanel } from './FontCheckPanel';
 import { TextMaskCheckPanel } from './TextMaskCheckPanel';
 import { InkPreviewFilter } from './InkPreviewFilter';
-import { refreshLibraryFonts,initializeLibraryFonts,showProjectFontChoices } from '../editor-admin/library-fonts';
+import { prepareLibraryFontFamilies,refreshLibraryFontIndex,refreshLibraryFonts,initializeLibraryFonts,showProjectFontChoices } from '../editor-admin/library-fonts';
 import { loadFontAssets, fontAssetArguments, defaultLibraryFont, registeredFontAsset } from './fonts';
 import { readAdminSnapshot, readArchiveRecord, localAdminRequest } from '../editor-admin/api';
 import { prepareSvg, svgInsertion } from './svg-import';
@@ -391,7 +391,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   }, [product?.productId,product?.variantIds[0],product?.profileVersion,product?.nominalAreaMm.width,product?.nominalAreaMm.height,catalogVersion]);
   useEffect(() => {
     if (!import.meta.env.DEV) return; let active = true;
-    const fonts = () => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => { if (active) setFontNotice(''); }).catch(error => { if (active) setFontNotice(error.message); }); }; fonts(); window.addEventListener('focus', fonts);
+    const fonts = () => { void refreshLibraryFontIndex(storeRef.current?.document.fontAssets).then(async state => {const current=storeRef.current?.document,object=selectedRef.current.length===1?current?.objects.find(object=>object.id===selectedRef.current[0]):undefined;if(object?.type==='text')await prepareLibraryFontFamilies([object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]],current?.fontAssets,undefined,state);if (active) setFontNotice(''); }).catch(error => { if (active) setFontNotice(error.message); }); }; fonts(); window.addEventListener('focus', fonts);
     void readAdminSnapshot().then(state => { if(active){setTrialArchive(state.environment);setArchiveVocabulary(archiveTagVocabulary(state));setCustomerPdfEnabled(state.settings.customerPdfEnabled??false);} if (active && !guidesTouched.current) { setGuides({ gridMm: state.settings.gridMm, gridVisible: state.settings.gridVisible, snapEnabled: state.settings.snapEnabled }); setGridRaw(String(state.settings.gridMm)); } }).catch(() => {});
     return () => { active = false; window.removeEventListener('focus', fonts); };
   }, []);
@@ -422,6 +422,9 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const displayedProduct=availableProducts?.find(item=>item.productId===doc.productId&&item.variantIds.includes(doc.variantId??''))??(product&&doc.productId===product.productId&&doc.variantId===product.variantIds[0]?product:null);
   const conflict = !!product && !portable && (doc.productId !== product.productId || doc.variantId !== product.variantIds[0] || doc.catalogVersion !== catalogVersion);
   const selectedObject = doc.objects.find(o => o.id === selectedId);
+  const selectedFontIds=selectedObject?.type==='text'?[...new Set([selectedObject.fontFamily,...selectedObject.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])].sort():[];
+  const selectedFontKey=JSON.stringify([doc.documentId,doc.pageId,selectedObject?.id,selectedFontIds]);
+  useEffect(()=>{if(!selectedFontIds.length)return;const controller=new AbortController();void prepareLibraryFontFamilies(selectedFontIds,doc.fontAssets,controller.signal).then(()=>{if(!controller.signal.aborted)setFontNotice('');}).catch(cause=>{if(!controller.signal.aborted)setFontNotice(cause instanceof Error?cause.message:'Varianti del font non disponibili');});return()=>controller.abort();},[selectedFontKey]);
   const selectedGroups = selectedRootGroups(doc,selectedIds);
   const keyboard = useRef<(event: KeyboardEvent) => void>(() => {});
   keyboard.current = event => {

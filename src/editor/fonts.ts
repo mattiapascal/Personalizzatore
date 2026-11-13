@@ -23,6 +23,16 @@ export function assertFontAvailable(family: FontFamily): void {
 interface RegisteredFont { asset: FontAsset; alias: string; loaded: boolean; visible: boolean; promise?: Promise<void>; }
 let visibleFontIds:Set<string>|undefined;
 const resources=new Map<string,RegisteredFont>(),aliases=new Map<string,string>(),listeners=new Set<()=>void>();let fontVersion=0;
+interface FontMenuEntry {id:string;family:string;weight:number;italic:boolean;}
+let menuEntries:readonly FontMenuEntry[]=[];
+/** Names only, no binaries or FontFace. Keeps menu geometry stable while files load. */
+export function setFontMenuEntries(entries:readonly FontMenuEntry[]):void{if(JSON.stringify(menuEntries)===JSON.stringify(entries))return;menuEntries=entries.map(entry=>({...entry}));notify();}
+export function fontMenuLabel(id:string):string{return menuEntries.find(entry=>entry.id===id)?.family??fontFamilyLabel(id);}
+export function fontMenuFamilyChoices():string[]{
+ const groups=new Map<string,FontMenuEntry>(),score=(entry:FontMenuEntry)=>Math.abs(entry.weight-400)+(entry.italic?10000:0);
+ for(const entry of [...menuEntries.filter(entry=>visibleFontIds?.has(entry.id)??true),...fontChoices().map(id=>{const asset=resources.get(id)!.asset;return{id,family:fontMenuLabel(id),weight:asset.weight??400,italic:asset.italic??false};})]){const key=fontFamilyKey(entry.family),previous=groups.get(key);if(!previous||score(entry)<score(previous))groups.set(key,entry);}
+ return[...groups.values()].map(entry=>entry.id).sort((a,b)=>fontMenuLabel(a).localeCompare(fontMenuLabel(b),'it',{sensitivity:'base',numeric:true})||a.localeCompare(b));
+}
 const notify=()=>{fontVersion++;for(const listener of listeners)listener();};
 export const subscribeFonts=(listener:()=>void)=>{listeners.add(listener);return()=>{listeners.delete(listener);};};
 export const fontCatalogVersion=()=>fontVersion;

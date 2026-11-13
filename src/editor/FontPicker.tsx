@@ -1,13 +1,13 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
-import { fontFamilyChoices, fontFamilyLabel, renderFontFamily, subscribeFonts, fontCatalogVersion, isFontAvailable, type FontFamily } from './fonts';
+import { fontMenuFamilyChoices, fontMenuLabel, renderFontFamily, subscribeFonts, fontCatalogVersion, isFontAvailable, type FontFamily } from './fonts';
 export function FontPicker({ value, disabled, onChange, onOpen, emptyLabel='Misto', label='Font' }: { label?:string; emptyLabel?:string; onOpen: () => void; value: FontFamily | ''; disabled: boolean; onChange: (font: FontFamily) => void }) {
-  useSyncExternalStore(subscribeFonts, fontCatalogVersion); const families = fontFamilyChoices();
+  useSyncExternalStore(subscribeFonts, fontCatalogVersion); const families = fontMenuFamilyChoices();
   const root = useRef<HTMLDivElement>(null), button = useRef<HTMLButtonElement>(null), id = useId(), [open, setOpen] = useState(false), [active, setActive] = useState(0), [position, setPosition] = useState({ left: 0, top: 0, width: 0, maxHeight: 300 });
   const [scrollRequest, requestScroll] = useState(0);
   const available = families.map(isFontAvailable);
   const close = () => setOpen(false);
   const place = () => { const box = button.current?.getBoundingClientRect(); if (!box) return; const height = Math.min(320, innerHeight - 16), below = innerHeight - box.bottom - 8; setPosition({ left: Math.max(8, Math.min(box.left, innerWidth - box.width - 8)), top: below >= height || below >= box.top ? box.bottom + 4 : Math.max(8, box.top - height - 4), width: box.width, maxHeight: Math.min(height, Math.max(below, box.top - 8)) }); };
-  const show = () => { if (!families.length || disabled || button.current?.matches(':disabled')) return; place(); onOpen(); setActive(Math.max(0, families.findIndex(id=>fontFamilyLabel(id)===fontFamilyLabel(value as FontFamily)))); setOpen(true); };
+  const show = () => { if (!families.length || disabled || button.current?.matches(':disabled')) return; place(); onOpen(); setActive(Math.max(0, families.findIndex(id=>fontMenuLabel(id)===fontMenuLabel(value as FontFamily)))); setOpen(true); };
   const choose = (index: number) => { if (!available[index] || disabled || button.current?.matches(':disabled')) return; close(); onChange(families[index]!); button.current?.focus({ preventScroll: true }); };
   useEffect(() => { if (disabled) close(); }, [disabled]);
   useEffect(() => {
@@ -24,7 +24,7 @@ export function FontPicker({ value, disabled, onChange, onOpen, emptyLabel='Mist
     if (event.key === 'Tab') { close(); return; }
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (open) choose(active); else show(); return; }
     if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); if (!open) { show(); return; } let next = event.key === 'Home' ? 0 : event.key === 'End' ? families.length - 1 : (active + (event.key === 'ArrowDown' ? 1 : -1) + families.length) % families.length; const step = event.key === 'ArrowUp' || event.key === 'End' ? -1 : 1; for (let i = 0; i < families.length && !available[next]; i++) next = (next + step + families.length) % families.length; setActive(next); requestScroll(request => request + 1); }
-  }}>{value ? fontFamilyLabel(value) : emptyLabel}<span aria-hidden="true">▾</span></button>
-    {open && <div id={`${id}-list`} role="listbox" aria-label="Caratteri disponibili" className="font-picker-list" style={position}>{families.map((family, index) => <button key={family} id={`${id}-${index}`} type="button" role="option" tabIndex={-1} aria-selected={!!value && fontFamilyLabel(value)===fontFamilyLabel(family)} disabled={!available[index]} data-active={index === active} style={{ fontFamily: renderFontFamily(family) }} onMouseDown={event => event.preventDefault()} onPointerMove={() => setActive(index)} onClick={() => choose(index)}>{fontFamilyLabel(family)}{!available[index] && <small>non disponibile</small>}</button>)}</div>}
+  }}>{value ? fontMenuLabel(value) : emptyLabel}<span aria-hidden="true">▾</span></button>
+    {open && <div id={`${id}-list`} role="listbox" aria-label="Caratteri disponibili" className="font-picker-list" style={position}>{families.map((family, index) => <button key={family} id={`${id}-${index}`} type="button" role="option" title={fontMenuLabel(family)} tabIndex={-1} aria-selected={!!value && fontMenuLabel(value)===fontMenuLabel(family)} disabled={!available[index]} data-active={index === active} style={{ fontFamily: available[index]?renderFontFamily(family):undefined }} onMouseDown={event => event.preventDefault()} onPointerMove={() => setActive(index)} onClick={() => choose(index)}><span className="font-picker-family-name">{fontMenuLabel(family)}</span>{!available[index] && <small>non caricato</small>}</button>)}</div>}
   </div>;
 }
