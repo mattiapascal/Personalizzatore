@@ -1,3 +1,4 @@
+import { decomposePitchprintText } from './pitchprint-affine';
 import{svgImageText,convertPitchprintSvgImage}from'./pitchprint-svg-image';
 import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import{joinGraphicPages}from'./pages';
@@ -63,7 +64,7 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
   // mtx is a cached PitchPrint/Fabric value and may be stale after an offline edit.
   const space=multiplyPitchprintMatrices(pageMatrix,parent),matrix=multiplyPitchprintMatrices(space,pitchprintTransform(item,name)),axisX=Math.hypot(matrix[0],matrix[1]),axisY=Math.hypot(matrix[2],matrix[3]),rotation=Math.atan2(matrix[1],matrix[0])*180/Math.PI,determinant=matrix[0]*matrix[3]-matrix[1]*matrix[2],orthogonal=Math.abs(matrix[0]*matrix[2]+matrix[1]*matrix[3])<=1e-7*axisX*axisY,center={xMm:matrix[4],yMm:matrix[5]};
   if(type==='i-text'||type==='text'||type==='textbox'){
-   if(determinant<=0||!orthogonal)throw new Error(`${name}: testo riflesso o inclinato dal gruppo non rappresentabile senza alterare i caratteri.`);
+   const textTransform=decomposePitchprintText(matrix,name),fontScale=textTransform.vertical;
    if(typeof item.text!=='string'||typeof item.fontFamily!=='string')throw new Error(`${name}: testo/font mancante.`);
    if(pitchprintTextIsBlank(item.text)){warnings.push(`${name}: box di testo senza caratteri visibili rimosso come refuso, secondo la regola di migrazione concordata.`);rememberGroup();continue;}
    if(item.textAlign&&!['left','right','center','justify'].includes(String(item.textAlign)))throw new Error(`${name}: allineamento testo da convertire.`);
@@ -74,21 +75,21 @@ async function importSinglePitchPrint(raw:unknown,options:PitchImportOptions):Pr
     const resolved=await checkedPitchprintFont(await pending,request),asset=resolved.asset;warnings.push(...resolved.warnings);
     if(!assets.some(existing=>existing.id===asset.id)){FontAssetsSchema.parse([...assets,asset]);assets.push(asset);}await loadFontAssets([asset]);return asset;
    };
-   const asset=await resolveFont(pitchprintFontRequest(item)),fontFamily=asset.id,fontSize=numeric(item.fontSize,name),fontSizePt=fontSize*axisY*72/25.4;
-   const {nativeStyles,characterStyles,ignoredInsertionStyles,ignoredDetachedStyles,ignoredTrailingStyles}=await pitchprintTextStyles(item,axisY,options.monochrome,resolveFont);
+   const asset=await resolveFont(pitchprintFontRequest(item)),fontFamily=asset.id,fontSize=numeric(item.fontSize,name),fontSizePt=fontSize*fontScale*72/25.4;
+   const {nativeStyles,characterStyles,ignoredInsertionStyles,ignoredDetachedStyles,ignoredTrailingStyles}=await pitchprintTextStyles(item,fontScale,options.monochrome,resolveFont);
    if(ignoredInsertionStyles)warnings.push(`${name}: ${ignoredInsertionStyles} stili di inserimento a fine riga esclusi; nessun carattere visibile modificato.`);
    if(ignoredDetachedStyles)warnings.push(`${name}: ${ignoredDetachedStyles} stili residui di righe assenti esclusi; nessun carattere del testo corrente modificato.`);
    if(ignoredTrailingStyles)warnings.push(`${name}: ${ignoredTrailingStyles} stili residui oltre fine riga esclusi; nessun carattere visibile modificato.`);
    const fill=color(item.fill,options.monochrome);if(fill==='none')throw new Error(`${name}: testo senza riempimento non convertibile.`);
-   const outline=pitchprintTextStroke(item,axisY,options.monochrome);
-   const nativeOptions={left:numeric(item.left,name),top:numeric(item.top,name),originX:(item.originX??'left') as 'left'|'center'|'right',originY:(item.originY??'top') as 'top'|'center'|'bottom',scaleX,scaleY,angle,flipX:item.flipX===true,flipY:item.flipY===true,fontSize,fontFamily:renderFontFamily(fontFamily),fontWeight:'normal' as const,fontStyle:'normal' as const,lineHeight:numeric(item.lineHeight??1,name),charSpacing:numeric(item.charSpacing??0,name),textAlign:(item.textAlign??'left') as 'left'|'center'|'right'|'justify',fill,...outline.native,underline:item.underline===true,linethrough:item.linethrough===true,overline:item.overline===true,styles:nativeStyles};
-   const object:Extract<SceneObject,{type:'text'}>={id,type:'text',xMm:0,yMm:0,text:item.text,fontFamily,fontSizePt,fill,...outline.canonical,rotationDeg:rotation,fontWeight:'normal',fontStyle:'normal',textAlign:justified?'justify-left':nativeOptions.textAlign as 'left'|'center'|'right',...(justified?{justification:{...DEFAULT_JUSTIFICATION,distribution:'word-space',justifyLastLine:true}}:{}),lineHeight:nativeOptions.lineHeight,textScaleX:axisX/axisY,letterSpacingPt:nativeOptions.charSpacing/1000*fontSizePt,underline:nativeOptions.underline,linethrough:nativeOptions.linethrough,overline:nativeOptions.overline,editor,...(characterStyles.length?{characterStyles}:{}),...(type==='textbox'?{textBox:{widthMm:rawWidth*axisX,heightMm:rawHeight*axisY,autoWidth:false,autoHeight:true}}:{})};
+   const outline=pitchprintTextStroke(item,fontScale,options.monochrome);
+   const nativeOptions={left:numeric(item.left,name),top:numeric(item.top,name),originX:(item.originX??'left') as 'left'|'center'|'right',originY:(item.originY??'top') as 'top'|'center'|'bottom',scaleX,scaleY,angle,skewX:numeric(item.skewX??0,name),skewY:numeric(item.skewY??0,name),strokeUniform:item.strokeUniform===true,flipX:item.flipX===true,flipY:item.flipY===true,fontSize,fontFamily:renderFontFamily(fontFamily),fontWeight:'normal' as const,fontStyle:'normal' as const,lineHeight:numeric(item.lineHeight??1,name),charSpacing:numeric(item.charSpacing??0,name),textAlign:(item.textAlign??'left') as 'left'|'center'|'right'|'justify',fill,...outline.native,underline:item.underline===true,linethrough:item.linethrough===true,overline:item.overline===true,styles:nativeStyles};
+   const object:Extract<SceneObject,{type:'text'}>={id,type:'text',xMm:0,yMm:0,text:item.text,fontFamily,fontSizePt,fill,...outline.canonical,rotationDeg:textTransform.rotationDeg,...(textTransform.textSkewXDeg?{textSkewXDeg:textTransform.textSkewXDeg}:{}),fontWeight:'normal',fontStyle:'normal',textAlign:justified?'justify-left':nativeOptions.textAlign as 'left'|'center'|'right',...(justified?{justification:{...DEFAULT_JUSTIFICATION,distribution:'word-space',justifyLastLine:true}}:{}),lineHeight:nativeOptions.lineHeight,textScaleX:textTransform.textScaleX,letterSpacingPt:nativeOptions.charSpacing/1000*fontSizePt,underline:nativeOptions.underline,linethrough:nativeOptions.linethrough,overline:nativeOptions.overline,editor,...(characterStyles.length?{characterStyles}:{}),...(type==='textbox'?{textBox:{widthMm:rawWidth*axisX,heightMm:rawHeight*fontScale,autoWidth:false,autoHeight:true}}:{})};
    await assertFontGeometry({objects:[object],fontAssets:assets});
    const native=type==='textbox'?new Textbox(item.text,{...nativeOptions,width:rawWidth,minWidth:.001}):new IText(item.text,nativeOptions);
    try{
     const measured=measureFabric({...object,rotationDeg:0}),layoutWidth=measured.textLayoutWidthMm??measured.widthMm,layoutHeight=measured.textLayoutHeightMm??measured.heightMm;object.textBox={widthMm:layoutWidth,heightMm:layoutHeight,autoWidth:type!=='textbox',autoHeight:true};
-    const nativeCenter=native.getCenterPoint(),point=pitchprintPoint(space,nativeCenter.x,nativeCenter.y),dx=(layoutWidth-native.width*axisX)/2,dy=(layoutHeight-native.height*axisY)/2,a=rotation*Math.PI/180;
-    objects.push(placeObjectAtCenter(object,{xMm:point.x+dx*Math.cos(a)-dy*Math.sin(a),yMm:point.y+dx*Math.sin(a)+dy*Math.cos(a)},measureFabric));
+    const nativeCenter=native.getCenterPoint(),point=pitchprintPoint(space,nativeCenter.x,nativeCenter.y),dx=(layoutWidth-native.width*axisX)/2,dy=(layoutHeight-native.height*fontScale)/2,k=Math.tan(textTransform.textSkewXDeg*Math.PI/180),a=textTransform.rotationDeg*Math.PI/180,offsetX=dx+k*dy;
+    objects.push(placeObjectAtCenter(object,{xMm:point.x+offsetX*Math.cos(a)-dy*Math.sin(a),yMm:point.y+offsetX*Math.sin(a)+dy*Math.cos(a)},measureFabric));
    }finally{native.dispose();}
    if(item.text.includes('\n')||type==='textbox')warnings.push('Box multiriga ricostruito: verificare interlinea e ritorni a capo.');
   }else if(type==='image'){

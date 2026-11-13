@@ -30,3 +30,9 @@ Nell’attesa dell’autorizzazione al cambio dell’archivio si può implementa
 [Inclinazione fisica del box](iteration-editor-text-skew.md): proprietà canonica opzionale, ispettore, trasformazione `R * K * S`, misure di impaginazione distinte dall’ingombro e otto maniglie sul parallelogramma con punto opposto stabile. Testo, stili e font rimangono editabili, con comandi/storico/JSON condivisi. Il parametro interno Fabric viene convertito perché usa un ordine diverso delle matrici; la decomposizione futura dei sorgenti deve produrre l’angolo fisico, non copiarne lo skew grezzo.
 
 Rimangono da completare trasformazioni e origini nell’adattatore PitchPrint, maschere sul testo e confronti integrali dei due cartelli. Nessun preflight allentato o importazione effettuata. La combinazione con testo su percorso resta esplicitamente rifiutata, senza perdita silenziosa delle proprietà.
+
+## Importazione affine completata
+
+[Matrici, gruppi e decorazioni SVG](iteration-editor-pitchprint-affine-text.md): l’adattatore conserva ora lo skew proprio del testo e quello dei genitori, usando l’angolo fisico canonico e la scala verticale corretta del font. Confrontate 216 matrici nel runtime originale 3.4.0; il campione completo con decorazioni Canvas rese esplicite nello SVG coincide nei pixel. Risolto anche un difetto generale dell’SVG delle decorazioni, conservando i segmenti dei glifi.
+
+Le maschere sul testo continuano a bloccare i due cartelli. Il [piano specifico](editor-text-mask-plan.md) si basa anche su dieci prove native del comportamento durante modifica di testo/corpo/larghezza e scala: frame locale stabile, trasformato geometricamente con l’oggetto. Non riutilizzare il frame relativo variabile delle immagini senza questo contratto. Nessuna nuova importazione o migrazione effettiva.

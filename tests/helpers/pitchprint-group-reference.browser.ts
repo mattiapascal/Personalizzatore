@@ -1,4 +1,5 @@
 import{legacyImageReferenceMarkup}from'./pitchprint-raster-reference.browser';
+import { canvasDecorationReference } from './canvas-decoration-reference.browser';
 import {config,Group,IText,Textbox,Rect,Circle,Ellipse,Line,Path,Polygon,Polyline,FabricImage,StaticCanvas,type FabricObject} from 'fabric';
 import {pitchprintFontRequest,fontNameKey} from '../../src/editor/pitchprint-fonts';
 import {loadFontAssets,renderFontFamily,embedSvgFonts} from '../../src/editor/fonts';
@@ -23,7 +24,9 @@ export async function pitchprintReferenceSvg(source:any,asset:FontAsset|FontAsse
    // the native renderer, independently of the importer, decides whether it paints.
    for(const [line,row] of Object.entries(styles) as any[])for(const [column,style] of Object.entries(row) as any[])
     if(Number(column)<(hardLines[Number(line)]?.length??0)&&['fontFamily','fontWeight','fontStyle'].some(key=>style[key]!==undefined)){style.fontFamily=renderFontFamily(font({...raw,...style}).id);style.fontWeight=style.fontStyle='normal';}
-   const textOptions={...options,styles,fontFamily:renderFontFamily(font(raw).id),fontWeight:'normal',fontStyle:'normal' as const,stroke:raw.stroke??null,strokeWidth:raw.strokeWidth??(raw.stroke?1:0)};return type==='textbox'?new Textbox(raw.text,textOptions):new IText(raw.text,textOptions);
+   const textOptions={...options,styles,fontFamily:renderFontFamily(font(raw).id),fontWeight:'normal',fontStyle:'normal' as const,stroke:raw.stroke??null,strokeWidth:raw.strokeWidth??(raw.stroke?1:0)};
+   const text=type==='textbox'?new Textbox(raw.text,textOptions):new IText(raw.text,textOptions),serialize=text.toSVG.bind(text);
+   text.toSVG=(...args)=>canvasDecorationReference(text,()=>serialize(...args));return text;
   }
   if(type==='image'){const image=await FabricImage.fromURL(raw.src,{},{...options,clipPath:undefined});if(raw.clipPath)image.set({clipPath:await build(raw.clipPath)});image._toSVG=()=>legacyImageReferenceMarkup(image);return image;}
   // Legacy full circles store radians; Fabric 7 expects degrees. Keep the

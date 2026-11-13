@@ -1,4 +1,5 @@
 import{pitchprintImageClip}from'./pitchprint-image-clip';
+import { pitchprintLinear } from './pitchprint-affine';
 import{singleFillPitchprintOpacity}from'./pitchprint-opacity';
 import{EDITOR_LIMITS,GRAPHIC_IMPORT_LIMITS}from'./limits';
 import {pitchprintNumber as number} from './pitchprint-units';
@@ -13,11 +14,15 @@ export function pitchprintOrigin(value:unknown,axis:'x'|'y'):number{
 /** Fabric 3 group children are expressed around the declared group centre.
  * Cached mtx values and a newly computed child bounding box are not authoritative. */
 export function pitchprintTransform(item:Record<string,unknown>,name:string):PitchprintMatrix{
- const sx=number(item.scaleX??1,name),sy=number(item.scaleY??1,name),width=number(item.width,name),height=number(item.height,name),stroke=number(item.strokeWidth??0,name);
- if(sx<=0||sy<=0||width<0||height<0||stroke<0)throw new Error(`${name}: dimensioni o scala non valide.`);
- const a=number(item.angle??0,name)*Math.PI/180,c=Math.cos(a),s=Math.sin(a),dx=(.5-pitchprintOrigin(item.originX,'x'))*(width+stroke)*sx,dy=(.5-pitchprintOrigin(item.originY,'y'))*(height+stroke)*sy;
+ const dimensions=pitchprintLinear(item,name),width=number(item.width,name),height=number(item.height,name),stroke=number(item.strokeWidth??0,name);
+ if(width<0||height<0||stroke<0)throw new Error(`${name}: dimensioni o scala non valide.`);
+ const uniform=item.strokeUniform===true,w=width+(uniform?0:stroke),h=height+(uniform?0:stroke);
+ const boxWidth=Math.abs(dimensions[0])*w+Math.abs(dimensions[2])*h+(uniform?stroke:0),boxHeight=Math.abs(dimensions[1])*w+Math.abs(dimensions[3])*h+(uniform?stroke:0);
+ const a=number(item.angle??0,name)*Math.PI/180,c=Math.cos(a),s=Math.sin(a),dx=(.5-pitchprintOrigin(item.originX,'x'))*boxWidth,dy=(.5-pitchprintOrigin(item.originY,'y'))*boxHeight;
  const x=number(item.left,name)+dx*c-dy*s,y=number(item.top,name)+dx*s+dy*c;
- return[c*sx*(item.flipX===true?-1:1),s*sx*(item.flipX===true?-1:1),-s*sy*(item.flipY===true?-1:1),c*sy*(item.flipY===true?-1:1),x,y];
+ const matrix=multiplyPitchprintMatrices([c,s,-s,c,x,y],dimensions);
+ if(!matrix.every(Number.isFinite))throw Error(`${name}: trasformazione non finita.`);
+ return matrix;
 }
 export function checkedPitchprintEffects(item:Record<string,unknown>,name:string):void{
  if(item.visible===false)throw new Error(`${name}: elemento nascosto, da gestire prima della conversione.`);
@@ -25,7 +30,9 @@ export function checkedPitchprintEffects(item:Record<string,unknown>,name:string
  if(item.globalCompositeOperation&&item.globalCompositeOperation!=='source-over')throw new Error(`${name}: metodo di fusione non supportato.`);
  if(item.fillRule!==undefined&&!['evenodd','nonzero'].includes(String(item.fillRule)))throw new Error(`${name}: regola di riempimento non riconosciuta.`);
  if(item.clipPath!=null)pitchprintImageClip(item,name);
- if(item.shadow||item.clipTo||item.transformMatrix||Number(item.skewX??0)||Number(item.skewY??0)||singleFillPitchprintOpacity(item)===null)throw new Error(`${name}: maschera, ombra, skew o opacità non supportati.`);
+ const skewX=number(item.skewX??0,name),skewY=number(item.skewY??0,name),hasSkew=skewX!==0||skewY!==0;
+ if(hasSkew)pitchprintLinear(item,name);
+ if(item.shadow||item.clipTo||item.transformMatrix||hasSkew&&!['group','text','i-text','textbox'].includes(String(item.type))||singleFillPitchprintOpacity(item)===null)throw new Error(`${name}: maschera, ombra, skew o opacità non supportati.`);
 }
 const inheritedKeys=['transformLocked','selectionLocked','deleteLocked','hideMenus','reference'] as const;
 export function inheritedPitchprintProperties(own:ObjectProperties,parent:ObjectProperties):ObjectProperties{const result={...own};for(const key of inheritedKeys)if(parent[key])result[key]=true;return result;}

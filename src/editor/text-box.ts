@@ -1,4 +1,5 @@
 import {textStrokeEnvelope} from './text-stroke';
+import { decorationRects, decorationSvg } from './text-decoration-svg';
 import { fabricTextSkew, physicalTextSkew } from './text-skew';
 import { canMeasureFontText } from './font-measurement';
 import { EDITOR_LIMITS } from './limits';
@@ -10,6 +11,13 @@ export interface TextFrame { width: number; height: number; autoWidth: boolean; 
 
 /** Vista Fabric del contenitore: testo originale e parametri restano nel documento. */
 export class EditorTextBox extends Textbox {
+  private vectorDecorationSvg = false;
+  getSvgTextDecoration(style: Partial<Pick<TextboxProps,'underline'|'overline'|'linethrough'>>): string {
+    // Fabric installs this SVG mixin at runtime but omits it from Textbox's
+    // declaration. Delegate through the native prototype to preserve its policy.
+    const native=Textbox.prototype as unknown as {getSvgTextDecoration(options:typeof style):string};
+    return this.vectorDecorationSvg ? '' : native.getSvgTextDecoration.call(this,style);
+  }
   /** Interactive glyph drawing gate. Outputs have their own preflight. */
   textRenderPermission?: () => boolean;
   override _render(context: CanvasRenderingContext2D): void {
@@ -134,8 +142,18 @@ export class EditorTextBox extends Textbox {
     try { super._renderChars(...args); } finally { this.charSpacing = previous; this.textAlign = align; }
   }
   override toSVG(...args: Parameters<Textbox['toSVG']>): string {
-    if (!this.hasKerning() && !this.hasLineStyles() && !this.justificationResults.some(line => line.letterPercent !== 0)) return super.toSVG(...args);
-    const previous = this.charSpacing; this.charSpacing = 1; try { return super.toSVG(...args); } finally { this.charSpacing = previous; }
+    const types=['underline','overline','linethrough'] as const;
+    const decoration=Object.fromEntries(types.map(type=>[type,decorationSvg(decorationRects(context=>this._renderTextDecoration(context,type)),type)]));
+    const previous = this.charSpacing, previousDecoration=this.vectorDecorationSvg;
+    const painted=types.some(type=>this[type]||Object.values(this.styles).some(line=>Object.values(line).some(style=>style[type])));
+    try {
+      // Suppress only the CSS paint. Keep native style boundaries, kerning and
+      // glyph runs: clearing decoration flags would merge otherwise distinct runs.
+      this.vectorDecorationSvg=painted||previousDecoration;
+      if(this.hasKerning()||this.hasLineStyles()||this.justificationResults.some(line=>line.letterPercent!==0))this.charSpacing=1;
+      const svg=super.toSVG(...args);
+      return painted?svg.replace(/<text\b/,decoration.underline+'<text').replace('</text>','</text>'+decoration.overline+decoration.linethrough):svg;
+    } finally { this.charSpacing=previous;this.vectorDecorationSvg=previousDecoration; }
   }
   override _renderSelection(...args: Parameters<Textbox['_renderSelection']>): void {
     const draw = (selection: typeof args[1]) => {
