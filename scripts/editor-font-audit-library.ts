@@ -1,4 +1,5 @@
 import{dirname,resolve,join}from'node:path';
+import{activeEditorArchive}from'./editor-active-archive';
 import{selectedEditorArchive}from'./editor-archive-selection';
 import{openEditorAdminRuntime,archiveIdentity,type EditorAdminRuntime}from'./editor-admin-runtime';
 import{EditorAdminSqlite}from'./editor-admin-sqlite';
@@ -8,10 +9,11 @@ import type{AdminSnapshot,AdminState}from'../src/editor-admin/schema';
 
 export class FontAuditConflictError extends Error{}
 export interface FontAuditLibrary{store:EditorAdminStore;backend:'json'|'sqlite';identity:string;file:string;close:()=>Promise<void>;}
-export async function openFontAuditLibrary(options:{libraryDirectory?:string;sqliteFile?:string}):Promise<FontAuditLibrary>{
+export async function openFontAuditLibrary(options:{libraryDirectory?:string;sqliteFile?:string},root=process.cwd()):Promise<FontAuditLibrary>{
  if(options.sqliteFile!==undefined&&options.libraryDirectory!==undefined)throw Error('Scegli --sqlite-file oppure --library-dir, non entrambi');
- if(options.sqliteFile===undefined){const runtime:EditorAdminRuntime=await openEditorAdminRuntime({kind:'json',directory:options.libraryDirectory??'.local/editor-admin'},process.cwd());return{...runtime,file:join(runtime.directory,'state.json')};}
- const selected=await selectedEditorArchive({EDITOR_ARCHIVE_BACKEND:'sqlite',EDITOR_ARCHIVE_PATH:options.sqliteFile});if(selected.kind!=='sqlite')throw Error('Backend SQLite non selezionato');
+ const storage=options.sqliteFile!==undefined?await selectedEditorArchive({EDITOR_ARCHIVE_BACKEND:'sqlite',EDITOR_ARCHIVE_PATH:options.sqliteFile},root):options.libraryDirectory!==undefined?{kind:'json' as const,directory:resolve(root,options.libraryDirectory)}:(await activeEditorArchive(root)).storage;
+ if(storage.kind==='json'){const runtime:EditorAdminRuntime=await openEditorAdminRuntime(storage,root);return{...runtime,file:join(runtime.directory,'state.json')};}
+ const selected=storage;if(selected.kind!=='sqlite')throw Error('Backend SQLite non selezionato');
  const file=resolve(selected.file),database=EditorAdminSqlite.open(file,true),store=new EditorAdminStore(dirname(file),undefined,undefined,database);let closed=false;
  return{store,file,backend:'sqlite',identity:archiveIdentity('sqlite',file),close:async()=>{if(closed)return;closed=true;await store.whenIdle();store.releaseReadCaches();database.close();}};
 }
