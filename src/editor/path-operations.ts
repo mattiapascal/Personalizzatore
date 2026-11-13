@@ -4,7 +4,7 @@ import type { PathObject } from './path-nodes';
 export function reflectPath(object: PathObject, axis: 'horizontal' | 'vertical', measure: Measure): PathObject {
   const center = objectCenter(object, measure);
   const next: PathObject = {
-    ...object,
+    ...object,...(object.skewXDeg===undefined?{}:{skewXDeg:-object.skewXDeg||0}),
     ...(object.rotationDeg === undefined ? {} : { rotationDeg: -(object.rotationDeg || 0) }),
     points: object.points.map(point => ({
       x: axis === 'horizontal' && object.widthMm > 0 ? 1 - point.x : point.x,

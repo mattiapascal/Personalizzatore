@@ -40,19 +40,20 @@ export function productionDocument(document:GraphicDocument):GraphicDocument{
  const groups=(document.groups??[]).map(group=>({...group,objectIds:group.objectIds.filter(id=>ids.has(id))})).filter(group=>group.objectIds.length>=2||group.objectIds.length===1&&(document.groups?.find(source=>source.id===group.id)?.objectIds.length===1||group.editor||document.groups?.some(child=>child.parentId===group.id)));
  const output={...document,objects,...(document.groups?{groups}:{})};if(output.backgroundImageId&&!ids.has(output.backgroundImageId))delete output.backgroundImageId;if(output.backgroundGroupId&&!groups.some(group=>group.id===output.backgroundGroupId))delete output.backgroundGroupId;return output;
 }
-export function selectableObjectIds(document:GraphicDocument,ids:readonly string[],role:EditorRole):string[]{
+export function selectableObjectIds(document:GraphicDocument,ids:readonly string[],role:EditorRole,direct=false):string[]{
  const requested=new Set(ids),blocked=new Set(document.objects.filter(object=>role==='customer'&&effectiveObjectProperties(document,object.id).selectionLocked).map(object=>object.id));
- for(const group of document.groups??[]){if(group.parentId)continue;if(group.objectIds.some(id=>requested.has(id)))group.objectIds.forEach(id=>requested.add(id));if(group.objectIds.some(id=>blocked.has(id)))group.objectIds.forEach(id=>blocked.add(id));}
+ for(const group of document.groups??[]){if(direct||group.parentId)continue;if(group.objectIds.some(id=>requested.has(id)))group.objectIds.forEach(id=>requested.add(id));if(group.objectIds.some(id=>blocked.has(id)))group.objectIds.forEach(id=>blocked.add(id));}
  return document.objects.filter(object=>requested.has(object.id)&&!blocked.has(object.id)).map(object=>object.id);
 }
 export function assertObjectPolicies(before:GraphicDocument,after:GraphicDocument,command:GraphicCommand,role:EditorRole,sameGeometry:(a:SceneObject,b:SceneObject)=>boolean):void{
  if(role==='admin')return;
+ const direct='targetScope'in command&&command.targetScope==='object';
  if(command.tool==='setObjectProperties'||command.tool==='setGroupProperties')throw new Error('Le proprietà del template si configurano in modalità amministrativa.');
  for(const group of before.groups??[]){
   const next=after.groups?.find(item=>item.id===group.id);
   if(next&&JSON.stringify(next.editor??{})!==JSON.stringify(group.editor??{}))throw new Error('Il cliente non può cambiare le proprietà del gruppo.');
-  if(next&&command.tool!=='ungroupObjects'&&(next.parentId!==group.parentId||JSON.stringify(next.objectIds)!==JSON.stringify(group.objectIds)))throw new Error('Il cliente non può cambiare la struttura di un gruppo del template.');
-  if(!next&&group.editor&&Object.values(group.editor).some(Boolean)&&group.objectIds.some(id=>after.objects.some(object=>object.id===id)))throw new Error('Un gruppo con proprietà del template può essere separato solo in modalità amministrativa.');
+  if(next&&(next.parentId!==group.parentId||command.tool!=='ungroupObjects'&&command.tool!=='placeGroupMember'&&!(direct&&['deleteObject','duplicateObject'].includes(command.tool))&&JSON.stringify(next.objectIds)!==JSON.stringify(group.objectIds)))throw new Error('Il cliente non può cambiare la struttura di un gruppo del template.');
+  if(!next&&command.tool!=='placeGroupMember'&&group.editor&&Object.values(group.editor).some(Boolean)&&group.objectIds.some(id=>after.objects.some(object=>object.id===id)))throw new Error('Un gruppo con proprietà del template può essere separato solo in modalità amministrativa.');
  }
  const argumentsWithIds=command.arguments as {objectIds?:string[];groupIds?:string[];copies?:{objectId:string}[];objects?:SceneObject[]};
  const targets=new Set([...(command.tool==='setPaperColor'?[]:[command.objectId]),...argumentsWithIds.objectIds??[],...argumentsWithIds.copies?.map(copy=>copy.objectId)??[],...argumentsWithIds.objects?.map(object=>object.id)??[],...(before.groups??[]).filter(group=>argumentsWithIds.groupIds?.includes(group.id)).flatMap(group=>group.objectIds)]);

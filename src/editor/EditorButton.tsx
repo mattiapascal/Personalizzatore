@@ -1,6 +1,12 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const icons = {
+  editMenu:<><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></>,
+  pasteFit:<><path d="M8 4H4v18h16V4h-4"/><rect x="8" y="2" width="8" height="5" rx="1"/><path d="M7 11h3v3M17 19h-3v-3M7 11l4 4M17 19l-4-4"/></>,
+  clearClipboard:<><path d="M8 4H4v18h16V4h-4"/><rect x="8" y="2" width="8" height="5" rx="1"/><path d="M8 12l8 6M16 12l-8 6"/></>,
+  directSelect:<><path d="M8 8v11l3-4 3 5 3-2-3-5h6zM3 9V3h6M15 3h6v5M3 15v6h3"/></>,
+  groupFolder:<><path d="M3 6h7l2 3h9v12H3zM3 6V3h8l2 3h8v3"/></>,
+  transform:<><path d="M7 4h14l-4 16H3zM3 4h3M18 20h3M4 3v3M20 18v3"/><path d="M6 15l9-8M10 7h5v5"/></>,
   pictures:<><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="2"/><path d="M3 18l6-6 4 4 3-5 5 7"/></>,
   background:<><rect x="3" y="3" width="18" height="18"/><path d="M3 14l6-6 12 12M12 3l9 9M3 21l6-6"/></>,
   link: <><path d="M9 15l6-6M8 11l-3 3a4 4 0 006 6l3-3M10 7l3-3a4 4 0 016 6l-3 3"/></>,

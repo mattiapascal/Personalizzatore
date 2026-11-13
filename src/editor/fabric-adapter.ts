@@ -1,4 +1,6 @@
-import { fabricTextSkew } from './text-skew';
+import {affineFrameView} from './affine-frame-view';
+import {hasObjectAffine,withoutObjectAffine,objectInclination} from './object-affine';
+import { fabricTextSkew,physicalTextSkew } from './text-skew';
 import{boxSampleRgba}from'./pixel-sampling';
 import{applyClipMasks}from'./clip-mask-view';
 import{ExternalCanvasControls}from'./external-controls';
@@ -26,7 +28,7 @@ import { DocumentSchema, validateLayout, objectGeometry, objectIntersectsArea, o
 import { lineAlignments, compressLineAlignments, lineSelection, applyLineAlignment } from './text-lines';
 import { EditorTextBox, textBoxControls } from './text-box';
 import { characterStyles, compressStyles, applyCharacterStyle, selectionStyle, applyTextKerning, textSpacingScope, type TextObject, type CharacterSelection } from './text-style';
-import { expandSelection } from './selection';
+import { expandSelection,selectionUnits,selectionBounds } from './selection';
 import { DEFAULT_GUIDES, snapTranslation, snapPoint, type GuideSettings, type SnapResult } from './guides';
 import { PrimitiveDrawingController, type PrimitiveDrawingCallbacks } from './primitive-drawing';
 import { primitiveFromEndpoints, type DrawingPrimitive } from './primitive-geometry';
@@ -53,7 +55,7 @@ export{PX_PER_MM}from'./canvas-size';
 export const PT_TO_MM = 25.4 / 72;
 const fontPoints = (pixels: number) => Math.round(pixels / (PT_TO_MM * PX_PER_MM) * 1e9) / 1e9;
 function transformedImageSize(source:ImageObject,object:FabricObject):Extract<TransformArguments['size'],{type:'image'}>{
- const crop=checkedRasterCrop(source.source,source.crop),widthMm=object.getScaledWidth()/PX_PER_MM,heightMm=object.getScaledHeight()/PX_PER_MM,aspect=widthMm*crop.heightPx/(heightMm*crop.widthPx);
+ const crop=checkedRasterCrop(source.source,source.crop),widthMm=object.width*object.scaleX/PX_PER_MM,heightMm=object.height*object.scaleY/PX_PER_MM,aspect=widthMm*crop.heightPx/(heightMm*crop.widthPx);
  return{type:'image',widthMm,heightMm,...(Math.abs(aspect-(source.pixelAspectRatio??1))>1e-9?{pixelAspectRatio:aspect}:{})};
 }
 function keepRotationHandleInCanvas(object: FabricObject): void {
@@ -93,13 +95,13 @@ function unverifiedTextMarker(o: TextObject): FabricObject {
   return new UnverifiedTextMarker({ left: o.xMm * PX_PER_MM, top: o.yMm * PX_PER_MM, width: Math.max(8, (o.textBox?.widthMm ?? 10) * PX_PER_MM), height: Math.max(8, (o.textBox?.heightMm ?? 5) * PX_PER_MM), originX: 'left', originY: 'top', fill: '#fff0dc', stroke: '#a34b00', strokeWidth: 1, strokeDashArray: [4, 3], lockMovementX: true, lockMovementY: true, lockScalingX: true, lockScalingY: true, lockRotation: true, hasControls: false, objectCaching: false });
 }
 function renderObject(o: SceneObject, editable = false): FabricObject {
-  const common = { borderColor: '#0088cc', cornerColor: '#0088cc', left: o.xMm * PX_PER_MM, top: o.yMm * PX_PER_MM, angle: o.rotationDeg ?? 0, originX: 'center' as const, originY: 'center' as const, lockScalingFlip: true, lockSkewingX: true, lockSkewingY: true, lockRotation: o.type === 'circle', hasControls: editable, objectCaching: false };
+  const common = { flipX:o.mirrorX??false,flipY:o.mirrorY??false, borderColor: '#0088cc', cornerColor: '#0088cc', left: o.xMm * PX_PER_MM, top: o.yMm * PX_PER_MM, angle: o.rotationDeg ?? 0, originX: 'center' as const, originY: 'center' as const, lockScalingFlip: true, lockSkewingX: true, lockSkewingY: true, lockRotation: o.type === 'circle'&&!o.skewXDeg, hasControls: editable, objectCaching: false };
   let object: FabricObject;
   if (o.type === 'text') {
     assertFontAvailable(o.fontFamily);
     for (const run of o.characterStyles ?? []) if (run.style.fontFamily) assertFontAvailable(run.style.fontFamily);
     assertTextGeometry(o);
-    const options = { ...common, scaleX: o.textScaleX ?? 1, scaleY: o.textScaleY ?? 1, skewX: fabricTextSkew(o.textSkewXDeg ?? 0, o.textScaleX ?? 1, o.textScaleY ?? 1), fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: renderFontFamily(o.fontFamily), fill: paintWithOpacity(o.fill, o.fillOpacity), stroke: o.stroke && o.stroke !== 'none' ? paintWithOpacity(o.stroke, o.strokeOpacity) : null, strokeWidth: o.stroke && o.stroke !== 'none' ? (o.strokeMm ?? .25) * PX_PER_MM : 0, strokeLineCap: o.strokeLineCap ?? 'butt', strokeLineJoin: o.strokeLineJoin ?? 'miter', strokeMiterLimit: o.strokeMiterLimit ?? 4, paintFirst: o.paintFirst ?? 'fill',
+    const options = { ...common, scaleX: o.textScaleX ?? 1, scaleY: o.textScaleY ?? 1, skewX: fabricTextSkew(objectInclination(o), (o.textPath?1:o.textScaleX ?? 1)*(o.mirrorX?-1:1), (o.textPath?1:o.textScaleY ?? 1)*(o.mirrorY?-1:1)), fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: renderFontFamily(o.fontFamily), fill: paintWithOpacity(o.fill, o.fillOpacity), stroke: o.stroke && o.stroke !== 'none' ? paintWithOpacity(o.stroke, o.strokeOpacity) : null, strokeWidth: o.stroke && o.stroke !== 'none' ? (o.strokeMm ?? .25) * PX_PER_MM : 0, strokeLineCap: o.strokeLineCap ?? 'butt', strokeLineJoin: o.strokeLineJoin ?? 'miter', strokeMiterLimit: o.strokeMiterLimit ?? 4, paintFirst: o.paintFirst ?? 'fill',
       fontWeight: o.fontWeight ?? 'normal', fontStyle: o.fontStyle ?? 'normal', underline: o.underline ?? false, linethrough: o.linethrough ?? false, overline: o.overline ?? false,
       textAlign: o.textAlign ?? 'left', lineHeight: o.lineHeight ?? 1, charSpacing: (o.letterSpacingPt ?? 0) / o.fontSizePt * 1000 };
     const styles: IText['styles'] = {}, characters = characterStyles(o), alignments = lineAlignments(o);
@@ -119,7 +121,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
   } else if (o.type === 'image') {
     assertRasterParameters(o.source,o.raster);
     const crop=checkedRasterCrop(o.source,o.crop),original=o.raster.mode==='original',bitmap=original?originalRasterImage(o.source):rasterCanvas(o.source,o.raster),width=crop.widthPx,height=crop.heightPx;
-    const image = new FabricImage(bitmap, {width,height,cropX:crop.leftPx,cropY:crop.topPx, ...common, strokeWidth: 0, perPixelTargetFind: true, flipX: o.flipX ?? false, flipY: o.flipY ?? false, scaleX: o.widthMm * PX_PER_MM / width, scaleY: o.heightMm * PX_PER_MM / height });
+    const image = new FabricImage(bitmap, {width,height,cropX:crop.leftPx,cropY:crop.topPx, ...common, strokeWidth: 0, perPixelTargetFind: true, flipX: !!o.flipX !== !!o.mirrorX, flipY: !!o.flipY !== !!o.mirrorY, scaleX: o.widthMm * PX_PER_MM / width, scaleY: o.heightMm * PX_PER_MM / height });
     if(o.raster.mode==='original')originalRasterSvg(image,o.source,o.crop);object=image;
   } else {
     const strokeWidth = o.stroke === 'none' ? 0 : o.strokeMm * PX_PER_MM;
@@ -135,6 +137,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
       : o.type === 'line' ? new Line([0, 0, o.lengthMm * PX_PER_MM, 0], { ...common, ...appearance, strokeLineCap: 'round', lockScalingY: true })
       : new Rect({ ...common, ...appearance, width: o.widthMm * PX_PER_MM, height: o.heightMm * PX_PER_MM, rx: (o.cornerRadiusMm ?? 0) * PX_PER_MM, ry: (o.cornerRadiusMm ?? 0) * PX_PER_MM });
   }
+  if(o.type!=='text')object.set('skewX',fabricTextSkew(o.skewXDeg??0,object.scaleX*(object.flipX?-1:1),object.scaleY*(object.flipY?-1:1)));
   if (o.type === 'vector' && o.clipRect) { const c = o.clipRect; object.clipPath = new Rect({ left: ((c.left + c.right) / 2 - .5) * o.widthMm * PX_PER_MM, top: ((c.top + c.bottom) / 2 - .5) * o.heightMm * PX_PER_MM, width: (c.right - c.left) * o.widthMm * PX_PER_MM, height: (c.bottom - c.top) * o.heightMm * PX_PER_MM, originX: 'center', originY: 'center', strokeWidth: 0, fill: '#000000' }); }
   if((o.type==='image'||o.type==='vector')&&o.clipMasks)applyClipMasks(object,o.clipMasks);
   if(editable&&o.type!=='text'&&o.type!=='line')objectDimensionControls(object);
@@ -145,8 +148,9 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
   if ((o.type === 'path' || o.type === 'bezier') && (o.widthMm === 0 || o.heightMm === 0)) {
     object.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, ml: o.widthMm > 0, mr: o.widthMm > 0, mt: o.heightMm > 0, mb: o.heightMm > 0 });
   }
-  if(o.type==='circle')object.setControlsVisibility({mtr:false});
-  if (editable && o.type !== 'circle') keepRotationHandleInCanvas(object);
+  if(o.type==='circle'&&!o.skewXDeg)object.setControlsVisibility({mtr:false});
+  if (editable && (o.type !== 'circle'||!!o.skewXDeg)) keepRotationHandleInCanvas(object);
+  if(hasObjectAffine(o))affineFrameView(object,o.type!=='text');
   // L’origine Fabric è centrale; il formato JSON conserva le coordinate esterne
   // storiche. La conversione non sposta i progetti salvati né cambia lo SVG.
   object.setCoords();
@@ -156,6 +160,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
   return object;
 }
 export const measureFabric: Measure = object => {
+  if(hasObjectAffine(object))return measureFabric(withoutObjectAffine(object));
   if (object.type === 'image') { assertRasterParameters(object.source, object.raster); return { widthMm: object.widthMm, heightMm: object.heightMm }; }
   // A local text mask never defines layout. Avoid rebuilding its curves for
   // every inspector, cursor and validation measurement.
@@ -171,7 +176,7 @@ export function measureTextFrame(object: TextObject) {
 export function textMaskInspectionView(object:TextObject):EditorTextBox{
  if(object.textPath)throw Error('Il testo su tracciato non ha una maschera del box');
  const view=renderObject({...object,textClipMasks:undefined}) as EditorTextBox;
- view.set({left:0,top:0,angle:0,scaleX:1,scaleY:1,skewX:0,skewY:0,objectCaching:false});
+ view.set({left:0,top:0,angle:0,scaleX:1,scaleY:1,skewX:0,skewY:0,flipX:false,flipY:false,objectCaching:false});
  return view;
 }
 /** The canonical project stays untouched. Only its productive objects and used
@@ -265,6 +270,41 @@ export class FabricAdapter {
   private onNodeMove?: (object: PathObject, index: number, point: PointMm, revision: number) => void;
   private onNodeActive?: (active: boolean) => void;
   private readonly cancelDrag: (event: KeyboardEvent) => void;
+  private masterObjectId:string|null=null;
+  private onMasterSelection?: (id:string)=>void;
+  private masterCandidate:{id:string;x:number;y:number;selection:string}|null=null;
+  setMasterSelectionHandler(handler:(id:string)=>void):void{this.onMasterSelection=handler;}
+  setMasterObject(id:string|null):void{this.masterObjectId=id;this.canvas.requestRenderAll();}
+  private drawMasterObject():void{
+    if(!this.masterObjectId||!this.document||this.dragging)return;
+    const unit=selectionUnits(this.document,this.selectedIds).find(unit=>unit.some(object=>object.id===this.masterObjectId));if(!unit)return;
+    const box=selectionBounds(unit,measureFabric),context=this.canvas.getContext(),retina=this.canvas.getRetinaScaling();
+    context.save();context.setTransform(retina*this.zoom,0,0,retina*this.zoom,0,0);context.strokeStyle='#005580';context.lineWidth=3/this.zoom;context.setLineDash([]);context.strokeRect(box.xMm*PX_PER_MM,box.yMm*PX_PER_MM,box.widthMm*PX_PER_MM,box.heightMm*PX_PER_MM);context.restore();
+  }
+  private directObjectId:string|null=null;
+  private onDirectSelection?: (id:string|null)=>void;
+  private directHit(event:MouseEvent):string|null{
+    const groups=this.canvas.getObjects().filter((object):object is Group=>object instanceof Group),saved=groups.map(group=>({group,subTargetCheck:group.subTargetCheck,interactive:group.interactive,evented:group.evented}));
+    try{
+      for(const group of groups){group.set({subTargetCheck:true,interactive:true,evented:true});group.setCoords();}
+      const {target}=this.canvas.searchPossibleTargets(this.canvas.getObjects(),this.canvas.getScenePoint(event));
+      const id=target?this.idByObject.get(target):undefined;
+      return id&&this.document&&selectableObjectIds(this.document,[id],this.role,true).includes(id)?id:null;
+    }finally{for(const {group,...values}of saved)group.set(values);}
+  }
+  private directMouseDown=(event:MouseEvent)=>{
+    if(event.button!==0||this.canvas.skipTargetFind||!this.document)return;
+    this.masterCandidate=null;
+    if(!event.altKey&&!event.shiftKey&&!event.metaKey&&!event.ctrlKey&&this.canvas.getActiveObject() instanceof ActiveSelection){const id=this.directHit(event);if(id&&this.selectedIds.includes(id))this.masterCandidate={id,x:event.clientX,y:event.clientY,selection:this.selectedIds.join('\0')};}
+    if(event.altKey){
+      const id=this.directHit(event);event.preventDefault();this.finishEditing();this.onDirectSelection?.(id);return;
+    }
+    if(this.directObjectId){
+      const active=this.canvas.getActiveObject();if(active?.findControl(this.canvas.getViewportPoint(event)))return;
+      if(this.directHit(event)!==this.directObjectId)this.onDirectSelection?.(null);
+    }
+  };
+  setDirectObject(id:string|null):boolean{const changed=id!==this.directObjectId;this.directObjectId=id;return changed;}
   private publishSelection: () => void;
   private publishObjectSelection: () => void;
   private textRenderGuard?: TextRenderGuard;
@@ -307,9 +347,10 @@ export class FabricAdapter {
     } };
     visit(this.canvas.getObjects()); this.fontRenderStatus(blocked, pending);
   }
-  constructor(element: HTMLCanvasElement, revision: () => number, onMove: (id: string, xMm: number, yMm: number, expectedRevision: number) => void, onText?: (id: string, object: TextObject, expectedRevision: number) => void, onEditing?: (editing: boolean) => void, onSelect?: (id: string | null) => void, onTransform?: (id: string, args: TransformArguments, expectedRevision: number) => void, onDeleteDrag?: (id: string, expectedRevision: number) => void, onTrash?: (visible: boolean) => void, onCharacterSelection?: (selection: CharacterSelection | null) => void, onSelection?: (ids: string[]) => void, onMoveSelection?: (ids: string[], deltaXmm: number, deltaYmm: number, revision: number) => void, onDeleteSelection?: (ids: string[], revision: number) => void, onTransformSelection?: (ids: string[], args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => void) {
+  constructor(element: HTMLCanvasElement, revision: () => number, onMove: (id: string, xMm: number, yMm: number, expectedRevision: number) => void, onText?: (id: string, object: TextObject, expectedRevision: number) => void, onEditing?: (editing: boolean) => void, onSelect?: (id: string | null) => void, onTransform?: (id: string, args: TransformArguments, expectedRevision: number) => void, onDeleteDrag?: (id: string, expectedRevision: number) => void, onTrash?: (visible: boolean) => void, onCharacterSelection?: (selection: CharacterSelection | null) => void, onSelection?: (ids: string[]) => void, onMoveSelection?: (ids: string[], deltaXmm: number, deltaYmm: number, revision: number) => void, onDeleteSelection?: (ids: string[], revision: number) => void, onTransformSelection?: (ids: string[], args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => void, onDirectSelection?:(id:string|null)=>void) {
     this.canvas = new Canvas(element, { stopContextMenu:false,selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
     this.externalControls=new ExternalCanvasControls(this.canvas);
+    this.onDirectSelection=onDirectSelection;this.canvas.upperCanvasEl.addEventListener('mousedown',this.directMouseDown,true);
     this.canvas.upperCanvasEl.tabIndex = 0; this.canvas.upperCanvasEl.setAttribute('aria-label', 'Area grafica interattiva');
     this.publishObjectSelection = () => {
       if (this.rendering || this.disposed) return;
@@ -331,7 +372,7 @@ export class FabricAdapter {
     };
     this.canvas.on('text:selection:changed', this.publishSelection);
     this.canvas.on('text:changed', () => { this.publishFontRenderStatus(); this.publishSelection(); });
-    this.canvas.on('after:render', () => { this.drawGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide();this.externalControls.render(); });
+    this.canvas.on('after:render', () => { this.drawGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide();this.drawMasterObject();this.externalControls.render(); });
     let gestureRevision = revision(), gestureBounds = { left: 0, top: 0 }, gestureAngle = 0, gestureScale = 1;
     this.canvas.on('before:transform', ({ transform }) => { gestureRevision = revision(); gestureBounds = transform.target.getBoundingRect(); gestureAngle = transform.target.angle; gestureScale = transform.target.scaleX; this.cancelled = false; });
     const delta = (object: FabricObject) => {
@@ -340,7 +381,7 @@ export class FabricAdapter {
     };
     const outside = (object: FabricObject) => {
       const ids = this.objectIds(object);
-      if (this.document&&(ids.length>1||rootGroupFor(this.document,ids[0]!))) {
+      if (this.document&&(ids.length>1||rootGroupFor(this.document,ids[0]!)&&ids[0]!==this.directObjectId)) {
         const offset = delta(object), document = this.document;
         return ids.every(id => { const source = document.objects.find(object => object.id === id)!; return !objectIntersectsArea(document, { ...source, xMm: source.xMm + offset.x, yMm: source.yMm + offset.y }, measureFabric); });
       }
@@ -367,7 +408,7 @@ export class FabricAdapter {
     this.canvas.on('object:scaling', () => { this.dragging = true; });
     this.canvas.on('object:rotating', () => { this.dragging = true; });
     this.canvas.on('object:modifyPoly', () => { this.dragging = true; if (!this.nodeDragging) { this.nodeDragging = true; this.onNodeActive?.(true); } });
-    this.canvas.on('mouse:up', () => { this.dragging = false; if (this.nodeDragging) { this.nodeDragging = false; this.onNodeActive?.(false); } this.activeGuides = {}; this.canvas.requestRenderAll(); onTrash?.(false); });
+    this.canvas.on('mouse:up', ({e}) => {const candidate=this.masterCandidate;this.masterCandidate=null;if(candidate&&'clientX'in e&&Math.hypot(e.clientX-candidate.x,e.clientY-candidate.y)<=3&&candidate.selection===this.selectedIds.join('\0'))this.onMasterSelection?.(candidate.id); this.dragging = false; if (this.nodeDragging) { this.nodeDragging = false; this.onNodeActive?.(false); } this.activeGuides = {}; this.canvas.requestRenderAll(); onTrash?.(false); });
     this.cancelDrag = event => {
       if (event.key !== 'Escape' || !this.dragging) return;
       event.preventDefault(); event.stopImmediatePropagation(); this.cancelled = true; this.canvas.endCurrentTransform(); this.dragging = false; onTrash?.(false);
@@ -385,7 +426,7 @@ export class FabricAdapter {
       const yMm = bounds.top / PX_PER_MM;
       const expectedRevision = gestureRevision;
       const ids = this.objectIds(object);
-      const grouped=!!this.document&&!!rootGroupFor(this.document,ids[0]!);
+      const grouped=!!this.document&&!!rootGroupFor(this.document,ids[0]!)&&ids[0]!==this.directObjectId;
       if ((ids.length > 1||grouped) && event.action === 'drag') {
         const offset = delta(object), remove = outside(object);
         queueMicrotask(() => { if (!this.disposed) { if (remove) onDeleteSelection?.(ids, expectedRevision); else onMoveSelection?.(ids, offset.x, offset.y, expectedRevision); } }); return;
@@ -429,8 +470,8 @@ export class FabricAdapter {
             : source.type === 'ellipse' ? { type: 'ellipse', rxMm: ((source.rxMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2, ryMm: ((source.ryMm * 2 + strokeMm) * object.scaleY - strokeMm) / 2 }
             : source.type === 'path' || source.type === 'bezier' || source.type === 'vector' ? { type: source.type, widthMm: source.widthMm === 0 ? 0 : (source.widthMm + strokeMm) * object.scaleX - strokeMm, heightMm: source.heightMm === 0 ? 0 : (source.heightMm + strokeMm) * object.scaleY - strokeMm }
             : { type: 'rect', widthMm: (source.widthMm + strokeMm) * object.scaleX - strokeMm, heightMm: (source.heightMm + strokeMm) * object.scaleY - strokeMm };
-        const rotationDeg = source.type === 'circle' ? 0 : ((object.angle + 180) % 360 + 360) % 360 - 180;
-        queueMicrotask(() => { if (!this.disposed) onTransform?.(id, { xMm, yMm, rotationDeg, size }, expectedRevision); });
+        const rotationDeg = source.type === 'circle'&&!source.skewXDeg ? 0 : ((object.angle + 180) % 360 + 360) % 360 - 180;
+        queueMicrotask(() => { if (!this.disposed) onTransform?.(id, { xMm, yMm, rotationDeg, size,...(hasObjectAffine(source)&&source.type!=='text'?{skewXDeg:physicalTextSkew(object.skewX,object.scaleX*(object.flipX?-1:1),object.scaleY*(object.flipY?-1:1))}:{}) }, expectedRevision); });
         return;
       }
       // Fabric deve terminare il gesto prima del render canonico: clear() durante
@@ -509,7 +550,7 @@ export class FabricAdapter {
       const rendered = new Set<string>();
       for (const object of document.objects) {
         if (rendered.has(object.id)) continue;
-        const group = rootGroupFor(document,object.id);
+        const owner=rootGroupFor(document,object.id),group=owner&&this.directObjectId&&owner.objectIds.includes(this.directObjectId)?undefined:owner;
         const members = group ? document.objects.filter(object => group.objectIds.includes(object.id)) : [object];
         const children = members.map(object => { const source = editing?.pending && object.id === selectedId && object.type === 'text' ? editing.snapshot : object, f = source.type === 'text' && !textGeometryVerified(source) ? unverifiedTextMarker(source) : renderObject(source, true); this.idByObject.set(f, object.id); this.sourceByObject.set(f, object); this.membersByObject.set(f, [object.id]); rendered.add(object.id);
           if (f instanceof EditorTextBox && object.type === 'text' && this.textRenderGuard) f.textRenderPermission = () => this.textRenderGuard!.status(this.textFontProbe(f, object), document.fontAssets) === 'ready';
@@ -585,7 +626,9 @@ export class FabricAdapter {
     this.bezierControls.configure(object instanceof FabricPath && focus && this.idByObject.get(object) === focus.objectId ? object : null, source?.type === 'bezier' ? source : null, focus?.index ?? -1, measureFabric, renderObject, () => { this.dragging = true; if (!this.nodeDragging) { this.nodeDragging = true; this.onNodeActive?.(true); } }, PX_PER_MM);
     const cropSource = this.cropFocus ? this.document?.objects.find(item => item.id === this.cropFocus) : null;
     this.cropControls.configure(object instanceof FabricImage && this.idByObject.get(object) === this.cropFocus ? object : null, cropSource?.type === 'image' ? cropSource : null, measureFabric, renderObject, () => { this.dragging = true; if (!this.nodeDragging) { this.nodeDragging = true; this.onNodeActive?.(true); } }, this.moveCropContents,this.zoom);
-
+    // Restoring a contextual controller can replace the full set of keys.
+    // Publish their coordinates before the next queued Fabric render.
+    object?.setCoords();
   }
   private drawTextPathGuide(): void {
     const target = this.canvas.getActiveObject(); if (!(target instanceof EditorPathText) || !target.path) return;
@@ -737,7 +780,8 @@ export class FabricAdapter {
   selectObjects(ids: readonly string[]): void {
     const previous = this.rendering; this.rendering = true;
     try {
-      const expanded = this.document ? selectableObjectIds(this.document,expandSelection(this.document,ids),this.role) : [];
+      const direct=ids.length===1&&ids[0]===this.directObjectId;
+      const expanded = this.document ? selectableObjectIds(this.document,direct?ids:expandSelection(this.document,ids),this.role,direct) : [];
       this.canvas.discardActiveObject();
       const targets = this.canvas.getObjects().filter(object => this.objectIds(object).some(id => expanded.includes(id)));
       this.selectedIds = expanded; this.selectedId = expanded.length === 1 ? expanded[0]! : null;
@@ -776,5 +820,5 @@ export class FabricAdapter {
     const active = this.canvas.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
   }
-  dispose(): void { this.disposed = true;this.externalControls.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
+  dispose(): void { this.disposed = true;this.canvas.upperCanvasEl.removeEventListener('mousedown',this.directMouseDown,true);this.externalControls.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
 }

@@ -1,3 +1,6 @@
+import {affinePathIntersects} from './affine-intersection';
+import {hasObjectAffine,withoutObjectAffine,frameToWorld} from './object-affine';
+import {deleteGroupMember,duplicateGroupMember,reorderGroupMember,innermostGroup,placeGroupMember} from './group-member';
 import { TextClipMasksSchema,scaleTextClipMasks,textClipExtent } from './text-clip-masks';
 import{ClipMasksSchema,maskedCommandCount}from'./clip-masks';
 import{isPageCommand,applyPageCommand,graphicPages,graphicPageIds,selectGraphicPage}from'./pages';
@@ -33,6 +36,7 @@ import { RasterCropSchema, checkedRasterCrop } from './raster-geometry';
 import { areaAlignmentDelta } from './align-area';
 import { BezierNodeSchema, bezierBounds, flattenBezier, MAX_BEZIER_NODES } from './bezier-geometry';
 
+const affineFields = { skewXDeg: z.number().finite().min(-MAX_TEXT_SKEW_DEG).max(MAX_TEXT_SKEW_DEG).optional(), mirrorX: z.boolean().optional(), mirrorY: z.boolean().optional() };
 const position = { xMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(GRAPHIC_GEOMETRY_LIMITS.coordinateMm), yMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(GRAPHIC_GEOMETRY_LIMITS.coordinateMm) };
 const rotation = z.number().finite().min(-180).max(180);
 const id = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/);
@@ -71,15 +75,15 @@ const shapeAppearance = { ...PaintOpacityFields, fill: paint.optional(), strokeD
 export const TextBoxSchema = z.strictObject({ widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), autoWidth: z.boolean(), autoHeight: z.literal(true) });
 const textContent = z.string().max(EDITOR_LIMITS.textCharacters*2).refine(t => !/[\r\u0000-\u0009\u000b-\u001f]/.test(t) && Array.from(t).length<=EDITOR_LIMITS.textCharacters && t.split('\n').length <= EDITOR_LIMITS.textLines, `Massimo ${EDITOR_LIMITS.textCharacters} caratteri Unicode e ${EDITOR_LIMITS.textLines} righe per box nel laboratorio`);
 export const SceneObjectSchema = z.discriminatedUnion('type', [
-  z.strictObject({ id, type: z.literal('text'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), text: textContent, fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fontFamily, fill: color, ...textAppearance, textBox: TextBoxSchema.optional(), characterStyles: characterRuns }),
-  z.strictObject({ id, type: z.literal('rect'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance, cornerRadiusMm: z.number().finite().min(0).max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2).optional() }),
-  z.strictObject({ id, type: z.literal('circle'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: z.literal(0).optional(), radiusMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
-  z.strictObject({ id, type: z.literal('line'), ...PaintOpacityFields, ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), lengthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: color, fill: z.literal('none').optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }),
-  z.strictObject({ id, type: z.literal('ellipse'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), rxMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ryMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
-  z.strictObject({ id, type: z.literal('path'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), points: z.array(z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) })).min(2).max(512), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
-  z.strictObject({ id, type: z.literal('image'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), source: RasterSourceSchema, raster: RasterParametersSchema,clipMasks:ClipMasksSchema.optional(), pixelAspectRatio: z.number().finite().min(0.01).max(100).optional(), crop: RasterCropSchema.optional(), flipX: z.boolean().optional(), flipY: z.boolean().optional() }),
-  z.strictObject({ id, type: z.literal('vector'), ...PaintOpacityFields, ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), commands: VectorCommandsSchema,clipMasks:ClipMasksSchema.optional(), clipRect: VectorClipSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), fillRule: z.enum(['evenodd', 'nonzero']), fill: paint, stroke: paint, strokeMm: StrokeWidthSchema, strokeLineCap: z.enum(['butt', 'round', 'square']), strokeLineJoin: z.enum(['miter', 'round', 'bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
-  z.strictObject({ id, type: z.literal('bezier'), ...position, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('text'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), text: textContent, fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fontFamily, fill: color, ...textAppearance, textBox: TextBoxSchema.optional(), characterStyles: characterRuns }),
+  z.strictObject({ id, type: z.literal('rect'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance, cornerRadiusMm: z.number().finite().min(0).max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2).optional() }),
+  z.strictObject({ id, type: z.literal('circle'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), radiusMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('line'), ...PaintOpacityFields, ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), lengthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: color, fill: z.literal('none').optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }),
+  z.strictObject({ id, type: z.literal('ellipse'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), rxMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ryMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('path'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), points: z.array(z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) })).min(2).max(512), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('image'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), source: RasterSourceSchema, raster: RasterParametersSchema,clipMasks:ClipMasksSchema.optional(), pixelAspectRatio: z.number().finite().min(0.01).max(100).optional(), crop: RasterCropSchema.optional(), flipX: z.boolean().optional(), flipY: z.boolean().optional() }),
+  z.strictObject({ id, type: z.literal('vector'), ...PaintOpacityFields, ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), commands: VectorCommandsSchema,clipMasks:ClipMasksSchema.optional(), clipRect: VectorClipSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), fillRule: z.enum(['evenodd', 'nonzero']), fill: paint, stroke: paint, strokeMm: StrokeWidthSchema, strokeLineCap: z.enum(['butt', 'round', 'square']), strokeLineJoin: z.enum(['miter', 'round', 'bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
+  z.strictObject({ id, type: z.literal('bezier'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
 ]);
 export type SceneObject = z.infer<typeof SceneObjectSchema>;
 export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
@@ -148,6 +152,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
   if (d.objects.reduce((sum, object) => sum + maskedCommandCount(object), 0) > EDITOR_LIMITS.vectorCommands) ctx.addIssue({ code: 'custom', message: `Massimo ${EDITOR_LIMITS.vectorCommands} segmenti vettoriali nel documento TEST` });
   const assetIds = new Set(d.fontAssets?.map(asset => asset.id) ?? []);
   for (const object of d.objects) {
+    if(object.type==='circle'&&object.rotationDeg&&!object.skewXDeg)ctx.addIssue({code:'custom',message:'Un cerchio senza inclinazione non richiede rotazione'});
     if (object.type === 'text' && [object.fontFamily,...object.characterStyles?.map(r=>r.style.fontFamily).filter((f):f is string=>!!f)??[]].some(f => f.startsWith('font-') && !assetIds.has(f))) ctx.addIssue({code:'custom',message:'Il documento non contiene la risorsa del font utilizzato'});
     if (object.type === 'vector') {
       const b = vectorBounds(object.commands), near = (a: number, b: number) => Math.abs(a - b) < 1e-7;
@@ -238,9 +243,10 @@ export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('image'), widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm),pixelAspectRatio:z.number().finite().min(.01).max(100).optional() }),
   z.strictObject({ type: z.literal('bezier'), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
 ]);
-export const TransformArgumentsSchema = z.strictObject({ ...position, rotationDeg: rotation, size: ObjectSizeSchema });
+export const TransformArgumentsSchema = z.strictObject({ ...position, skewXDeg:textSkew.optional(), rotationDeg: rotation, size: ObjectSizeSchema });
 export type TransformArguments = z.infer<typeof TransformArgumentsSchema>;
 const base = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), objectId: id,pageId:id.optional() };
+const objectBase={...base,targetScope:z.literal('object').optional()};
 const ids = z.array(id).min(1).max(EDITOR_LIMITS.objects);
 const alignment = z.enum(['left', 'centerX', 'right', 'top', 'centerY', 'bottom']);
 export const SelectionTransformSchema = z.strictObject({ objectIds: ids.min(2), scale: z.number().finite().min(0.01).max(100), rotationDeg: rotation, center: z.strictObject(position) });
@@ -254,30 +260,31 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('removePage'),arguments:z.strictObject({pageId:id})}),
   z.strictObject({...base,tool:z.literal('renamePage'),arguments:z.strictObject({pageId:id,name:z.string().trim().min(1).max(120)})}),
   z.strictObject({...base,tool:z.literal('reorderPage'),arguments:z.strictObject({pageId:id,index:z.number().int().min(0).max(MAX_GRAPHIC_PAGES-1)})}),
-  z.strictObject({...base,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
+  z.strictObject({...objectBase,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
+  z.strictObject({...base,tool:z.literal('placeGroupMember'),arguments:z.strictObject({parentGroupId:id.nullable(),targetObjectId:id.optional(),side:z.enum(['above','below'])})}),
   z.strictObject({...base,tool:z.literal('setPaperColor'),arguments:z.strictObject({color:ColorSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('setBackgroundImage'),arguments:z.strictObject({object:SceneObjectSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('setBackgroundObjects'),arguments:z.strictObject({objects:z.array(SceneObjectSchema).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundGroupId:id.optional(),fontAssets:FontAssetsSchema.optional()})}),
-  z.strictObject({...base,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema,fit:z.enum(['contain','cover']).optional()})}),
+  z.strictObject({...objectBase,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema,fit:z.enum(['contain','cover']).optional()})}),
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
   z.strictObject({...base,tool:z.literal('changeFormat'),arguments:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1),allowShrink:z.boolean()})}),
   z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),objects:z.array(SceneObjectSchema).min(0).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundImageId:id.optional(),backgroundGroupId:id.optional(),paperColor:ColorSchema.optional(),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
   z.strictObject({ ...base, tool: z.literal('attachTextToPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...base, tool: z.literal('detachTextFromPath'), arguments: z.strictObject({ pathObjectId: id }) }),
-  z.strictObject({ ...base, tool: z.literal('setTextPath'), arguments: TextPathOptionsSchema }),
-  z.strictObject({ ...base, tool: z.literal('moveObject'), arguments: z.strictObject(position) }),
-  z.strictObject({ ...base, tool: z.literal('setText'), arguments: z.strictObject({ text: textContent }) }),
-  z.strictObject({ ...base, tool: z.literal('setObjectStyle'), arguments: z.strictObject({ fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fill: color }) }),
+  z.strictObject({ ...objectBase, tool: z.literal('setTextPath'), arguments: TextPathOptionsSchema }),
+  z.strictObject({ ...objectBase, tool: z.literal('moveObject'), arguments: z.strictObject(position) }),
+  z.strictObject({ ...objectBase, tool: z.literal('setText'), arguments: z.strictObject({ text: textContent }) }),
+  z.strictObject({ ...objectBase, tool: z.literal('setObjectStyle'), arguments: z.strictObject({ fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fill: color }) }),
   z.strictObject({ ...base, tool: z.literal('addObject'), arguments: z.strictObject({ object: SceneObjectSchema, fontAssets: FontAssetsSchema.optional() }) }),
   z.strictObject({ ...base, tool: z.literal('insertObjects'), arguments: z.strictObject({ objects: z.array(SceneObjectSchema).min(1).max(EDITOR_LIMITS.objects), groups: z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups), fontAssets: FontAssetsSchema.optional() }) }),
-  z.strictObject({ ...base, tool: z.literal('updateObject'), arguments: z.strictObject({ object: SceneObjectSchema, fontAssets: FontAssetsSchema.optional() }) }),
-  z.strictObject({ ...base, tool: z.literal('duplicateObject'), arguments: z.strictObject({ newObjectId: id, ...position }) }),
-  z.strictObject({ ...base, tool: z.literal('deleteObject'), arguments: z.strictObject({}) }),
-  z.strictObject({ ...base, tool: z.literal('transformObject'), arguments: TransformArgumentsSchema }),
-  z.strictObject({ ...base, tool: z.literal('reorderObject'), arguments: z.strictObject({ position: z.enum(['front', 'back', 'forward', 'backward']) }) }),
-  z.strictObject({ ...base, tool: z.literal('alignObject'), arguments: z.strictObject({ alignment: z.enum(['left', 'centerX', 'right', 'top', 'centerY', 'bottom']) }) }),
+  z.strictObject({ ...objectBase, tool: z.literal('updateObject'), arguments: z.strictObject({ object: SceneObjectSchema, fontAssets: FontAssetsSchema.optional() }) }),
+  z.strictObject({ ...objectBase, tool: z.literal('duplicateObject'), arguments: z.strictObject({ newObjectId: id, ...position }) }),
+  z.strictObject({ ...objectBase, tool: z.literal('deleteObject'), arguments: z.strictObject({}) }),
+  z.strictObject({ ...objectBase, tool: z.literal('transformObject'), arguments: TransformArgumentsSchema }),
+  z.strictObject({ ...objectBase, tool: z.literal('reorderObject'), arguments: z.strictObject({ position: z.enum(['front', 'back', 'forward', 'backward']) }) }),
+  z.strictObject({ ...objectBase, tool: z.literal('alignObject'), arguments: z.strictObject({ alignment: z.enum(['left', 'centerX', 'right', 'top', 'centerY', 'bottom']), marginMm: z.number().finite().min(0).max(1000).optional() }) }),
   z.strictObject({ ...base, tool: z.literal('groupObjects'), arguments: z.strictObject({ objectIds: ids.min(2), groupId: id }) }),
   z.strictObject({ ...base, tool: z.literal('ungroupObjects'), arguments: z.strictObject({ groupIds: z.array(id).min(1).max(EDITOR_LIMITS.groups) }) }),
   z.strictObject({ ...base, tool: z.literal('moveObjects'), arguments: z.strictObject({ objectIds: ids, deltaXmm: z.number().finite().min(-2*GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(2*GRAPHIC_GEOMETRY_LIMITS.coordinateMm), deltaYmm: z.number().finite().min(-2*GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(2*GRAPHIC_GEOMETRY_LIMITS.coordinateMm) }) }),
@@ -287,22 +294,26 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({ ...base, tool: z.literal('placeObjects'), arguments: z.strictObject({ objectIds: ids, targetObjectId: id, side: z.enum(['above', 'below']) }) }),
   z.strictObject({ ...base, tool: z.literal('deleteObjects'), arguments: z.strictObject({ objectIds: ids }) }),
   z.strictObject({ ...base, tool: z.literal('duplicateObjects'), arguments: z.strictObject({ copies: z.array(z.strictObject({ objectId: id, newObjectId: id })).min(1).max(EDITOR_LIMITS.objects), groups: z.array(z.strictObject({ groupId: id, newGroupId: id })).max(EDITOR_LIMITS.groups) }) }),
-  z.strictObject({ ...base, tool: z.literal('alignObjects'), arguments: z.strictObject({ objectIds: ids.min(2), alignment }) }),
-  z.strictObject({ ...base, tool: z.literal('alignObjectsToArea'), arguments: z.strictObject({ objectIds: ids.min(2), alignment }) }),
+  z.strictObject({ ...base, tool: z.literal('alignObjects'), arguments: z.strictObject({ objectIds: ids.min(2), alignment, referenceObjectId:id.optional() }) }),
+  z.strictObject({ ...base, tool: z.literal('alignObjectsToArea'), arguments: z.strictObject({ objectIds: ids, alignment, marginMm:z.number().finite().min(0).max(1000).optional(), individually:z.boolean().optional() }) }),
+  z.strictObject({ ...objectBase, tool: z.literal('inclineObjects'), arguments: z.strictObject({objectIds:ids,angleDeg:textSkew}) }),
+  z.strictObject({ ...objectBase, tool: z.literal('reflectObjects'), arguments: z.strictObject({objectIds:ids,axis:z.enum(['horizontal','vertical'])}) }),
   z.strictObject({ ...base, tool: z.literal('distributeObjects'), arguments: z.strictObject({ objectIds: ids.min(3), axis: z.enum(['horizontal', 'vertical']) }) }),
 ]);
 export type GraphicCommand = z.infer<typeof GraphicCommandSchema>;
 export type Measure = (object: SceneObject) => { widthMm: number; heightMm: number; textLayoutWidthMm?: number; textLayoutHeightMm?: number; pathCenterOffsetMm?: { x: number; y: number }; pathLengthMm?: number; textAdvanceMm?: number };
 export const TEST_MARGIN_MM = 1;
 export function objectGeometry(object: SceneObject, measure: Measure) {
-  const box = measure(object);
+  const affine=hasObjectAffine(object), box = measure(affine?withoutObjectAffine(object):object);
   if (!Number.isFinite(box.widthMm) || !Number.isFinite(box.heightMm) || box.widthMm <= 0 || box.heightMm <= 0) throw new Error('Misurazione non valida');
   if(Math.max(box.widthMm,box.heightMm)>EDITOR_LIMITS.maxObjectExtentMm)throw new Error('Ingombro dell’oggetto oltre il limite di sicurezza del laboratorio (10 m). Riduci corpo, dilatazione o lunghezza della riga.');
   const angle = (object.rotationDeg ?? 0) * Math.PI / 180;
   const cos = Math.cos(angle), sin = Math.sin(angle);
-  const local = [[0, 0], [box.widthMm, 0], [box.widthMm, box.heightMm], [0, box.heightMm]].map(([x, y]) => ({ x: x! * cos - y! * sin, y: x! * sin + y! * cos }));
+  const local = [[0, 0], [box.widthMm, 0], [box.widthMm, box.heightMm], [0, box.heightMm]].map(([x, y]) => affine ? frameToWorld(object,x!,y!) : ({ x: x! * cos - y! * sin, y: x! * sin + y! * cos }));
   const minX = Math.min(...local.map(p => p.x)), minY = Math.min(...local.map(p => p.y));
-  return { widthMm: Math.max(...local.map(p => p.x)) - minX, heightMm: Math.max(...local.map(p => p.y)) - minY, corners: local.map(p => ({ x: object.xMm + p.x - minX, y: object.yMm + p.y - minY })) };
+  const extentX=Math.max(...local.map(p=>p.x))-minX,extentY=Math.max(...local.map(p=>p.y))-minY;
+  if(affine&&Math.max(extentX,extentY)>EDITOR_LIMITS.maxObjectExtentMm)throw new Error('Ingombro trasformato oltre il limite geometrico del laboratorio (10 m)');
+  return { widthMm: extentX, heightMm: extentY, corners: local.map(p => ({ x: object.xMm + p.x - minX, y: object.yMm + p.y - minY })) };
 }
 export function objectCenter(object: SceneObject, measure: Measure) {
   const bounds = objectGeometry(object, measure);
@@ -315,6 +326,7 @@ export function placeObjectAtCenter(object: SceneObject, center: { xMm: number; 
 export function objectIntersectsArea(doc: Pick<GraphicDocument, 'areaMm' | 'shape'>, object: SceneObject, measure: Measure): boolean {
   const bounds = objectGeometry(object, measure), center = objectCenter(object, measure), epsilon = 1e-8;
   if (object.xMm + bounds.widthMm <= epsilon || object.yMm + bounds.heightMm <= epsilon || object.xMm >= doc.areaMm.width - epsilon || object.yMm >= doc.areaMm.height - epsilon) return false;
+  if(hasObjectAffine(object)){const hit=affinePathIntersects(doc,object,center);if(hit!==null)return hit;}
   if (object.type === 'vector') {
     if (object.clipRect) { const c = object.clipRect; if (!pathIntersectsArea([{x:c.left,y:c.top},{x:c.right,y:c.top},{x:c.right,y:c.bottom},{x:c.left,y:c.bottom}], object.widthMm, object.heightMm, {x:center.xMm,y:center.yMm}, object.rotationDeg ?? 0, 0, true, true, doc.areaMm, doc.shape === 'round')) return false; }
     const contours = vectorContours(object.commands), filled = object.fill !== 'none', stroke = object.stroke === 'none' ? 0 : object.strokeMm;
@@ -380,6 +392,7 @@ export interface GraphicCatalogContext {version:string;products:readonly Product
 export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure: Measure, catalog?:GraphicCatalogContext,role:EditorRole='customer'): GraphicDocument {
   DocumentSchema.parse(doc);
   const command = GraphicCommandSchema.parse(raw);
+  const direct='targetScope'in command&&command.targetScope==='object';
   if (command.expectedRevision !== doc.revision) throw new Error('Revisione grafica obsoleta: rileggi il documento');
   if(command.pageId!==undefined&&command.pageId!==(doc.pageId??'page-1'))throw Error('Pagina del comando diversa dalla pagina attiva');
   if(isPageCommand(command))return applyPageCommand(doc,command,measure,role);
@@ -421,6 +434,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     validateLayout(next,measure);
     assertDocumentTextProduction(next,catalog);
   }
+  else if(command.tool==='placeGroupMember')placeGroupMember(next,command.objectId,command.arguments,role);
   else if(command.tool==='setGroupProperties'){
     if(role!=='admin')throw new Error('Le proprietà del template si configurano in modalità amministrativa.');
     const group=next.groups?.find(group=>group.id===command.objectId);if(!group)throw new Error('ID gruppo sconosciuto');group.editor={...command.arguments};
@@ -438,7 +452,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     if (command.objectId !== command.arguments.object.id) throw new Error('ID del comando e del nuovo oggetto diversi');
     next.objects.push(cloneSceneObject(command.arguments.object));
   } else {
-    if (!['setText','replaceImageSource','setObjectProperties'].includes(command.tool)&&next.groups?.some(group => group.objectIds.includes(command.objectId))) throw new Error('Separa il gruppo prima di modificare un singolo elemento');
+    if (!direct&&!['setText','replaceImageSource','setObjectProperties'].includes(command.tool)&&next.groups?.some(group => group.objectIds.includes(command.objectId))) throw new Error('Separa il gruppo prima di modificare un singolo elemento');
     const found=next.objects.find(o=>o.id===command.objectId);
     if(!found)throw new Error('ID oggetto sconosciuto');
     let object:SceneObject=found;
@@ -474,9 +488,11 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
         try { if (object.textPath && before.type === 'text') Object.assign(object, preserveTextPathGuide(before, object, measure)); } catch(error) {if(!(error instanceof UnverifiedTextGeometryError))throw error;}
         break;
       }
-      case 'duplicateObject':
-        next.objects.push({ ...cloneSceneObject(object), id: command.arguments.newObjectId, xMm: command.arguments.xMm, yMm: command.arguments.yMm }); break;
-      case 'deleteObject': next.objects = next.objects.filter(o => o.id !== command.objectId); break;
+      case 'duplicateObject': {
+        const copy={ ...cloneSceneObject(object), id: command.arguments.newObjectId, xMm: command.arguments.xMm, yMm: command.arguments.yMm };
+        if(command.targetScope==='object'&&innermostGroup(next,object.id))duplicateGroupMember(next,object.id,copy);else next.objects.push(copy);break;
+      }
+      case 'deleteObject': next.objects = next.objects.filter(o => o.id !== command.objectId);if(command.targetScope==='object')deleteGroupMember(next,command.objectId);break;
       case 'updateObject': {
         const update = command.arguments.object;
         if (update.id !== object.id || update.type !== object.type) throw new Error('L’ispettore non può cambiare ID o tipo dell’oggetto');
@@ -497,6 +513,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
         Object.assign(object, transform, size); break;
       }
       case 'reorderObject': {
+        if(command.targetScope==='object'&&innermostGroup(next,object.id)){reorderGroupMember(next,object.id,command.arguments.position);break;}
         const units = selectionUnits(next, next.objects.map(object => object.id));
         const index = units.findIndex(unit => unit.includes(object)), last = units.length - 1;
         const target = command.arguments.position === 'front' ? last : command.arguments.position === 'back' ? 0
@@ -504,7 +521,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
         const [unit] = units.splice(index, 1); units.splice(target, 0, unit!); next.objects = units.flat(); break;
       }
       case 'alignObject': {
-        const bounds = objectGeometry(object, measure), delta = areaAlignmentDelta({ ...bounds, xMm: object.xMm, yMm: object.yMm }, next.areaMm, command.arguments.alignment, TEST_MARGIN_MM);
+        const bounds = objectGeometry(object, measure), delta = areaAlignmentDelta({ ...bounds, xMm: object.xMm, yMm: object.yMm }, next.areaMm, command.arguments.alignment, command.arguments.marginMm ?? TEST_MARGIN_MM);
         object.xMm += delta.xMm; object.yMm += delta.yMm;
         break;
       }
@@ -516,7 +533,8 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   const parsed = DocumentSchema.parse(next);
   validateLayout(parsed, measure, 'edit');
   assertObjectPolicies(doc,parsed,command,role,(a,b)=>{
-    const keys=['rotationDeg','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textSkewXDeg','textClipMasks','clipMasks','textBox','points','nodes','commands','textPath'];
+    if((a.rotationDeg??0)!==(b.rotationDeg??0))return false;
+    const keys=['skewXDeg','mirrorX','mirrorY','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textSkewXDeg','textClipMasks','clipMasks','textBox','points','nodes','commands','textPath'];
     if(keys.some(key=>JSON.stringify((a as unknown as Record<string,unknown>)[key])!==JSON.stringify((b as unknown as Record<string,unknown>)[key])))return false;
     if(a.type==='text'&&b.type==='text'){try{const ac=objectCenter(a,measure),bc=objectCenter(b,measure);return Math.abs(ac.xMm-bc.xMm)<1e-6&&Math.abs(ac.yMm-bc.yMm)<1e-6;}catch(error){if(!(error instanceof UnverifiedTextGeometryError))throw error;return a.xMm===b.xMm&&a.yMm===b.yMm;}}return Math.abs(a.xMm-b.xMm)<1e-6&&Math.abs(a.yMm-b.yMm)<1e-6;
   });

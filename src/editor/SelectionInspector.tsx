@@ -15,15 +15,13 @@ import {selectedRootGroups} from './object-properties';
 
 type Field = 'x' | 'y' | 'width' | 'height' | 'rotation';
 const format = (value: number) => String(Math.round(value * 1000) / 1000);
-function MeasuredSelectionInspector({ document, ids, onMove, onTransform, onAlign, onDistribute, onStyle, onAlignArea, onAttachText,onGroupProperties }: {
+function MeasuredSelectionInspector({ document, ids, onMove, onTransform, onStyle, onAttachText,onGroupProperties }: {
   document: GraphicDocument; ids: string[]; onAttachText: (textId: string, pathId: string) => void;
   onGroupProperties?:(id:string,properties:GroupProperties)=>void;
   onMove: (x: number, y: number, revision: number) => number | null;
   onTransform: (args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => number | null;
-  onAlign: (alignment: 'left' | 'centerX' | 'right' | 'top' | 'centerY' | 'bottom') => void;
-  onDistribute: (axis: 'horizontal' | 'vertical') => void;
   onStyle: (style: SelectionStyle, revision: number) => boolean;
-  onAlignArea: (alignment: 'left' | 'centerX' | 'right' | 'top' | 'centerY' | 'bottom') => void;
+
 }) {
   const objects = document.objects.filter(object => ids.includes(object.id)), bounds = selectionBounds(objects, measureFabric);
   const center = { x: bounds.xMm + bounds.widthMm / 2, y: bounds.yMm + bounds.heightMm / 2 }, key = ids.join(',');
@@ -80,13 +78,6 @@ function MeasuredSelectionInspector({ document, ids, onMove, onTransform, onAlig
     <h3>Geometria</h3>
     <div className="property-grid">{input('x', 'X selezione (mm)', -GRAPHIC_GEOMETRY_LIMITS.coordinateMm, GRAPHIC_GEOMETRY_LIMITS.coordinateMm)}{input('y', 'Y selezione (mm)', -GRAPHIC_GEOMETRY_LIMITS.coordinateMm, GRAPHIC_GEOMETRY_LIMITS.coordinateMm)}{input('width', 'Larghezza selezione (mm)', 0.01, GRAPHIC_GEOMETRY_LIMITS.selectionSideMm)}{input('height', 'Altezza selezione (mm)', 0.01, GRAPHIC_GEOMETRY_LIMITS.selectionSideMm)}{input('rotation', 'Ruota selezione di (°)', -180, 180)}</div>
     <p className="caption">Posizione del centro e dimensioni dell’ingombro. Proporzioni sempre mantenute; la scala comprende caratteri, spaziature e contorni. L’angolo è aggiuntivo rispetto alla composizione attuale e torna a zero dopo la rotazione.</p>
-    <h3>Allinea gli elementi tra loro</h3>
-    <div className="button-row">{([['left', 'Allinea a sinistra'], ['centerX', 'Centra orizzontalmente'], ['right', 'Allinea a destra'], ['top', 'Allinea in alto'], ['centerY', 'Centra verticalmente'], ['bottom', 'Allinea in basso']] as const).map(([alignment, label]) => <EditorButton key={alignment} icon={alignment} label={label} disabled={units.length < 2} onClick={() => onAlign(alignment)}/>)}</div>
-    <div className="button-row"><EditorButton icon="distributeX" label="Distribuisci spazi orizzontali" disabled={units.length < 3} onClick={() => onDistribute('horizontal')}/><EditorButton icon="distributeY" label="Distribuisci spazi verticali" disabled={units.length < 3} onClick={() => onDistribute('vertical')}/></div>
-    <p className="caption">Allineamento entro l’ingombro della selezione; distribuzione con spazi uguali e senza sovrapposizioni. I gruppi si comportano come unità. Separa un gruppo per modificare testo e forme al suo interno.</p>
-    <h3>Allinea l’insieme all’area</h3>
-    <div className="button-row">{([['left', 'Allinea selezione a sinistra dell’area'], ['centerX', 'Centra selezione orizzontalmente nell’area'], ['right', 'Allinea selezione a destra dell’area'], ['top', 'Allinea selezione in alto nell’area'], ['centerY', 'Centra selezione verticalmente nell’area'], ['bottom', 'Allinea selezione in basso nell’area']] as const).map(([alignment, label]) => <EditorButton key={alignment} icon={alignment} label={label} onClick={() => onAlignArea(alignment)}/>)}</div>
-    <p className="caption">Bordi al margine TEST di 1 mm, centri al centro dell’area. Distanze interne conservate, nessun ridimensionamento.</p>
     <SelectionStyleInspector {...{ document, ids, onStyle }}/>
     <div className="inspector-footer"><span role="status">{status}</span></div>
   </form>;

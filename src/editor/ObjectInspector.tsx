@@ -1,5 +1,5 @@
 import { TextMaskPanel } from './TextMaskPanel';
-import{GRAPHIC_GEOMETRY_LIMITS,MAX_TEXT_SKEW_DEG}from'./limits';
+import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import{AspectRatioControl}from'./AspectRatioControl';
 import{resizeObjectDimension}from'./resize-object';
 import { OpacityControls } from './OpacityControls';
@@ -15,7 +15,7 @@ import { fontVariantChoices, fontVariantLabel, renderFontFamily, chooseFontStyle
 import { transformSelection } from './selection';
 import { textHeightLimits } from './text-sizing';
 import { DEFAULT_JUSTIFICATION } from './justification';
-import { useSyncExternalStore, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useSyncExternalStore, useEffect, useRef, useState } from 'react';
 import { EditorButton, type EditorIconName } from './EditorButton';
 import { PaintPicker } from './PaintPicker';
 import { type SceneObject, type CharacterStyle, type TextAlignment } from './model';
@@ -35,9 +35,9 @@ import { ObjectIdentity } from './ObjectIdentity';
 import { smallestPrintedFontPt } from './text-production';
 import { SelectedTextFontNotice } from './SelectedTextFontNotice';
 
-type Section = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'arrange' | 'template';
+type Section = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'template';
 
-function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, object, revision, arrangement, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { minimumFontPt?:number|null;allowColor?:boolean; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; arrangement: ReactNode; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
+function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onProperties, effectiveProperties, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { minimumFontPt?:number|null;allowColor?:boolean;effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
   const form = useRef<HTMLFormElement>(null);
   const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
   const [section, setSection] = useState<Section>('geometry');
@@ -88,7 +88,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
   const alignmentValue = characterSelection?.line?.value ?? (current.type === 'text' ? current.textAlign ?? 'left' : 'left'), alignmentMixed = !!characterSelection?.line?.mixed;
   const justified = current.type === 'text' && (current.textAlign === 'justify-left' || !!current.lineStyles?.some(run => run.alignment === 'justify-left'));
   const fixedJustification=justified&&current.type==='text'&&current.justification?.distribution!=='word-space';
-  const geometryLocked=!onProperties&&!!object.editor?.transformLocked;
+  const geometryLocked=!onProperties&&!!(effectiveProperties??object.editor)?.transformLocked;
   const fields = { revision: draft.revision };
   const tabs: { id: Section; label: string; icon: EditorIconName }[] = [
     { id: 'geometry', label: 'Geometria', icon: 'geometry' },
@@ -97,7 +97,6 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
     ...(current.type !== 'image' ? [{ id: 'stroke' as const, label: 'Contorno', icon: 'stroke' as const }] : []),
     ...(current.type === 'path' || current.type === 'bezier' ? [{ id: 'nodes' as const, label: 'Nodi', icon: 'nodes' as const }] : []),
     ...(current.type === 'image' ? [{ id: 'image' as const, label: 'Immagine', icon: 'image' as const }, { id: 'crop' as const, label: 'Ritaglio', icon: 'crop' as const }] : []),
-    { id: 'arrange', label: 'Disposizione', icon: 'centerX' },
     ...(onProperties?[{id:'template' as const,label:'Proprietà template',icon:'properties' as const}]:[]),
   ];
   const title = tabs.find(tab => tab.id === section)?.label ?? 'Geometria';
@@ -109,7 +108,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
     onChange={style => { if (current.type === 'text') characterPatch(style); else patch(style); }}/>;
 
   return <form ref={form} className="object-inspector" aria-label="Proprietà oggetto" onSubmit={event => { event.preventDefault(); flush(); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) flush(); }} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); reset(); } }}>
-    <div className="inspector-selection"><ObjectIdentity object={current}/></div>
+    <div className="inspector-selection"><ObjectIdentity object={effectiveProperties?{...current,editor:effectiveProperties}:current}/></div>
     <div role="tablist" aria-label="Sezioni dell’ispettore" className="inspector-tabs" onKeyDown={event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault(); const index = tabs.findIndex(tab => tab.id === section);
@@ -166,10 +165,6 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
         {fontError&&<p role="status">{fontError}</p>}
         {variants.length>1&&<details className="font-other-styles"><summary>Altri stili</summary><label>Variante font<select aria-label="Variante font" disabled={noCharacters||!commonFamily} value={activeFont} onChange={event=>characterPatch(chooseFontStyle(event.target.value),true)}>{variants.map(face=><option key={face.id} value={face.id} style={{fontFamily:renderFontFamily(face.id)}}>{fontVariantLabel(face.id)}</option>)}</select></label></details>}
         <div className="property-grid">{fontSizeField}{textScaleField}</div>
-        {!current.textPath && <details className="text-transform-settings"><summary>Inclinazione del box</summary>
-          <NumberField {...fields} label="Inclinazione orizzontale (°)" value={current.textSkewXDeg ?? 0} min={-MAX_TEXT_SKEW_DEG} max={MAX_TEXT_SKEW_DEG} step={0.1} disabled={geometryLocked} onChange={textSkewXDeg => patch({ textSkewXDeg })}/>
-          <p className="caption">Inclina l’intero box, conservando testo e stili. Zero ripristina il box diritto.</p>
-        </details>}
         {!current.textPath&&frame&&<TextMaskPanel object={current} frame={frame} revision={draft.revision} disabled={geometryLocked} onChange={textClipMasks=>patch({textClipMasks})}/>}
         {minimumFontPt!==null&&<p role="status" data-testid="minimum-font-notice" className="caption">{(smallestPrintedFontPt(current)??Infinity)<minimumFontPt-1e-7?`Questo testo contiene caratteri sotto ${minimumFontPt} pt: correggili prima di confermare il timbro.`:`Per questo modello il corpo minimo è ${minimumFontPt} pt.`}</p>}
         <div className="property-grid">{!current.textPath && <NumberField {...fields} label="Interlinea" value={current.lineHeight ?? 1} min={EDITOR_LIMITS.minLineHeight} max={EDITOR_LIMITS.maxLineHeight} step={0.1} onChange={lineHeight => patch({ lineHeight })}/> }
@@ -238,7 +233,6 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
       {section === 'crop' && current.type === 'image' && <RasterCropInspector object={current} moveContents={cropContents} onMoveContents={setCropContents} revision={draft.revision} onChange={(next, immediate) => replaceObject(next, immediate)}/>}
       {section === 'nodes' && current.type === 'bezier' && <BezierNodeInspector object={current} revision={draft.revision} onChange={replaceObject} onFocusNode={onNodeFocus}/>}
       {section === 'nodes' && current.type === 'path' && <PathNodeInspector object={current} revision={draft.revision} onChange={replaceObject} onFocusNode={onNodeFocus}/>}
-      {section === 'arrange' && <><fieldset className="inspector-arrangement" disabled={dirty || !!characterSelection}>{arrangement}</fieldset>{dirty && <p className="caption">Aggiornamento in corso o valore da correggere.</p>}</>}
       {frame?.overflow && <p role="status" className="inspector-overflow">{current.type === 'text' && current.textPath ? 'Il testo supera la lunghezza del tracciato. Il contenuto completo è conservato.' : 'Testo più largo del box: aumenta la larghezza o abilita la larghezza automatica. Il contenuto completo è conservato.'}</p>}
     </div>
     <div className="inspector-footer"><span role="status">{status}</span></div>

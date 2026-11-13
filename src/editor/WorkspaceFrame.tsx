@@ -1,3 +1,4 @@
+import {useMovablePanel} from './use-movable-panel';
 import{config as fabricConfig}from'fabric';
 import { useCanvasPan } from './use-canvas-pan';
 import { EditorButton } from './EditorButton';
@@ -5,8 +6,8 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test' }: {
-  context: ReactNode; stage: ReactNode; tools: ReactNode; properties: ReactNode; project: ReactNode; diagnostics: ReactNode;
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test' }: {
+  edit?:ReactNode;transforms?:ReactNode;context: ReactNode; stage: ReactNode; tools: ReactNode; properties: ReactNode; project: ReactNode; diagnostics: ReactNode;
   document: GraphicDocument; editing: boolean; onZoom: (zoom: number) => void;
   showForm?:boolean;actions?:ReactNode;mode?:'customer'|'admin'|'test';workflow?: ReactNode; layers: ReactNode; panTool: boolean; onTemporaryPan: (active: boolean) => void;
 }) {
@@ -17,8 +18,10 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const [workflowOpen,setWorkflowOpen]=useState(()=>mode==='customer'&&!!doc.plaque),workflowAnchor=useRef<HTMLDivElement>(null),workflowPanel=useRef<HTMLElement>(null);
   useEffect(()=>{if(showForm&&mode==='customer')setWorkflowOpen(true);},[showForm,mode,doc.documentId]);
   const workflowTitle=showForm?'Compila i dati':'Prodotto e fissaggi';
+  const [workflowPosition,setWorkflowPosition]=useState<CSSProperties>({});
   const [layersOpen, setLayersOpen] = useState(false), layerAnchor = useRef<HTMLDivElement>(null), layerId = useId();
   const [layerPosition, setLayerPosition] = useState<CSSProperties>({});
+  const floatingLayers=useMovablePanel(layersOpen,layerPosition),floatingWorkflow=useMovablePanel(workflowOpen,workflowPosition,workflowPanel);
   const maximumZoom=canvasZoomLimit(doc.areaMm,Math.max(fabricConfig.devicePixelRatio??window.devicePixelRatio??1,1));
   const [zoom, setZoom] = useState(()=>Math.min(1,maximumZoom)), [screenError, setScreenError] = useState('');
   const [viewReady,setViewReady]=useState(false),autoFit=useRef(true);
@@ -50,7 +53,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     };
     area.addEventListener('wheel', wheel, { passive: false }); return () => area.removeEventListener('wheel', wheel);
   }, [maximumZoom]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!layersOpen) return;
     const position = () => {
       const anchor = layerAnchor.current?.getBoundingClientRect(); if (!anchor) return;
@@ -65,9 +68,9 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     window.addEventListener('pointerdown', outside, true); window.addEventListener('focusin', focusOutside, true); window.addEventListener('keydown', key, true); window.addEventListener('resize', position); window.addEventListener('scroll', position, true);
     return () => { window.removeEventListener('pointerdown', outside, true); window.removeEventListener('focusin', focusOutside, true); window.removeEventListener('keydown', key, true); window.removeEventListener('resize', position); window.removeEventListener('scroll', position, true); };
   }, [layersOpen]);
-  useEffect(()=>{
+  useLayoutEffect(()=>{
     if(!workflowOpen||mode==='test')return;
-    const position=()=>{const anchor=workflowAnchor.current?.getBoundingClientRect(),panel=workflowPanel.current;if(!anchor||!panel)return;const width=Math.min(360,innerWidth-16),below=innerHeight-anchor.bottom-16,above=anchor.top-16,height=Math.min(680,Math.max(below,above),innerHeight-16),top=below>=Math.min(260,height)||below>=above?anchor.bottom+8:anchor.top-height-8;Object.assign(panel.style,{position:'fixed',left:`${Math.max(8,Math.min(anchor.left,innerWidth-width-8))}px`,top:`${Math.max(8,top)}px`,width:`${width}px`,maxHeight:`${Math.max(100,height)}px`});};
+    const position=()=>{const anchor=workflowAnchor.current?.getBoundingClientRect(),panel=workflowPanel.current;if(!anchor||!panel)return;const width=Math.min(360,innerWidth-16),below=innerHeight-anchor.bottom-16,above=anchor.top-16,height=Math.min(680,Math.max(below,above),innerHeight-16),top=below>=Math.min(260,height)||below>=above?anchor.bottom+8:anchor.top-height-8;setWorkflowPosition({position:'fixed',left:Math.max(8,Math.min(anchor.left,innerWidth-width-8)),top:Math.max(8,top),width,maxHeight:Math.max(100,height)});};
     const outside=(event:Event)=>{if(event.target instanceof Node&&!workflowAnchor.current?.contains(event.target))setWorkflowOpen(false);};const key=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();setWorkflowOpen(false);workflowAnchor.current?.querySelector<HTMLButtonElement>('button')?.focus();}};
     const focusOutside=(event:FocusEvent)=>{if(event.relatedTarget instanceof Node&&workflowAnchor.current?.contains(event.relatedTarget))outside(event);};
     position();window.addEventListener('pointerdown',outside,true);window.addEventListener('focusin',focusOutside,true);window.addEventListener('keydown',key,true);window.addEventListener('resize',position);return()=>{window.removeEventListener('pointerdown',outside,true);window.removeEventListener('focusin',focusOutside,true);window.removeEventListener('keydown',key,true);window.removeEventListener('resize',position);};
@@ -145,14 +148,15 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
         }}/>}
         <EditorButton className="workspace-close" disabled={editing} onClick={close} icon="return" label="Torna al laboratorio"/>
       </> : <EditorButton onClick={() => setExpanded(true)} disabled={editing} icon="workspace" label="Apri area di disegno a tutto schermo"/>}
+      {edit}{transforms}
       <div ref={layerAnchor} className="workspace-layers-toggle">
         <EditorButton aria-pressed={layersOpen} aria-expanded={layersOpen} aria-controls={layerId} onClick={() => {setLayersOpen(!layersOpen);setWorkflowOpen(false);}} icon="layers" label="Pannello livelli"/>
-        <aside id={layerId} className="workspace-layers-popover" aria-label="Pannello livelli" hidden={!layersOpen} style={layerPosition}>
-          <div className="layers-popover-heading"><strong>Livelli</strong><EditorButton className="panel-close" icon="close" label="Chiudi pannello livelli" onClick={() => { setLayersOpen(false); layerAnchor.current?.querySelector<HTMLButtonElement>('button')?.focus(); }}/></div>
+        <aside ref={floatingLayers.panelRef} id={layerId} className="workspace-layers-popover" aria-label="Pannello livelli" hidden={!layersOpen} style={floatingLayers.style}>
+          <div className="layers-popover-heading" {...floatingLayers.headingProps}><strong>Livelli</strong><EditorButton className="panel-close" icon="close" label="Chiudi pannello livelli" onClick={() => { setLayersOpen(false); layerAnchor.current?.querySelector<HTMLButtonElement>('button')?.focus(); }}/></div>
           {layers}
         </aside>
       </div>
-      {mode!=='test'&&workflow&&<div className="workspace-workflow-toggle" ref={workflowAnchor}><EditorButton icon="geometry" label={workflowTitle} aria-expanded={workflowOpen} onClick={()=>{setWorkflowOpen(!workflowOpen);setLayersOpen(false);}}/><aside ref={workflowPanel} className="workspace-workflow-popover" aria-label={workflowTitle} hidden={!workflowOpen}><div className="layers-popover-heading"><strong>{workflowTitle}</strong><EditorButton className="panel-close" icon="close" label="Chiudi pannello prodotto" onClick={()=>setWorkflowOpen(false)}/></div>{workflow}</aside></div>}
+      {mode!=='test'&&workflow&&<div className="workspace-workflow-toggle" ref={workflowAnchor}><EditorButton icon="geometry" label={workflowTitle} aria-expanded={workflowOpen} onClick={()=>{setWorkflowOpen(!workflowOpen);setLayersOpen(false);}}/><aside ref={workflowPanel} className="workspace-workflow-popover" aria-label={workflowTitle} hidden={!workflowOpen} style={floatingWorkflow.style}><div className="layers-popover-heading" {...floatingWorkflow.headingProps}><strong>{workflowTitle}</strong><EditorButton className="panel-close" icon="close" label="Chiudi pannello prodotto" onClick={()=>setWorkflowOpen(false)}/></div>{workflow}</aside></div>}
       {actions&&<div className="design-session-actions" aria-label="Azioni del design">{actions}</div>}
     </div>
     {!expanded && context}

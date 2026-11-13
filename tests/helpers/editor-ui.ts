@@ -1,14 +1,16 @@
 import { expect, type Page } from '@playwright/test';
 type ButtonOptions = Parameters<Page['getByRole']>[1];
 type ClickOptions = Parameters<ReturnType<Page['getByRole']>['click']>[0];
-/** Follow the real UI: contextual actions live in the optional Layers popover. */
+/** Follow the real UI: actions live in the Layers, Modifica and Trasforma popovers. */
 export async function clickEditorButton(page: Page, options: ButtonOptions, clickOptions?: ClickOptions, keepLayersOpen = false): Promise<void> {
   const button = page.getByRole('button', options);
   if (!await button.isVisible().catch(() => false)) {
+    for(const label of ['Modifica','Trasforma']){const toggle=page.getByRole('button',{name:label,exact:true}),panel=page.getByRole('complementary',{name:label,exact:true,includeHidden:true});if(await panel.getByRole('button',{...options,includeHidden:true}).count()){if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();break;}}
     const layerButton = page.locator('.workspace-layers-popover').getByRole('button', { ...options, includeHidden: true });
     if (await layerButton.count()) await page.getByRole('button', { name: 'Pannello livelli', exact: true }).click();
   }
   await button.click(clickOptions);
+  if(!keepLayersOpen)for(const label of ['Modifica','Trasforma']){const close=page.getByRole('button',{name:`Chiudi pannello ${label}`,exact:true});if(await close.isVisible().catch(()=>false))await close.click();}
   // Return to the canvas through the actual close control; drag tests keep the panel open.
   if (!keepLayersOpen && await page.locator('.workspace-layers-popover').isVisible()) await page.getByRole('button', { name: 'Chiudi pannello livelli', exact: true }).click();
 }

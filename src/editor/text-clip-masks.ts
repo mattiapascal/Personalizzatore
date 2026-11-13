@@ -15,8 +15,8 @@ export function textClipCommands(mask:TextClipMask,pixelsPerMm=1):VectorCommand[
 export function scaleTextClipMasks(masks:readonly TextClipMask[],factor:number):TextClipMask[]{
  return masks.map(mask=>({...mask,commands:mask.commands.map(command=>[...command]) as VectorCommand[],frameMm:{x:mask.frameMm.x*factor,y:mask.frameMm.y*factor,width:mask.frameMm.width*factor,height:mask.frameMm.height*factor}}));
 }
-export function textClipExtent(object:{textClipMasks?:readonly TextClipMask[];textScaleX?:number;textScaleY?:number;textSkewXDeg?:number;rotationDeg?:number}):number{
- let extent=0;const sx=object.textScaleX??1,sy=object.textScaleY??1,k=Math.tan((object.textSkewXDeg??0)*Math.PI/180),a=(object.rotationDeg??0)*Math.PI/180;
+export function textClipExtent(object:{textClipMasks?:readonly TextClipMask[];textScaleX?:number;textScaleY?:number;textSkewXDeg?:number;skewXDeg?:number;mirrorX?:boolean;mirrorY?:boolean;rotationDeg?:number}):number{
+ let extent=0;const sx=(object.textScaleX??1)*(object.mirrorX?-1:1),sy=(object.textScaleY??1)*(object.mirrorY?-1:1),k=Math.tan((object.textSkewXDeg??0)*Math.PI/180)+Math.tan((object.skewXDeg??0)*Math.PI/180),a=(object.rotationDeg??0)*Math.PI/180;
  for(const mask of object.textClipMasks??[]){const f=mask.frameMm;for(const x of[f.x,f.x+f.width])for(const y of[f.y,f.y+f.height]){const px=sx*x+k*sy*y,py=sy*y;extent=Math.max(extent,Math.abs(px*Math.cos(a)-py*Math.sin(a)),Math.abs(px*Math.sin(a)+py*Math.cos(a)));}}
  return extent;
 }

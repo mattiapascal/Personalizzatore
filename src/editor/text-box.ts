@@ -239,7 +239,7 @@ export class EditorTextBox extends Textbox {
 
 export function textBoxControls(object: EditorTextBox): void {
   const baseScale = object.scaleX, baseScaleY = object.scaleY, baseRawWidth = object.width + object.strokeBoundsWidth(), baseRawHeight = object.height + object.strokeBoundsWidth();
-  const physicalSkew = physicalTextSkew(object.skewX, baseScale, baseScaleY);
+  const physicalSkew = physicalTextSkew(object.skewX, baseScale*(object.flipX?-1:1), baseScaleY*(object.flipY?-1:1));
   // Layout axes, before the shear. A skew must not change wrapping or the
   // horizontal stretch requested by dragging an edge.
   const baseWidth = baseRawWidth * baseScale, baseHeight = baseRawHeight * baseScaleY, automatic = object.frame?.autoWidth ?? true;
@@ -255,10 +255,10 @@ export function textBoxControls(object: EditorTextBox): void {
     object.controls[name] = new Control({ x, y, actionName: 'resizeTextBox', cursorStyle: y ? x * y > 0 ? 'nwse-resize' : 'nesw-resize' : 'ew-resize', cursorStyleHandler: (_event, control, target) => {
       // La diagonale dipende dall'angolo della maniglia, non dal rapporto
       // larghezza/altezza del testo (un box largo non deve mostrare frecce orizzontali agli angoli).
-      const skew = physicalTextSkew(target.skewX, target.scaleX, target.scaleY);
+      const skew = physicalTextSkew(target.skewX, target.scaleX*(target.flipX?-1:1), target.scaleY*(target.flipY?-1:1));
       const angle = Math.atan2(control.y, control.x + Math.tan(skew * Math.PI / 180) * control.y) * 180 / Math.PI + target.getTotalAngle();
       return `${['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'][((Math.round(angle / 45) % 8) + 8) % 8]}-resize`;
-    }, ...(object.skewX ? { positionHandler: (_dimensions, _matrix, target) => textFramePoint(target as EditorTextBox, x, y).transform(target.getViewportTransform()) } : {}), actionHandler: (event, transform, pointerX, pointerY) => {
+    }, ...(object.skewX||object.flipX||object.flipY ? { positionHandler: (_dimensions, _matrix, target) => textFramePoint(target as EditorTextBox, x, y).transform(target.getViewportTransform()) } : {}), actionHandler: (event, transform, pointerX, pointerY) => {
       const target = transform.target as EditorTextBox;
       if (gesture !== transform) {
         gesture = transform; matrix = target.calcTransformMatrix(); inverse = util.invertTransform(matrix);
@@ -288,7 +288,7 @@ export function textBoxControls(object: EditorTextBox): void {
         target.set({ fontSize: baseFont * fontScale, strokeWidth: baseStroke * fontScale, styles, scaleY: 1 }); target.initDimensions();
         target.set('scaleX', Math.max(.1, Math.min(10, width / (target.width + target.strokeBoundsWidth()))));
       } else target.resizeFrame(Math.max(.001, width / baseScale - target.strokeBoundsWidth()), object.height, false);
-      target.set('skewX', fabricTextSkew(physicalSkew, target.scaleX, target.scaleY));
+      target.set('skewX', fabricTextSkew(physicalSkew, target.scaleX*(target.flipX?-1:1), target.scaleY*(target.flipY?-1:1)));
       const nextAnchor = textFramePoint(target, -x, -y);
       const correction = anchor.subtract(nextAnchor), parent = target.group;
       const localCorrection = parent ? correction.transform(util.invertTransform(parent.calcTransformMatrix()), true) : correction;

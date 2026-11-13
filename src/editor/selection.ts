@@ -1,3 +1,4 @@
+import {objectInclination} from './object-affine';
 import { scaleTextClipMasks } from './text-clip-masks';
 import { scaledTextPath } from './text-path-spec';
 import { TEST_MARGIN_MM, cloneSceneObject, objectGeometry, objectCenter, placeObjectAtCenter, type GraphicDocument, type GraphicCommand, type Measure, type SceneObject, type SelectionTransformArguments } from './model';
@@ -6,10 +7,10 @@ import { objectWithAppearance } from './object-appearance';
 import { areaAlignmentDelta } from './align-area';
 import {rootGroupFor,cloneSceneGroup,remapSceneGroups} from './scene-groups';
 
-type SelectionTool = 'placeObjects' | 'alignObjectsToArea' | 'reorderObjects' | 'styleObjects' | 'groupObjects' | 'ungroupObjects' | 'moveObjects' | 'transformObjects' | 'deleteObjects' | 'duplicateObjects' | 'alignObjects' | 'distributeObjects';
+type SelectionTool = 'inclineObjects' | 'reflectObjects' | 'placeObjects' | 'alignObjectsToArea' | 'reorderObjects' | 'styleObjects' | 'groupObjects' | 'ungroupObjects' | 'moveObjects' | 'transformObjects' | 'deleteObjects' | 'duplicateObjects' | 'alignObjects' | 'distributeObjects';
 type SelectionCommand = Extract<GraphicCommand, { tool: SelectionTool }>;
 export function isSelectionCommand(command: GraphicCommand): command is SelectionCommand {
-  return ['placeObjects', 'alignObjectsToArea', 'reorderObjects', 'styleObjects', 'groupObjects', 'ungroupObjects', 'moveObjects', 'transformObjects', 'deleteObjects', 'duplicateObjects', 'alignObjects', 'distributeObjects'].includes(command.tool);
+  return ['inclineObjects', 'reflectObjects', 'placeObjects', 'alignObjectsToArea', 'reorderObjects', 'styleObjects', 'groupObjects', 'ungroupObjects', 'moveObjects', 'transformObjects', 'deleteObjects', 'duplicateObjects', 'alignObjects', 'distributeObjects'].includes(command.tool);
 }
 export function expandSelection(doc: GraphicDocument, ids: readonly string[]): string[] {
   const selected = new Set(ids);
@@ -21,10 +22,10 @@ export function selectionBounds(objects: readonly SceneObject[], measure: Measur
   const xMm = Math.min(...objects.map(object => object.xMm)), yMm = Math.min(...objects.map(object => object.yMm));
   return { xMm, yMm, widthMm: Math.max(...objects.map(object => object.xMm + objectGeometry(object, measure).widthMm)) - xMm, heightMm: Math.max(...objects.map(object => object.yMm + objectGeometry(object, measure).heightMm)) - yMm };
 }
-function selectedObjects(doc: GraphicDocument, ids: readonly string[], objectId: string) {
+function selectedObjects(doc: GraphicDocument, ids: readonly string[], objectId: string, direct=false) {
   const objects = doc.objects.filter(object => ids.includes(object.id));
   if (new Set(ids).size !== ids.length || objects.length !== ids.length || !ids.includes(objectId)) throw new Error('Selezione non valida: ID duplicati, sconosciuti o comando estraneo');
-  for (const group of doc.groups ?? []) if (group.objectIds.some(id => ids.includes(id)) && !group.objectIds.every(id => ids.includes(id))) throw new Error('La selezione deve comprendere l’intero gruppo');
+  for (const group of doc.groups ?? []) if (!direct && group.objectIds.some(id => ids.includes(id)) && !group.objectIds.every(id => ids.includes(id))) throw new Error('La selezione deve comprendere l’intero gruppo');
   return objects;
 }
 export function selectionUnits(doc: GraphicDocument, ids: readonly string[]): SceneObject[][] {
@@ -73,7 +74,7 @@ export function transformSelection(objects: readonly SceneObject[], args: Omit<S
         else { object.widthMm *= scale; object.heightMm *= scale; if (object.type === 'rect' && object.cornerRadiusMm !== undefined) object.cornerRadiusMm *= scale; }
       }
     }
-    if (args.rotationDeg !== 0 && object.type !== 'circle') object.rotationDeg = normalizedAngle((source.rotationDeg ?? 0) + args.rotationDeg);
+    if (args.rotationDeg !== 0 && (object.type !== 'circle'||!!object.skewXDeg)) object.rotationDeg = normalizedAngle((source.rotationDeg ?? 0) + args.rotationDeg);
     const x = (before.xMm - pivot.xMm) * scale, y = (before.yMm - pivot.yMm) * scale;
     return placeObjectAtCenter(object, { xMm: args.center.xMm + x * cos - y * sin, yMm: args.center.yMm + x * sin + y * cos }, measure);
   });
@@ -87,7 +88,8 @@ export function applySelectionCommand(doc: GraphicDocument, command: SelectionCo
     doc.groups = doc.groups?.filter(group => !ids.includes(group.id)).map(source=>{const group=cloneSceneGroup(source);let parent=group.parentId;while(parent&&ids.includes(parent))parent=groups.find(item=>item.id===parent)?.parentId;if(parent)group.parentId=parent;else delete group.parentId;return group;}); cleanGroups(doc); return;
   }
   const ids = command.tool === 'duplicateObjects' ? command.arguments.copies.map(copy => copy.objectId) : command.arguments.objectIds;
-  const objects = selectedObjects(doc, ids, command.objectId);
+  if('targetScope' in command&&command.targetScope==='object'&&ids.length!==1)throw new Error('L’ambito oggetto richiede un solo elemento');
+  const objects = selectedObjects(doc, ids, command.objectId, 'targetScope' in command && command.targetScope==='object');
   const selectedGroups = doc.groups?.filter(group => group.objectIds.every(id => ids.includes(id))) ?? [];
   switch (command.tool) {
     case 'placeObjects': {
@@ -138,14 +140,38 @@ export function applySelectionCommand(doc: GraphicDocument, command: SelectionCo
       (doc.groups??=[]).push(...remapSceneGroups(selectedGroups,new Map(command.arguments.copies.map(copy=>[copy.objectId,copy.newObjectId])),new Map(mappings.map(mapping=>[mapping.groupId,mapping.newGroupId]))));
       break;
     }
+    case 'inclineObjects': {
+      for (const object of objects) {
+        const center=objectCenter(object,measure);
+        if(object.type==='text'&&!object.textPath){object.textSkewXDeg=command.arguments.angleDeg||0;delete object.skewXDeg;}else object.skewXDeg=command.arguments.angleDeg||0;
+        if(object.type==='circle'&&!object.skewXDeg)object.rotationDeg=0;
+        Object.assign(object,placeObjectAtCenter(object,center,measure));
+      }
+      break;
+    }
+    case 'reflectObjects': {
+      const b=selectionBounds(objects,measure),pivot={xMm:b.xMm+b.widthMm/2,yMm:b.yMm+b.heightMm/2},horizontal=command.arguments.axis==='horizontal';
+      for(const object of objects){
+        const center=objectCenter(object,measure),inclination=objectInclination(object);
+        object.rotationDeg=normalizedAngle(-(object.rotationDeg??0));
+        if(object.type==='text'&&!object.textPath){object.textSkewXDeg=-inclination||0;delete object.skewXDeg;}else object.skewXDeg=-inclination||0;
+        if(horizontal)object.mirrorX=!object.mirrorX;else object.mirrorY=!object.mirrorY;
+        Object.assign(object,placeObjectAtCenter(object,{xMm:horizontal?2*pivot.xMm-center.xMm:center.xMm,yMm:horizontal?center.yMm:2*pivot.yMm-center.yMm},measure));
+      }
+      break;
+    }
     case 'alignObjectsToArea': {
-      const delta = areaAlignmentDelta(selectionBounds(objects, measure), doc.areaMm, command.arguments.alignment, TEST_MARGIN_MM);
-      translate(objects, delta.xMm, delta.yMm); break;
+      const units=command.arguments.individually?selectionUnits(doc,ids):[objects];
+      for(const unit of units){const delta=areaAlignmentDelta(selectionBounds(unit,measure),doc.areaMm,command.arguments.alignment,command.arguments.marginMm??TEST_MARGIN_MM);translate(unit,delta.xMm,delta.yMm);}
+      break;
     }
     case 'alignObjects': {
-      const bounds = selectionBounds(objects, measure), alignment = command.arguments.alignment;
-      const units = selectionUnits(doc, ids); if (units.length < 2) throw new Error('Seleziona almeno due oggetti o gruppi distinti');
+      const units = selectionUnits(doc, ids), referenceId=command.arguments.referenceObjectId;
+      const reference=referenceId?units.find(unit=>unit.some(object=>object.id===referenceId)):undefined;
+      if(referenceId&&!reference)throw new Error('L’oggetto master deve appartenere alla selezione');
+      const bounds = selectionBounds(reference??objects, measure), alignment = command.arguments.alignment; if (units.length < 2) throw new Error('Seleziona almeno due oggetti o gruppi distinti');
       for (const unit of units) {
+        if(unit===reference)continue;
         const box = selectionBounds(unit, measure);
         const x = alignment === 'left' ? bounds.xMm - box.xMm : alignment === 'right' ? bounds.xMm + bounds.widthMm - box.xMm - box.widthMm : alignment === 'centerX' ? bounds.xMm + bounds.widthMm / 2 - box.xMm - box.widthMm / 2 : 0;
         const y = alignment === 'top' ? bounds.yMm - box.yMm : alignment === 'bottom' ? bounds.yMm + bounds.heightMm - box.yMm - box.heightMm : alignment === 'centerY' ? bounds.yMm + bounds.heightMm / 2 - box.yMm - box.heightMm / 2 : 0;

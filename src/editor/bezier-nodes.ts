@@ -1,19 +1,20 @@
+import {frameToWorld,worldToFrame} from './object-affine';
 import { objectCenter, placeObjectAtCenter, type Measure, type SceneObject } from './model';
 import { cloneBezierNodes, lerpPoint, normalizedBezier, MAX_BEZIER_NODES, type BezierNode, type CurvePoint } from './bezier-geometry';
 export type BezierObject = Extract<SceneObject, { type: 'bezier' }>;
 export type BezierPart = 'point' | 'in' | 'out';
 export function bezierWorldNodes(object: BezierObject, measure: Measure): BezierNode[] {
-  const center = objectCenter(object, measure), angle = (object.rotationDeg ?? 0) * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
-  const world = (point: CurvePoint): CurvePoint => { const x = (point.x - 0.5) * object.widthMm, y = (point.y - 0.5) * object.heightMm; return { x: center.xMm + x * cos - y * sin, y: center.yMm + x * sin + y * cos }; };
+  const center = objectCenter(object, measure);
+  const world = (point: CurvePoint): CurvePoint => { const x = (point.x - 0.5) * object.widthMm, y = (point.y - 0.5) * object.heightMm; const p=frameToWorld(object,x,y);return {x:center.xMm+p.x,y:center.yMm+p.y}; };
   return object.nodes.map(node => ({ ...world(node), ...(node.in ? { in: world(node.in) } : {}), ...(node.out ? { out: world(node.out) } : {}) }));
 }
 function rebuild(object: BezierObject, world: BezierNode[], measure: Measure, closed = object.closed): BezierObject {
-  const center = objectCenter(object, measure), angle = (object.rotationDeg ?? 0) * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
-  const local = (point: CurvePoint): CurvePoint => { const x = point.x - center.xMm, y = point.y - center.yMm; return { x: x * cos + y * sin, y: -x * sin + y * cos }; };
+  const center = objectCenter(object, measure);
+  const local = (point: CurvePoint): CurvePoint => { const x = point.x - center.xMm, y = point.y - center.yMm; return worldToFrame(object,x,y); };
   const nodes = world.map(node => ({ ...local(node), ...(node.in ? { in: local(node.in) } : {}), ...(node.out ? { out: local(node.out) } : {}) }));
   const geometry = normalizedBezier(nodes, closed, object.strokeMm), x = geometry.xMm + (geometry.widthMm + object.strokeMm) / 2, y = geometry.yMm + (geometry.heightMm + object.strokeMm) / 2;
   const next = { ...object, ...geometry, closed, ...(!closed ? { fill: 'none' as const } : {}) };
-  return placeObjectAtCenter(next, { xMm: center.xMm + x * cos - y * sin, yMm: center.yMm + x * sin + y * cos }, measure) as BezierObject;
+  return placeObjectAtCenter(next, {xMm:center.xMm+frameToWorld(object,x,y).x,yMm:center.yMm+frameToWorld(object,x,y).y}, measure) as BezierObject;
 }
 function assertIndex(object: BezierObject, index: number) { if (!Number.isInteger(index) || index < 0 || index >= object.nodes.length) throw new Error('Nodo della curva non presente'); }
 export function bezierPartAvailable(object: BezierObject, index: number, part: BezierPart): boolean {
@@ -78,5 +79,5 @@ export function reverseBezier(object: BezierObject): BezierObject {
 export function reflectBezier(object: BezierObject, axis: 'horizontal' | 'vertical', measure: Measure): BezierObject {
   const center = objectCenter(object, measure), nodes = cloneBezierNodes(object.nodes), reflect = (point: CurvePoint) => { if (axis === 'horizontal' && object.widthMm > 0) point.x = 1 - point.x; if (axis === 'vertical' && object.heightMm > 0) point.y = 1 - point.y; };
   for (const node of nodes) { reflect(node); if (node.in) reflect(node.in); if (node.out) reflect(node.out); }
-  return placeObjectAtCenter({ ...object, nodes, rotationDeg: -(object.rotationDeg || 0) }, center, measure) as BezierObject;
+  return placeObjectAtCenter({ ...object, nodes, ...(object.skewXDeg===undefined?{}:{skewXDeg:-object.skewXDeg||0}),rotationDeg: -(object.rotationDeg || 0) }, center, measure) as BezierObject;
 }

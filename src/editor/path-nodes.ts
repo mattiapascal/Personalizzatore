@@ -1,18 +1,19 @@
+import {frameToWorld,worldToFrame} from './object-affine';
 import { objectCenter, placeObjectAtCenter, type SceneObject, type Measure } from './model';
 import type { PointMm } from './line-geometry';
 import { strokeGeometry } from './path-geometry';
 export type PathObject = Extract<SceneObject, { type: 'path' }>;
 export function pathWorldPoints(object: PathObject, measure: Measure): PointMm[] {
-  const center = objectCenter(object, measure), angle = (object.rotationDeg ?? 0) * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
-  return object.points.map(point => { const x = (point.x - 0.5) * object.widthMm, y = (point.y - 0.5) * object.heightMm; return { xMm: center.xMm + x * cos - y * sin, yMm: center.yMm + x * sin + y * cos }; });
+  const center = objectCenter(object, measure);
+  return object.points.map(point => { const x = (point.x - 0.5) * object.widthMm, y = (point.y - 0.5) * object.heightMm; const p=frameToWorld(object,x,y);return {xMm:center.xMm+p.x,yMm:center.yMm+p.y}; });
 }
 function rebuild(object: PathObject, points: PointMm[], measure: Measure): PathObject {
-  const center = objectCenter(object, measure), angle = (object.rotationDeg ?? 0) * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
+  const center = objectCenter(object, measure);
   const clean = (value: number) => Math.round(value * 1e9) / 1e9;
-  const local = points.map(point => { const x = point.xMm - center.xMm, y = point.yMm - center.yMm; return { xMm: clean(x * cos + y * sin), yMm: clean(-x * sin + y * cos) }; });
+  const local = points.map(point => { const x = point.xMm - center.xMm, y = point.yMm - center.yMm; const p=worldToFrame(object,x,y);return {xMm:clean(p.x),yMm:clean(p.y)}; });
   const geometry = strokeGeometry(local, object.strokeMm), x = geometry.xMm + (geometry.widthMm + object.strokeMm) / 2, y = geometry.yMm + (geometry.heightMm + object.strokeMm) / 2;
   if (object.closed && (geometry.widthMm < 1e-9 || geometry.heightMm < 1e-9)) throw new Error('Un tracciato chiuso richiede una larghezza e un’altezza non nulle');
-  return placeObjectAtCenter({ ...object, ...geometry }, { xMm: center.xMm + x * cos - y * sin, yMm: center.yMm + x * sin + y * cos }, measure) as PathObject;
+  return placeObjectAtCenter({ ...object, ...geometry }, {xMm:center.xMm+frameToWorld(object,x,y).x,yMm:center.yMm+frameToWorld(object,x,y).y}, measure) as PathObject;
 }
 function assertIndex(object: PathObject, index: number): void { if (!Number.isInteger(index) || index < 0 || index >= object.points.length) throw new Error('Nodo non presente nel tracciato'); }
 export function movePathNode(object: PathObject, index: number, point: PointMm, measure: Measure): PathObject {

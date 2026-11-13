@@ -1,14 +1,15 @@
+import {frameToWorld,worldToFrame} from './object-affine';
 import { objectCenter, placeObjectAtCenter, type Measure } from './model';
 import { checkedRasterCrop, changeRasterCrop, type ImageObject, type RasterCrop } from './raster-geometry';
 /** Crop without moving/rescaling the remaining pixels, including rotated/flipped images. */
 export function cropRasterInPlace(object: ImageObject, crop: RasterCrop, measure: Measure): ImageObject {
-  const before = checkedRasterCrop(object.source, object.crop), after = checkedRasterCrop(object.source, crop), next = changeRasterCrop(object, after), center = objectCenter(object, measure), mmX = object.widthMm / before.widthPx, mmY = object.heightMm / before.heightPx, angle = (object.rotationDeg ?? 0) * Math.PI / 180;
+  const before = checkedRasterCrop(object.source, object.crop), after = checkedRasterCrop(object.source, crop), next = changeRasterCrop(object, after), center = objectCenter(object, measure), mmX = object.widthMm / before.widthPx, mmY = object.heightMm / before.heightPx;
   const x = (after.leftPx + after.widthPx / 2 - before.leftPx - before.widthPx / 2) * mmX * (object.flipX ? -1 : 1), y = (after.topPx + after.heightPx / 2 - before.topPx - before.heightPx / 2) * mmY * (object.flipY ? -1 : 1);
-  return placeObjectAtCenter(next, { xMm: center.xMm + x * Math.cos(angle) - y * Math.sin(angle), yMm: center.yMm + x * Math.sin(angle) + y * Math.cos(angle) }, measure) as ImageObject;
+  return placeObjectAtCenter(next, {xMm:center.xMm+frameToWorld(object,x,y).x,yMm:center.yMm+frameToWorld(object,x,y).y}, measure) as ImageObject;
 }
 export function dragRasterCrop(object: ImageObject, horizontal: number, vertical: number, deltaXmm: number, deltaYmm: number, measure: Measure): ImageObject {
-  const crop = checkedRasterCrop(object.source, object.crop), mmX = object.widthMm / crop.widthPx, mmY = object.heightMm / crop.heightPx, angle = (object.rotationDeg ?? 0) * Math.PI / 180, sx = object.flipX ? -1 : 1, sy = object.flipY ? -1 : 1;
-  const dx = (deltaXmm * Math.cos(angle) + deltaYmm * Math.sin(angle)) * sx / mmX, dy = (-deltaXmm * Math.sin(angle) + deltaYmm * Math.cos(angle)) * sy / mmY;
+  const crop = checkedRasterCrop(object.source, object.crop), mmX = object.widthMm / crop.widthPx, mmY = object.heightMm / crop.heightPx, sx = object.flipX ? -1 : 1, sy = object.flipY ? -1 : 1;
+  const local=worldToFrame(object,deltaXmm,deltaYmm), dx=local.x*sx/mmX,dy=local.y*sy/mmY;
   let left = crop.leftPx, right = crop.leftPx + crop.widthPx, top = crop.topPx, bottom = crop.topPx + crop.heightPx;
   if (horizontal * sx < 0) left = Math.max(0, Math.min(right - 1, left + dx)); else if (horizontal * sx > 0) right = Math.min(object.source.pixelWidth, Math.max(left + 1, right + dx));
   if (vertical * sy < 0) top = Math.max(0, Math.min(bottom - 1, top + dy)); else if (vertical * sy > 0) bottom = Math.min(object.source.pixelHeight, Math.max(top + 1, bottom + dy));
@@ -31,8 +32,8 @@ export function positionRasterContents(object:ImageObject,offset:Partial<{x:numb
 export function panRasterContents(object:ImageObject,deltaXmm:number,deltaYmm:number):ImageObject {
   if(!Number.isFinite(deltaXmm)||!Number.isFinite(deltaYmm))throw new Error('Spostamento della foto non valido');
   if(deltaXmm===0&&deltaYmm===0)return object;
-  const angle=(object.rotationDeg??0)*Math.PI/180,offset=rasterContentOffsetMm(object);
-  return positionRasterContents(object,{x:offset.x+deltaXmm*Math.cos(angle)+deltaYmm*Math.sin(angle),y:offset.y-deltaXmm*Math.sin(angle)+deltaYmm*Math.cos(angle)});
+  const offset=rasterContentOffsetMm(object),delta=worldToFrame(object,deltaXmm,deltaYmm);
+  return positionRasterContents(object,{x:offset.x+delta.x,y:offset.y+delta.y});
 }
 
 /** 100% is the widest source window that fills this frame without distortion. */

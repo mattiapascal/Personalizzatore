@@ -1,3 +1,4 @@
+import {effectiveObjectProperties} from './object-properties';
 import { cloneSceneObject, type GraphicDocument, type SceneGroup,type SceneObject, type GraphicCommand,type Measure } from './model';
 import {cloneSceneGroup,remapSceneGroups} from './scene-groups';
 import type { FontAsset } from './font-assets';
@@ -9,15 +10,15 @@ export interface GraphicClipboard {
   objects: SceneObject[];
   groups: SceneGroup[];
 }
-export function captureSelection(document: GraphicDocument, objectIds: readonly string[]): GraphicClipboard {
+export function captureSelection(document: GraphicDocument, objectIds: readonly string[],direct=false): GraphicClipboard {
   if (!objectIds.length || new Set(objectIds).size !== objectIds.length || objectIds.some(id => !document.objects.some(object => object.id === id))) throw new Error('Selezione da copiare non valida');
-  const selected = new Set(expandSelection(document, objectIds));
+  const selected = new Set(direct?objectIds:expandSelection(document, objectIds));
   const objects=document.objects.filter(object=>selected.has(object.id));
   const used=new Set(objects.flatMap(object=>object.type==='text'?[object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]]:[]));
   return {
     ...(document.fontAssets ? { fontAssets: document.fontAssets.filter(asset=>used.has(asset.id)).map(asset=>({...asset})) } : {}),
-    objects: objects.map(cloneSceneObject),
-    groups: (document.groups ?? []).filter(group => group.objectIds.every(id => selected.has(id))).map(cloneSceneGroup),
+    objects: objects.map(object=>direct?{...cloneSceneObject(object),editor:effectiveObjectProperties(document,object.id)}:cloneSceneObject(object)),
+    groups: (direct?[]:document.groups ?? []).filter(group => group.objectIds.every(id => selected.has(id))).map(cloneSceneGroup),
   };
 }
 export function clipboardInsertion(clipboard: GraphicClipboard, expectedRevision: number, makeId = (kind: 'object' | 'group') => `${kind}-${crypto.randomUUID()}`): Extract<GraphicCommand, { tool: 'insertObjects' }> {

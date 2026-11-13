@@ -346,6 +346,17 @@
                           "minimum": -10000,
                           "maximum": 10000
                         },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
+                        },
                         "editor": {
                           "type": "object",
                           "properties": {
@@ -1654,6 +1665,17 @@
                           "minimum": -10000,
                           "maximum": 10000
                         },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
+                        },
                         "editor": {
                           "type": "object",
                           "properties": {
@@ -1803,6 +1825,17 @@
                           "minimum": -10000,
                           "maximum": 10000
                         },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
+                        },
                         "editor": {
                           "type": "object",
                           "properties": {
@@ -1853,7 +1886,8 @@
                         },
                         "rotationDeg": {
                           "type": "number",
-                          "const": 0
+                          "minimum": -180,
+                          "maximum": 180
                         },
                         "radiusMm": {
                           "type": "number",
@@ -1949,6 +1983,17 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
                         },
                         "editor": {
                           "type": "object",
@@ -2061,6 +2106,17 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
                         },
                         "editor": {
                           "type": "object",
@@ -2205,6 +2261,17 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
                         },
                         "editor": {
                           "type": "object",
@@ -2371,6 +2438,17 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
                         },
                         "editor": {
                           "type": "object",
@@ -2777,6 +2855,17 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
                         },
                         "editor": {
                           "type": "object",
@@ -3246,6 +3335,17 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "skewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
+                        "mirrorX": {
+                          "type": "boolean"
+                        },
+                        "mirrorY": {
+                          "type": "boolean"
                         },
                         "editor": {
                           "type": "object",
@@ -3731,6 +3831,17 @@
                                 "type": "number",
                                 "minimum": -10000,
                                 "maximum": 10000
+                              },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
                               },
                               "editor": {
                                 "type": "object",
@@ -5040,6 +5151,17 @@
                                 "minimum": -10000,
                                 "maximum": 10000
                               },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
+                              },
                               "editor": {
                                 "type": "object",
                                 "properties": {
@@ -5189,6 +5311,17 @@
                                 "minimum": -10000,
                                 "maximum": 10000
                               },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
+                              },
                               "editor": {
                                 "type": "object",
                                 "properties": {
@@ -5239,7 +5372,8 @@
                               },
                               "rotationDeg": {
                                 "type": "number",
-                                "const": 0
+                                "minimum": -180,
+                                "maximum": 180
                               },
                               "radiusMm": {
                                 "type": "number",
@@ -5335,6 +5469,17 @@
                                 "type": "number",
                                 "minimum": -10000,
                                 "maximum": 10000
+                              },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
                               },
                               "editor": {
                                 "type": "object",
@@ -5447,6 +5592,17 @@
                                 "type": "number",
                                 "minimum": -10000,
                                 "maximum": 10000
+                              },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
                               },
                               "editor": {
                                 "type": "object",
@@ -5591,6 +5747,17 @@
                                 "type": "number",
                                 "minimum": -10000,
                                 "maximum": 10000
+                              },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
                               },
                               "editor": {
                                 "type": "object",
@@ -5757,6 +5924,17 @@
                                 "type": "number",
                                 "minimum": -10000,
                                 "maximum": 10000
+                              },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
                               },
                               "editor": {
                                 "type": "object",
@@ -6163,6 +6341,17 @@
                                 "type": "number",
                                 "minimum": -10000,
                                 "maximum": 10000
+                              },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
                               },
                               "editor": {
                                 "type": "object",
@@ -6632,6 +6821,17 @@
                                 "type": "number",
                                 "minimum": -10000,
                                 "maximum": 10000
+                              },
+                              "skewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
+                              },
+                              "mirrorX": {
+                                "type": "boolean"
+                              },
+                              "mirrorY": {
+                                "type": "boolean"
                               },
                               "editor": {
                                 "type": "object",
