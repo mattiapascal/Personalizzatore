@@ -225,6 +225,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, doc
           <EditorButton icon="refresh" label="Ripristina elaborazione monocolore" onClick={()=>patch({raster:{...DEFAULT_RASTER,mode:'grayscale'}},true)}/>
         </> : (current.raster.mode === 'original'||current.raster.mode === 'color') ? <>
           <div className="property-grid"><NumberField {...fields} label="Luminosità" value={current.raster.brightness??0} min={-100} max={100} step={1} onChange={brightness=>patch({raster:{...current.raster,mode:'color',brightness}})}/><NumberField {...fields} label="Contrasto" value={current.raster.contrast??0} min={-100} max={100} step={1} onChange={contrast=>patch({raster:{...current.raster,mode:'color',contrast}})}/></div>
+          <NumberField {...fields} label="Tonalità (°)" value={current.raster.hueDeg??0} min={-180} max={180} step={1} onChange={hueDeg=>patch({raster:{...current.raster,mode:'color',hueDeg}})}/>
           <NumberField {...fields} label="Saturazione (%)" value={current.raster.saturation??100} min={0} max={200} step={1} onChange={saturation=>patch({raster:{...current.raster,mode:'color',saturation}})}/>
           <p className="caption">Saturazione: 0% per i grigi, 100% originale, 200% per colori più intensi. La trasparenza rimane invariata.</p>
           <EditorButton icon="refresh" label="Ripristina colori originali" onClick={()=>patch({raster:{...DEFAULT_RASTER,mode:'original'}},true)}/>

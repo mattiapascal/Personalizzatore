@@ -1,3 +1,5 @@
+**13 novembre — tonalità RGB:** [JSON](../fixtures/illustrator/raster-hue.TEST.json) e [SVG](../fixtures/illustrator/raster-hue.TEST.svg), 120 × 65 mm, originale e tonalità 75° con crop, rotazione/riflessione, alpha e Arimo OFL. [Comportamento e confronto Fabric](iteration-editor-raster-hue.md). **Illustrator non collaudato.**
+
 **13 novembre — regolazioni RGB:** [JSON](../fixtures/illustrator/raster-color.TEST.json) e [SVG](../fixtures/illustrator/raster-color.TEST.svg), 120 × 65 mm con originale/immagine regolata, crop frazionario, rotazione/riflessione, alpha continuo e Arimo OFL. [Parametri e prove](iteration-editor-raster-color.md). **Illustrator non collaudato.**
 
 **13 novembre — spaziatura precisa:** [JSON](../fixtures/illustrator/object-spacing.TEST.json) e [SVG](../fixtures/illustrator/object-spacing.TEST.svg), 120 × 80 mm, quattro oggetti/un gruppo con Arimo OFL e immagine TEST. Ingombri affini e distanza orizzontale di 3 mm; [comportamento e prove](iteration-editor-object-spacing.md). **Illustrator non collaudato.**

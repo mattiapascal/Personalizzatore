@@ -86,7 +86,7 @@ export async function prepareRasterSource(raw: RasterSource): Promise<void> {
 }
 /** Filters stay anchored to original pixels; cropping is a viewport, never a resampling step. */
 export function rasterCanvas(source: RasterSource, params: RasterParameters): HTMLCanvasElement {
-  assertRasterParameters(source, params); const key = `${prepared.get(source.id)!.resource.cacheId}:${params.mode ?? "binary"}:${params.threshold}:${params.invert}:${params.whiteTransparent}:${params.backgroundRemoval ?? 'none'}:${params.method ?? "threshold"}:${params.brightness ?? 0}:${params.contrast ?? 0}:${params.tintColor ?? "#000000"}:${params.saturation ?? 100}`, cached = derived.get(key);
+  assertRasterParameters(source, params); const key = `${prepared.get(source.id)!.resource.cacheId}:${params.mode ?? "binary"}:${params.threshold}:${params.invert}:${params.whiteTransparent}:${params.backgroundRemoval ?? 'none'}:${params.method ?? "threshold"}:${params.brightness ?? 0}:${params.contrast ?? 0}:${params.tintColor ?? "#000000"}:${params.saturation ?? 100}:${params.hueDeg ?? 0}`, cached = derived.get(key);
   if (cached) { derived.delete(key); derived.set(key, cached); return cached; }
   const canvas = document.createElement('canvas');
   canvas.width = source.pixelWidth; canvas.height = source.pixelHeight;

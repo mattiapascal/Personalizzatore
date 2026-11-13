@@ -3131,6 +3131,11 @@
                               "minimum": 0,
                               "maximum": 200
                             },
+                            "hueDeg": {
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
                             "backgroundRemoval": {
                               "type": "string",
                               "const": "luminance"
@@ -7165,6 +7170,11 @@
                                     "type": "number",
                                     "minimum": 0,
                                     "maximum": 200
+                                  },
+                                  "hueDeg": {
+                                    "type": "number",
+                                    "minimum": -180,
+                                    "maximum": 180
                                   },
                                   "backgroundRemoval": {
                                     "type": "string",
