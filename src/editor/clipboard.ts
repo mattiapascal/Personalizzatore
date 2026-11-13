@@ -1,4 +1,5 @@
 import {effectiveObjectProperties} from './object-properties';
+import {objectIsVisible} from './scene-visibility';
 import { cloneSceneObject, type GraphicDocument, type SceneGroup,type SceneObject, type GraphicCommand,type Measure } from './model';
 import {cloneSceneGroup,remapSceneGroups} from './scene-groups';
 import type { FontAsset } from './font-assets';
@@ -17,7 +18,7 @@ export function captureSelection(document: GraphicDocument, objectIds: readonly 
   const used=new Set(objects.flatMap(object=>object.type==='text'?[object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]]:[]));
   return {
     ...(document.fontAssets ? { fontAssets: document.fontAssets.filter(asset=>used.has(asset.id)).map(asset=>({...asset})) } : {}),
-    objects: objects.map(object=>direct?{...cloneSceneObject(object),editor:effectiveObjectProperties(document,object.id)}:cloneSceneObject(object)),
+    objects: objects.map(object=>direct?{...cloneSceneObject(object),...(!objectIsVisible(document,object)?{visible:false}:{}),editor:effectiveObjectProperties(document,object.id)}:cloneSceneObject(object)),
     groups: (direct?[]:document.groups ?? []).filter(group => group.objectIds.every(id => selected.has(id))).map(cloneSceneGroup),
   };
 }

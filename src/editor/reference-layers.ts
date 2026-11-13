@@ -1,3 +1,4 @@
+import {objectIsVisible} from './scene-visibility';
 import {cloneGraphicDocument,type GraphicDocument} from './model';
 import {effectiveObjectProperties,productionDocument} from './object-properties';
 import {backgroundObjectIds} from './background';
@@ -10,7 +11,7 @@ function subset(document:GraphicDocument,ids:Set<string>):GraphicDocument{
 /** Single-page export projections only. The canonical references are never changed. */
 export function referenceLayers(document:GraphicDocument):ReferenceLayers{
  if(document.otherPages)throw Error('Seleziona una pagina prima di preparare i livelli.');
- const references=document.objects.filter(object=>effectiveObjectProperties(document,object.id).reference),backgrounds=backgroundObjectIds(document),backIds=new Set(references.filter(object=>backgrounds.has(object.id)).map(object=>object.id)),frontIds=new Set(references.filter(object=>!backgrounds.has(object.id)).map(object=>object.id));
+ const references=document.objects.filter(object=>objectIsVisible(document,object)&&effectiveObjectProperties(document,object.id).reference),backgrounds=backgroundObjectIds(document),backIds=new Set(references.filter(object=>backgrounds.has(object.id)).map(object=>object.id)),frontIds=new Set(references.filter(object=>!backgrounds.has(object.id)).map(object=>object.id));
  const artwork=productionDocument(cloneGraphicDocument(document)),background=backIds.size?subset(document,backIds):null,foreground=subset(document,frontIds);
  // A physical support colour belongs below the technical reference image.
  if(background&&artwork.paperColor){background.paperColor=artwork.paperColor;delete artwork.paperColor;}
@@ -25,4 +26,4 @@ export function referenceLayers(document:GraphicDocument):ReferenceLayers{
  if(foreground.objects.length)foreground.colorMode='color';
  return{artwork,background,foreground:foreground.objects.length?foreground:null};
 }
-export function hasReferenceLayers(document:GraphicDocument):boolean{return document.objects.some(object=>effectiveObjectProperties(document,object.id).reference)||!!document.plaque&&plaqueMountingPoints(document.areaMm,document.plaque).length>0;}
+export function hasReferenceLayers(document:GraphicDocument):boolean{return document.objects.some(object=>objectIsVisible(document,object)&&effectiveObjectProperties(document,object.id).reference)||!!document.plaque&&plaqueMountingPoints(document.areaMm,document.plaque).length>0;}

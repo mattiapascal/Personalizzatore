@@ -1251,6 +1251,9 @@
                             "minimum": -10000,
                             "maximum": 10000
                           },
+                          "visible": {
+                            "type": "boolean"
+                          },
                           "skewXDeg": {
                             "type": "number",
                             "minimum": -85,
@@ -2570,6 +2573,9 @@
                             "minimum": -10000,
                             "maximum": 10000
                           },
+                          "visible": {
+                            "type": "boolean"
+                          },
                           "skewXDeg": {
                             "type": "number",
                             "minimum": -85,
@@ -2730,6 +2736,9 @@
                             "minimum": -10000,
                             "maximum": 10000
                           },
+                          "visible": {
+                            "type": "boolean"
+                          },
                           "skewXDeg": {
                             "type": "number",
                             "minimum": -85,
@@ -2889,6 +2898,9 @@
                             "minimum": -10000,
                             "maximum": 10000
                           },
+                          "visible": {
+                            "type": "boolean"
+                          },
                           "skewXDeg": {
                             "type": "number",
                             "minimum": -85,
@@ -3011,6 +3023,9 @@
                             "type": "number",
                             "minimum": -10000,
                             "maximum": 10000
+                          },
+                          "visible": {
+                            "type": "boolean"
                           },
                           "skewXDeg": {
                             "type": "number",
@@ -3166,6 +3181,9 @@
                             "type": "number",
                             "minimum": -10000,
                             "maximum": 10000
+                          },
+                          "visible": {
+                            "type": "boolean"
                           },
                           "skewXDeg": {
                             "type": "number",
@@ -3343,6 +3361,9 @@
                             "type": "number",
                             "minimum": -10000,
                             "maximum": 10000
+                          },
+                          "visible": {
+                            "type": "boolean"
                           },
                           "skewXDeg": {
                             "type": "number",
@@ -3760,6 +3781,9 @@
                             "type": "number",
                             "minimum": -10000,
                             "maximum": 10000
+                          },
+                          "visible": {
+                            "type": "boolean"
                           },
                           "skewXDeg": {
                             "type": "number",
@@ -4241,6 +4265,9 @@
                             "minimum": -10000,
                             "maximum": 10000
                           },
+                          "visible": {
+                            "type": "boolean"
+                          },
                           "skewXDeg": {
                             "type": "number",
                             "minimum": -85,
@@ -4453,6 +4480,9 @@
                       "parentId": {
                         "type": "string",
                         "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "editor": {
                         "type": "object",
@@ -4928,6 +4958,102 @@
           "type": "string",
           "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
         },
+        "targetScope": {
+          "type": "string",
+          "const": "object"
+        },
+        "tool": {
+          "type": "string",
+          "const": "setObjectVisibility"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "visible": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "visible"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "objectId",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "objectId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
+        "pageId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
+        "tool": {
+          "type": "string",
+          "const": "setGroupVisibility"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "visible": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "visible"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "objectId",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "objectId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
+        "pageId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
         "tool": {
           "type": "string",
           "const": "setGroupProperties"
@@ -5146,6 +5272,9 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "visible": {
+                          "type": "boolean"
                         },
                         "skewXDeg": {
                           "type": "number",
@@ -6466,6 +6595,9 @@
                           "minimum": -10000,
                           "maximum": 10000
                         },
+                        "visible": {
+                          "type": "boolean"
+                        },
                         "skewXDeg": {
                           "type": "number",
                           "minimum": -85,
@@ -6626,6 +6758,9 @@
                           "minimum": -10000,
                           "maximum": 10000
                         },
+                        "visible": {
+                          "type": "boolean"
+                        },
                         "skewXDeg": {
                           "type": "number",
                           "minimum": -85,
@@ -6785,6 +6920,9 @@
                           "minimum": -10000,
                           "maximum": 10000
                         },
+                        "visible": {
+                          "type": "boolean"
+                        },
                         "skewXDeg": {
                           "type": "number",
                           "minimum": -85,
@@ -6907,6 +7045,9 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "visible": {
+                          "type": "boolean"
                         },
                         "skewXDeg": {
                           "type": "number",
@@ -7062,6 +7203,9 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "visible": {
+                          "type": "boolean"
                         },
                         "skewXDeg": {
                           "type": "number",
@@ -7239,6 +7383,9 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "visible": {
+                          "type": "boolean"
                         },
                         "skewXDeg": {
                           "type": "number",
@@ -7656,6 +7803,9 @@
                           "type": "number",
                           "minimum": -10000,
                           "maximum": 10000
+                        },
+                        "visible": {
+                          "type": "boolean"
                         },
                         "skewXDeg": {
                           "type": "number",
@@ -8137,6 +8287,9 @@
                           "minimum": -10000,
                           "maximum": 10000
                         },
+                        "visible": {
+                          "type": "boolean"
+                        },
                         "skewXDeg": {
                           "type": "number",
                           "minimum": -85,
@@ -8408,6 +8561,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -9728,6 +9884,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -9888,6 +10047,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -10047,6 +10209,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -10169,6 +10334,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -10324,6 +10492,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -10501,6 +10672,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -10918,6 +11092,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -11399,6 +11576,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -11611,6 +11791,9 @@
                   "parentId": {
                     "type": "string",
                     "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                  },
+                  "visible": {
+                    "type": "boolean"
                   },
                   "editor": {
                     "type": "object",
@@ -12147,6 +12330,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -13466,6 +13652,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -13626,6 +13815,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -13785,6 +13977,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -13907,6 +14102,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -14062,6 +14260,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -14239,6 +14440,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -14656,6 +14860,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -15137,6 +15344,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -15349,6 +15559,9 @@
                   "parentId": {
                     "type": "string",
                     "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                  },
+                  "visible": {
+                    "type": "boolean"
                   },
                   "editor": {
                     "type": "object",
@@ -15887,6 +16100,9 @@
                       "minimum": -10000,
                       "maximum": 10000
                     },
+                    "visible": {
+                      "type": "boolean"
+                    },
                     "skewXDeg": {
                       "type": "number",
                       "minimum": -85,
@@ -17206,6 +17422,9 @@
                       "minimum": -10000,
                       "maximum": 10000
                     },
+                    "visible": {
+                      "type": "boolean"
+                    },
                     "skewXDeg": {
                       "type": "number",
                       "minimum": -85,
@@ -17366,6 +17585,9 @@
                       "minimum": -10000,
                       "maximum": 10000
                     },
+                    "visible": {
+                      "type": "boolean"
+                    },
                     "skewXDeg": {
                       "type": "number",
                       "minimum": -85,
@@ -17525,6 +17747,9 @@
                       "minimum": -10000,
                       "maximum": 10000
                     },
+                    "visible": {
+                      "type": "boolean"
+                    },
                     "skewXDeg": {
                       "type": "number",
                       "minimum": -85,
@@ -17647,6 +17872,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -17802,6 +18030,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -17979,6 +18210,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -18396,6 +18630,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -18877,6 +19114,9 @@
                       "minimum": -10000,
                       "maximum": 10000
                     },
+                    "visible": {
+                      "type": "boolean"
+                    },
                     "skewXDeg": {
                       "type": "number",
                       "minimum": -85,
@@ -19212,6 +19452,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -20532,6 +20775,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -20692,6 +20938,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -20851,6 +21100,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -20973,6 +21225,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -21128,6 +21383,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -21305,6 +21563,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -21722,6 +21983,9 @@
                         "type": "number",
                         "minimum": -10000,
                         "maximum": 10000
+                      },
+                      "visible": {
+                        "type": "boolean"
                       },
                       "skewXDeg": {
                         "type": "number",
@@ -22203,6 +22467,9 @@
                         "minimum": -10000,
                         "maximum": 10000
                       },
+                      "visible": {
+                        "type": "boolean"
+                      },
                       "skewXDeg": {
                         "type": "number",
                         "minimum": -85,
@@ -22416,6 +22683,9 @@
                     "type": "string",
                     "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                   },
+                  "visible": {
+                    "type": "boolean"
+                  },
                   "editor": {
                     "type": "object",
                     "properties": {
@@ -22604,6 +22874,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -23924,6 +24197,9 @@
                       "minimum": -10000,
                       "maximum": 10000
                     },
+                    "visible": {
+                      "type": "boolean"
+                    },
                     "skewXDeg": {
                       "type": "number",
                       "minimum": -85,
@@ -24084,6 +24360,9 @@
                       "minimum": -10000,
                       "maximum": 10000
                     },
+                    "visible": {
+                      "type": "boolean"
+                    },
                     "skewXDeg": {
                       "type": "number",
                       "minimum": -85,
@@ -24243,6 +24522,9 @@
                       "minimum": -10000,
                       "maximum": 10000
                     },
+                    "visible": {
+                      "type": "boolean"
+                    },
                     "skewXDeg": {
                       "type": "number",
                       "minimum": -85,
@@ -24365,6 +24647,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -24520,6 +24805,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -24697,6 +24985,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -25114,6 +25405,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",
@@ -25594,6 +25888,9 @@
                       "type": "number",
                       "minimum": -10000,
                       "maximum": 10000
+                    },
+                    "visible": {
+                      "type": "boolean"
                     },
                     "skewXDeg": {
                       "type": "number",

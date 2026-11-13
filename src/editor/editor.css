@@ -277,10 +277,16 @@
 .layer-direct-select { flex: none; width: 28px; padding: 4px; border: 0; border-left: 1px solid #c8dce955; background: transparent; color: inherit; }
 .layer-direct-select:hover, .layer-direct-select[aria-pressed=true] { background: #0088cc22; }
 .layer-direct-select > svg { width: 17px; height: 18px; pointer-events: none; }
+.layer-visibility { flex: none; align-self: center; width: 28px; height: 30px; min-height: 30px; padding: 4px; border: 0; background: transparent; color: inherit; }
+.layer-visibility > svg { width: 18px; height: 18px; pointer-events: none; }
+.layer-visibility[aria-pressed=true] { background: transparent; color: inherit; }
+.layer-visibility:hover { background: #0088cc22; }
+.layer-row[data-visible=false] .layer-select, .layer-group-heading[data-visible=false] .layer-select, .layer-group-heading[data-visible=false] .layer-group-name { opacity: .5; }
 
 .layer-container { margin: 4px 0; border-left: 2px solid #b7d9ed; }
 .layer-group-heading { display: flex; align-items: center; min-width: 0; background: #eaf5fc; border-radius: 3px; }
-.layer-group-name { display: flex; align-items: center; gap: 5px; padding: 7px 5px; font-size: 12px; min-width: 0; overflow-wrap: anywhere; }
+.layer-group-name { display: flex; flex: 1; align-items: center; gap: 5px; padding: 7px 5px; font-size: 12px; min-width: 0; overflow-wrap: anywhere; }
+.layer-group-heading[data-root=false] { padding-right: 28px; }
 .layer-group-name > svg { width: 18px; height: 18px; flex: none; }
 .layer-group-children { padding-left: 10px; }
 .layer-root-drop { margin: 4px 0; padding: 8px; border: 1px dashed #0088cc; border-radius: 3px; color: #005a88; background: #eef8ff; font-size: 12px; }

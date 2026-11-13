@@ -2,12 +2,14 @@ import { UnverifiedTextGeometryError } from './unverified-text-geometry';
 import type { GraphicDocument, Measure } from './model';
 import { selectionBounds, selectionUnits } from './selection';
 import type { PointMm } from './line-geometry';
+import { visibleDocument } from './scene-visibility';
 
 export interface GuideSettings { gridVisible: boolean; snapEnabled: boolean; gridMm: number; }
 export interface SnapResult { deltaXmm: number; deltaYmm: number; guideXmm?: number; guideYmm?: number; }
 export const DEFAULT_GUIDES: GuideSettings = { gridVisible: false, snapEnabled: false, gridMm: 1 };
 const anchors = (start: number, size: number) => [start, start + size / 2, start + size];
 function references(doc: GraphicDocument, ignored: readonly string[], measure: Measure) {
+  doc=visibleDocument(doc);
   const others = selectionUnits(doc, doc.objects.filter(object => !ignored.includes(object.id)).map(object => object.id));
   const targets = others.flatMap(unit => {try{return [selectionBounds(unit,measure)];}catch(error){if(error instanceof UnverifiedTextGeometryError)return [];throw error;}});
   return { xs: [...targets.flatMap(box => anchors(box.xMm, box.widthMm)), 0, doc.areaMm.width / 2, doc.areaMm.width], ys: [...targets.flatMap(box => anchors(box.yMm, box.heightMm)), 0, doc.areaMm.height / 2, doc.areaMm.height] };

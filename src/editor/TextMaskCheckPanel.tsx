@@ -1,3 +1,4 @@
+import {objectIsVisible} from './scene-visibility';
 import { useEffect,useRef,useState,useSyncExternalStore } from 'react';
 import type { GraphicDocument } from './model';
 import { graphicPages,activeGraphicPageId } from './pages';
@@ -10,7 +11,7 @@ interface Answer{identity:string;input:TextMaskInkInput;result:TextMaskInkResult
 const resultMessage=(result:TextMaskInkResult)=>'message'in result?result.message:result.status==='clipped'?'una parte del testo è nascosta dalla maschera.':'';
 export function TextMaskCheckPanel({document:doc,busy,onLocate}:{document:GraphicDocument;busy:boolean;onLocate:(pageId:string,objectId:string)=>void}){
  const coverage=useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion),cache=useRef<TextMaskInkCache|null>(null),[retry,setRetry]=useState(0),[answers,setAnswers]=useState<Answer[]>([]);
- const rows:Row[]=graphicPages(doc).flatMap(page=>page.objects.flatMap(object=>object.type==='text'&&object.textClipMasks?.length&&!effectiveObjectProperties(page,object.id).reference?[{identity:JSON.stringify([activeGraphicPageId(page),object.id]),pageId:activeGraphicPageId(page),objectId:object.id,label:`${doc.otherPages?(page.pageName??'Pagina 1')+' · ':''}${object.editor?.label||object.id}`,input:textMaskInkInput(object,doc.fontAssets??[])}]:[]));
+ const rows:Row[]=graphicPages(doc).flatMap(page=>page.objects.flatMap(object=>objectIsVisible(page,object)&&object.type==='text'&&object.textClipMasks?.length&&!effectiveObjectProperties(page,object.id).reference?[{identity:JSON.stringify([activeGraphicPageId(page),object.id]),pageId:activeGraphicPageId(page),objectId:object.id,label:`${doc.otherPages?(page.pageName??'Pagina 1')+' · ':''}${object.editor?.label||object.id}`,input:textMaskInkInput(object,doc.fontAssets??[])}]:[]));
  useEffect(()=>{const instance=new TextMaskInkCache(input=>inspectTextMaskInk(input));cache.current=instance;return()=>{instance.dispose();if(cache.current===instance)cache.current=null;};},[]);
  useEffect(()=>{
   if(busy||!rows.length)return;let active=true;const instance=cache.current!;

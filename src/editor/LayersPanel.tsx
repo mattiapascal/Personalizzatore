@@ -1,5 +1,6 @@
 import {canReorderGroupMember,innermostGroup} from './group-member';
-import {selectableObjectIds,effectiveObjectProperties} from './object-properties';
+import {selectableObjectIds,effectiveObjectProperties,visibilityProblem} from './object-properties';
+import {objectIsVisible,groupIsVisible} from './scene-visibility';
 import {useEffect,useRef,useState,type ReactNode,type PointerEvent} from 'react';
 import type {GraphicDocument,SceneObject,SceneGroup} from './model';
 import {expandSelection,canReorderSelection} from './selection';
@@ -8,12 +9,13 @@ import {ObjectIdentity,objectTypeLabel} from './ObjectIdentity';
 import {rootGroupFor} from './scene-groups';
 interface Drag{ids:string[];revision:number;documentId:string;memberId?:string;}
 interface Drop{kind:'row'|'group'|'root';id:string;side:'above'|'below';parentGroupId?:string|null;}
-export function LayersPanel({customer=false,document:doc,selectedIds,directObjectId,onSelectObject,disabled,multiple,onSelect,onPlace,onPlaceMember,onReorder,actions}:{
+export function LayersPanel({customer=false,document:doc,selectedIds,directObjectId,onSelectObject,disabled,multiple,onSelect,onPlace,onPlaceMember,onReorder,onVisibility,actions}:{
  customer?:boolean;document:GraphicDocument;selectedIds:string[];directObjectId?:string|null;disabled:boolean;multiple:boolean;actions:ReactNode;
  onSelect:(id:string,additive:boolean)=>void;onSelectObject?:(id:string)=>void;
  onPlace:(ids:string[],target:string,side:'above'|'below',revision:number)=>void;
  onPlaceMember?:(id:string,parentGroupId:string|null,targetObjectId:string|undefined,side:'above'|'below',revision:number)=>void;
  onReorder:(position:'front'|'forward'|'backward'|'back')=>void;
+ onVisibility?:(kind:'object'|'group',id:string,visible:boolean,revision:number)=>void;
 }){
  const drag=useRef<Drag|null>(null),pointer=useRef<{id:number;x:number;y:number;moved:boolean}|null>(null),destination=useRef<Drop|null>(null),list=useRef<HTMLDivElement>(null);
  const [hover,setHover]=useState<Drop|null>(null),[dragging,setDragging]=useState(false),[memberDrag,setMemberDrag]=useState(false);
@@ -22,7 +24,7 @@ export function LayersPanel({customer=false,document:doc,selectedIds,directObjec
  useEffect(()=>{if(disabled||drag.current?.documentId!==doc.documentId)clear();},[disabled,doc.documentId]);
  const begin=(ids:string[],memberId?:string)=>{if(disabled)return false;drag.current={ids,memberId,revision:doc.revision,documentId:doc.documentId};setDragging(true);setMemberDrag(!!memberId);return true;};
  const beginObject=(object:SceneObject)=>{
-  if(customer&&!selectableObjectIds(doc,[object.id],'customer',true).length)return false;
+  if(customer&&effectiveObjectProperties(doc,object.id).selectionLocked)return false;
   const member=!!onPlaceMember&&(!!innermostGroup(doc,object.id)||!selectedIds.includes(object.id)||selectedIds.length===1);
   return begin(member?[object.id]:selectedIds.includes(object.id)?expandSelection(doc,selectedIds):expandSelection(doc,[object.id]),member?object.id:undefined);
  };
@@ -43,19 +45,25 @@ export function LayersPanel({customer=false,document:doc,selectedIds,directObjec
   onPointerCancel:clear,onLostPointerCapture:()=>{if(pointer.current)clear();},
  });
  const dropEvents={onDragOver:(event:React.DragEvent<HTMLElement>)=>{if(!drag.current||disabled)return;event.preventDefault();event.stopPropagation();event.dataTransfer.dropEffect='move';locate(event.currentTarget,event.clientY);},onDrop:(event:React.DragEvent<HTMLElement>)=>{if(!drag.current||disabled)return;event.preventDefault();event.stopPropagation();locate(event.currentTarget,event.clientY);commit();}};
+ const visibilityButton=(kind:'object'|'group',id:string,own:boolean,effective:boolean)=>{
+  if(!onVisibility)return null;const problem=visibilityProblem(doc,kind,id,customer?'customer':'admin'),action=`${own?'Nascondi':'Mostra'} ${kind==='group'?'gruppo':'oggetto'} ${id}`;
+  return <button type="button" className="layer-visibility" disabled={!!problem} aria-label={action} aria-pressed={own} title={problem??`${action} · La visibilità vale anche per i file esportati.${own&&!effective?' Nascosto dal gruppo.':''}`} onDragStart={event=>{event.preventDefault();event.stopPropagation();}} onClick={()=>onVisibility(kind,id,!own,doc.revision)}><EditorIcon name={own?'eye':'eyeOff'}/></button>;
+ };
  const renderObject=(object:SceneObject)=>{
-  const locked=customer&&!selectableObjectIds(doc,[object.id],'customer').length,directLocked=customer&&!selectableObjectIds(doc,[object.id],'customer',true).length,selected=selectedIds.includes(object.id),group=rootGroupFor(doc,object.id),preview=object.type==='text'?object.text.replace(/\s+/gu,' ').trim():'';
-  return <div key={object.id} className="layer-row" data-layer-id={object.id} data-selected={selected} data-grouped={!!group} data-drop={hover?.kind==='row'&&hover.id===object.id?hover.side:undefined} draggable={!disabled&&!directLocked}
-   onDragStart={event=>{if(disabled||directLocked||pointer.current||!beginObject(object)){event.preventDefault();return;}event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('application/x-editor-layers',object.id);}} onDragEnd={clear} {...dropEvents}>
+  const visible=objectIsVisible(doc,object),locked=!visible||customer&&!selectableObjectIds(doc,[object.id],'customer').length,directLocked=!visible||customer&&!selectableObjectIds(doc,[object.id],'customer',true).length,reorderLocked=customer&&!!effectiveObjectProperties(doc,object.id).selectionLocked,selected=selectedIds.includes(object.id),group=rootGroupFor(doc,object.id),preview=object.type==='text'?object.text.replace(/\s+/gu,' ').trim():'';
+  return <div key={object.id} className="layer-row" data-layer-id={object.id} data-visible={visible} data-selected={selected} data-grouped={!!group} data-drop={hover?.kind==='row'&&hover.id===object.id?hover.side:undefined} draggable={!disabled&&!reorderLocked}
+   onDragStart={event=>{if(disabled||reorderLocked||pointer.current||!beginObject(object)){event.preventDefault();return;}event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('application/x-editor-layers',object.id);}} onDragEnd={clear} {...dropEvents}>
    <button type="button" className="layer-select" disabled={locked} aria-label={`${objectTypeLabel(object)} · ${object.id}`} aria-pressed={selected} title={`${object.id}${preview?` - ${preview}`:''}${group?` · Gruppo ${group.id}`:''}`} onClick={event=>group&&event.altKey&&onSelectObject?onSelectObject(object.id):onSelect(object.id,multiple||event.shiftKey||event.metaKey||event.ctrlKey)}><ObjectIdentity object={{...object,editor:effectiveObjectProperties(doc,object.id)}}/></button>
    {group&&onSelectObject&&<button type="button" className="layer-direct-select" disabled={directLocked} aria-label={`Seleziona solo ${object.id}`} title="Seleziona solo questo elemento · Option/Alt + clic nel canvas" aria-pressed={directObjectId===object.id} onClick={()=>onSelectObject(object.id)}><EditorIcon name="directSelect"/></button>}
-   <button type="button" className="layer-grip" disabled={directLocked} aria-label={`Sposta livello ${object.id}`} title="Trascina per cambiare livello o gruppo" {...gripEvents(()=>beginObject(object))}><EditorIcon name="grip"/></button>
+   {visibilityButton('object',object.id,object.visible!==false,visible)}
+   <button type="button" className="layer-grip" disabled={reorderLocked} aria-label={`Sposta livello ${object.id}`} title="Trascina per cambiare livello o gruppo" {...gripEvents(()=>beginObject(object))}><EditorIcon name="grip"/></button>
   </div>;
  };
- const renderGroup=(group:SceneGroup):ReactNode=>{const root=!group.parentId,locked=customer&&!selectableObjectIds(doc,group.objectIds,'customer').length,label=group.editor?.label||group.id;
-  return <div className="layer-container" key={'group:'+group.id} role="group" aria-label={`Contenuto gruppo ${label}`}><div className="layer-group-heading" data-selected={group.objectIds.every(id=>selectedIds.includes(id))} data-layer-group-id={group.id} data-drop={hover?.kind==='group'&&hover.id===group.id?'inside':undefined} draggable={root&&!disabled&&!locked} {...dropEvents} onDragStart={event=>{if(!root||disabled||locked||pointer.current||!begin([...group.objectIds])){event.preventDefault();return;}event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('application/x-editor-layers',group.id);}} onDragEnd={clear}>
+ const renderGroup=(group:SceneGroup):ReactNode=>{const root=!group.parentId,visible=groupIsVisible(doc,group),reorderLocked=customer&&group.objectIds.some(id=>effectiveObjectProperties(doc,id).selectionLocked),locked=!visible||!selectableObjectIds(doc,group.objectIds,customer?'customer':'admin').length,label=group.editor?.label||group.id;
+  return <div className="layer-container" key={'group:'+group.id} role="group" aria-label={`Contenuto gruppo ${label}`}><div className="layer-group-heading" data-root={root} data-visible={visible} data-selected={group.objectIds.every(id=>selectedIds.includes(id))} data-layer-group-id={group.id} data-drop={hover?.kind==='group'&&hover.id===group.id?'inside':undefined} draggable={root&&!disabled&&!reorderLocked} {...dropEvents} onDragStart={event=>{if(!root||disabled||reorderLocked||pointer.current||!begin([...group.objectIds])){event.preventDefault();return;}event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('application/x-editor-layers',group.id);}} onDragEnd={clear}>
    {root?<button type="button" className="layer-select" disabled={locked} aria-label={`Seleziona gruppo ${group.id}`} onClick={()=>onSelect(group.objectIds[0]!,false)}><EditorIcon name="groupFolder"/>{label}</button>:<span className="layer-group-name"><EditorIcon name="groupFolder"/>{label}</span>}
-   {root&&<button type="button" className="layer-grip" disabled={locked} aria-label={`Sposta gruppo ${group.id}`} {...gripEvents(()=>begin([...group.objectIds]))}><EditorIcon name="grip"/></button>}
+   {visibilityButton('group',group.id,group.visible!==false,visible)}
+   {root&&<button type="button" className="layer-grip" disabled={reorderLocked} aria-label={`Sposta gruppo ${group.id}`} {...gripEvents(()=>begin([...group.objectIds]))}><EditorIcon name="grip"/></button>}
   </div><div className="layer-group-children">{renderItems(group.id)}</div></div>;
  };
  const renderItems=(parentId:string|null):ReactNode[]=>{const parent=doc.groups?.find(group=>group.id===parentId),allowed=new Set(parent?.objectIds??doc.objects.map(object=>object.id)),groups=doc.groups?.filter(group=>(group.parentId??null)===parentId)??[],seen=new Set<string>(),result:ReactNode[]=[];for(const object of[...doc.objects].reverse()){if(!allowed.has(object.id)||seen.has(object.id))continue;const group=groups.find(group=>group.objectIds.includes(object.id));if(group){group.objectIds.forEach(id=>seen.add(id));result.push(renderGroup(group));}else{seen.add(object.id);result.push(renderObject(object));}}return result;};

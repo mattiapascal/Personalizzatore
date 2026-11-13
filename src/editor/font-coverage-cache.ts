@@ -1,6 +1,6 @@
 import { fontAssetBytes, type FontAsset } from './font-assets';
 import { readCmapCoverage, UnicodeCoverageSchema, type UnicodeRange } from './font-cmap';
-export interface FontInspectionOptions { resolveWoff2?: (asset: FontAsset) => Promise<readonly UnicodeRange[] | undefined>; }
+export interface FontInspectionOptions { resolveWoff2?: (asset: FontAsset) => Promise<readonly UnicodeRange[] | undefined>; includeHidden?: boolean; }
 interface Entry { ranges?: UnicodeRange[]; promise?: Promise<UnicodeRange[] | undefined>; }
 const entries = new Map<string, Entry>();
 const byAsset = new WeakMap<FontAsset, { format: string; data: string; entry: Entry }>();

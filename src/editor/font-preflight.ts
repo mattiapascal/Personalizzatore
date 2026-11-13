@@ -2,6 +2,7 @@ import { readFontCoverage as coverage, type FontInspectionOptions } from './font
 export type { FontInspectionOptions } from './font-coverage-cache';
 import { fontSupportsCharacter } from './font-support';
 import type { GraphicDocument } from './model';
+import {objectIsVisible} from './scene-visibility';
 
 export interface FontIssue {
   objectId: string; fontId: string; fontLabel: string; pageId?:string; pageName?:string;
@@ -10,13 +11,13 @@ export interface FontIssue {
 }
 export interface FontReport { issues: FontIssue[]; checkedFonts: number; }
 /** Derives checks from exact embedded bytes, never client-supplied coverage metadata. */
-export async function inspectDocumentFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>&Partial<Pick<GraphicDocument,'otherPages'|'pageId'|'pageName'>>,options:FontInspectionOptions={}): Promise<FontReport> {
+export async function inspectDocumentFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>&Partial<Pick<GraphicDocument,'groups'|'otherPages'|'pageId'|'pageName'>>,options:FontInspectionOptions={}): Promise<FontReport> {
   const assets = new Map(doc.fontAssets?.map(asset => [asset.id, asset]) ?? []);
   const used = new Set<string>(), issues: FontIssue[] = [];
-  const scenes=[{id:doc.pageId??'page-1',name:doc.pageName??'Pagina 1',objects:doc.objects},...doc.otherPages??[]];
+  const scenes=[{id:doc.pageId??'page-1',name:doc.pageName??'Pagina 1',objects:doc.objects,groups:doc.groups},...doc.otherPages??[]];
   for(const scene of scenes){const pageInfo=doc.otherPages||doc.pageId?{pageId:scene.id,pageName:scene.name}:{};const addIssue=(issue:FontIssue)=>issues.push({...issue,...pageInfo});
   for (const object of scene.objects) {
-    if (object.type !== 'text') continue;
+    if (object.type !== 'text'||!options.includeHidden&&!objectIsVisible(scene,object)) continue;
     for(const fontId of new Set([object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]]))if(!fontId.startsWith('font-'))addIssue({objectId:object.id,fontId,fontLabel:fontId,kind:'unembedded-font'});
     const runs: { fontId: string; synthetic: boolean; text: string }[] = [];
     for (const [index, character] of Array.from(object.text).entries()) {
@@ -59,7 +60,7 @@ export function fontIssueMessage(issue: FontIssue): string {
   return `${issue.objectId}: copertura dei caratteri di «${issue.fontLabel}» non verificabile automaticamente. Riprova il controllo oppure scegli un file con copertura verificabile.`;
 }
 
-export async function assertDocumentFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>&Partial<Pick<GraphicDocument,'otherPages'|'pageId'|'pageName'>>,options:FontInspectionOptions={}): Promise<FontReport> {
+export async function assertDocumentFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>&Partial<Pick<GraphicDocument,'groups'|'otherPages'|'pageId'|'pageName'>>,options:FontInspectionOptions={}): Promise<FontReport> {
   const report = await inspectDocumentFonts(doc,options), blocking = report.issues.filter(issue => issue.kind !== 'unknown-coverage');
   if (blocking.length) throw new Error(fontIssueMessage(blocking[0]!));
   return report;
@@ -67,7 +68,7 @@ export async function assertDocumentFonts(doc: Pick<GraphicDocument, 'objects' |
 
 /** Output is stricter than an editable draft: unknown coverage is not proof
  * that the browser will use only the requested file. */
-export async function assertOutputFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>&Partial<Pick<GraphicDocument,'otherPages'|'pageId'|'pageName'>>, options: FontInspectionOptions = {}): Promise<FontReport> {
+export async function assertOutputFonts(doc: Pick<GraphicDocument, 'objects' | 'fontAssets'>&Partial<Pick<GraphicDocument,'groups'|'otherPages'|'pageId'|'pageName'>>, options: FontInspectionOptions = {}): Promise<FontReport> {
   const report = await inspectDocumentFonts(doc, options);
   if (report.issues.length) throw new Error(`Correggi i font prima di generare la grafica. ${fontIssueMessage(report.issues[0]!)}`);
   return report;

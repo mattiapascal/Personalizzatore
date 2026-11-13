@@ -6,6 +6,7 @@ import { TEST_MARGIN_MM, cloneSceneObject, objectGeometry, objectCenter, placeOb
 import { objectWithAppearance } from './object-appearance';
 import { areaAlignmentDelta } from './align-area';
 import {rootGroupFor,cloneSceneGroup,remapSceneGroups} from './scene-groups';
+import {objectIsVisible} from './scene-visibility';
 
 type SelectionTool = 'inclineObjects' | 'reflectObjects' | 'placeObjects' | 'alignObjectsToArea' | 'reorderObjects' | 'styleObjects' | 'groupObjects' | 'ungroupObjects' | 'moveObjects' | 'transformObjects' | 'deleteObjects' | 'duplicateObjects' | 'alignObjects' | 'distributeObjects';
 type SelectionCommand = Extract<GraphicCommand, { tool: SelectionTool }>;
@@ -85,7 +86,10 @@ export function applySelectionCommand(doc: GraphicDocument, command: SelectionCo
   if (command.tool === 'ungroupObjects') {
     const ids = command.arguments.groupIds, groups = doc.groups?.filter(group => ids.includes(group.id)) ?? [];
     if (new Set(ids).size !== ids.length || groups.length !== ids.length || !groups.some(group => group.objectIds.includes(command.objectId))) throw new Error('Gruppi da separare non validi');
-    doc.groups = doc.groups?.filter(group => !ids.includes(group.id)).map(source=>{const group=cloneSceneGroup(source);let parent=group.parentId;while(parent&&ids.includes(parent))parent=groups.find(item=>item.id===parent)?.parentId;if(parent)group.parentId=parent;else delete group.parentId;return group;}); cleanGroups(doc); return;
+    const hidden=new Set(doc.objects.filter(object=>!objectIsVisible(doc,object)).map(object=>object.id));
+    doc.groups = doc.groups?.filter(group => !ids.includes(group.id)).map(source=>{const group=cloneSceneGroup(source);let parent=group.parentId;while(parent&&ids.includes(parent))parent=groups.find(item=>item.id===parent)?.parentId;if(parent)group.parentId=parent;else delete group.parentId;return group;});
+    for(const object of doc.objects)if(hidden.has(object.id)&&objectIsVisible(doc,object))object.visible=false;
+    cleanGroups(doc); return;
   }
   const ids = command.tool === 'duplicateObjects' ? command.arguments.copies.map(copy => copy.objectId) : command.arguments.objectIds;
   if('targetScope' in command&&command.targetScope==='object'&&ids.length!==1)throw new Error('L’ambito oggetto richiede un solo elemento');

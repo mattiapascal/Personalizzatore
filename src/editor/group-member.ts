@@ -2,7 +2,7 @@ import type { GraphicDocument,SceneObject } from './model';
 import { groupAncestors } from './scene-groups';
 import {effectiveObjectProperties,effectiveGroupProperties,type EditorRole} from './object-properties';
 
-const tools=new Set(['inclineObjects','reflectObjects','moveObject','transformObject','updateObject','setText','setObjectStyle','setTextPath','replaceImageSource','setObjectProperties','alignObject','reorderObject','duplicateObject','deleteObject']);
+const tools=new Set(['setObjectVisibility','inclineObjects','reflectObjects','moveObject','transformObject','updateObject','setText','setObjectStyle','setTextPath','replaceImageSource','setObjectProperties','alignObject','reorderObject','duplicateObject','deleteObject']);
 export function objectScopeTool(tool:string):boolean{return tools.has(tool);}
 /** Selection is transient; the scope becomes explicit in the validated command. */
 export function withObjectTargetScope(raw:unknown,id:string|null):unknown{

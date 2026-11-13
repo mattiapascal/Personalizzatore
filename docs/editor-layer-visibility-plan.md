@@ -1,0 +1,11 @@
+# Visibilità di oggetti e gruppi — 13 novembre 2026
+
+Incremento manuale della roadmap: icona dell’occhio nel pannello livelli, senza aggiungere strumenti di editing avanzato. `visible` opzionale su oggetti e gruppi, visibilità predefinita invariata; nascondere conserva identità, geometria, stile, risorse e gerarchia nel JSON. Esclusione da canvas/anteprima, SVG/PNG/PDF/miniature e controlli produttivi; proprietà di riferimento non stampabile distinta. Nessuna modifica automatica ai template esistenti.
+
+Comandi tipizzati `setObjectVisibility` / `setGroupVisibility`, revisione e pagina, stesso motore per UI e simulazione AI, Undo/Redo. Un figlio nascosto dal gruppo conserva la propria impostazione per quando il gruppo torna visibile. Selezione diretta degli elementi nascosti esclusa; i gruppi mantengono la propria geometria canonica e comprendono i membri nascosti nelle trasformazioni. Un font non verificato non autorizza misure sostitutive, neanche in un gruppo con figli nascosti.
+
+Permessi: in modalità cliente, selection/delete lock impediscono di nascondere o mostrare l’elemento protetto, anche attraverso il gruppo o un aggiornamento generico. Nessun bypass dei blocchi del template. L’amministratore può gestire la visibilità; i livelli nascosti restano nella lista e si possono ripristinare con l’occhio. Separare un gruppo nascosto non deve rivelarne involontariamente il contenuto.
+
+Prove richieste: dati precedenti invariati, comandi e revisioni errate rifiutati, gerarchie e blocchi ereditati, copia/JSON, selezione e drag, canvas senza hit sui nascosti, snapping, output e controlli produttivi coerenti, font mancanti non misurati, file TEST portabile e catture desktop/mobile. Verifica del backend locale su archivi temporanei prima di considerare il nuovo formato salvabile. Nessuna migrazione o scrittura nell’archivio personale, nessun deploy o cambiamento commerciale.
+
+**Completato:** [contratto e verifiche](iteration-editor-layer-visibility.md). Visibilità canonica e comandi condivisi, permessi, gerarchia, output/miniature, JSON/SQLite TEST e PDF verificati; 1.214 unitari e 78 browser pertinenti distinti passati. Nessuna migrazione o scrittura nell’archivio personale.

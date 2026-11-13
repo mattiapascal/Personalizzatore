@@ -1,5 +1,5 @@
 import {test,expect,type APIRequestContext} from '@playwright/test';
-import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,readFile,writeFile,rm,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFile} from 'node:child_process';
@@ -8,6 +8,7 @@ import {compressedFontDocument,compressedTestFonts} from '../helpers/compressed-
 import {joinGraphicPages} from '../../src/editor/pages';
 import {renderLocalDesignPdf} from '../../scripts/local-pdf-export';
 import type {GraphicDocument} from '../../src/editor/model';
+import {layerVisibilityFixture} from '../helpers/layer-visibility';
 const run=promisify(execFile),origin='http://127.0.0.1:5173';
 test.setTimeout(90000);
 async function inspectPdf(bytes:Buffer){
@@ -65,4 +66,14 @@ test('PDF font compressi: download dall’editor reale senza mutare JSON, revisi
 });
 test('PDF font compressi: il renderer rifiuta origini esterne e API prive di intestazione locale',async({request})=>{
  const doc=compressedFontDocument();await expect(renderLocalDesignPdf(doc,'https://example.com')).rejects.toThrow('loopback');const response=await request.post('/__editor-local/export-pdf',{data:doc});expect(response.status()).toBe(403);
+});
+test('PDF visibilità: gruppi, testi e riferimenti nascosti esclusi da entrambi gli output, file e misure verificati',async({request})=>{
+ const doc=layerVisibilityFixture(),text=doc.objects[2]!;if(text.type!=='text')throw Error('Fixture');doc.groups![0]!.visible=false;
+ doc.objects.push({...text,id:'visible-text',text:'VISIBILE',xMm:10,yMm:10},{...text,id:'hidden-text',text:'NON_PRODURRE',xMm:10,yMm:25,visible:false},{...text,id:'hidden-guide',text:'GUIDA_NASCOSTA',xMm:10,yMm:35,visible:false,editor:{reference:true}},{...text,id:'visible-guide',text:'GUIDA_VISIBILE',xMm:10,yMm:45,editor:{reference:true}});
+ const before=structuredClone(doc);await mkdir('tmp/pdfs',{recursive:true});const directory=await mkdtemp('tmp/pdfs/layer-visibility-'),reports=[];
+ for(const references of[false,true]){
+  const response=await request.post(`/__editor-local/export-pdf${references?'?references=1':''}`,{headers:{'X-Editor-Local':'1','Content-Type':'application/json'},data:doc,timeout:85000});expect(response.status(),response.ok()?'':await response.text()).toBe(200);const bytes=await response.body(),pdf=await inspectPdf(bytes),name=references?'technical':'production';physicalSize(pdf.pages[0],100,60);expect(pdf.text).toContain('VISIBILE');expect(pdf.text).not.toContain('NON_PRODURRE');expect(pdf.text).not.toContain('GUIDA_NASCOSTA');expect(pdf.text).not.toContain('TEST');if(references)expect(pdf.text).toContain('GUIDA_VISIBILE');else expect(pdf.text).not.toContain('GUIDA_VISIBILE');
+  const path=join(directory,name+'.pdf');await writeFile(path,bytes);await run('pdftoppm',['-png','-r','150','-singlefile',path,join(directory,name)]);reports.push({name,path,png:join(directory,name+'.png'),text:pdf.text,fonts:pdf.fonts,pageCount:pdf.pages.length});
+ }
+ expect(doc).toEqual(before);await mkdir('.local/layer-visibility',{recursive:true});await writeFile('.local/layer-visibility/pdf-report.json',JSON.stringify({directory,reports},null,2));
 });

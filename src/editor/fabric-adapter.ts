@@ -14,6 +14,7 @@ import {preciseIntermediateSvg} from './svg-precision';
 import { assertTextGeometry, textGeometryVerified } from './font-measurement';
 import { originalRasterSvg } from './raster-svg';
 import {productionDocument,selectableObjectIds,effectiveObjectProperties,type EditorRole} from './object-properties';
+import {objectIsVisible} from './scene-visibility';
 import {rootGroupFor} from './scene-groups';
 import {plaqueMountingPoints} from './plaque';
 import { mapVector } from './vector-geometry';
@@ -369,6 +370,7 @@ export class FabricAdapter {
     if (!this.fontRenderStatus || !this.document || !this.textRenderGuard) return;
     const blocked: string[] = [], pending: string[] = [];
     const visit = (objects: readonly FabricObject[]) => { for (const object of objects) {
+      if(!object.visible)continue;
       if (object instanceof Group) visit(object.getObjects());
       else {
         const source = this.sourceByObject.get(object); if (source?.type !== 'text') continue;
@@ -552,7 +554,7 @@ export class FabricAdapter {
     if(sources.some(object=>effectiveObjectProperties(this.document!,object.id).transformLocked))target.set({lockMovementX:true,lockMovementY:true,lockScalingX:true,lockScalingY:true,lockRotation:true,hasControls:false});
   }
   render(document: GraphicDocument, selection: string | null | readonly string[] = this.selectedIds, serializationOnly=false): void {
-    for(const object of document.objects)if(object.type==='text')for(const font of [object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])assertFontAvailable(font);
+    for(const object of document.objects)if(object.type==='text'&&objectIsVisible(document,object))for(const font of [object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])assertFontAvailable(font);
     const selectedIds = typeof selection === 'string' ? [selection] : selection ?? [], selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
     const active = this.canvas.getActiveObject(), focus = window.document.activeElement as HTMLElement | null;
     const editing = active instanceof EditorTextBox && active.isEditing && this.idByObject.get(active) === selectedId ? { start: active.selectionStart, end: active.selectionEnd, focused: focus === active.hiddenTextarea, snapshot: this.textSnapshot(active), pending: document.revision === this.editingRevision, committedText: this.editingText } : null;
@@ -563,7 +565,7 @@ export class FabricAdapter {
     try {
       this.canvas.clear();
       this.canvas.backgroundColor = document.paperColor ?? '#ffffff';
-      const partial = document.objects.some(object => { if(object.type==='text'&&!textGeometryVerified(object))return true; const bounds = objectGeometry(object, measureFabric); return object.xMm < 0 || object.yMm < 0 || object.xMm + bounds.widthMm > document.areaMm.width || object.yMm + bounds.heightMm > document.areaMm.height; });
+      const partial = document.objects.some(object => { if(!objectIsVisible(document,object))return false;if(object.type==='text'&&!textGeometryVerified(object))return true; const bounds = objectGeometry(object, measureFabric); return object.xMm < 0 || object.yMm < 0 || object.xMm + bounds.widthMm > document.areaMm.width || object.yMm + bounds.heightMm > document.areaMm.height; });
       this.canvas.clipPath = document.shape === 'round'
         ? new Circle({ radius: document.areaMm.width * PX_PER_MM / 2, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true })
         : partial ? new Rect({ width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true }) : undefined;
@@ -585,10 +587,12 @@ export class FabricAdapter {
         const owner=rootGroupFor(document,object.id),group=owner&&this.directObjectId&&owner.objectIds.includes(this.directObjectId)?undefined:owner;
         const members = group ? document.objects.filter(object => group.objectIds.includes(object.id)) : [object];
         const children = members.map(object => { const source = editing?.pending && object.id === selectedId && object.type === 'text' ? editing.snapshot : object, f = source.type === 'text' && !textGeometryVerified(source) ? unverifiedTextMarker(source) : renderObject(source, true); this.idByObject.set(f, object.id); this.sourceByObject.set(f, object); this.membersByObject.set(f, [object.id]); rendered.add(object.id);
+          f.set({visible:objectIsVisible(document,object)});
           if (f instanceof EditorTextBox && object.type === 'text' && this.textRenderGuard) f.textRenderPermission = () => this.textRenderGuard!.status(this.textFontProbe(f, object), document.fontAssets) === 'ready';
           return f; });
         const root = group ? new Group(children, { originX: 'center', originY: 'center', strokeWidth: 0, objectCaching: false, subTargetCheck: false, interactive: false, perPixelTargetFind: true }) : children[0]!;
         if (group) selectionControls(root);
+        root.set({visible:members.some(object=>objectIsVisible(document,object))});
         if(members.some(object=>object.type==='text'&&!textGeometryVerified(object)))root.set({lockMovementX:true,lockMovementY:true,lockScalingX:true,lockScalingY:true,lockRotation:true,hasControls:false});
         this.membersByObject.set(root, members.map(object => object.id)); this.applyLocks(root,members.map(object=>object.id));this.canvas.add(root);
       }

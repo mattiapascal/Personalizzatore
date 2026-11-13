@@ -12,6 +12,7 @@ import { UnverifiedTextGeometryError } from './unverified-text-geometry';
 import { StrokeWidthSchema } from './stroke';
 import {ColorSchema,PaintSchema,isMonochromePaint} from './paint';
 import {ObjectPropertiesSchema,GroupPropertiesSchema,effectiveObjectProperties,assertObjectPolicies,type EditorRole} from './object-properties';
+import {visibleDocument} from './scene-visibility';
 import {cloneSceneGroup} from './scene-groups';
 import {PlaqueMountingSchema,plaqueMountingPoints} from './plaque';
 import { FontAssetsSchema, FontIdSchema } from './font-assets';
@@ -38,7 +39,7 @@ import { RasterCropSchema, checkedRasterCrop } from './raster-geometry';
 import { areaAlignmentDelta } from './align-area';
 import { BezierNodeSchema, bezierBounds, flattenBezier, MAX_BEZIER_NODES } from './bezier-geometry';
 
-const affineFields = { skewXDeg: z.number().finite().min(-MAX_TEXT_SKEW_DEG).max(MAX_TEXT_SKEW_DEG).optional(), mirrorX: z.boolean().optional(), mirrorY: z.boolean().optional() };
+const affineFields = { visible: z.boolean().optional(), skewXDeg: z.number().finite().min(-MAX_TEXT_SKEW_DEG).max(MAX_TEXT_SKEW_DEG).optional(), mirrorX: z.boolean().optional(), mirrorY: z.boolean().optional() };
 const position = { xMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(GRAPHIC_GEOMETRY_LIMITS.coordinateMm), yMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.coordinateMm).max(GRAPHIC_GEOMETRY_LIMITS.coordinateMm) };
 const rotation = z.number().finite().min(-180).max(180);
 const id = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/);
@@ -88,7 +89,7 @@ export const SceneObjectSchema = z.discriminatedUnion('type', [
   z.strictObject({ id, type: z.literal('bezier'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
 ]);
 export type SceneObject = z.infer<typeof SceneObjectSchema>;
-export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
+export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),visible:z.boolean().optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
 export type SceneGroup=z.infer<typeof SceneGroupSchema>;
 const documentFields = z.strictObject({
   productionProfile:ProductionProfileSchema.optional(),
@@ -266,6 +267,8 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('renamePage'),arguments:z.strictObject({pageId:id,name:z.string().trim().min(1).max(120)})}),
   z.strictObject({...base,tool:z.literal('reorderPage'),arguments:z.strictObject({pageId:id,index:z.number().int().min(0).max(MAX_GRAPHIC_PAGES-1)})}),
   z.strictObject({...objectBase,tool:z.literal('setObjectProperties'),arguments:ObjectPropertiesSchema}),
+  z.strictObject({...objectBase,tool:z.literal('setObjectVisibility'),arguments:z.strictObject({visible:z.boolean()})}),
+  z.strictObject({...base,tool:z.literal('setGroupVisibility'),arguments:z.strictObject({visible:z.boolean()})}),
   z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('placeGroupMember'),arguments:z.strictObject({parentGroupId:id.nullable(),targetObjectId:id.optional(),side:z.enum(['above','below'])})}),
   z.strictObject({...base,tool:z.literal('setPaperColor'),arguments:z.strictObject({color:ColorSchema.nullable()})}),
@@ -372,6 +375,7 @@ function validateSinglePageLayout(doc: GraphicDocument, measure: Measure, mode: 
   // The editing workspace includes the area outside the paper. Only a drag
   // gesture can request deletion; importing/resizing must preserve every object.
   if(mode==='edit'){for(const object of doc.objects)try{objectGeometry(object,measure);}catch(error){if(!(object.type==='text'&&error instanceof UnverifiedTextGeometryError))throw error;}return;}
+  doc=visibleDocument(doc);
   const backgrounds=backgroundObjectIds(doc);
   const intersections=new Map<SceneObject,boolean>();
   const intersects = (object: SceneObject): boolean => {const previous=intersections.get(object);if(previous!==undefined)return previous;const visible=objectIntersectsArea(doc, object, measure);intersections.set(object,visible);return visible;};
@@ -444,6 +448,14 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     assertDocumentTextProduction(next,catalog);
   }
   else if(command.tool==='placeGroupMember')placeGroupMember(next,command.objectId,command.arguments,role);
+  else if(command.tool==='setObjectVisibility'){
+    const object=next.objects.find(object=>object.id===command.objectId);if(!object)throw Error('ID oggetto sconosciuto');
+    if(!direct&&innermostGroup(next,object.id))throw Error('Usa l’ambito oggetto per la visibilità di un membro del gruppo.');
+    object.visible=command.arguments.visible;
+  }
+  else if(command.tool==='setGroupVisibility'){
+    const group=next.groups?.find(group=>group.id===command.objectId);if(!group)throw Error('ID gruppo sconosciuto');group.visible=command.arguments.visible;
+  }
   else if(command.tool==='setGroupProperties'){
     if(role!=='admin')throw new Error('Le proprietà del template si configurano in modalità amministrativa.');
     const group=next.groups?.find(group=>group.id===command.objectId);if(!group)throw new Error('ID gruppo sconosciuto');group.editor={...command.arguments};

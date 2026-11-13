@@ -1,4 +1,5 @@
-import{allGraphicObjects,activeGraphicPageId}from'./pages';
+import {objectIsVisible} from './scene-visibility';
+import{graphicPages,activeGraphicPageId}from'./pages';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { GraphicDocument } from './model';
 import { fontIssueMessage, inspectDocumentFonts, type FontReport } from './font-preflight';
@@ -54,7 +55,7 @@ export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {},
   const coverageVersion=useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion);
   const [retry,setRetry]=useState(0);
   const [result, setResult] = useState<{ document: GraphicDocument; report: FontReport } | null>(null);
-  const relevant = allGraphicObjects(doc).some(object => object.type === 'text');
+  const relevant = graphicPages(doc).some(page=>page.objects.some(object=>object.type==='text'&&objectIsVisible(page,object)));
   useEffect(() => {
     if (!relevant) return;
     let active = true;
