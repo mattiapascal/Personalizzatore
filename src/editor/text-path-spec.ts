@@ -1,4 +1,5 @@
 import {PaintSchema,ColorSchema} from './paint';
+import {ObjectPropertiesSchema} from './object-properties';
 import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import { PaintOpacityFields } from './paint-opacity';
 import { StrokeWidthSchema } from './stroke';
@@ -29,7 +30,8 @@ export const TextPathGuideSchema = z.discriminatedUnion('type', [
   }
 });
 export type TextPathGuide = z.infer<typeof TextPathGuideSchema>;
-export const TextPathSchema = z.strictObject({ guide: TextPathGuideSchema, originalPathId: z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/), offsetMm: z.number().finite().min(-10000).max(10000), normalOffsetMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.objectSideMm).max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm).optional(), baseline: z.enum(['baseline', 'ascender', 'descender']), reversed: z.boolean(), showGuide: z.boolean() });
+export const TextPathMetadataSchema=z.strictObject({editor:ObjectPropertiesSchema.optional(),visible:z.boolean().optional()});
+export const TextPathSchema = z.strictObject({ guide: TextPathGuideSchema, originalPathId: z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{0,63}$/), originalPathMetadata:TextPathMetadataSchema.optional(), offsetMm: z.number().finite().min(-10000).max(10000), normalOffsetMm: z.number().finite().min(-GRAPHIC_GEOMETRY_LIMITS.objectSideMm).max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm).optional(), baseline: z.enum(['baseline', 'ascender', 'descender']), reversed: z.boolean(), showGuide: z.boolean() });
 export type TextPathBinding = z.infer<typeof TextPathSchema>;
 export const TextPathOptionsSchema = TextPathSchema.pick({ offsetMm: true, normalOffsetMm: true, baseline: true, reversed: true, showGuide: true }).partial().refine(value => Object.keys(value).length > 0, 'Specifica almeno un’opzione del testo su tracciato');
 export function scaledTextPath(binding: TextPathBinding, scale: number): TextPathBinding {

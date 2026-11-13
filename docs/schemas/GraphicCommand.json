@@ -2232,6 +2232,63 @@
                                 "type": "string",
                                 "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                               },
+                              "originalPathMetadata": {
+                                "type": "object",
+                                "properties": {
+                                  "editor": {
+                                    "type": "object",
+                                    "properties": {
+                                      "label": {
+                                        "type": "string",
+                                        "maxLength": 120
+                                      },
+                                      "order": {
+                                        "type": "integer",
+                                        "minimum": -10000,
+                                        "maximum": 10000
+                                      },
+                                      "textInputFormat": {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "email",
+                                          "phone",
+                                          "digits",
+                                          "cap-it"
+                                        ]
+                                      },
+                                      "maxCharacters": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 4000
+                                      },
+                                      "transformLocked": {
+                                        "type": "boolean"
+                                      },
+                                      "selectionLocked": {
+                                        "type": "boolean"
+                                      },
+                                      "deleteLocked": {
+                                        "type": "boolean"
+                                      },
+                                      "hideMenus": {
+                                        "type": "boolean"
+                                      },
+                                      "includeInForm": {
+                                        "type": "boolean"
+                                      },
+                                      "reference": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "additionalProperties": false
+                                  },
+                                  "visible": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
                               "offsetMm": {
                                 "type": "number",
                                 "minimum": -10000,
@@ -6402,6 +6459,63 @@
                               "type": "string",
                               "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                             },
+                            "originalPathMetadata": {
+                              "type": "object",
+                              "properties": {
+                                "editor": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string",
+                                      "maxLength": 120
+                                    },
+                                    "order": {
+                                      "type": "integer",
+                                      "minimum": -10000,
+                                      "maximum": 10000
+                                    },
+                                    "textInputFormat": {
+                                      "type": "string",
+                                      "enum": [
+                                        "none",
+                                        "email",
+                                        "phone",
+                                        "digits",
+                                        "cap-it"
+                                      ]
+                                    },
+                                    "maxCharacters": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 4000
+                                    },
+                                    "transformLocked": {
+                                      "type": "boolean"
+                                    },
+                                    "selectionLocked": {
+                                      "type": "boolean"
+                                    },
+                                    "deleteLocked": {
+                                      "type": "boolean"
+                                    },
+                                    "hideMenus": {
+                                      "type": "boolean"
+                                    },
+                                    "includeInForm": {
+                                      "type": "boolean"
+                                    },
+                                    "reference": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                },
+                                "visible": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
                             "offsetMm": {
                               "type": "number",
                               "minimum": -10000,
@@ -9740,6 +9854,63 @@
                           "originalPathId": {
                             "type": "string",
                             "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                          },
+                          "originalPathMetadata": {
+                            "type": "object",
+                            "properties": {
+                              "editor": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string",
+                                    "maxLength": 120
+                                  },
+                                  "order": {
+                                    "type": "integer",
+                                    "minimum": -10000,
+                                    "maximum": 10000
+                                  },
+                                  "textInputFormat": {
+                                    "type": "string",
+                                    "enum": [
+                                      "none",
+                                      "email",
+                                      "phone",
+                                      "digits",
+                                      "cap-it"
+                                    ]
+                                  },
+                                  "maxCharacters": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 4000
+                                  },
+                                  "transformLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "selectionLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "deleteLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "hideMenus": {
+                                    "type": "boolean"
+                                  },
+                                  "includeInForm": {
+                                    "type": "boolean"
+                                  },
+                                  "reference": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "visible": {
+                                "type": "boolean"
+                              }
+                            },
+                            "additionalProperties": false
                           },
                           "offsetMm": {
                             "type": "number",
@@ -13571,6 +13742,63 @@
                             "type": "string",
                             "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                           },
+                          "originalPathMetadata": {
+                            "type": "object",
+                            "properties": {
+                              "editor": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string",
+                                    "maxLength": 120
+                                  },
+                                  "order": {
+                                    "type": "integer",
+                                    "minimum": -10000,
+                                    "maximum": 10000
+                                  },
+                                  "textInputFormat": {
+                                    "type": "string",
+                                    "enum": [
+                                      "none",
+                                      "email",
+                                      "phone",
+                                      "digits",
+                                      "cap-it"
+                                    ]
+                                  },
+                                  "maxCharacters": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 4000
+                                  },
+                                  "transformLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "selectionLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "deleteLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "hideMenus": {
+                                    "type": "boolean"
+                                  },
+                                  "includeInForm": {
+                                    "type": "boolean"
+                                  },
+                                  "reference": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "visible": {
+                                "type": "boolean"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
                           "offsetMm": {
                             "type": "number",
                             "minimum": -10000,
@@ -17391,6 +17619,63 @@
                           "type": "string",
                           "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                         },
+                        "originalPathMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "editor": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "order": {
+                                  "type": "integer",
+                                  "minimum": -10000,
+                                  "maximum": 10000
+                                },
+                                "textInputFormat": {
+                                  "type": "string",
+                                  "enum": [
+                                    "none",
+                                    "email",
+                                    "phone",
+                                    "digits",
+                                    "cap-it"
+                                  ]
+                                },
+                                "maxCharacters": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 4000
+                                },
+                                "transformLocked": {
+                                  "type": "boolean"
+                                },
+                                "selectionLocked": {
+                                  "type": "boolean"
+                                },
+                                "deleteLocked": {
+                                  "type": "boolean"
+                                },
+                                "hideMenus": {
+                                  "type": "boolean"
+                                },
+                                "includeInForm": {
+                                  "type": "boolean"
+                                },
+                                "reference": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "visible": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
                         "offsetMm": {
                           "type": "number",
                           "minimum": -10000,
@@ -20793,6 +21078,63 @@
                           "originalPathId": {
                             "type": "string",
                             "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                          },
+                          "originalPathMetadata": {
+                            "type": "object",
+                            "properties": {
+                              "editor": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string",
+                                    "maxLength": 120
+                                  },
+                                  "order": {
+                                    "type": "integer",
+                                    "minimum": -10000,
+                                    "maximum": 10000
+                                  },
+                                  "textInputFormat": {
+                                    "type": "string",
+                                    "enum": [
+                                      "none",
+                                      "email",
+                                      "phone",
+                                      "digits",
+                                      "cap-it"
+                                    ]
+                                  },
+                                  "maxCharacters": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 4000
+                                  },
+                                  "transformLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "selectionLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "deleteLocked": {
+                                    "type": "boolean"
+                                  },
+                                  "hideMenus": {
+                                    "type": "boolean"
+                                  },
+                                  "includeInForm": {
+                                    "type": "boolean"
+                                  },
+                                  "reference": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "visible": {
+                                "type": "boolean"
+                              }
+                            },
+                            "additionalProperties": false
                           },
                           "offsetMm": {
                             "type": "number",
@@ -24266,6 +24608,63 @@
                           "type": "string",
                           "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
                         },
+                        "originalPathMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "editor": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "order": {
+                                  "type": "integer",
+                                  "minimum": -10000,
+                                  "maximum": 10000
+                                },
+                                "textInputFormat": {
+                                  "type": "string",
+                                  "enum": [
+                                    "none",
+                                    "email",
+                                    "phone",
+                                    "digits",
+                                    "cap-it"
+                                  ]
+                                },
+                                "maxCharacters": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 4000
+                                },
+                                "transformLocked": {
+                                  "type": "boolean"
+                                },
+                                "selectionLocked": {
+                                  "type": "boolean"
+                                },
+                                "deleteLocked": {
+                                  "type": "boolean"
+                                },
+                                "hideMenus": {
+                                  "type": "boolean"
+                                },
+                                "includeInForm": {
+                                  "type": "boolean"
+                                },
+                                "reference": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "visible": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
                         "offsetMm": {
                           "type": "number",
                           "minimum": -10000,
@@ -27593,6 +27992,63 @@
                         "originalPathId": {
                           "type": "string",
                           "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                        },
+                        "originalPathMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "editor": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "order": {
+                                  "type": "integer",
+                                  "minimum": -10000,
+                                  "maximum": 10000
+                                },
+                                "textInputFormat": {
+                                  "type": "string",
+                                  "enum": [
+                                    "none",
+                                    "email",
+                                    "phone",
+                                    "digits",
+                                    "cap-it"
+                                  ]
+                                },
+                                "maxCharacters": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 4000
+                                },
+                                "transformLocked": {
+                                  "type": "boolean"
+                                },
+                                "selectionLocked": {
+                                  "type": "boolean"
+                                },
+                                "deleteLocked": {
+                                  "type": "boolean"
+                                },
+                                "hideMenus": {
+                                  "type": "boolean"
+                                },
+                                "includeInForm": {
+                                  "type": "boolean"
+                                },
+                                "reference": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "visible": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false
                         },
                         "offsetMm": {
                           "type": "number",

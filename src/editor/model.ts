@@ -1,3 +1,4 @@
+import {assertTextPathPolicies} from './text-path-policy';
 import {replacementLineStyles,lineAlignments} from './text-lines';
 import {LayoutGuidesSchema,assertGuideChange} from './layout-guides';
 import {affinePathIntersects} from './affine-intersection';
@@ -583,12 +584,14 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   next.revision++;if(next.contentRevision!==undefined)next.contentRevision++;
   const parsed = DocumentSchema.parse(next);
   validateLayout(parsed, measure, 'edit');
-  assertObjectPolicies(doc,parsed,command,role,(a,b)=>{
+  const sameGeometry=(a:SceneObject,b:SceneObject)=>{
     if((a.rotationDeg??0)!==(b.rotationDeg??0))return false;
     const keys=['skewXDeg','mirrorX','mirrorY','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textSkewXDeg','textClipMasks','clipMasks','textBox','points','nodes','commands','textPath'];
     if(keys.some(key=>JSON.stringify((a as unknown as Record<string,unknown>)[key])!==JSON.stringify((b as unknown as Record<string,unknown>)[key])))return false;
     if(a.type==='text'&&b.type==='text'){try{const ac=objectCenter(a,measure),bc=objectCenter(b,measure);return Math.abs(ac.xMm-bc.xMm)<1e-6&&Math.abs(ac.yMm-bc.yMm)<1e-6;}catch(error){if(!(error instanceof UnverifiedTextGeometryError))throw error;return a.xMm===b.xMm&&a.yMm===b.yMm;}}return Math.abs(a.xMm-b.xMm)<1e-6&&Math.abs(a.yMm-b.yMm)<1e-6;
-  });
+  };
+  assertObjectPolicies(doc,parsed,command,role,sameGeometry);
+  assertTextPathPolicies(doc,parsed,command,role,measure,sameGeometry);
   return parsed;
 }
 export const createDocument = (product?: ProductProfile, catalogVersion?: string): GraphicDocument => ({

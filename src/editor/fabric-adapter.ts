@@ -166,6 +166,15 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
   object.setCoords();
   return object;
 }
+/** Technical layer projection only; layout and canonical data stay intact. */
+export interface GraphicRenderOptions{guideOnlyIds?:readonly string[];}
+function outputParts(view:FabricObject,id:string,options:GraphicRenderOptions):FabricObject{
+ if(view instanceof EditorPathText)view.renderPart=options.guideOnlyIds?.includes(id)?'guide-only':'artwork';return view;
+}
+function assertRenderOptions(document:GraphicDocument,options:GraphicRenderOptions){
+ const ids=options.guideOnlyIds??[];
+ if(!Array.isArray(ids)||new Set(ids).size!==ids.length||ids.some(id=>{const object=document.objects.find(object=>object.id===id);return !object||object.type!=='text'||!object.textPath?.showGuide||!object.textPath.originalPathMetadata?.editor?.reference;}))throw Error('Proiezione tecnica delle guide non valida');
+}
 export const measureFabric: Measure = object => {
   if(hasObjectAffine(object))return measureFabric(withoutObjectAffine(object));
   if (object.type === 'image') { assertRasterParameters(object.source, object.raster); return { widthMm: object.widthMm, heightMm: object.heightMm }; }
@@ -199,9 +208,10 @@ async function prepareGraphicOutput(document: GraphicDocument): Promise<GraphicD
 }
 /** Checked public SVG output. The adapter's synchronous serializer is only for
  * already prepared scenes and internal geometry/reference tests. */
-export async function exportDocumentSvg(document: GraphicDocument, transparentPaper=false): Promise<string> {
+export async function exportDocumentSvg(document: GraphicDocument, transparentPaper=false,options:GraphicRenderOptions={}): Promise<string> {
+  assertRenderOptions(document,options);
   const output = await prepareGraphicOutput(structuredClone(document)), adapter = new FabricAdapter(window.document.createElement('canvas'), () => 0, () => {});
-  try { return adapter.exportSvg(output,transparentPaper); } finally { adapter.dispose(); }
+  try { return adapter.exportSvg(output,transparentPaper,options); } finally { adapter.dispose(); }
 }
 /** Canvas temporaneo: né overlay della vista né selezione entrano nel PNG. */
 export async function exportDocumentPng(document: GraphicDocument, dpi: PngDpi, transparent: boolean): Promise<Blob> {
@@ -209,10 +219,10 @@ export async function exportDocumentPng(document: GraphicDocument, dpi: PngDpi, 
   return new Blob([pngWithDpi(new Uint8Array(await blob.arrayBuffer()), dpi)], { type: 'image/png' });
 }
 /** Browser cache image: bounded resolution independent of paper size and editor zoom. */
-export async function exportDocumentThumbnail(document: GraphicDocument, side = 512): Promise<Blob> {
+export async function exportDocumentThumbnail(document: GraphicDocument, side = 512,options:GraphicRenderOptions={}): Promise<Blob> {
   if (!Number.isInteger(side) || side < 32 || side > 1024) throw new Error('Dimensione miniatura non valida');
   const pixelsPerMm = side / Math.max(document.areaMm.width, document.areaMm.height);
-  return renderDocumentPng(document, { width: Math.max(1, Math.round(document.areaMm.width * pixelsPerMm)), height: Math.max(1, Math.round(document.areaMm.height * pixelsPerMm)), pixelsPerMm }, true);
+  return renderDocumentPng(document, { width: Math.max(1, Math.round(document.areaMm.width * pixelsPerMm)), height: Math.max(1, Math.round(document.areaMm.height * pixelsPerMm)), pixelsPerMm }, true,options);
 }
 /** Read-only bounded tile renderer, using the very same objects, exact fonts,
  * clips and raster filters as the editor. Never allocate the full page at the
@@ -221,7 +231,7 @@ export async function createGraphicTileRenderer(source:GraphicDocument){
  const document=await prepareGraphicOutput(structuredClone(source)),element=window.document.createElement('canvas'),output=new StaticCanvas(element,{width:1,height:1,enableRetinaScaling:false,renderOnAddRemove:false,skipOffscreen:false});
  try{
   output.backgroundColor=document.paperColor??'';
-  const objects=document.objects.map(object=>({id:object.id,view:renderObject(object)}));for(const object of objects)output.add(object.view);
+  const objects=document.objects.map(object=>({id:object.id,view:outputParts(renderObject(object),object.id,{})}));for(const object of objects)output.add(object.view);
   let disposed=false;
   return{
    read(tile:GeometryTile):Uint8ClampedArray{
@@ -239,7 +249,8 @@ export async function createGraphicTileRenderer(source:GraphicDocument){
   };
  }catch(error){await output.dispose();throw error;}
 }
-async function renderDocumentPng(document: GraphicDocument, size: {width:number;height:number;pixelsPerMm:number}, transparent: boolean): Promise<Blob> {
+async function renderDocumentPng(document: GraphicDocument, size: {width:number;height:number;pixelsPerMm:number}, transparent: boolean,options:GraphicRenderOptions={}): Promise<Blob> {
+  assertRenderOptions(document,options);
   document = await prepareGraphicOutput(structuredClone(document)); validateLayout(document, measureFabric, 'edit');
   const element = window.document.createElement('canvas'),masked=document.objects.some(object=>'clipMasks'in object&&object.clipMasks?.length||object.type==='text'&&object.textClipMasks?.length);
   // Intersecting bitmap masks otherwise multiply edge coverage at the output
@@ -253,7 +264,7 @@ async function renderDocumentPng(document: GraphicDocument, size: {width:number;
     output.setViewportTransform([scale, 0, 0, scale, 0, 0]);
     if(document.paperColor)output.backgroundColor=document.paperColor;
     if (document.shape === 'round') output.clipPath = new Circle({ radius: document.areaMm.width * PX_PER_MM / 2, left: 0, top: 0, originX: 'left', originY: 'top', strokeWidth: 0, absolutePositioned: true });
-    for (const object of productionDocument(document).objects) output.add(renderObject(object));
+    for (const object of productionDocument(document).objects) output.add(outputParts(renderObject(object),object.id,options));
     output.renderAll();
     if (!transparent) {
       const context = element.getContext('2d'); if (!context) throw new Error('Esportazione PNG non disponibile');
@@ -555,7 +566,7 @@ export class FabricAdapter {
     if(sources.some(object=>effectiveObjectProperties(this.document!,object.id).selectionLocked))target.set({selectable:false,evented:false});
     if(sources.some(object=>effectiveObjectProperties(this.document!,object.id).transformLocked))target.set({lockMovementX:true,lockMovementY:true,lockScalingX:true,lockScalingY:true,lockRotation:true,hasControls:false});
   }
-  render(document: GraphicDocument, selection: string | null | readonly string[] = this.selectedIds, serializationOnly=false): void {
+  render(document: GraphicDocument, selection: string | null | readonly string[] = this.selectedIds, serializationOnly=false,outputOptions:GraphicRenderOptions={}): void {
     for(const object of document.objects)if(object.type==='text'&&objectIsVisible(document,object))for(const font of [object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])assertFontAvailable(font);
     const selectedIds = typeof selection === 'string' ? [selection] : selection ?? [], selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
     const active = this.canvas.getActiveObject(), focus = window.document.activeElement as HTMLElement | null;
@@ -589,7 +600,7 @@ export class FabricAdapter {
         const owner=rootGroupFor(document,object.id),group=owner&&this.directObjectId&&owner.objectIds.includes(this.directObjectId)?undefined:owner;
         const members = group ? document.objects.filter(object => group.objectIds.includes(object.id)) : [object];
         const children = members.map(object => { const source = editing?.pending && object.id === selectedId && object.type === 'text' ? editing.snapshot : object, f = source.type === 'text' && !textGeometryVerified(source) ? unverifiedTextMarker(source) : renderObject(source, true); this.idByObject.set(f, object.id); this.sourceByObject.set(f, object); this.membersByObject.set(f, [object.id]); rendered.add(object.id);
-          f.set({visible:objectIsVisible(document,object)});
+          f.set({visible:objectIsVisible(document,object)});if(serializationOnly)outputParts(f,object.id,outputOptions);
           if (f instanceof EditorTextBox && object.type === 'text' && this.textRenderGuard) f.textRenderPermission = () => this.textRenderGuard!.status(this.textFontProbe(f, object), document.fontAssets) === 'ready';
           return f; });
         const root = group ? new Group(children, { originX: 'center', originY: 'center', strokeWidth: 0, objectCaching: false, subTargetCheck: false, interactive: false, perPixelTargetFind: true }) : children[0]!;
@@ -846,12 +857,13 @@ export class FabricAdapter {
     this.publishObjectSelection();
   }
   /** Low-level serialization; runtime output callers use exportDocumentSvg. */
-  exportSvg(document: GraphicDocument,transparentPaper=false): string {
+  exportSvg(document: GraphicDocument,transparentPaper=false,options:GraphicRenderOptions={}): string {
+    assertRenderOptions(document,options);
     for(const object of productionDocument(document).objects)if(object.type==='text'){for(const id of [object.fontFamily,...object.characterStyles?.flatMap(run=>run.style.fontFamily?[run.style.fontFamily]:[])??[]])assertFontAvailable(id);assertTextGeometry(object);}
     const zoom = this.zoom;
     const selected = [...this.selectedIds];
     try {
-      this.zoom = 1; this.render(productionDocument(document), null,true);if(transparentPaper&&!document.paperColor)this.canvas.backgroundColor='';
+      this.zoom = 1; this.render(productionDocument(document), null,true,options);if(transparentPaper&&!document.paperColor)this.canvas.backgroundColor='';
       // Both physical axes are explicit. Avoid a subpixel "meet" gutter from
       // rounding the intrinsic millimetre viewport to CSS pixels in SVG images.
       const svg=preciseIntermediateSvg(()=>this.canvas.toSVG({ width: `${document.areaMm.width}mm`, height: `${document.areaMm.height}mm`, viewBox: { x: 0, y: 0, width: document.areaMm.width * PX_PER_MM, height: document.areaMm.height * PX_PER_MM } })).replace('<svg ','<svg preserveAspectRatio="none" ');

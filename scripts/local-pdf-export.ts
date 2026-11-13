@@ -9,14 +9,14 @@ import {exactPdfPageSize,mergeLocalPdfPages} from './pdf-page-size';
 import type {Plugin} from 'vite';
 import {withLocalGraphicRenderer} from './local-graphic-renderer';
 import {parseGraphicDocument,type GraphicDocument} from '../src/editor/model';
-async function renderSinglePagePdf(raw:unknown,origin:string,inspection:LocalRenderFontCoverage,transparentPaper=false):Promise<Buffer>{
+async function renderSinglePagePdf(raw:unknown,origin:string,inspection:LocalRenderFontCoverage,transparentPaper=false,guideOnlyIds:readonly string[]=[]):Promise<Buffer>{
  const doc=parseGraphicDocument(raw);await assertOutputFonts(productionDocument(doc), {resolveWoff2:inspection.resolveWoff2});
  return withLocalGraphicRenderer(origin,inspection,async(page,context)=>{
-  await page.evaluate(async({document,transparentPaper}:{document:GraphicDocument;transparentPaper:boolean})=>{
+  await page.evaluate(async({document,transparentPaper,guideOnlyIds}:{document:GraphicDocument;transparentPaper:boolean;guideOnlyIds:readonly string[]})=>{
    const adapterPath='/src/editor/fabric-adapter.ts',{exportDocumentSvg}=await import(adapterPath);
-   const svg=await exportDocumentSvg(document,transparentPaper);
+   const svg=await exportDocumentSvg(document,transparentPaper,{guideOnlyIds});
    window.document.body.innerHTML=svg;const style=window.document.createElement('style');style.textContent=`@page{size:${document.areaMm.width+1}mm ${document.areaMm.height+1}mm;margin:0}html,body{margin:0;padding:0;width:${document.areaMm.width}mm;height:${document.areaMm.height}mm;overflow:hidden}svg{display:block}`;window.document.head.append(style);await window.document.fonts.ready;
-  },{document:doc,transparentPaper});
+  },{document:doc,transparentPaper,guideOnlyIds});
   if(transparentPaper){const cdp=await context.newCDPSession(page);await cdp.send('Emulation.setDefaultBackgroundColorOverride',{color:{r:0,g:0,b:0,a:0}});}
   return await exactPdfPageSize(await page.pdf({width:`${doc.areaMm.width+1}mm`,height:`${doc.areaMm.height+1}mm`,preferCSSPageSize:true,printBackground:true,pageRanges:'1',margin:{top:0,right:0,bottom:0,left:0}}),doc.areaMm.width,doc.areaMm.height);
  });
@@ -25,7 +25,7 @@ export async function renderLocalDesignPdf(raw:unknown,origin:string,includeRefe
  const project=parseGraphicDocument(raw),pages=graphicPages(project),inspection=new LocalRenderFontCoverage(project.fontAssets);
  // Validate every page before starting a partial output; the response is one PDF.
  for(const page of pages)await assertOutputFonts(productionDocument(page),{resolveWoff2:inspection.resolveWoff2});
- if(includeReferences){const scenes=pages.map(referenceLayers);for(const scene of scenes)for(const layer of[scene.background,scene.foreground])if(layer)await assertOutputFonts(layer,{resolveWoff2:inspection.resolveWoff2});const output:PdfReferencePage[]=[];for(const scene of scenes)output.push({artwork:await renderSinglePagePdf(scene.artwork,origin,inspection,true),...(scene.background?{background:await renderSinglePagePdf(scene.background,origin,inspection,true)}:{}),...(scene.foreground?{foreground:await renderSinglePagePdf(scene.foreground,origin,inspection,true)}:{})});return pdfWithReferenceLayers(output);}
+ if(includeReferences){const scenes=pages.map(referenceLayers);for(const scene of scenes)for(const layer of[scene.background,scene.foreground])if(layer)await assertOutputFonts(layer,{resolveWoff2:inspection.resolveWoff2});const output:PdfReferencePage[]=[];for(const scene of scenes)output.push({artwork:await renderSinglePagePdf(scene.artwork,origin,inspection,true),...(scene.background?{background:await renderSinglePagePdf(scene.background,origin,inspection,true)}:{}),...(scene.foreground?{foreground:await renderSinglePagePdf(scene.foreground,origin,inspection,true,scene.foregroundGuideIds??[])}:{})});return pdfWithReferenceLayers(output);}
  const output:Buffer[]=[];for(const page of pages)output.push(await renderSinglePagePdf(page,origin,inspection));return mergeLocalPdfPages(output);
 }
 export function localPdfExportPlugin():Plugin{

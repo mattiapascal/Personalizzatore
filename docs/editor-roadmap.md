@@ -1,6 +1,8 @@
-**13 novembre — estremità delle linee:** [Funzione e collaudi](iteration-editor-stroke-caps.md). Tre icone per linee e vettori SVG, anche in selezione multipla; centri/lunghezza nominale e maniglie coerenti, stesso comando manuale/AI e Undo. Guide del testo RGB ammesse nei progetti a colori e controlli timbro conservati. Nessuna modifica agli archivi personali o alla chat pubblicata.
+**14 novembre — proprietà del testo su tracciato:** [Correzione, campione e collaudi](iteration-editor-text-path-properties.md). Label, ordine, visibilità e blocchi del percorso conservati e ripristinati; riferimenti separati dalla grafica produttiva senza spostare o duplicare i glifi. Stessi comandi manuali/AI, Undo e appunti; **1.327 unitari, 35 browser pertinenti, 13 pubblici e 83 campioni passati**. SQLite R638 invariato, nessun deploy.
 
-**Prossimo controllo manuale:** verificare applicazione/separazione del testo su tracciati che hanno label, proprietà amministrative e visibilità. L’estrazione attuale della guida va confrontata con il suo schema stretto: conservare le proprietà e i blocchi, senza eliminarli per aggirare errori.
+**Prossimo incremento manuale:** giunzioni dei contorni ed estremità per tracciati a punti/Bézier, con misure, maniglie e output coerenti; conservare preferenze legacy e controlli produttivi.
+
+**13 novembre — estremità delle linee:** [Funzione e collaudi](iteration-editor-stroke-caps.md). Tre icone per linee e vettori SVG, anche in selezione multipla; centri/lunghezza nominale e maniglie coerenti, stesso comando manuale/AI e Undo. Guide del testo RGB ammesse nei progetti a colori e controlli timbro conservati. Nessuna modifica agli archivi personali o alla chat pubblicata.
 
 **13 novembre — tonalità delle immagini:** [Funzione e collaudi](iteration-editor-raster-hue.md). Rotazione delle tinte RGB da −180° a +180°, confrontata con Fabric 2D; alpha e grigi invariati, stessi comandi manuali/AI, cache, Undo e output portabili. Nessuna elaborazione automatica degli originali o modifica ai dati personali/chat pubblicata.
 

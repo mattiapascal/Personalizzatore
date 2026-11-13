@@ -201,6 +201,8 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, doc
           <NumberField {...fields} label="Scorrimento sul tracciato (mm)" value={current.textPath.offsetMm} min={-10000} max={10000} step={0.1} onChange={offsetMm => patch({ textPath: { ...current.textPath!, offsetMm } })}/>
           <label className="ratio-toggle"><input type="checkbox" checked={current.textPath.reversed} onChange={event => patch({ textPath: { ...current.textPath!, reversed: event.target.checked } }, true)}/> Inverti direzione</label>
           <label className="ratio-toggle"><input type="checkbox" checked={current.textPath.showGuide} onChange={event => patch({ textPath: { ...current.textPath!, showGuide: event.target.checked } }, true)}/> Mostra tracciato nel disegno</label>
+          {current.textPath.originalPathMetadata?.editor?.label&&<p className="caption">Tracciato: {current.textPath.originalPathMetadata.editor.label}. Le proprietà originali si ripristinano separandolo dal testo.</p>}
+          {current.textPath.originalPathMetadata?.editor?.reference&&<p className="caption">Tracciato di riferimento: se mostrato, compare nella tavola tecnica ed è escluso dalla grafica produttiva.</p>}
           <EditorButton icon="detachText" label="Separa testo dal tracciato" disabled={!!characterSelection || dirty} onClick={onDetachText}/>
           <p className="caption">Trascina la maniglia sul percorso per far scorrere il testo. Il testo segue una sola riga; Giustifica usa l’allineamento centrato.</p>
         </fieldset>}

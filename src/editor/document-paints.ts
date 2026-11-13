@@ -9,7 +9,7 @@ export function documentPaintColors(document:GraphicDocument):string[]{
  for(const object of page.objects){
   if(object.type==='image'){if(object.raster.mode==='grayscale')add(object.raster.tintColor);continue;}
   if(object.type!=='text'){appearance(object);continue;}
-  if(object.textPath?.showGuide)add(object.textPath.guide.stroke);
+  if(object.textPath?.showGuide&&!object.textPath.originalPathMetadata?.editor?.reference)add(object.textPath.guide.stroke);
   const length=Array.from(object.text).length;let cursor=0;
   for(const run of object.characterStyles??[]){if(run.start>cursor)appearance(object);add(run.style.fill??object.fill);add(run.style.stroke??object.stroke);cursor=run.end;}
   if(cursor<length||length===0)appearance(object);

@@ -14,7 +14,7 @@ export async function exportReferenceThumbnail(document: GraphicDocument, side =
   try {
     for (const layer of [layers.background,layers.artwork,layers.foreground]) {
       if (!layer) continue;
-      const uri = URL.createObjectURL(await exportDocumentThumbnail(layer,side)), image = new Image();
+      const uri = URL.createObjectURL(await exportDocumentThumbnail(layer,side,layer===layers.foreground?{guideOnlyIds:layers.foregroundGuideIds}:{})), image = new Image();
       try {image.src=uri;await image.decode();context.drawImage(image,0,0);} finally {URL.revokeObjectURL(uri);}
     }
     return await new Promise<Blob>((resolve,reject)=>element.toBlob(blob=>blob?resolve(blob):reject(Error('Anteprima non generata')),'image/png'));

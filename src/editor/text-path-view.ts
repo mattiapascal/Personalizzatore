@@ -10,6 +10,8 @@ function measureContext() { return measuringContext ??= document.createElement('
 const rounded = (value: number) => Math.round(value * 1e6) / 1e6;
 export class EditorPathText extends EditorTextBox {
   binding?: TextPathBinding;
+  renderPart:'all'|'artwork'|'guide-only'='all';
+  private paintsGuide(){return !!this.binding?.showGuide&&(this.renderPart!=='artwork'||!this.binding.originalPathMetadata?.editor?.reference);}
   glyphScale = 1;
   pathCenterOffset = { x: 0, y: 0 };
   textAdvance = 0;
@@ -73,8 +75,8 @@ export class EditorPathText extends EditorTextBox {
     if (!this.binding) { super._renderChar(...args); return; } const context = args[1], style = this.getCompleteStyleDeclaration(args[2], args[3]), shift = this.baselineShift(style, args[4]); context.save(); context.scale(this.glyphScale, 1); args[5] /= this.glyphScale; args[6] += shift; try { super._renderChar(...args); } finally { context.restore(); }
   }
   override _render(context: CanvasRenderingContext2D): void {
-    if (this.binding?.showGuide && this.path) { context.save(); context.translate(-this.pathCenterOffset.x, -this.pathCenterOffset.y); this.path._render(context); context.restore(); }
-    super._render(context);
+    if (this.paintsGuide() && this.path) { context.save(); context.translate(-this.pathCenterOffset.x, -this.pathCenterOffset.y); this.path._render(context); context.restore(); }
+    if(this.renderPart!=='guide-only')super._render(context);
   }
   override _renderTextDecoration(context: CanvasRenderingContext2D, type: 'underline' | 'linethrough' | 'overline'): void {
     if (!this.binding) { super._renderTextDecoration(context, type); return; }
@@ -97,7 +99,8 @@ export class EditorPathText extends EditorTextBox {
   }
   override _toSVG(): string[] {
     if (!this.binding) return super._toSVG(); let content = '';
-    if (this.binding.showGuide && this.path) { const visible = this.path.visible; this.path.visible = true; try { content += `<g transform="translate(${-this.pathCenterOffset.x} ${-this.pathCenterOffset.y})">${this.path.toSVG()}</g>`; } finally { this.path.visible = visible; } }
+    if (this.paintsGuide() && this.path) { const visible = this.path.visible; this.path.visible = true; try { content += `<g transform="translate(${-this.pathCenterOffset.x} ${-this.pathCenterOffset.y})">${this.path.toSVG()}</g>`; } finally { this.path.visible = visible; } }
+    if(this.renderPart==='guide-only')return ['<g ', 'COMMON_PARTS', '>', content, '</g>'];
     this._textLines[0]!.forEach((character, i) => {
       const box = this.__charBounds[0]![i]!, style = this.getCompleteStyleDeclaration(0, i), shift = this.baselineShift(style, character), decoration = [style.underline && 'underline', style.linethrough && 'line-through', style.overline && 'overline'].filter(Boolean).join(' ');
       content += `<g transform="translate(${rounded(box.renderLeft!)} ${rounded(box.renderTop!)}) rotate(${rounded(box.angle! * 180 / Math.PI)}) scale(${rounded(this.glyphScale)} 1)"><text xml:space="preserve" x="${rounded(-box.width / 2 / this.glyphScale)}" y="${rounded(shift)}" font-family="${xml(style.fontFamily)}" font-size="${rounded(style.fontSize)}" font-weight="${style.fontWeight}" font-style="${style.fontStyle}" fill="${xml(String(style.fill))}" stroke="${xml(String(style.stroke ?? 'none'))}" stroke-width="${rounded(style.strokeWidth)}" stroke-linecap="${this.strokeLineCap}" stroke-linejoin="${this.strokeLineJoin}" stroke-miterlimit="${this.strokeMiterLimit}" paint-order="${this.paintFirst === 'stroke' ? 'stroke fill' : 'fill stroke'}"${decoration ? ` text-decoration="${decoration}"` : ''}><tspan>${xml(character)}</tspan></text></g>`;
