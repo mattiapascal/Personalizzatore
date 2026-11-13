@@ -1,5 +1,7 @@
 import {assertOutputFonts} from '../editor/font-preflight';
 import {assertDocumentTextProduction} from '../editor/text-production';
+import {assertDocumentProduction} from '../editor/production-check';
+import {browserBinaryRasterCheck} from '../editor/production-check-browser';
 import {productionDocument} from '../editor/object-properties';
 import {validateObjectInputs} from '../editor/object-properties';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -78,7 +80,7 @@ export function ConfigurationPanel({ api }: { api: WorkflowEditorApi }) {
     setNotice('');
     const catalog={version:fixtureCatalog.version,products:fixtureCatalog.list()};assertDocumentTextProduction(api.peek(),catalog,true);
     const captured = await api.capture();validateObjectInputs(captured.document);const report = await assertDocumentFonts(captured.document);
-    assertDocumentTextProduction(captured.document,catalog,true);
+    await assertDocumentProduction(captured.document,catalog,browserBinaryRasterCheck,true);
     setReview(captured); setFontReport(report);
     setTitle(captured.document.objects.filter(o => o.type === 'text').map(o => o.text.replace(/\s+/g, ' ')).join(' · ').trim().slice(0,120) || 'Composizione grafica');
     setView('review');

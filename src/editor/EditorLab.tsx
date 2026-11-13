@@ -50,7 +50,9 @@ import { createDocument, DocumentStore, GraphicCommandSchema, parseGraphicDocume
 import type { ProductProfile } from '../catalog/schema';
 import './editor.css';
 import { ObjectInspector,type InspectorSection } from './ObjectInspector';
-import { assertDocumentTextProduction, minimumFontForDocument } from './text-production';
+import { minimumFontForDocument } from './text-production';
+import {assertDocumentProduction} from './production-check';
+import {browserBinaryRasterCheck} from './production-check-browser';
 import { WorkspaceFrame } from './WorkspaceFrame';
 import { LayersPanel } from './LayersPanel';
 import type { CharacterSelection } from './text-style';
@@ -182,7 +184,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const saveArchive = async (close=false,copy=true) => {
     const snapshot = structuredClone(storeRef.current!.document);archiveBusyRef.current=true;setArchiveBusy(true);setError('');setSessionNotice('');
     try {
-      if(mode==='customer'){if(!fieldsValid)throw new Error('Correggi il campo del modulo non ancora applicato al design.');for(const page of graphicPages(snapshot)){try{validateObjectInputs(page);if(close)assertDocumentTextProduction(page,graphicCatalog,true);}catch(error){throw Error(`${page.pageName??'Pagina 1'}: ${error instanceof Error?error.message:'Dati non validi'}`);}}}
+      if(mode==='customer'){if(!fieldsValid)throw new Error('Correggi il campo del modulo non ancora applicato al design.');for(const page of graphicPages(snapshot)){try{validateObjectInputs(page);}catch(error){throw Error(`${page.pageName??'Pagina 1'}: ${error instanceof Error?error.message:'Dati non validi'}`);}}if(close)await assertDocumentProduction(snapshot,graphicCatalog,browserBinaryRasterCheck,true);}
       const state=await readAdminSnapshot();if(state.environment?.readOnly)throw new Error('Copia di prova in sola lettura: esporta il progetto per conservare le modifiche.');const title=archiveTitle.trim()||sourceRecord?.title||`Composizione ${new Date().toLocaleDateString('it-IT')}`;
       const replace=!copy&&sourceRecord&&(mode==='admin'||sourceRecord.kind==='composition');
       const saved=await localAdminRequest('',replace?{tool:'replaceRecord',expectedRevision:state.revision,arguments:{id:sourceRecord.id,recordVersion:sourceRecord.version,title,tags:parseTags(archiveTags),document:snapshot}}:{tool:'saveRecord',expectedRevision:state.revision,arguments:{kind:mode==='customer'?'composition':archiveKind,title,tags:parseTags(archiveTags),clientRef:'',document:snapshot}})as Awaited<ReturnType<typeof readAdminSnapshot>>;

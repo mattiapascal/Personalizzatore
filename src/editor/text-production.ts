@@ -50,9 +50,13 @@ export function assertDocumentTextProduction(document: GraphicDocument, catalog?
       if (object.type === 'image') return object.raster.mode === 'grayscale';
       if (object.type === 'text') {
         const styles = characterStyles(object);
-        return Array.from(object.text).some((character,index) => !/\s/u.test(character) && partial(styles[index]?.fillOpacity ?? object.fillOpacity));
+        return Array.from(object.text).some((character,index) => {
+          if(/\s/u.test(character))return false;
+          const style=styles[index],stroke=style?.stroke??object.stroke??'none',width=style?.strokeMm??object.strokeMm??.25;
+          return partial(style?.fillOpacity??object.fillOpacity)||stroke!=='none'&&width>0&&partial(style?.strokeOpacity??object.strokeOpacity);
+        });
       }
-      return object.fill !== undefined && object.fill !== 'none' && partial(object.fillOpacity) || object.stroke !== 'none' && partial(object.strokeOpacity);
+      return object.fill !== undefined && object.fill !== 'none' && partial(object.fillOpacity) || object.stroke !== 'none' && object.strokeMm>0 && partial(object.strokeOpacity);
     });
     if (issue) throw Error(`Il timbro richiede grafica in bianco/nero senza sfumature o trasparenze parziali: correggi «${issue.editor?.label || issue.id}» prima di confermare.`);
   }
