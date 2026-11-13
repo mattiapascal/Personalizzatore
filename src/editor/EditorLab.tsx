@@ -22,6 +22,8 @@ import { MAX_PROJECT_BYTES } from './project-limits';
 import { assertFontGeometry } from './verified-font-geometry';
 import { exportDocumentSvg } from './fabric-adapter';
 import { missingCharacterFontCommand } from './font-repair';
+import{fontIssueSelectionTarget,type InspectorRequest}from'./font-issue-selection';
+import type{FontIssue}from'./font-preflight';
 import {useProjectFontPreparation} from './LegacyFontDialog';
 import {legacyFontRequests} from './legacy-fonts';
 import {CustomerFieldsPanel} from './CustomerFieldsPanel';
@@ -119,6 +121,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const storeRef = useRef<DocumentStore | null>(null);
   const [doc, setDoc] = useState<GraphicDocument>(() => initialDocument?parseGraphicDocument(initialDocument):createEditorDocument(product, catalogVersion));
   const [geometryFocus,setGeometryFocus]=useState<GeometryFocus|null>(null),geometryFocusSequence=useRef(0);
+  const [inspectorRequest,setInspectorRequest]=useState<InspectorRequest|null>(null),inspectorSequence=useRef(0);
   const currentGeometryFocus=geometryFocus&&geometryFocusCurrent(geometryFocus,doc)?geometryFocus:null;
   useEffect(() => setVectorMonochrome(doc.colorMode !== 'color'), [doc.colorMode]);
   const firstProductEffect=useRef(true);
@@ -335,6 +338,13 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     if(pageId!==(store.document.pageId??'page-1')&&!act(()=>dispatch(store,{schemaVersion:1,tool:'selectPage',objectId:pageId,expectedRevision:store.document.revision,arguments:{pageId}},'manual'),[]))return;
     setContextPoint(null);setGeometryFocus(focus);
   };
+  const locateFontIssue=(issue:FontIssue,revision:number)=>{
+    const store=storeRef.current;if(!store||store.document.documentId!==doc.documentId||store.document.revision!==revision){setError('La segnalazione è cambiata: rileggi il controllo font.');return;}
+    const target=fontIssueSelectionTarget(store.document,issue,policyRole);if(!target||!target.selectable){setError('Il testo non è disponibile per la selezione.');return;}
+    if(target.pageId!==(store.document.pageId??'page-1')&&!act(()=>dispatch(store,{schemaVersion:1,tool:'selectPage',objectId:target.pageId,expectedRevision:revision,arguments:{pageId:target.pageId}},'manual'),[]))return;
+    setDrawingTool(null);setNodeMode(false);setCropMode(false);setPanTool(false);setContextPoint(null);setError('');select(target.object.id,true);adapter.current?.selectObjects(selectedRef.current);
+    setInspectorRequest({documentId:store.document.documentId,pageId:target.pageId,objectId:target.object.id,sequence:++inspectorSequence.current});
+  };
   useEffect(() => {
     if (!canvasRef.current) return;
     const initial = structuredClone(doc);
@@ -453,7 +463,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     else selectionCommand('alignObjects',{objectIds:ids,alignment,...(masterRef.current?{referenceObjectId:masterRef.current}:{})});
   };
   const workflowApi: WorkflowEditorApi = { document: doc, peek: () => cloneGraphicDocument(storeRef.current?.document ?? doc), busy: editing || drawing || assetBusy || conflict || catalogOutdated || graphicPageIds(doc).length>1, busyReason: graphicPageIds(doc).length>1 ? 'Il riepilogo prodotto è disponibile per progetti a pagina singola. Puoi salvare il progetto completo nell’archivio.' : editing ? 'Termina la scrittura con Esc o con il pulsante di conferma sul foglio.' : drawing ? 'Termina il disegno prima di controllare il progetto.' : assetBusy ? 'Attendi il caricamento della risorsa.' : 'Risolvi il cambio di formato prima di continuare.', capture: async () => { const store = storeRef.current; if (!store || !adapter.current) throw new Error('Editor non ancora disponibile'); const document = cloneGraphicDocument(store.document), svg = await exportDocumentSvg(document); if (storeRef.current !== store || store.document.documentId !== document.documentId || store.document.revision !== document.revision) throw new Error('Il progetto è cambiato durante il controllo dei font. Ripeti l’anteprima.'); return { document, svg }; }, open: next => prepareAndAct(async store => { if(autosave)await preserveDraftSnapshot(store.document); next=await projectFonts.prepare(next);await Promise.all([...allGraphicObjects(next).filter(o => o.type === 'image').map(o => prepareRasterSource(o.source))]); return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);}; }) };
-  return <>{contextPoint&&<CanvasContextMenu point={contextPoint} selected={!!selectedIds.length} canPaste={clipboardCount>0} busy={clipboardBusy||assetBusy||archiveBusy} onCopy={()=>copySelection()} onCut={()=>copySelection(true)} onPaste={fit=>{void pasteSelection(fit);}} onClose={()=>{setContextPoint(null);adapter.current?.canvas.upperCanvasEl.focus();}}/>}{mediaLibrary&&<MediaLibraryDialog kind={mediaLibrary} monochrome={doc.colorMode!=='color'} busy={assetBusy} onClose={()=>setMediaLibrary(null)} onInsert={insertLibraryAsset}/>}<WorkspaceFrame showForm={formEntries(doc).length>0} mode={mode} geometryFocus={currentGeometryFocus} onClearGeometryFocus={()=>setGeometryFocus(null)} actions={<>
+  return <>{contextPoint&&<CanvasContextMenu point={contextPoint} selected={!!selectedIds.length} canPaste={clipboardCount>0} busy={clipboardBusy||assetBusy||archiveBusy} onCopy={()=>copySelection()} onCut={()=>copySelection(true)} onPaste={fit=>{void pasteSelection(fit);}} onClose={()=>{setContextPoint(null);adapter.current?.canvas.upperCanvasEl.focus();}}/>}{mediaLibrary&&<MediaLibraryDialog kind={mediaLibrary} monochrome={doc.colorMode!=='color'} busy={assetBusy} onClose={()=>setMediaLibrary(null)} onInsert={insertLibraryAsset}/>}<WorkspaceFrame showForm={formEntries(doc).length>0} mode={mode} inspectorRequest={inspectorRequest} geometryFocus={currentGeometryFocus} onClearGeometryFocus={()=>setGeometryFocus(null)} actions={<>
       <span className="design-session-status" role="status">{trialArchive&&<span data-testid="archive-environment">{trialArchive.readOnly?'Copia di prova · sola lettura':'Copia di prova'} · </span>}{sessionNotice||sourceRecord?.title||archiveTitle||'Nuovo design'} · {dirty?'Modifiche da confermare':'Nessuna modifica da salvare'}</span>
       {(mode!=='customer'||customerPdfEnabled)&&<EditorButton icon="download" badge="PDF" label="Scarica PDF" disabled={pdfBusy||editing||drawing||assetBusy} onClick={()=>void exportPdf()}/>}
       <EditorButton icon="refresh" label="Ricarica design originale" disabled={archiveBusy||editing||drawing||assetBusy} onClick={()=>setSessionDialog('reload')}/>
@@ -609,7 +619,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     </>}
     project={<>
       <ProductionProfilePanel document={doc} onLocate={locateGeometry} onResetFocus={()=>setGeometryFocus(null)} catalog={graphicCatalog} admin={mode!=='customer'} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onSet={(profile,expectedRevision)=>act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'setProductionProfile',objectId:'page',expectedRevision,arguments:{profile}},'manual'))}/>
-      {projectFonts.dialog}{(mode!=='customer'||!!fontRendering.blocked.length)&&<FontCheckPanel onPage={pageId=>{setNodeMode(false);setCropMode(false);setContextPoint(null);act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'selectPage',objectId:pageId,expectedRevision:storeRef.current!.document.revision,arguments:{pageId}},'manual'),[]);}} document={doc} busy={editing || drawing || assetBusy || archiveBusy} onOpen={() => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).catch(cause => setError(cause.message)); }} onRepair={(issue, fontId, expectedRevision) => prepareAndAct(async store => {
+      {projectFonts.dialog}{(mode!=='customer'||!!fontRendering.blocked.length)&&<FontCheckPanel role={policyRole} onSelectIssue={locateFontIssue} onPage={pageId=>{setNodeMode(false);setCropMode(false);setContextPoint(null);act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'selectPage',objectId:pageId,expectedRevision:storeRef.current!.document.revision,arguments:{pageId}},'manual'),[]);}} document={doc} busy={editing || drawing || assetBusy || archiveBusy} onOpen={() => { void refreshLibraryFonts(storeRef.current?.document.fontAssets).catch(cause => setError(cause.message)); }} onRepair={(issue, fontId, expectedRevision) => prepareAndAct(async store => {
         if (store.document.revision !== expectedRevision) throw new Error('Revisione grafica obsoleta: rileggi la segnalazione.');
         const asset = registeredFontAsset(fontId); if (!asset) throw new Error('File font non caricato dalla libreria.');
         const command = await missingCharacterFontCommand(store.document, issue, asset);

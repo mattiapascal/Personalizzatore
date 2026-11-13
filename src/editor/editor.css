@@ -320,3 +320,7 @@
 .geometry-focus-status > span { min-width: 0; overflow-wrap: anywhere; }
 .geometry-focus-status .panel-close { width: 26px; height: 26px; min-width: 26px; min-height: 26px; padding: 4px; border: 0; background: transparent; }
 .geometry-focus-status .panel-close > svg { width: 16px; height: 16px; }
+
+.font-issue-target { margin: 10px 0; padding-bottom: 8px; border-bottom: 1px solid #b7dbee; }
+.font-issue-target > button { width: 100%; margin-top: 6px; background: #08c; color: #fff; border-color: #0075af; }
+.font-issue-target > button:hover:not(:disabled) { background: #0075af; }

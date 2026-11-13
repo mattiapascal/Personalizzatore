@@ -1,5 +1,6 @@
 import {useMovablePanel} from './use-movable-panel';
 import {geometryFocusCurrent,geometryFocusTranslation,type GeometryFocus} from './geometry-focus';
+import type{InspectorRequest}from'./font-issue-selection';
 import{config as fabricConfig}from'fabric';
 import { useCanvasPan } from './use-canvas-pan';
 import { EditorButton } from './EditorButton';
@@ -7,16 +8,24 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus }: {
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest }: {
   edit?:ReactNode;transforms?:ReactNode;context: ReactNode; stage: ReactNode; tools: ReactNode; properties: ReactNode; project: ReactNode; diagnostics: ReactNode;
   document: GraphicDocument; editing: boolean; onZoom: (zoom: number) => void;
   showForm?:boolean;actions?:ReactNode;mode?:'customer'|'admin'|'test';workflow?: ReactNode; layers: ReactNode; panTool: boolean; onTemporaryPan: (active: boolean) => void;
   geometryFocus?:GeometryFocus|null;onClearGeometryFocus?:()=>void;
+  inspectorRequest?:InspectorRequest|null;
 }) {
   const root = useRef<HTMLElement>(null), viewport = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(() => new URLSearchParams(window.location.search).get('workspace') === '1');
   const [objectsOpen, setObjectsOpen] = useState(() => window.innerWidth >= 900);
   const [propertiesOpen, setPropertiesOpen] = useState(() => window.innerWidth >= 900);
+  const handledInspectorRequest=useRef(0);
+  useLayoutEffect(()=>{
+    if(!inspectorRequest||handledInspectorRequest.current===inspectorRequest.sequence||inspectorRequest.documentId!==doc.documentId||inspectorRequest.pageId!==(doc.pageId??'page-1')||!doc.objects.some(object=>object.id===inspectorRequest.objectId))return;
+    handledInspectorRequest.current=inspectorRequest.sequence;
+    setPropertiesOpen(true);if(innerWidth<900)setObjectsOpen(false);
+    const frame=requestAnimationFrame(()=>{const panel=root.current?.querySelector<HTMLElement>('.properties-panel');if(panel){panel.scrollTop=0;panel.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')?.focus({preventScroll:true});}});return()=>cancelAnimationFrame(frame);
+  },[inspectorRequest?.sequence,doc.documentId,doc.pageId]);
   const [workflowOpen,setWorkflowOpen]=useState(()=>mode==='customer'&&!!doc.plaque),workflowAnchor=useRef<HTMLDivElement>(null),workflowPanel=useRef<HTMLElement>(null);
   useEffect(()=>{if(showForm&&mode==='customer')setWorkflowOpen(true);},[showForm,mode,doc.documentId]);
   const workflowTitle=showForm?'Compila i dati':'Prodotto e fissaggi';

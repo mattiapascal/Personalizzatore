@@ -9,6 +9,9 @@ import { fontCoverageVersion, subscribeFontCoverage } from './font-coverage-cach
 import {missingCharacterFontCommand} from './font-repair';
 import {registeredFontAsset,renderFontFamily,isFontAvailable} from './fonts';
 import {characterStyles} from './text-style';
+import{fontIssueSelectionTarget}from'./font-issue-selection';
+import type{EditorRole}from'./object-properties';
+import{ObjectIdentity}from'./ObjectIdentity';
 
 type Repair = (issue: FontIssue, fontId: string, revision: number) => Promise<boolean>;
 function FontRepairRow({ issue, document:doc, busy, onOpen, onRepair }: { issue: FontIssue; document:GraphicDocument; busy: boolean; onOpen: () => void; onRepair: Repair }) {
@@ -41,7 +44,7 @@ function FontRepairRow({ issue, document:doc, busy, onOpen, onRepair }: { issue:
   </div>;
 }
 
-export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {}, onRepair,onPage }: { onPage?:(pageId:string)=>void;document: GraphicDocument; busy?: boolean; onOpen?: () => void; onRepair?: Repair }) {
+export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {}, onRepair,onPage,onSelectIssue,role='customer' }: { onSelectIssue?:(issue:FontIssue,revision:number)=>void;role?:EditorRole;onPage?:(pageId:string)=>void;document: GraphicDocument; busy?: boolean; onOpen?: () => void; onRepair?: Repair }) {
   const coverageVersion=useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion);
   const [retry,setRetry]=useState(0);
   const [result, setResult] = useState<{ document: GraphicDocument; report: FontReport } | null>(null);
@@ -56,7 +59,9 @@ export function FontCheckPanel({ document: doc, busy = false, onOpen = () => {},
   const report = result?.document === doc ? result.report : null;
   return <section aria-label="Controllo font del progetto" className="font-check-panel">
     <strong>Font del progetto</strong>
-    {!report ? <p className="caption">Controllo dei caratteri…</p> : report.issues.length ? <div><p className="caption" role="status">Controlla questi testi prima di confermare la grafica.</p><ul>{report.issues.map(issue=><li key={`${issue.pageId??''}:${issue.objectId}:${issue.fontId}:${issue.kind}`}>{fontIssueMessage(issue)}{issue.pageId&&issue.pageId!==activeGraphicPageId(doc)?<button type="button" disabled={busy} onClick={()=>onPage?.(issue.pageId!)}>Apri pagina {issue.pageName}</button>:issue.kind === 'missing-characters' && onRepair && <FontRepairRow issue={issue} document={doc} busy={busy} onOpen={onOpen} onRepair={onRepair}/>}</li>)}</ul></div> : <p className="caption">I caratteri usati sono presenti nei {report.checkedFonts} file font controllati. Verifica comunque la resa nell’anteprima.</p>}
+    {!report ? <p className="caption">Controllo dei caratteri…</p> : report.issues.length ? <div><p className="caption" role="status">Controlla questi testi prima di confermare la grafica.</p><ul>{report.issues.map((issue,index)=>{const target=fontIssueSelectionTarget(doc,issue,role),first=report.issues.findIndex(other=>other.objectId===issue.objectId&&other.pageId===issue.pageId)===index;return <li key={`${issue.pageId??''}:${issue.objectId}:${issue.fontId}:${issue.kind}`}>
+      {first&&target&&onSelectIssue&&<div className="font-issue-target"><ObjectIdentity object={target.object}/><button type="button" disabled={busy||!target.selectable} aria-label={`Apri testo ${issue.objectId}${issue.pageName?` di ${issue.pageName}`:''} nell’ispettore`} onClick={()=>onSelectIssue(issue,doc.revision)}>Apri nell’ispettore</button>{!target.selectable&&<p className="caption">Selezione bloccata dal template.</p>}</div>}
+      {fontIssueMessage(issue)}{issue.pageId&&issue.pageId!==activeGraphicPageId(doc)?(!onSelectIssue||!target?.selectable)&&<button type="button" disabled={busy} onClick={()=>onPage?.(issue.pageId!)}>Apri pagina {issue.pageName}</button>:issue.kind === 'missing-characters' && onRepair && <FontRepairRow issue={issue} document={doc} busy={busy} onOpen={onOpen} onRepair={onRepair}/>}</li>;})}</ul></div> : <p className="caption">I caratteri usati sono presenti nei {report.checkedFonts} file font controllati. Verifica comunque la resa nell’anteprima.</p>}
     {report?.issues.some(issue=>issue.kind==='unknown-coverage')&&<button type="button" disabled={busy} onClick={()=>{setResult(null);setRetry(value=>value+1);}}>Ricontrolla i font</button>}
   </section>;
 }
