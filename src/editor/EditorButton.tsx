@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const icons = {
+  locate:<><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/></>,
   editMenu:<><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></>,
   pasteFit:<><path d="M8 4H4v18h16V4h-4"/><rect x="8" y="2" width="8" height="5" rx="1"/><path d="M7 11h3v3M17 19h-3v-3M7 11l4 4M17 19l-4-4"/></>,
   clearClipboard:<><path d="M8 4H4v18h16V4h-4"/><rect x="8" y="2" width="8" height="5" rx="1"/><path d="M8 12l8 6M16 12l-8 6"/></>,

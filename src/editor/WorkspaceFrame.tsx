@@ -1,4 +1,5 @@
 import {useMovablePanel} from './use-movable-panel';
+import {geometryFocusCurrent,geometryFocusTranslation,type GeometryFocus} from './geometry-focus';
 import{config as fabricConfig}from'fabric';
 import { useCanvasPan } from './use-canvas-pan';
 import { EditorButton } from './EditorButton';
@@ -6,10 +7,11 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test' }: {
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus }: {
   edit?:ReactNode;transforms?:ReactNode;context: ReactNode; stage: ReactNode; tools: ReactNode; properties: ReactNode; project: ReactNode; diagnostics: ReactNode;
   document: GraphicDocument; editing: boolean; onZoom: (zoom: number) => void;
   showForm?:boolean;actions?:ReactNode;mode?:'customer'|'admin'|'test';workflow?: ReactNode; layers: ReactNode; panTool: boolean; onTemporaryPan: (active: boolean) => void;
+  geometryFocus?:GeometryFocus|null;onClearGeometryFocus?:()=>void;
 }) {
   const root = useRef<HTMLElement>(null), viewport = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(() => new URLSearchParams(window.location.search).get('workspace') === '1');
@@ -26,7 +28,8 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const [zoom, setZoom] = useState(()=>Math.min(1,maximumZoom)), [screenError, setScreenError] = useState('');
   const [viewReady,setViewReady]=useState(false),autoFit=useRef(true);
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
-  const view = useRef({ zoom: Math.min(1,maximumZoom), panX: 0, panY: 0 }), live = useRef({ onZoom, editing }); live.current = { onZoom, editing };
+  const focus=geometryFocus&&geometryFocusCurrent(geometryFocus,doc)?geometryFocus:null;
+  const view = useRef({ zoom: Math.min(1,maximumZoom), panX: 0, panY: 0 }), live = useRef({ onZoom, editing,focus }); live.current = { onZoom, editing,focus };
   useCanvasPan(viewport, view, panTool, editing, onTemporaryPan);
   const updateZoom = (value: number, anchor?: { x: number; y: number }, fitting=false) => {
     autoFit.current=fitting;
@@ -83,15 +86,29 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   useLayoutEffect(()=>{setViewReady(!expanded);},[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   useEffect(()=>{
     if(!expanded)return;
-    autoFit.current=true;
-    const frame=requestAnimationFrame(()=>{fit();setViewReady(true);});
+    const locating=!!live.current.focus&&geometryFocusCurrent(live.current.focus,doc);autoFit.current=!locating;
+    const frame=requestAnimationFrame(()=>{if(!locating)fit();setViewReady(true);});
     return()=>cancelAnimationFrame(frame);
   },[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
+  useLayoutEffect(()=>{
+    if(!focus||!viewReady)return;autoFit.current=false;
+    if(innerWidth<900){setObjectsOpen(false);setPropertiesOpen(false);setLayersOpen(false);setWorkflowOpen(false);}
+    const frame=requestAnimationFrame(()=>{
+      const area=viewport.current?.querySelector<HTMLElement>('.canvas-scroll'),container=area?.querySelector<HTMLElement>('.canvas-container');if(!area||!container)return;
+      area.scrollLeft=0;area.scrollTop=0;
+      for(let i=0;i<3;i++){
+        const box=area.getBoundingClientRect(),delta=geometryFocusTranslation(container.getBoundingClientRect(),{left:box.left+area.clientLeft,top:box.top+area.clientTop,width:area.clientWidth,height:area.clientHeight},doc.areaMm,focus);
+        view.current.panX+=delta.x;view.current.panY+=delta.y;container.style.transform=`translate(${view.current.panX}px, ${view.current.panY}px)`;
+      }
+      container.querySelector<HTMLCanvasElement>('.upper-canvas')?.focus({preventScroll:true});
+    });return()=>cancelAnimationFrame(frame);
+  },[focus?.sequence,focus?.documentId,focus?.contentRevision,doc.pageId,doc.areaMm.width,doc.areaMm.height,viewReady,expanded]);
   useEffect(()=>{
     const area=viewport.current?.querySelector<HTMLElement>('.canvas-scroll');if(!expanded||!area)return;
     const observer=new ResizeObserver(()=>{if(autoFit.current&&!live.current.editing)fit();});observer.observe(area);return()=>observer.disconnect();
   },[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   const close = () => {
+    onClearGeometryFocus?.();
     if (document.fullscreenElement === root.current) void document.exitFullscreen();
     updateZoom(1); setExpanded(false);
   };
@@ -161,7 +178,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     </div>
     {!expanded && context}
     <div className="workspace-layout" data-objects-open={objectsOpen} data-properties-open={propertiesOpen} data-layers-open={layersOpen}>
-      <div ref={viewport} className="drawing-stage">{stage}{screenError && <p role="status">{screenError}</p>}</div>
+      <div ref={viewport} className="drawing-stage">{stage}{focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
       <aside className="workspace-panel objects-panel" aria-label="Strumenti" hidden={expanded && !objectsOpen}>{mode==='test'&&workflow}{tools}{project}{diagnostics}</aside>
       <div className="workspace-right-panels" hidden={expanded && !propertiesOpen}>
         <aside className="workspace-panel properties-panel" aria-label="Ispettore oggetto" hidden={expanded && !propertiesOpen}>{properties}</aside>

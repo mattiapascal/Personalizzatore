@@ -1,4 +1,6 @@
 import {affineFrameView} from './affine-frame-view';
+import {GeometryPointMarker} from './geometry-point-marker';
+import type {GeometryFocus} from './geometry-focus';
 import type {GeometryTile} from './production-geometry';
 import {hasObjectAffine,withoutObjectAffine,objectInclination} from './object-affine';
 import { fabricTextSkew,physicalTextSkew } from './text-skew';
@@ -262,6 +264,8 @@ async function renderDocumentPng(document: GraphicDocument, size: {width:number;
 }
 export class FabricAdapter {
   private readonly externalControls:ExternalCanvasControls;
+  private readonly geometryPointMarker:GeometryPointMarker;
+  private geometryFocus:GeometryFocus|null=null;
   readonly canvas: Canvas;
   private idByObject = new WeakMap<FabricObject, string>();
   private sourceByObject = new WeakMap<FabricObject, SceneObject>();
@@ -377,6 +381,7 @@ export class FabricAdapter {
   constructor(element: HTMLCanvasElement, revision: () => number, onMove: (id: string, xMm: number, yMm: number, expectedRevision: number) => void, onText?: (id: string, object: TextObject, expectedRevision: number) => void, onEditing?: (editing: boolean) => void, onSelect?: (id: string | null) => void, onTransform?: (id: string, args: TransformArguments, expectedRevision: number) => void, onDeleteDrag?: (id: string, expectedRevision: number) => void, onTrash?: (visible: boolean) => void, onCharacterSelection?: (selection: CharacterSelection | null) => void, onSelection?: (ids: string[]) => void, onMoveSelection?: (ids: string[], deltaXmm: number, deltaYmm: number, revision: number) => void, onDeleteSelection?: (ids: string[], revision: number) => void, onTransformSelection?: (ids: string[], args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => void, onDirectSelection?:(id:string|null)=>void) {
     this.canvas = new Canvas(element, { stopContextMenu:false,selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
     this.externalControls=new ExternalCanvasControls(this.canvas);
+    this.geometryPointMarker=new GeometryPointMarker(this.canvas.wrapperEl);
     this.onDirectSelection=onDirectSelection;this.canvas.upperCanvasEl.addEventListener('mousedown',this.directMouseDown,true);
     this.canvas.upperCanvasEl.tabIndex = 0; this.canvas.upperCanvasEl.setAttribute('aria-label', 'Area grafica interattiva');
     this.publishObjectSelection = () => {
@@ -399,7 +404,7 @@ export class FabricAdapter {
     };
     this.canvas.on('text:selection:changed', this.publishSelection);
     this.canvas.on('text:changed', () => { this.publishFontRenderStatus(); this.publishSelection(); });
-    this.canvas.on('after:render', () => { this.drawGuides(); this.drawProductionProfileGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide();this.drawMasterObject();this.externalControls.render(); });
+    this.canvas.on('after:render', () => { this.drawGuides(); this.drawProductionProfileGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide();this.drawMasterObject();this.externalControls.render();this.geometryPointMarker.update(this.geometryFocus,this.document); });
     let gestureRevision = revision(), gestureBounds = { left: 0, top: 0 }, gestureAngle = 0, gestureScale = 1;
     this.canvas.on('before:transform', ({ transform }) => { gestureRevision = revision(); gestureBounds = transform.target.getBoundingRect(); gestureAngle = transform.target.angle; gestureScale = transform.target.scaleX; this.cancelled = false; });
     const delta = (object: FabricObject) => {
@@ -641,6 +646,7 @@ export class FabricAdapter {
   setTextPathHandler(onChange: (object: TextObject, revision: number) => void): void { this.onTextPathChange = onChange; }
   setRasterCropHandler(onChange: (object: ImageObject, revision: number) => void): void { this.onCropChange = onChange; }
   setRasterCropFocus(id: string | null, moveContents=false): void { this.cropFocus = id;this.moveCropContents=moveContents; this.configureNodeControls(); this.canvas.requestRenderAll(); }
+  setGeometryFocus(focus:GeometryFocus|null):void{this.geometryFocus=focus?{...focus}:null;this.geometryPointMarker.update(this.geometryFocus,this.document);}
   setNodeDragHandlers(onMove: (object: PathObject, index: number, point: PointMm, revision: number) => void, onActive: (active: boolean) => void): void { this.onNodeMove = onMove; this.onNodeActive = onActive; }
   setBezierDragHandler(onChange: (object: BezierObject, revision: number) => void): void { this.onBezierChange = onChange; }
   setNodeFocus(focus: { objectId: string; index: number } | null): void { this.nodeFocus = focus; this.configureNodeControls(); this.canvas.requestRenderAll(); }
@@ -858,5 +864,5 @@ export class FabricAdapter {
     const active = this.canvas.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
   }
-  dispose(): void { this.disposed = true;this.canvas.upperCanvasEl.removeEventListener('mousedown',this.directMouseDown,true);this.externalControls.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
+  dispose(): void { this.disposed = true;this.canvas.upperCanvasEl.removeEventListener('mousedown',this.directMouseDown,true);this.externalControls.dispose();this.geometryPointMarker.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
 }
