@@ -1,4 +1,4 @@
-import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
+import{GRAPHIC_GEOMETRY_LIMITS,MAX_TEXT_SKEW_DEG}from'./limits';
 import{AspectRatioControl}from'./AspectRatioControl';
 import{resizeObjectDimension}from'./resize-object';
 import { OpacityControls } from './OpacityControls';
@@ -164,6 +164,10 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
         {fontError&&<p role="status">{fontError}</p>}
         {variants.length>1&&<details className="font-other-styles"><summary>Altri stili</summary><label>Variante font<select aria-label="Variante font" disabled={noCharacters||!commonFamily} value={activeFont} onChange={event=>characterPatch(chooseFontStyle(event.target.value),true)}>{variants.map(face=><option key={face.id} value={face.id} style={{fontFamily:renderFontFamily(face.id)}}>{fontVariantLabel(face.id)}</option>)}</select></label></details>}
         <div className="property-grid">{fontSizeField}{textScaleField}</div>
+        {!current.textPath && <details className="text-transform-settings"><summary>Inclinazione del box</summary>
+          <NumberField {...fields} label="Inclinazione orizzontale (°)" value={current.textSkewXDeg ?? 0} min={-MAX_TEXT_SKEW_DEG} max={MAX_TEXT_SKEW_DEG} step={0.1} disabled={geometryLocked} onChange={textSkewXDeg => patch({ textSkewXDeg })}/>
+          <p className="caption">Inclina l’intero box, conservando testo e stili. Zero ripristina il box diritto.</p>
+        </details>}
         {minimumFontPt!==null&&<p role="status" data-testid="minimum-font-notice" className="caption">{(smallestPrintedFontPt(current)??Infinity)<minimumFontPt-1e-7?`Questo testo contiene caratteri sotto ${minimumFontPt} pt: correggili prima di confermare il timbro.`:`Per questo modello il corpo minimo è ${minimumFontPt} pt.`}</p>}
         <div className="property-grid">{!current.textPath && <NumberField {...fields} label="Interlinea" value={current.lineHeight ?? 1} min={EDITOR_LIMITS.minLineHeight} max={EDITOR_LIMITS.maxLineHeight} step={0.1} onChange={lineHeight => patch({ lineHeight })}/> }
         <NumberField {...fields} label={characterSelection ? 'Crenatura (pt)' : 'Spaziatura (pt)'} value={characterSelection?.spacing?.value ?? current.letterSpacingPt ?? 0} min={EDITOR_LIMITS.minTrackingPt} max={EDITOR_LIMITS.maxTrackingPt} step={0.1} mixed={characterSelection?.spacing?.mixed} disabled={!!characterSelection && !characterSelection.spacing?.indices.length} onChange={value => { if (value >= EDITOR_LIMITS.minTrackingPt && value <= EDITOR_LIMITS.maxTrackingPt) { if (characterSelection) onKerning(value); else patch({ letterSpacingPt: value }); } }}/>

@@ -1,3 +1,4 @@
+import { fabricTextSkew } from './text-skew';
 import{boxSampleRgba}from'./pixel-sampling';
 import{applyClipMasks}from'./clip-mask-view';
 import{ExternalCanvasControls}from'./external-controls';
@@ -98,7 +99,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
     assertFontAvailable(o.fontFamily);
     for (const run of o.characterStyles ?? []) if (run.style.fontFamily) assertFontAvailable(run.style.fontFamily);
     assertTextGeometry(o);
-    const options = { ...common, scaleX: o.textScaleX ?? 1, scaleY: o.textScaleY ?? 1, fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: renderFontFamily(o.fontFamily), fill: paintWithOpacity(o.fill, o.fillOpacity), stroke: o.stroke && o.stroke !== 'none' ? paintWithOpacity(o.stroke, o.strokeOpacity) : null, strokeWidth: o.stroke && o.stroke !== 'none' ? (o.strokeMm ?? .25) * PX_PER_MM : 0, strokeLineCap: o.strokeLineCap ?? 'butt', strokeLineJoin: o.strokeLineJoin ?? 'miter', strokeMiterLimit: o.strokeMiterLimit ?? 4, paintFirst: o.paintFirst ?? 'fill',
+    const options = { ...common, scaleX: o.textScaleX ?? 1, scaleY: o.textScaleY ?? 1, skewX: fabricTextSkew(o.textSkewXDeg ?? 0, o.textScaleX ?? 1, o.textScaleY ?? 1), fontSize: o.fontSizePt * PT_TO_MM * PX_PER_MM, fontFamily: renderFontFamily(o.fontFamily), fill: paintWithOpacity(o.fill, o.fillOpacity), stroke: o.stroke && o.stroke !== 'none' ? paintWithOpacity(o.stroke, o.strokeOpacity) : null, strokeWidth: o.stroke && o.stroke !== 'none' ? (o.strokeMm ?? .25) * PX_PER_MM : 0, strokeLineCap: o.strokeLineCap ?? 'butt', strokeLineJoin: o.strokeLineJoin ?? 'miter', strokeMiterLimit: o.strokeMiterLimit ?? 4, paintFirst: o.paintFirst ?? 'fill',
       fontWeight: o.fontWeight ?? 'normal', fontStyle: o.fontStyle ?? 'normal', underline: o.underline ?? false, linethrough: o.linethrough ?? false, overline: o.overline ?? false,
       textAlign: o.textAlign ?? 'left', lineHeight: o.lineHeight ?? 1, charSpacing: (o.letterSpacingPt ?? 0) / o.fontSizePt * 1000 };
     const styles: IText['styles'] = {}, characters = characterStyles(o), alignments = lineAlignments(o);
@@ -157,7 +158,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
 export const measureFabric: Measure = object => {
   if (object.type === 'image') { assertRasterParameters(object.source, object.raster); return { widthMm: object.widthMm, heightMm: object.heightMm }; }
   const f = renderObject(object);
-  return { widthMm: f.getScaledWidth() / PX_PER_MM, heightMm: f.getScaledHeight() / PX_PER_MM, ...(f instanceof EditorTextBox && f.strokeBoundsWidth() > 0 ? { textLayoutWidthMm: f.width * f.scaleX / PX_PER_MM, textLayoutHeightMm: f.height * f.scaleY / PX_PER_MM } : {}), ...(f instanceof EditorPathText ? { pathCenterOffsetMm: { x: f.pathCenterOffset.x / PX_PER_MM, y: f.pathCenterOffset.y / PX_PER_MM }, pathLengthMm: f.pathLength / PX_PER_MM, textAdvanceMm: f.textAdvance / PX_PER_MM } : {}) };
+  return { widthMm: f.getScaledWidth() / PX_PER_MM, heightMm: f.getScaledHeight() / PX_PER_MM, ...(f instanceof EditorTextBox && (f.strokeBoundsWidth() > 0 || f.skewX !== 0) ? { textLayoutWidthMm: f.width * f.scaleX / PX_PER_MM, textLayoutHeightMm: f.height * f.scaleY / PX_PER_MM } : {}), ...(f instanceof EditorPathText ? { pathCenterOffsetMm: { x: f.pathCenterOffset.x / PX_PER_MM, y: f.pathCenterOffset.y / PX_PER_MM }, pathLengthMm: f.pathLength / PX_PER_MM, textAdvanceMm: f.textAdvance / PX_PER_MM } : {}) };
 };
 export function measureTextFrame(object: TextObject) {
   const box = renderObject(object) as EditorTextBox;

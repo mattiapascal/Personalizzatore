@@ -24,3 +24,9 @@ Rapporti privati: `.local/pitchprint-migration/text-mask-diagnosis-20261113/repo
 6. Soltanto dopo i controlli generali, confrontare entrambe le composizioni complete con il sorgente nativo. Nessuna importazione o rimozione dei vincoli prima di quelle verifiche.
 
 Nell’attesa dell’autorizzazione al cambio dell’archivio si può implementare e collaudare questa capacità su fixture e conversioni diagnostiche. Il JSON principale è quasi pieno e rimane invariato. I due casi continuano a essere conteggiati nei 16 prioritari, distinti dai sei simboli mancanti nei font, da Gloria Hallelujah 700 e dai sette primi piani da classificare.
+
+## Primo incremento completato
+
+[Inclinazione fisica del box](iteration-editor-text-skew.md): proprietà canonica opzionale, ispettore, trasformazione `R * K * S`, misure di impaginazione distinte dall’ingombro e otto maniglie sul parallelogramma con punto opposto stabile. Testo, stili e font rimangono editabili, con comandi/storico/JSON condivisi. Il parametro interno Fabric viene convertito perché usa un ordine diverso delle matrici; la decomposizione futura dei sorgenti deve produrre l’angolo fisico, non copiarne lo skew grezzo.
+
+Rimangono da completare trasformazioni e origini nell’adattatore PitchPrint, maschere sul testo e confronti integrali dei due cartelli. Nessun preflight allentato o importazione effettuata. La combinazione con testo su percorso resta esplicitamente rifiutata, senza perdita silenziosa delle proprietà.

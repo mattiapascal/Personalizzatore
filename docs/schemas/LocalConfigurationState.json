@@ -1267,6 +1267,11 @@
                           "minimum": 0.1,
                           "maximum": 10
                         },
+                        "textSkewXDeg": {
+                          "type": "number",
+                          "minimum": -85,
+                          "maximum": 85
+                        },
                         "fontWeight": {
                           "type": "string",
                           "enum": [
@@ -4485,6 +4490,11 @@
                                 "type": "number",
                                 "minimum": 0.1,
                                 "maximum": 10
+                              },
+                              "textSkewXDeg": {
+                                "type": "number",
+                                "minimum": -85,
+                                "maximum": 85
                               },
                               "fontWeight": {
                                 "type": "string",

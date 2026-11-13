@@ -1,9 +1,10 @@
 import {textStrokeEnvelope} from './text-stroke';
+import { fabricTextSkew, physicalTextSkew } from './text-skew';
 import { canMeasureFontText } from './font-measurement';
 import { EDITOR_LIMITS } from './limits';
 import { justifySpacing, type JustificationSettings } from './justification';
 import type { VisualTextLine } from './text-lines';
-import { Textbox, Rect, Point, Control, type TextboxProps, type TOptions, type TPointerEventInfo } from 'fabric';
+import { Textbox, Rect, Point, Control, util, type TextboxProps, type TOptions, type TPointerEventInfo } from 'fabric';
 
 export interface TextFrame { width: number; height: number; autoWidth: boolean; autoHeight: true; }
 
@@ -41,6 +42,27 @@ export class EditorTextBox extends Textbox {
   }
   override _getNonTransformedDimensions(): Point { const extra = this.strokeBoundsWidth(); return new Point(this.width + extra, this.height + extra); }
   override _getTransformedDimensions(options: Parameters<Textbox['_getTransformedDimensions']>[0] = {}): Point { return super._getTransformedDimensions({ ...options, strokeWidth: this.strokeBoundsWidth() }); }
+  override drawBorders(...[context, options, style]: Parameters<Textbox['drawBorders']>): void {
+    if (!this.skewX || style?.forActiveSelection) { super.drawBorders(context, options, style); return; }
+    // Fabric normally draws the rotated envelope of a skewed object. The text
+    // frame and its handles instead follow the actual parallelogram.
+    const extra = this.strokeBoundsWidth(), width = this.width + extra, height = this.height + extra;
+    const shear = Math.tan(options.skewX * Math.PI / 180);
+    context.save(); context.strokeStyle = style?.borderColor ?? this.borderColor;
+    this._setLineDash(context, style?.borderDashArray ?? this.borderDashArray);
+    context.beginPath();
+    for (const [index, [x, y]] of [[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]].entries()) {
+      const px = options.scaleX * (x! * width + shear * y! * height), py = options.scaleY * y! * height;
+      if (index) context.lineTo(px, py); else context.moveTo(px, py);
+    }
+    context.closePath(); context.stroke();
+    if ((style?.hasControls ?? this.hasControls) && this.controls.mtr?.getVisibility(this, 'mtr')) {
+      const size = this._calculateCurrentDimensions();
+      context.beginPath(); context.moveTo(-options.scaleX * shear * height / 2, -options.scaleY * height / 2);
+      context.lineTo(0, -size.y / 2 + this.controls.mtr.offsetY); context.stroke();
+    }
+    context.restore();
+  }
   frame?: TextFrame;
   justificationSettings?: JustificationSettings;
   justificationResults: ReturnType<typeof justifySpacing>[] = [];
@@ -194,7 +216,11 @@ export class EditorTextBox extends Textbox {
 }
 
 export function textBoxControls(object: EditorTextBox): void {
-  const baseScale = object.scaleX, baseScaleY = object.scaleY, baseWidth = object.getScaledWidth(), baseHeight = object.getScaledHeight(), automatic = object.frame?.autoWidth ?? true;
+  const baseScale = object.scaleX, baseScaleY = object.scaleY, baseRawWidth = object.width + object.strokeBoundsWidth(), baseRawHeight = object.height + object.strokeBoundsWidth();
+  const physicalSkew = physicalTextSkew(object.skewX, baseScale, baseScaleY);
+  // Layout axes, before the shear. A skew must not change wrapping or the
+  // horizontal stretch requested by dragging an edge.
+  const baseWidth = baseRawWidth * baseScale, baseHeight = baseRawHeight * baseScaleY, automatic = object.frame?.autoWidth ?? true;
   const baseFrame=object.frame&&{...object.frame};
   const baseStroke = object.strokeWidth, baseFont = object.fontSize, baseStyles = structuredClone(object.styles), fonts = [baseFont, ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => style.fontSize ?? baseFont))];
   const spacings = [object.charSpacing / 1000 * baseFont / (25.4 / 72 * 8), ...Object.values(baseStyles).flatMap(line => Object.values(line).map(style => (style as { editorKerningPt?: number }).editorKerningPt ?? 0))], spacingScale = Math.min(Infinity, ...spacings.filter(value => value !== 0).map(value => value > 0 ? EDITOR_LIMITS.maxTrackingPt / value : EDITOR_LIMITS.minTrackingPt / value));
@@ -202,17 +228,25 @@ export function textBoxControls(object: EditorTextBox): void {
   const minimumFontScale = EDITOR_LIMITS.minFontSizePt * 25.4 / 72 * 8 / Math.min(...fonts), maximumFontScale = Math.min(EDITOR_LIMITS.maxFontSizePt * 25.4 / 72 * 8 / Math.max(...fonts), spacingScale, strokeScale);
   const handles = { tl: [-0.5, -0.5], tr: [0.5, -0.5], bl: [-0.5, 0.5], br: [0.5, 0.5], ml: [-0.5, 0], mr: [0.5, 0], mt: [0, -0.5], mb: [0, 0.5] } as const;
   for (const [name, [x, y]] of Object.entries(handles)) {
+    let gesture: Parameters<NonNullable<Control['actionHandler']>>[1] | undefined;
+    let matrix = object.calcTransformMatrix(), inverse = util.invertTransform(matrix), anchor = new Point();
     object.controls[name] = new Control({ x, y, actionName: 'resizeTextBox', cursorStyle: y ? x * y > 0 ? 'nwse-resize' : 'nesw-resize' : 'ew-resize', cursorStyleHandler: (_event, control, target) => {
       // La diagonale dipende dall'angolo della maniglia, non dal rapporto
       // larghezza/altezza del testo (un box largo non deve mostrare frecce orizzontali agli angoli).
-      const angle = Math.atan2(control.y, control.x) * 180 / Math.PI + target.getTotalAngle();
+      const skew = physicalTextSkew(target.skewX, target.scaleX, target.scaleY);
+      const angle = Math.atan2(control.y, control.x + Math.tan(skew * Math.PI / 180) * control.y) * 180 / Math.PI + target.getTotalAngle();
       return `${['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'][((Math.round(angle / 45) % 8) + 8) % 8]}-resize`;
-    }, actionHandler: (event, transform, pointerX, pointerY) => {
-      const target = transform.target as EditorTextBox, angle = -target.angle * Math.PI / 180;
+    }, ...(object.skewX ? { positionHandler: (_dimensions, _matrix, target) => textFramePoint(target as EditorTextBox, x, y).transform(target.getViewportTransform()) } : {}), actionHandler: (event, transform, pointerX, pointerY) => {
+      const target = transform.target as EditorTextBox;
+      if (gesture !== transform) {
+        gesture = transform; matrix = target.calcTransformMatrix(); inverse = util.invertTransform(matrix);
+        anchor = new Point(-x * baseRawWidth, -y * baseRawHeight).transform(matrix);
+      }
       // Start from the actual pointer-down point, including the grab offset.
       // Il punto opposto resta fermo anche con dilatazione su entrambi gli assi.
       const dx = pointerX - transform.ex, dy = pointerY - transform.ey;
-      const localX = dx * Math.cos(angle) - dy * Math.sin(angle), localY = dx * Math.sin(angle) + dy * Math.cos(angle);
+      const delta = new Point(dx, dy).transform(inverse, true);
+      const localX = delta.x * baseScale, localY = delta.y * baseScaleY;
       let width = x ? Math.max(0.08, Math.sign(x) * localX + baseWidth) : baseWidth;
       const proportional=!!x&&!!y&&!event.shiftKey;
       if (automatic||y) {
@@ -231,9 +265,11 @@ export function textBoxControls(object: EditorTextBox): void {
         target.set({ fontSize: baseFont * fontScale, strokeWidth: baseStroke * fontScale, styles, scaleY: 1 }); target.initDimensions();
         target.set('scaleX', Math.max(.1, Math.min(10, width / (target.width + target.strokeBoundsWidth()))));
       } else target.resizeFrame(Math.max(.001, width / baseScale - target.strokeBoundsWidth()), object.height, false);
-      const offsetX = x ? Math.sign(x) * (target.getScaledWidth() - baseWidth) / 2 : 0;
-      const offsetY = y ? Math.sign(y) * (target.getScaledHeight() - baseHeight) / 2 : 0;
-      target.set({ left: transform.original.left + offsetX * Math.cos(-angle) - offsetY * Math.sin(-angle), top: transform.original.top + offsetX * Math.sin(-angle) + offsetY * Math.cos(-angle) });
+      target.set('skewX', fabricTextSkew(physicalSkew, target.scaleX, target.scaleY));
+      const nextAnchor = textFramePoint(target, -x, -y);
+      const correction = anchor.subtract(nextAnchor), parent = target.group;
+      const localCorrection = parent ? correction.transform(util.invertTransform(parent.calcTransformMatrix()), true) : correction;
+      target.set({ left: target.left + localCorrection.x, top: target.top + localCorrection.y });
       target.setCoords(); return true;
     } });
     if (!x || !y) object.controls[name]!.render = (context, left, top) => {
@@ -247,4 +283,10 @@ export function textBoxControls(object: EditorTextBox): void {
     context.save(); context.fillStyle = '#fff'; context.strokeStyle = '#b43a29'; context.lineWidth = 1.5; context.fillRect(left - 5, top - 5, 10, 10); context.strokeRect(left - 5, top - 5, 10, 10);
     context.beginPath(); context.moveTo(left - 3, top); context.lineTo(left + 3, top); context.moveTo(left, top - 3); context.lineTo(left, top + 3); context.stroke(); context.restore();
   } });
+}
+
+/** Actual text frame, including the conservative stroke envelope, in scene px. */
+export function textFramePoint(object: EditorTextBox, x: number, y: number): Point {
+  const extra = object.strokeBoundsWidth();
+  return new Point(x * (object.width + extra), y * (object.height + extra)).transform(object.calcTransformMatrix());
 }

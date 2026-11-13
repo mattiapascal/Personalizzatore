@@ -6,3 +6,6 @@ export const GRAPHIC_IMPORT_LIMITS={sourceElements:2000,svgElements:4000,svgByte
 
 /** Technical drawing ceilings; independent from product or public chat rules. */
 export const GRAPHIC_GEOMETRY_LIMITS={pageSideMm:3000,objectSideMm:3000,coordinateMm:10000,selectionSideMm:30000}as const;
+
+/** Avoid singular shears; physical extent checks still apply after the transform. */
+export const MAX_TEXT_SKEW_DEG = 85;

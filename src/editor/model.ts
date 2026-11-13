@@ -13,7 +13,7 @@ import {PlaqueMountingSchema,plaqueMountingPoints} from './plaque';
 import { FontAssetsSchema, FontIdSchema } from './font-assets';
 import { fitComposition } from './format-adaptation';
 import { InkColorSchema } from './ink';
-import { EDITOR_LIMITS,GRAPHIC_GEOMETRY_LIMITS } from './limits';
+import { EDITOR_LIMITS,GRAPHIC_GEOMETRY_LIMITS,MAX_TEXT_SKEW_DEG } from './limits';
 import {GraphicAreaSchema as AreaSchema}from'./graphic-area';
 import { assertDocumentTextProduction, assertMinimumText, minimumFontForProduct } from './text-production';
 import { VectorCommandsSchema, VectorClipSchema, vectorBounds, vectorContours } from './vector-geometry';
@@ -49,6 +49,7 @@ export const CharacterStyleSchema = z.strictObject({
 export type CharacterStyle = z.infer<typeof CharacterStyleSchema>;
 const characterRuns = z.array(z.strictObject({ start: z.number().int().nonnegative(), end: z.number().int().positive(), style: CharacterStyleSchema })).max(EDITOR_LIMITS.textCharacters).optional();
 const textScale = z.number().finite().min(0.1).max(10);
+const textSkew = z.number().finite().min(-MAX_TEXT_SKEW_DEG).max(MAX_TEXT_SKEW_DEG);
 export const TextAlignmentSchema = z.enum(['left', 'center', 'right', 'justify-left']);
 export type TextAlignment = z.infer<typeof TextAlignmentSchema>;
 const lineStyles = z.array(z.strictObject({ start: z.number().int().nonnegative(), end: z.number().int().nonnegative(), alignment: TextAlignmentSchema })).max(EDITOR_LIMITS.textCharacters+1).optional();
@@ -59,6 +60,7 @@ const textAppearance = {
   lineStyles, justification: JustificationSchema.optional(), textPath: TextPathSchema.optional(),
   textScaleX: textScale.optional(),
   textScaleY: textScale.optional(),
+  textSkewXDeg: textSkew.optional(),
   fontWeight: z.enum(['normal', 'bold']).optional(), fontStyle: z.enum(['normal', 'italic']).optional(), underline: z.boolean().optional(), linethrough: z.boolean().optional(), overline: z.boolean().optional(),
   textAlign: TextAlignmentSchema.optional(), lineHeight: z.number().finite().min(EDITOR_LIMITS.minLineHeight).max(EDITOR_LIMITS.maxLineHeight).optional(),
   letterSpacingPt: z.number().finite().min(EDITOR_LIMITS.minTrackingPt).max(EDITOR_LIMITS.maxTrackingPt).optional(),
@@ -150,7 +152,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
       if (!near(b.x, 0) || !near(b.y, 0) || !near(b.width, object.widthMm ? 1 : 0) || !near(b.height, object.heightMm ? 1 : 0) || !object.widthMm && !object.heightMm) ctx.addIssue({ code: 'custom', message: 'Vettore non normalizzato o degenere' });
     }
     if (object.type === 'text') {
-      if (object.textPath && (object.text.includes('\n') || object.textBox || object.lineStyles?.length || object.textAlign === 'justify-left' || object.textScaleY !== undefined && object.textScaleY !== 1)) ctx.addIssue({ code: 'custom', message: 'Il testo su tracciato richiede una sola riga, senza box/giustificazione o scala verticale' });
+      if (object.textPath && (object.text.includes('\n') || object.textBox || object.lineStyles?.length || object.textAlign === 'justify-left' || object.textScaleY !== undefined && object.textScaleY !== 1 || !!object.textSkewXDeg)) ctx.addIssue({ code: 'custom', message: 'Il testo su tracciato richiede una sola riga, senza box/giustificazione, scala verticale o inclinazione del box' });
       if ((object.textAlign === 'justify-left' || object.lineStyles?.some(run => run.alignment === 'justify-left')) && (object.textBox?.autoWidth ?? true) && object.justification?.distribution!=='word-space') ctx.addIssue({ code: 'custom', message: 'Il testo giustificato richiede un box a larghezza fissa' });
       let lineEnd = -1, emptyEnd = -1;
       for (const run of object.lineStyles ?? []) {
@@ -195,7 +197,7 @@ export const DocumentSchema = documentFields.extend({pageId:id.optional(),pageNa
  }
 });
 const LegacySceneObjectSchema = z.discriminatedUnion('type', [
-  SceneObjectSchema.options[0].omit({ rotationDeg: true, fontWeight: true, fontStyle: true, underline: true, linethrough: true, overline: true, textAlign: true, lineHeight: true, letterSpacingPt: true, textScaleX: true, textScaleY: true, lineStyles: true, justification: true, textPath: true, textBox: true, characterStyles: true }).extend({ fontFamily: z.literal('Arial') }),
+  SceneObjectSchema.options[0].omit({ rotationDeg: true, fontWeight: true, fontStyle: true, underline: true, linethrough: true, overline: true, textAlign: true, lineHeight: true, letterSpacingPt: true, textScaleX: true, textScaleY: true, textSkewXDeg: true, lineStyles: true, justification: true, textPath: true, textBox: true, characterStyles: true }).extend({ fontFamily: z.literal('Arial') }),
   SceneObjectSchema.options[1].omit({ rotationDeg: true, fill: true, strokeDash: true, cornerRadiusMm: true }).extend({ stroke: color, strokeMm: z.number().positive().max(2) }),
   SceneObjectSchema.options[2].omit({ rotationDeg: true, fill: true, strokeDash: true }).extend({ stroke: color, strokeMm: z.number().positive().max(2) }),
 ]);
@@ -224,7 +226,7 @@ export function cloneGraphicDocument(document: GraphicDocument): GraphicDocument
 }
 export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('vector'), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
-  z.strictObject({ type: z.literal('text'), fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), textScaleX: textScale.optional(), textScaleY: textScale.optional(), textBox: TextBoxSchema.optional(), textPath: TextPathSchema.optional() }),
+  z.strictObject({ type: z.literal('text'), fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), textScaleX: textScale.optional(), textScaleY: textScale.optional(), textSkewXDeg: textSkew.optional(), textBox: TextBoxSchema.optional(), textPath: TextPathSchema.optional() }),
   z.strictObject({ type: z.literal('rect'), widthMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
   z.strictObject({ type: z.literal('circle'), radiusMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2) }),
   z.strictObject({ type: z.literal('line'), lengthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
@@ -510,7 +512,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   const parsed = DocumentSchema.parse(next);
   validateLayout(parsed, measure, 'edit');
   assertObjectPolicies(doc,parsed,command,role,(a,b)=>{
-    const keys=['rotationDeg','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textBox','points','nodes','commands','textPath'];
+    const keys=['rotationDeg','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textSkewXDeg','textBox','points','nodes','commands','textPath'];
     if(keys.some(key=>JSON.stringify((a as unknown as Record<string,unknown>)[key])!==JSON.stringify((b as unknown as Record<string,unknown>)[key])))return false;
     if(a.type==='text'&&b.type==='text'){try{const ac=objectCenter(a,measure),bc=objectCenter(b,measure);return Math.abs(ac.xMm-bc.xMm)<1e-6&&Math.abs(ac.yMm-bc.yMm)<1e-6;}catch(error){if(!(error instanceof UnverifiedTextGeometryError))throw error;return a.xMm===b.xMm&&a.yMm===b.yMm;}}return Math.abs(a.xMm-b.xMm)<1e-6&&Math.abs(a.yMm-b.yMm)<1e-6;
   });
