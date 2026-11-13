@@ -2,11 +2,13 @@
 
 Su richiesta del titolare, il cambio di oggetto conserva la scheda scelta nell’ispettore, quando disponibile anche per il nuovo elemento. Testo → Testo mantiene Testo; forma → forma mantiene Riempimento/Contorno; immagine → immagine mantiene Immagine/Ritaglio.
 
-Se la scheda non esiste per il nuovo tipo, viene mostrata Geometria senza cancellare la preferenza: Testo → forma → Testo recupera Testo. Una scelta esplicita successiva sostituisce la preferenza. Anche deselezione e passaggio temporaneo alla selezione multipla non la azzerano. La preferenza appartiene alla vista corrente dell’editor; non è scritta nel documento o nell’archivio e non sopravvive al ricaricamento della pagina.
+Precisazione successiva del titolare: se la scheda non esiste per il nuovo tipo, Geometria diventa la nuova scheda attiva e rimane tale nei cambi successivi. Testo → forma → Testo mantiene Geometria. Una scelta esplicita successiva sostituisce la scheda attiva. [Correzione e verifiche](iteration-editor-inspector-section-fallback.md). Anche deselezione e passaggio temporaneo alla selezione multipla non la azzerano. La preferenza appartiene alla vista corrente dell’editor; non è scritta nel documento o nell’archivio e non sopravvive al ricaricamento della pagina.
 
 Il rimontaggio dell’ispettore per ID resta attivo: vengono conservati soltanto il nome della scheda, non bozze, valori, stili o selezioni di caratteri dell’oggetto precedente. Le modalità di ritaglio e i loro controlli vengono riconfigurate sul nuovo oggetto. Nessun nuovo comando grafico, dato produttivo o migrazione aggiuntiva.
 
-## Verifiche
+## Verifiche della versione iniziale
+
+I risultati seguenti precedono la precisazione sul fallback; per il comportamento attuale e i ricontrolli usare il resoconto collegato sopra.
 
 - Due nuovi casi browser: testo/forma, valori del font propri del nuovo oggetto, applicazione del colore al solo destinatario, fallback, deselezione/selezione multipla senza revisioni; due immagini con ritagli differenti, aggiornamento dei valori e delle maniglie, ritorno dal testo e sorgente pixel immutabile.
 - **35 browser pertinenti passati**, comprendenti gli altri test di ispettore, ritaglio, gruppi e tastiera. Il primo tentativo del test immagini leggeva lo stato prima che il caricamento della fixture fosse concluso: aggiunta l’attesa del documento completo, senza cambiare timeout o codice applicativo per mascherare il problema.

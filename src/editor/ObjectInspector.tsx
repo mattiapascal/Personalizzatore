@@ -15,7 +15,7 @@ import { fontVariantChoices, fontVariantLabel, renderFontFamily, chooseFontStyle
 import { transformSelection } from './selection';
 import { textHeightLimits } from './text-sizing';
 import { DEFAULT_JUSTIFICATION } from './justification';
-import { useSyncExternalStore, useEffect, useRef, useState } from 'react';
+import { useSyncExternalStore, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { EditorButton, type EditorIconName } from './EditorButton';
 import { PaintPicker } from './PaintPicker';
 import { type SceneObject, type CharacterStyle, type TextAlignment } from './model';
@@ -56,6 +56,8 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, onP
   const [preferredSection,setPreferredSection]=useState<InspectorSection>(()=>sectionMemory?.current??'geometry');
   const tabs=inspectorTabs(object,!!onProperties),section=tabs.some(tab=>tab.id===preferredSection)?preferredSection:'geometry';
   const setSection=(value:InspectorSection)=>{if(sectionMemory)sectionMemory.current=value;setPreferredSection(value);};
+  // The visible fallback becomes the active section for subsequent objects.
+  useLayoutEffect(()=>{if(sectionMemory)sectionMemory.current=section;if(preferredSection!==section)setPreferredSection(section);},[section,preferredSection,sectionMemory]);
   const [opacityLinked, setOpacityLinked] = useState(true);
   useEffect(() => setOpacityLinked(true), [object.id]);
   const [ratioLocked, setRatioLocked] = useState(true),[cropContents,setCropContents]=useState(false);

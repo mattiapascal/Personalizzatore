@@ -49,8 +49,10 @@ Una prova aggiuntiva sul backend ha rilevato che il vecchio controllo dell’are
 
 La prima suite generale è stata fermata intenzionalmente per questa correzione: **162 passati, uno interrotto e 525 non eseguiti**, non una suite verde. Aggiunti due unitari e un browser sul salvataggio parametrico, poi ripetuti unitari completi (**1.126**) e cinque browser pertinenti, tutti passati. Il nuovo collaudo generale indicato sotto include la correzione.
 
-### Collaudo generale avviato
+### Collaudo generale concluso
 
-La suite completa di **689 scenari browser** è in esecuzione sul codice dell’incremento: `.local/profile-link/browser-full-final.log`, sessione exec `55644`. Non è ancora dichiarata passata. **Non modificare sorgenti applicativi o avviare una seconda suite sullo stesso output mentre è in corso.** Al prossimo passaggio controllare il processo/handle effettivo; completare eventuali diagnosi e aggiornare questo resoconto con l’esito terminale. I test pertinenti sopra sono già conclusi; non sostituiscono il risultato della suite generale.
+La suite completa di **689 scenari browser** sul commit `41e196a` è terminata: **685 passati e quattro falliti** (`.local/profile-link/browser-full-final.log`, sessione `55644` terminale). Tre attese erano rimaste agli indici PitchPrint originari, prima della normalizzazione già richiesta; il quarto caso usava il ruolo cliente per separare un gruppo con proprietà del template. Attese/ruolo corretti, senza cambiare geometrie o blocchi applicativi: **sei ricontrolli passati**, inclusa la successiva precisazione dell’ispettore. Non è una nuova suite completa verde. [Esiti e correzione della scheda](iteration-editor-inspector-section-fallback.md).
+
+Il vincolo di non modificare i sorgenti durante quell’esecuzione è concluso. Il [piano geometrico](editor-production-geometry-plan.md) riporta la diagnosi successiva: prima di riusare il renderer va sistemata la preparazione dei font compressi nel PDF, già provata su copia privata e ancora da applicare al codice.
 
 Nessuna migrazione o applicazione massiva ai 339 template; archivio e libreria personali non sono destinatari delle prove. Nessuna modifica a Shopify/tema/PitchPrint/BSS, prezzi, carrello online o checkout. Prossimo incremento: controlli geometrici di margine/zone e completamento delle regole produttive, mantenendo distinti esiti dimostrati e verifiche mancanti.
