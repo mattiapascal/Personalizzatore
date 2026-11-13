@@ -251,6 +251,54 @@
             "document": {
               "type": "object",
               "properties": {
+                "layoutGuides": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "maxItems": 64,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                          },
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y"
+                            ]
+                          },
+                          "positionMm": {
+                            "type": "number",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "axis",
+                          "positionMm"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "visible": {
+                      "type": "boolean"
+                    },
+                    "locked": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "visible",
+                    "locked"
+                  ],
+                  "additionalProperties": false
+                },
                 "productionProfile": {
                   "type": "object",
                   "properties": {
@@ -4314,6 +4362,54 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "layoutGuides": {
+                        "type": "object",
+                        "properties": {
+                          "items": {
+                            "maxItems": 64,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                                },
+                                "axis": {
+                                  "type": "string",
+                                  "enum": [
+                                    "x",
+                                    "y"
+                                  ]
+                                },
+                                "positionMm": {
+                                  "type": "number",
+                                  "minimum": -10000,
+                                  "maximum": 10000
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "axis",
+                                "positionMm"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "visible": {
+                            "type": "boolean"
+                          },
+                          "locked": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "items",
+                          "visible",
+                          "locked"
+                        ],
+                        "additionalProperties": false
+                      },
                       "productionProfile": {
                         "type": "object",
                         "properties": {
@@ -9435,6 +9531,54 @@
             "document": {
               "type": "object",
               "properties": {
+                "layoutGuides": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "maxItems": 64,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                          },
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y"
+                            ]
+                          },
+                          "positionMm": {
+                            "type": "number",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "axis",
+                          "positionMm"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "visible": {
+                      "type": "boolean"
+                    },
+                    "locked": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "visible",
+                    "locked"
+                  ],
+                  "additionalProperties": false
+                },
                 "productionProfile": {
                   "type": "object",
                   "properties": {
@@ -13498,6 +13642,54 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "layoutGuides": {
+                        "type": "object",
+                        "properties": {
+                          "items": {
+                            "maxItems": 64,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                                },
+                                "axis": {
+                                  "type": "string",
+                                  "enum": [
+                                    "x",
+                                    "y"
+                                  ]
+                                },
+                                "positionMm": {
+                                  "type": "number",
+                                  "minimum": -10000,
+                                  "maximum": 10000
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "axis",
+                                "positionMm"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "visible": {
+                            "type": "boolean"
+                          },
+                          "locked": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "items",
+                          "visible",
+                          "locked"
+                        ],
+                        "additionalProperties": false
+                      },
                       "productionProfile": {
                         "type": "object",
                         "properties": {
@@ -17567,6 +17759,54 @@
             "document": {
               "type": "object",
               "properties": {
+                "layoutGuides": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "maxItems": 64,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                          },
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y"
+                            ]
+                          },
+                          "positionMm": {
+                            "type": "number",
+                            "minimum": -10000,
+                            "maximum": 10000
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "axis",
+                          "positionMm"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "visible": {
+                      "type": "boolean"
+                    },
+                    "locked": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "visible",
+                    "locked"
+                  ],
+                  "additionalProperties": false
+                },
                 "productionProfile": {
                   "type": "object",
                   "properties": {
@@ -21630,6 +21870,54 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "layoutGuides": {
+                        "type": "object",
+                        "properties": {
+                          "items": {
+                            "maxItems": 64,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+                                },
+                                "axis": {
+                                  "type": "string",
+                                  "enum": [
+                                    "x",
+                                    "y"
+                                  ]
+                                },
+                                "positionMm": {
+                                  "type": "number",
+                                  "minimum": -10000,
+                                  "maximum": 10000
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "axis",
+                                "positionMm"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "visible": {
+                            "type": "boolean"
+                          },
+                          "locked": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "items",
+                          "visible",
+                          "locked"
+                        ],
+                        "additionalProperties": false
+                      },
                       "productionProfile": {
                         "type": "object",
                         "properties": {

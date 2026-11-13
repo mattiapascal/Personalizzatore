@@ -1,6 +1,10 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const icons = {
+  lock:<><rect x="5" y="10" width="14" height="12" rx="2"/><path d="M8 10V6a4 4 0 018 0v4M12 15v3"/></>,
+  ruler:<><path d="M3 4h18v16H3zM6 4v6M10 4v3M14 4v6M18 4v3M3 14h6M3 18h3"/></>,
+  guideVertical:<><path d="M12 2v20" strokeDasharray="3 2"/><path d="M3 7h5M5 5l3 2-3 2M21 17h-5M19 15l-3 2 3 2"/></>,
+  guideHorizontal:<><path d="M2 12h20" strokeDasharray="3 2"/><path d="M7 3v5M5 5l2 3 2-3M17 21v-5M15 19l2-3 2 3"/></>,
   eye:<><path d="M2 12c4-8 16-8 20 0-4 8-16 8-20 0Z"/><circle cx="12" cy="12" r="3"/></>,
   eyeOff:<><path d="M2 12c4-8 16-8 20 0-4 8-16 8-20 0Z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></>,
   locate:<><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/></>,

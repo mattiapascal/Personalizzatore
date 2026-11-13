@@ -1,3 +1,5 @@
+import {LayoutGuidesOverlay} from './LayoutGuidesOverlay';
+import type {LayoutGuides} from './layout-guides';
 import {useMovablePanel} from './use-movable-panel';
 import {geometryFocusCurrent,geometryFocusTranslation,type GeometryFocus} from './geometry-focus';
 import type{InspectorRequest}from'./font-issue-selection';
@@ -8,7 +10,9 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest }: {
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,layoutGuidesDisabled }: {
+  layoutGuidesDisabled?:boolean;
+  onLayoutGuides?:(guides:LayoutGuides,revision:number)=>void;
   edit?:ReactNode;transforms?:ReactNode;context: ReactNode; stage: ReactNode; tools: ReactNode; properties: ReactNode; project: ReactNode; diagnostics: ReactNode;
   document: GraphicDocument; editing: boolean; onZoom: (zoom: number) => void;
   showForm?:boolean;actions?:ReactNode;mode?:'customer'|'admin'|'test';workflow?: ReactNode; layers: ReactNode; panTool: boolean; onTemporaryPan: (active: boolean) => void;
@@ -36,6 +40,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const maximumZoom=canvasZoomLimit(doc.areaMm,Math.max(fabricConfig.devicePixelRatio??window.devicePixelRatio??1,1));
   const [zoom, setZoom] = useState(()=>Math.min(1,maximumZoom)), [screenError, setScreenError] = useState('');
   const [viewReady,setViewReady]=useState(false),autoFit=useRef(true);
+  const [rulersVisible,setRulersVisible]=useState(false);
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
   const focus=geometryFocus&&geometryFocusCurrent(geometryFocus,doc)?geometryFocus:null;
   const view = useRef({ zoom: Math.min(1,maximumZoom), panX: 0, panY: 0 }), live = useRef({ onZoom, editing,focus }); live.current = { onZoom, editing,focus };
@@ -57,13 +62,14 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   };
   useEffect(()=>{if(view.current.zoom>maximumZoom)updateZoom(maximumZoom);},[maximumZoom]);
   useEffect(() => {
-    const area = viewport.current?.querySelector<HTMLElement>('.canvas-scroll'); if (!area) return;
+    const parent=viewport.current,area = parent?.querySelector<HTMLElement>('.canvas-scroll'); if (!area||!parent) return;
     const wheel = (event: WheelEvent) => {
-      event.preventDefault(); if (live.current.editing || area.dataset.panDragging === 'true') return;
+      if(!(event.target instanceof Element)||!event.target.closest('.canvas-scroll,.layout-guides-overlay'))return;
+      event.preventDefault(); if (live.current.editing || area.dataset.panDragging === 'true'||parent.querySelector('[data-guide-dragging=true]')) return;
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? area.clientHeight : 1, delta = Math.max(-200, Math.min(200, event.deltaY * unit));
       if (delta) updateZoom(view.current.zoom * Math.exp(-delta * (event.ctrlKey ? 0.01 : 0.0015)), { x: event.clientX, y: event.clientY });
     };
-    area.addEventListener('wheel', wheel, { passive: false }); return () => area.removeEventListener('wheel', wheel);
+    parent.addEventListener('wheel', wheel, { passive: false }); return () => parent.removeEventListener('wheel', wheel);
   }, [maximumZoom]);
   useLayoutEffect(() => {
     if (!layersOpen) return;
@@ -174,6 +180,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
         }}/>}
         <EditorButton className="workspace-close" disabled={editing} onClick={close} icon="return" label="Torna al laboratorio"/>
       </> : <EditorButton onClick={() => setExpanded(true)} disabled={editing} icon="workspace" label="Apri area di disegno a tutto schermo"/>}
+      {onLayoutGuides&&<EditorButton icon="ruler" label="Mostra righelli" aria-pressed={rulersVisible} onClick={()=>setRulersVisible(!rulersVisible)}/>}
       {edit}{transforms}
       <div ref={layerAnchor} className="workspace-layers-toggle">
         <EditorButton aria-pressed={layersOpen} aria-expanded={layersOpen} aria-controls={layerId} onClick={() => {setLayersOpen(!layersOpen);setWorkflowOpen(false);}} icon="layers" label="Pannello livelli"/>
@@ -187,7 +194,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     </div>
     {!expanded && context}
     <div className="workspace-layout" data-objects-open={objectsOpen} data-properties-open={propertiesOpen} data-layers-open={layersOpen}>
-      <div ref={viewport} className="drawing-stage">{stage}{focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
+      <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
       <aside className="workspace-panel objects-panel" aria-label="Strumenti" hidden={expanded && !objectsOpen}>{mode==='test'&&workflow}{tools}{project}{diagnostics}</aside>
       <div className="workspace-right-panels" hidden={expanded && !propertiesOpen}>
         <aside className="workspace-panel properties-panel" aria-label="Ispettore oggetto" hidden={expanded && !propertiesOpen}>{properties}</aside>

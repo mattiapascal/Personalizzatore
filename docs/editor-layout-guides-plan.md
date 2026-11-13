@@ -1,0 +1,9 @@
+# Righelli e guide personali — 13 novembre 2026
+
+Incremento della roadmap per l’impaginazione manuale: righelli in mm con origine nell’angolo superiore sinistro della pagina, coerenti con zoom/PAN, e guide orizzontali/verticali trascinabili. Coordinate anche negative o esterne alla pagina entro i limiti geometrici del laboratorio. Le guide si creano dai righelli oppure dal pannello Strumenti, si spostano tramite trascinamento/campo numerico e si eliminano anche da tastiera. Escape e cancellazione del gesto non modificano il progetto; un trascinamento concluso produce un solo comando.
+
+Proprietà opzionale `layoutGuides` per pagina, massimo 64 guide con ID stabili e coordinate finite in mm. `setLayoutGuides` è il comando validato comune a manuale e simulazione AI, con revisione/pagina, Undo/Redo e copia dei dati. Visibilità e blocco conservati nel JSON; lo sblocco deve precedere un cambio alle posizioni. I documenti precedenti non vengono riscritti. Le guide non sono oggetti produttivi o zone riservate, non modificano misure/testo e non compaiono nelle miniature o negli export SVG/PNG/PDF. Guide nascoste escluse dagli agganci, Alt sospende gli agganci esistenti.
+
+Prove: comandi atomici/limiti/blocco, indipendenza delle copie, persistenza JSON/SQLite temporanea, snapping su bordi/centri/punti, drag con zoom e PAN, annullamento e tastiera, coordinate numeriche, output e cache identici prima/dopo, catture desktop/mobile e campione JSON/SVG TEST. Preservare le pagine esistenti senza ampliarne le funzioni. Nessuna modifica ai template personali, migrazione, deploy o intervento sul negozio.
+
+**Completato:** [contratto e verifiche](iteration-editor-layout-guides.md). Righelli, guide canoniche, drag/touch/tastiera, agganci, output invariati, JSON/SQLite TEST e campione portabile verificati. Nessuna migrazione o scrittura ai progetti personali.

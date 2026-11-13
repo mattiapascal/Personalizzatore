@@ -12,7 +12,7 @@ function references(doc: GraphicDocument, ignored: readonly string[], measure: M
   doc=visibleDocument(doc);
   const others = selectionUnits(doc, doc.objects.filter(object => !ignored.includes(object.id)).map(object => object.id));
   const targets = others.flatMap(unit => {try{return [selectionBounds(unit,measure)];}catch(error){if(error instanceof UnverifiedTextGeometryError)return [];throw error;}});
-  return { xs: [...targets.flatMap(box => anchors(box.xMm, box.widthMm)), 0, doc.areaMm.width / 2, doc.areaMm.width], ys: [...targets.flatMap(box => anchors(box.yMm, box.heightMm)), 0, doc.areaMm.height / 2, doc.areaMm.height] };
+  return { xs: [...(doc.layoutGuides?.visible?doc.layoutGuides.items.filter(guide=>guide.axis==='x').map(guide=>guide.positionMm):[]),...targets.flatMap(box => anchors(box.xMm, box.widthMm)), 0, doc.areaMm.width / 2, doc.areaMm.width], ys: [...(doc.layoutGuides?.visible?doc.layoutGuides.items.filter(guide=>guide.axis==='y').map(guide=>guide.positionMm):[]),...targets.flatMap(box => anchors(box.yMm, box.heightMm)), 0, doc.areaMm.height / 2, doc.areaMm.height] };
 }
 function nearest(positions: number[], targets: number[], gridMm: number, toleranceMm: number) {
   let best: { delta: number; guide: number } | null = null;

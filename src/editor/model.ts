@@ -1,3 +1,4 @@
+import {LayoutGuidesSchema,assertGuideChange} from './layout-guides';
 import {affinePathIntersects} from './affine-intersection';
 import {hasObjectAffine,withoutObjectAffine,frameToWorld} from './object-affine';
 import {deleteGroupMember,duplicateGroupMember,reorderGroupMember,innermostGroup,placeGroupMember} from './group-member';
@@ -92,6 +93,7 @@ export type SceneObject = z.infer<typeof SceneObjectSchema>;
 export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),visible:z.boolean().optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
 export type SceneGroup=z.infer<typeof SceneGroupSchema>;
 const documentFields = z.strictObject({
+  layoutGuides:LayoutGuidesSchema.optional(),
   productionProfile:ProductionProfileSchema.optional(),
   plaque:PlaqueMountingSchema.optional(),
   inkColor:InkColorSchema.optional(),
@@ -235,7 +237,7 @@ export function cloneSceneObject<T extends SceneObject>(object: T): T {
   return object.type === 'image' ? { ...object, ...(object.editor?{editor:{...object.editor}}:{}), source: { ...object.source }, raster: { ...object.raster }, ...(object.crop ? { crop: { ...object.crop } } : {}),...(object.clipMasks?{clipMasks:structuredClone(object.clipMasks)}:{}) } : structuredClone(object);
 }
 export function cloneGraphicDocument(document: GraphicDocument): GraphicDocument {
-  return { ...document, ...(document.productionProfile?{productionProfile:structuredClone(document.productionProfile)}:{}), ...(document.pageOrder?{pageOrder:[...document.pageOrder]}:{}),...(document.otherPages?{otherPages:document.otherPages.map(page=>{const{objects,groups,areaMm,...rest}=page;return{...structuredClone(rest),areaMm:{...areaMm},objects:objects.map(cloneSceneObject),...(groups?{groups:groups.map(cloneSceneGroup)}:{})};})}:{}), ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
+  return { ...document, ...(document.layoutGuides?{layoutGuides:structuredClone(document.layoutGuides)}:{}), ...(document.productionProfile?{productionProfile:structuredClone(document.productionProfile)}:{}), ...(document.pageOrder?{pageOrder:[...document.pageOrder]}:{}),...(document.otherPages?{otherPages:document.otherPages.map(page=>{const{objects,groups,areaMm,...rest}=page;return{...structuredClone(rest),areaMm:{...areaMm},objects:objects.map(cloneSceneObject),...(groups?{groups:groups.map(cloneSceneGroup)}:{})};})}:{}), ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
 }
 export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('vector'), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
@@ -271,6 +273,7 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setGroupVisibility'),arguments:z.strictObject({visible:z.boolean()})}),
   z.strictObject({...base,tool:z.literal('setGroupProperties'),arguments:GroupPropertiesSchema}),
   z.strictObject({...base,tool:z.literal('placeGroupMember'),arguments:z.strictObject({parentGroupId:id.nullable(),targetObjectId:id.optional(),side:z.enum(['above','below'])})}),
+  z.strictObject({...base,tool:z.literal('setLayoutGuides'),arguments:z.strictObject({guides:LayoutGuidesSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('setPaperColor'),arguments:z.strictObject({color:ColorSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('setBackgroundImage'),arguments:z.strictObject({object:SceneObjectSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('setBackgroundObjects'),arguments:z.strictObject({objects:z.array(SceneObjectSchema).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundGroupId:id.optional(),fontAssets:FontAssetsSchema.optional()})}),
@@ -411,6 +414,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     if(role!=='admin')throw Error('Il profilo produttivo si collega in modalità amministrativa.');
     if(command.arguments.profile){assertProfileForPage(command.arguments.profile,doc,catalog,true);next.productionProfile=structuredClone(command.arguments.profile);}else delete next.productionProfile;
   }
+  else if(command.tool==='setLayoutGuides'){assertGuideChange(doc.layoutGuides,command.arguments.guides);if(command.arguments.guides)next.layoutGuides=structuredClone(command.arguments.guides);else delete next.layoutGuides;}
   else if(command.tool==='setPaperColor'){if(command.arguments.color===null)delete next.paperColor;else next.paperColor=command.arguments.color;}
   else if(command.tool==='setBackgroundImage'){
     const image=command.arguments.object;if(image&&(image.type!=='image'||image.id!==command.objectId))throw new Error('Lo sfondo richiede un’immagine e un ID coerenti');

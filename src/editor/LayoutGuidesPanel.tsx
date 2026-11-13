@@ -1,0 +1,14 @@
+import type {GraphicDocument} from './model';
+import {emptyLayoutGuides,MAX_LAYOUT_GUIDES,type LayoutGuides} from './layout-guides';
+import {GRAPHIC_GEOMETRY_LIMITS} from './limits';
+import {NumberField} from './InspectorNumberField';
+import {EditorButton} from './EditorButton';
+export function LayoutGuidesPanel({document:doc,disabled,onChange}:{document:GraphicDocument;disabled:boolean;onChange:(guides:LayoutGuides|null)=>void}){
+ const guides=doc.layoutGuides??emptyLayoutGuides(),change=(next:LayoutGuides)=>onChange(next);
+ const add=(axis:'x'|'y')=>change({...guides,visible:true,items:[...guides.items,{id:'guide-'+crypto.randomUUID(),axis,positionMm:doc.areaMm[axis==='x'?'width':'height']/2}]});
+ return <fieldset className="layout-guides-panel" disabled={disabled} aria-label="Guide personali"><h3>Guide personali</h3>
+  <div className="button-row"><EditorButton icon="eye" label="Mostra guide personali" aria-pressed={guides.visible} onClick={()=>change({...guides,visible:!guides.visible})}/><EditorButton icon="lock" label="Blocca guide personali" aria-pressed={guides.locked} onClick={()=>change({...guides,locked:!guides.locked})}/><EditorButton icon="guideVertical" label="Aggiungi guida verticale" disabled={guides.locked||guides.items.length>=MAX_LAYOUT_GUIDES} onClick={()=>add('x')}/><EditorButton icon="guideHorizontal" label="Aggiungi guida orizzontale" disabled={guides.locked||guides.items.length>=MAX_LAYOUT_GUIDES} onClick={()=>add('y')}/><EditorButton icon="delete" label="Elimina tutte le guide" disabled={guides.locked||!guides.items.length} onClick={()=>onChange(null)}/></div>
+  <p className="caption">Trascina dai righelli per aggiungere guide. Le coordinate partono dall’angolo superiore sinistro della pagina. Le guide si salvano nel progetto, senza comparire nei file grafici.</p>
+  {guides.items.length>0&&<div className="layout-guide-list">{guides.items.map((guide,index)=><div className="layout-guide-row" key={guide.id}><NumberField label={`${guide.axis==='x'?'Verticale X':'Orizzontale Y'} ${index+1} (mm)`} revision={doc.revision} value={guide.positionMm} min={-GRAPHIC_GEOMETRY_LIMITS.coordinateMm} max={GRAPHIC_GEOMETRY_LIMITS.coordinateMm} step={.1} disabled={guides.locked} onChange={positionMm=>change({...guides,items:guides.items.map(item=>item.id===guide.id?{...item,positionMm}:item)})}/><EditorButton icon="close" label={`Elimina guida ${index+1}`} disabled={guides.locked} onClick={()=>change({...guides,items:guides.items.filter(item=>item.id!==guide.id)})}/></div>)}</div>}
+ </fieldset>;
+}
