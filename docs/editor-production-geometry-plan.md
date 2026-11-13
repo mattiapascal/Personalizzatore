@@ -9,18 +9,18 @@
 3. Un prototipo privato, `.local/profile-geometry-probe.ts`, ha verificato 23 casi sui predicati fra frame convessi e zone rettangolari/ellittiche: orientamento invertito, contenimento, tangenza senza sovrapposizione positiva, falso allarme dei bounding box e zona interna al vuoto di una cornice. È soltanto una prova dei predicati, non un controllo degli oggetti dipinti e non una certificazione di tutti i casi affini.
 4. Il backend dispone già di Chromium e di un renderer locale per i PDF (`scripts/local-pdf-export.ts`). È riutilizzabile per eseguire lo stesso motore Fabric e gli stessi font del frontend, senza introdurre misure basate su font del computer.
 5. Prima di riusarlo va corretto un difetto riprodotto: il PDF con WOFF2 valido e quello con WOFF realmente compresso falliscono con `UnverifiedTextGeometryError`. Il renderer invoca il serializzatore sincrono dopo il solo caricamento del font, senza attendere la copertura; inoltre blocca la richiesta locale di analisi WOFF2. L’editor e il percorso SVG pubblico hanno già il preflight asincrono necessario.
-6. Una copia privata del modulo (`.local/prototype-local-pdf-export.ts`) riusa `exportDocumentSvg`, soddisfa l’analisi WOFF2 soltanto per i byte incorporati noti e mantiene bloccate le altre richieste di scrittura/esterne. Il prototipo produce i due PDF. Sul WOFF2 verificati ABeeZee incorporato/sottoinsieme/Unicode, testo «ABC» estraibile e pagina 58 × 22 mm. Font originali e documenti non modificati. Log `.local/profile-link/pdf-font-probe.log`, `pdf-font-prototype.log`, `pdf-woff-probe.log`. È una diagnosi/prova privata: la correzione non è ancora nel codice applicativo.
+6. Una copia privata del modulo (`.local/prototype-local-pdf-export.ts`) ha dimostrato la correzione riusando `exportDocumentSvg` e l’analisi dei soli byte WOFF2 incorporati. La [correzione è ora applicativa e collaudata](iteration-editor-pdf-font-preparation.md): WOFF2, WOFF realmente compresso, stili locali, pagine diverse e riferimenti, senza fallback o scritture negli archivi. Le prove private precedenti restano in `.local/profile-link/pdf-font-probe.log`, `pdf-font-prototype.log`, `pdf-woff-probe.log`.
 
-## Incremento immediato: font del renderer PDF
+## Incremento completato: font del renderer PDF
 
-Dopo l’esito terminale della suite generale:
+Dopo l’esito terminale della suite generale è stato completato il [prerequisito PDF](iteration-editor-pdf-font-preparation.md):
 
-- usare il percorso SVG asincrono già verificato, evitando una seconda sequenza di preparazione dei font;
-- consentire il controllo WOFF2 soltanto per il contenuto esatto dei file del documento; il prototipo lo risolve nel processo locale, senza una scrittura HTTP negli archivi;
-- mantenere il rifiuto dei glifi mancanti e degli stili simulati, senza fallback;
-- preparare soltanto le risorse usate dalla scena produttiva, lasciando gli originali e le altre pagine nel JSON;
-- coprire PDF effettivi WOFF2, WOFF compresso, testo misto, risorse inutilizzate, glifi mancanti, pagine e riferimenti. Verificare font incorporati e misure con Poppler/qpdf, oltre al download dall’interfaccia;
-- aggiornare campioni, documentazione e sincronizzazione. Non attribuire a questa prova un nuovo collaudo Illustrator.
+- percorso SVG asincrono condiviso, senza duplicare la preparazione dei font;
+- analisi WOFF2 in memoria, limitata ai byte esatti dei file del documento;
+- glifi mancanti e stili simulati rifiutati, nessun fallback;
+- sole risorse usate dalla scena preparate, originali e altre pagine conservati nel JSON;
+- PDF effettivi WOFF2/WOFF, testo misto, risorse inutilizzate, errori, pagine e riferimenti collaudati con Poppler/qpdf e download reale;
+- nuovo campione JSON/SVG/PDF, 1.131 unitari, 13 browser pertinenti e 68 campioni passati. Illustrator resta da collaudare.
 
 ## Motore di analisi geometrica
 

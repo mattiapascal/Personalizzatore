@@ -1,0 +1,22 @@
+# PDF locale con font compressi — 13 novembre 2026
+
+Corretto il difetto riprodotto durante la preparazione dei controlli produttivi: un WOFF2 valido o un WOFF con tabella `cmap` realmente compressa poteva funzionare nel canvas e nello SVG, ma fallire nell’esportazione PDF con `UnverifiedTextGeometryError`.
+
+Il renderer chiamava il serializzatore sincrono dopo il caricamento dei file, senza attendere la copertura dei caratteri. Il controllo locale WOFF2 era inoltre bloccato dalla rete isolata del renderer. Ora `scripts/local-pdf-export.ts` riusa `exportDocumentSvg`, che attende il preflight dei soli font usati nella scena e la preparazione delle immagini prima di creare le geometrie.
+
+`LocalRenderFontCoverage` conserva per la durata dell’esportazione l’insieme esatto dei file WOFF2 incorporati e la loro analisi. Il controllo nel processo Node e quello della pagina headless ricevono la copertura ricavata dagli stessi byte. La richiesta della pagina viene soddisfatta in memoria, senza inviarla all’archivio HTTP. Byte sconosciuti, richieste esterne e altre scritture restano bloccati. Risposte e intervalli sono copiati, così una modifica del chiamante non può ampliare la copertura memorizzata. Un file corrotto rimane non verificabile.
+
+Nessuna sostituzione di font o modifica dei file originali. Glifi mancanti, font non verificabili e grassetto/corsivo simulati continuano a impedire il PDF. Un file inutilizzato non impedisce l’esportazione di una scena verificata. Tutte le pagine e gli eventuali riferimenti vengono controllati prima di iniziare la generazione; un errore nella pagina inattiva non produce un documento parziale.
+
+## Evidenze
+
+- **1.131 unitari / 160 file passati**, inclusi cinque casi nuovi: WOFF compresso reale, byte WOFF2 ammessi, risultati immutabili, file corrotto, glifi/stili rifiutati. Log `.local/pdf-fonts-unit.log`.
+- **13 browser pertinenti passati**, di cui sei nuovi PDF effettivi: WOFF/WOFF2 e stili locali, pagine 100×60 e 120×80 mm, riferimenti OCG non stampabili, file inutilizzato/glifi/stili non validi, download reale dall’editor e protezioni loopback/intestazione. Inclusi anche i due casi dell’ispettore: dopo il fallback Geometria resta selezionata. Log `.local/pdf-fonts-regressions.log`.
+- **68 campioni JSON/SVG riaperti ed esportati**, zero errori browser, richieste esterne o letture di file font dalla libreria personale. Log `.local/pdf-fonts-artifacts.log`.
+- Build e TypeScript, pacchetto Worker con `--dry-run`, **13 browser pubblici** e controlli segreti dei due bundle passati. Bundle pubblico ancora `index-BG2r_x-8.js`. Log `.local/pdf-fonts-build.log`, `pdf-fonts-worker-package.log`, `pdf-fonts-public.log`, `pdf-fonts-secrets.log`, `pdf-fonts-public-secrets.log`. Non è stata rieseguita la suite browser generale: resta registrato l’esito precedente 685/689, con i quattro casi successivamente ricontrollati.
+
+Il nuovo campione [JSON](../fixtures/illustrator/pdf-fonts.TEST.json) e [SVG](../fixtures/illustrator/pdf-fonts.TEST.svg) usa Arimo TEST in WOFF e ABeeZee TEST in WOFF2, con licenze e font incorporati. Il generatore `node --import tsx scripts/capture-editor-pdf-fonts.ts` scrive anche un [PDF di prova](../output/pdf/editor-font-compressi.TEST.pdf), 100×60 mm, 11.766 byte alla prima cattura. Il WOFF viene costruito dal TTF TEST con compressione separata delle tabelle; non è un TTF rinominato. I caratteri del subset ABeeZee sono rispettati, senza completarli con fallback.
+
+Poppler conferma entrambi i font incorporati, sottoinsiemi e mappa Unicode; il testo accentato e quello con stili locali sono estraibili. qpdf controlla struttura e MediaBox/CropBox/TrimBox senza scalare la grafica. Nel PDF tecnico i due gruppi di riferimento hanno `PrintState /OFF`; nel PDF produttivo sono esclusi. PNG rasterizzato a 150 dpi e ispezionato: testi leggibili, nessun taglio o sovrapposizione. Report e immagini in `.local/pdf-fonts-capture/`. **Illustrator non collaudato**: incorporamento e ispezione Poppler non certificano la modificabilità in quell’applicazione.
+
+Archivio ordinario confermato in sola lettura: **SQLite R630, 339 template, due composizioni, 219 font, un profilo produttivo**. Nessuna modifica ai dati personali, nessuna importazione o migrazione, nessun deploy o modifica Shopify/PitchPrint/BSS. La correzione resta nel laboratorio locale. I controlli geometrici di margini, zone e lavorabilità descritti nel [piano](editor-production-geometry-plan.md) rimangono da implementare; le guide non diventano una certificazione produttiva.
