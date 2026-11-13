@@ -1,3 +1,5 @@
+**13 novembre — regolazioni delle foto a colori:** [Funzione e collaudi](iteration-editor-raster-color.md). Luminosità, contrasto e saturazione RGB live, reset all’originale, alpha e crop conservati, stessi comandi manuali/AI e Undo. Cache, output e controlli B/N condivisi; nessun filtro applicato automaticamente ai progetti esistenti. Nessuna modifica ai dati personali o alla chat pubblicata.
+
 **13 novembre — distanza precisa tra oggetti:** [Funzione e collaudi](iteration-editor-object-spacing.md). Trasforma aggiunge distanza orizzontale/verticale in mm, gruppi indivisi e master fermo, stesso comando manuale/AI e Undo/Redo. Intestazione del pannello sempre accessibile durante lo scorrimento. Nessuna modifica ai dati personali o alla chat pubblicata.
 
 **13 novembre — inquadrare la selezione:** [Funzione e collaudi](iteration-editor-selection-view.md). Nuovo pulsante accanto ad Adatta all’area, con margine per maniglie, gruppi/membri, mobile e limiti Retina. Solo zoom/PAN: documento e output invariati, font non misurabili senza stime. Nessuna modifica ai dati personali o alla chat online.

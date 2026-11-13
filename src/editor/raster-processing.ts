@@ -3,13 +3,14 @@ import { monochromePixels } from './raster-monochrome';
 import { z } from 'zod';
 import { analyzeRasterPixels } from './raster-analysis';
 export const RasterParametersSchema = z.strictObject({
-  mode: z.enum(['binary', 'original', 'grayscale']).optional(),
+  mode: z.enum(['binary', 'original', 'grayscale', 'color']).optional(),
   threshold: z.number().int().min(0).max(255), invert: z.boolean(), whiteTransparent: z.boolean(),
   method: z.enum(['threshold', 'ordered', 'diffusion']).optional(),
   brightness: z.number().finite().min(-100).max(100).optional(), contrast: z.number().finite().min(-100).max(100).optional(),
+  saturation: z.number().finite().min(0).max(200).optional(),
   backgroundRemoval: z.literal('luminance').optional(),
   tintColor: ColorSchema.optional(),
-}).refine(params => params.mode !== 'original' || !params.backgroundRemoval && !params.invert && !params.whiteTransparent && !params.brightness && !params.contrast && (!params.method || params.method === 'threshold'), 'La modalità originale conserva i pixel senza elaborazioni bianco/nero').refine(params => !params.tintColor || params.mode === 'grayscale', 'La tinta richiede la modalità monocolore').refine(params => params.mode !== 'grayscale' || !params.whiteTransparent && (!params.method || params.method === 'threshold'), 'Il monocolore usa grigi continui; soglia e mezzitoni restano nella conversione binaria');
+}).refine(params => params.mode !== 'original' || !params.backgroundRemoval && !params.invert && !params.whiteTransparent && !params.brightness && !params.contrast && (!params.method || params.method === 'threshold'), 'La modalità originale conserva i pixel senza elaborazioni bianco/nero').refine(params => !params.tintColor || params.mode === 'grayscale', 'La tinta richiede la modalità monocolore').refine(params => params.mode !== 'grayscale' || !params.whiteTransparent && (!params.method || params.method === 'threshold'), 'Il monocolore usa grigi continui; soglia e mezzitoni restano nella conversione binaria').refine(params => params.saturation === undefined || params.mode === 'color', 'La saturazione richiede le regolazioni a colori').refine(params => params.mode !== 'color' || !params.backgroundRemoval && !params.invert && !params.whiteTransparent && (!params.method || params.method === 'threshold'), 'Le regolazioni a colori conservano la trasparenza originale e non applicano conversioni binarie');
 export type RasterParameters = z.infer<typeof RasterParametersSchema>;
 export const DEFAULT_RASTER: RasterParameters = { threshold: 128, invert: false, whiteTransparent: false };
 const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5] as const;
@@ -19,6 +20,16 @@ export function rasterPixels(source: Uint8ClampedArray, raw: RasterParameters, w
   if (params.mode === 'original') {
     if (!Number.isInteger(width) || width <= 0 || source.length % 4 || source.length / 4 % width) throw new Error('Dimensioni RGBA non valide');
     return source.slice();
+  }
+  if (params.mode === 'color') {
+    if (!Number.isInteger(width) || width <= 0 || source.length % 4 || source.length / 4 % width) throw new Error('Dimensioni RGBA non valide');
+    const output=source.slice(),saturation=(params.saturation??100)/100,brightness=(params.brightness??0)*255/100,contrast=params.contrast??0,factor=(100+contrast)/Math.max(.01,100-contrast);
+    if(saturation===1&&brightness===0&&contrast===0)return output;
+    for(let i=0;i<source.length;i+=4){
+      const gray=(2126*source[i]!+7152*source[i+1]!+722*source[i+2]!)/10000;
+      for(let channel=0;channel<3;channel++){const value=gray+saturation*(source[i+channel]!-gray);output[i+channel]=Math.round(Math.max(0,Math.min(255,(value-127.5)*factor+127.5+brightness)));}
+    }
+    return output;
   }
   if (params.mode === 'grayscale') {
     if (!Number.isInteger(width) || width <= 0 || source.length % 4 || source.length / 4 % width) throw new Error('Dimensioni RGBA non valide');

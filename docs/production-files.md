@@ -1,3 +1,5 @@
+**13 novembre — regolazioni RGB:** [JSON](../fixtures/illustrator/raster-color.TEST.json) e [SVG](../fixtures/illustrator/raster-color.TEST.svg), 120 × 65 mm con originale/immagine regolata, crop frazionario, rotazione/riflessione, alpha continuo e Arimo OFL. [Parametri e prove](iteration-editor-raster-color.md). **Illustrator non collaudato.**
+
 **13 novembre — spaziatura precisa:** [JSON](../fixtures/illustrator/object-spacing.TEST.json) e [SVG](../fixtures/illustrator/object-spacing.TEST.svg), 120 × 80 mm, quattro oggetti/un gruppo con Arimo OFL e immagine TEST. Ingombri affini e distanza orizzontale di 3 mm; [comportamento e prove](iteration-editor-object-spacing.md). **Illustrator non collaudato.**
 
 **13 novembre — campione griglia fisica:** [JSON](../fixtures/illustrator/physical-grid.TEST.json) e [SVG](../fixtures/illustrator/physical-grid.TEST.svg), 99×93 mm con Arimo TEST incorporato. Spostamento manuale/AI, Undo con pixel identici e misure in mm conservate; [metodo e controlli](iteration-editor-physical-grid.md). Il viewport di confronto è solo nei test, non nello SVG di produzione. **Illustrator non collaudato.**

@@ -1,0 +1,23 @@
+# Luminosità, contrasto e saturazione RGB — 13 novembre 2026
+
+Nella scheda **Immagine** dell’ispettore, attivando **Immagine a colori**, sono disponibili luminosità, contrasto e **Saturazione (%)**. Le modifiche sono live; 100% è neutro, 0% produce grigi, 200% intensifica i colori. Il pulsante **Ripristina colori originali** rimuove le regolazioni. Il precedente interruttore «Mantieni colori originali» cambia nome perché i colori ora possono essere regolati.
+
+La modalità canonica `original` conserva il significato precedente: pixel non elaborati, e SVG che conserva il flusso originale. La prima regolazione porta esplicitamente i parametri a `mode: color`; saturazione assente equivale a 100%. Nessun vecchio progetto viene convertito automaticamente. La nuova modalità conserva l’alpha sorgente, anche parziale; non compone i pixel su bianco e non rimuove lo sfondo. La saturazione usa la luminanza pesata dei canali sRGB, seguita da contrasto e luminosità per canale, arrotondamento e clipping all’intervallo 0–255. Non è gestione ICC/CMYK.
+
+File sorgente incorporato, ID, crop frazionario, posizione, misure e trasformazioni non cambiano. Ogni modifica usa `updateObject` revisionato, lo stesso della simulazione AI, con Undo/Redo. La cache distingue saturazione, luminosità e contrasto e le bitmap elaborate rientrano nei limiti cumulativi esistenti. A parametri neutri i byte del motore sono identici alla sorgente.
+
+SVG, PNG e miniature contengono l’elaborazione; il JSON conserva sia originale sia parametri. La conversione monocolore/tinta rimane una modalità distinta, come B/N e rimozione del bianco. Questi interruttori iniziano una nuova elaborazione dall’originale e restano annullabili. Le regolazioni a colori non vengono abilitate nei documenti monocromatici: il validatore le rifiuta anche nei comandi simulati. I controlli produttivi analizzano tutti i pixel pertinenti del risultato e non considerano il nuovo valore di modalità una garanzia B/N, neppure con saturazione zero.
+
+## Verifiche
+
+- **1.290 unitari / 183 file passati** (`.local/raster-color-all-units.log`), con otto nuovi casi per riferimenti numerici RGB, alpha, neutri/estremi, valori/dimensioni errati, UI/AI, JSON, Undo/Redo, blocchi cliente, budget bitmap e controllo B/N server.
+- **Sei nuovi browser passati** (`.local/raster-color-browser-final.log`): desktop e telefono, ispettore live, reset, comando AI equivalente, cache/alpha, output PNG/miniatura ripristinati da Undo e riapertura JSON. JPEG EXIF 1–8 confrontati con decoder nativo, differenza massima ammessa di due livelli RGB per le differenze di decodifica. Altri 32 confronti B/N PNG/JPEG orientati fra browser e server, risultati concordi.
+- **24 regressioni browser aggiuntive passate**, per **30 casi pertinenti distinti** con i sei nuovi: 18 su foto/cache/monocolore/EXIF/controlli timbro (`.local/raster-color-regression.log`), cinque sul B/N nel crop (`raster-color-crop-regression.log`) e una sull’importazione a colori PitchPrint (`raster-color-pitchprint-regression.log`). Non è una nuova esecuzione della suite browser generale.
+- Campione [JSON](../fixtures/illustrator/raster-color.TEST.json) e [SVG](../fixtures/illustrator/raster-color.TEST.svg), **120 × 65 mm**: due immagini con stesso originale generato, crop e trasformazioni, a sinistra originale e a destra saturazione 175%, luminosità 10 e contrasto 5; testo Arimo OFL incorporato. Generatore `scripts/capture-editor-raster-color.ts`, zero errori/richieste esterne/scritture amministrative nel rapporto `.local/raster-color-capture.json`. Catture desktop/mobile ispezionate visivamente.
+
+- **80 campioni JSON/SVG riaperti ed esportati** senza errori browser, richieste esterne o font personali (`.local/raster-color-artifacts.log`). Il caso output ricontrollato in `raster-color-svg-pixels.log` verifica anche che lo SVG incorpori esattamente i PNG derivati dal motore per entrambe le immagini regolate e dopo riapertura JSON.
+- Build locale/pubblica, schemi e scansioni dei segreti passati; **13 browser pubblici passati** (`.local/raster-color-public-tests.log`). JavaScript della chat ancora `index-BG2r_x-8.js`.
+
+Archivio principale letto senza scritture: **SQLite R638, 346 template, due composizioni, 219 font e un profilo** (`.local/raster-color-archive.json`). Nessuna migrazione o modifica automatica ai documenti esistenti. Nessun deploy o intervento su negozio, tema, PitchPrint, BSS, prezzi, carrello e checkout.
+
+Nessun collaudo Illustrator eseguito: restano da verificare dimensioni, resa cromatica, ritaglio/trasparenza e testo editabile con i file di produzione reali. Nessuna nuova funzione multipagina, generazione immagini o rimozione dello sfondo a colori.

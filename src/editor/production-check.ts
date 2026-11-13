@@ -22,7 +22,7 @@ export function binaryInkWindow(pixels:Uint8Array|Uint8ClampedArray,width:number
 
 /** Binary threshold/dither produces only binary samples, regardless of input.
  * Luminance removal instead keeps continuous alpha and needs pixel inspection. */
-export const guaranteesBinaryRaster=(object:RasterObject)=>object.raster.mode!=='original'&&object.raster.mode!=='grayscale'&&!object.raster.backgroundRemoval;
+export const guaranteesBinaryRaster=(object:RasterObject)=>(object.raster.mode===undefined||object.raster.mode==='binary')&&!object.raster.backgroundRemoval;
 
 /** Same read-only final gate in the browser and local API. The decoder is an
  * adapter: no DOM/native code enters this domain module. Check every page and

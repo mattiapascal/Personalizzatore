@@ -3082,7 +3082,8 @@
                                 "enum": [
                                   "binary",
                                   "original",
-                                  "grayscale"
+                                  "grayscale",
+                                  "color"
                                 ]
                               },
                               "threshold": {
@@ -3113,6 +3114,11 @@
                                 "type": "number",
                                 "minimum": -100,
                                 "maximum": 100
+                              },
+                              "saturation": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 200
                               },
                               "backgroundRemoval": {
                                 "type": "string",
@@ -7111,7 +7117,8 @@
                                       "enum": [
                                         "binary",
                                         "original",
-                                        "grayscale"
+                                        "grayscale",
+                                        "color"
                                       ]
                                     },
                                     "threshold": {
@@ -7142,6 +7149,11 @@
                                       "type": "number",
                                       "minimum": -100,
                                       "maximum": 100
+                                    },
+                                    "saturation": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 200
                                     },
                                     "backgroundRemoval": {
                                       "type": "string",
@@ -11345,7 +11357,8 @@
                                 "enum": [
                                   "binary",
                                   "original",
-                                  "grayscale"
+                                  "grayscale",
+                                  "color"
                                 ]
                               },
                               "threshold": {
@@ -11376,6 +11389,11 @@
                                 "type": "number",
                                 "minimum": -100,
                                 "maximum": 100
+                              },
+                              "saturation": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 200
                               },
                               "backgroundRemoval": {
                                 "type": "string",
@@ -15374,7 +15392,8 @@
                                       "enum": [
                                         "binary",
                                         "original",
-                                        "grayscale"
+                                        "grayscale",
+                                        "color"
                                       ]
                                     },
                                     "threshold": {
@@ -15405,6 +15424,11 @@
                                       "type": "number",
                                       "minimum": -100,
                                       "maximum": 100
+                                    },
+                                    "saturation": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 200
                                     },
                                     "backgroundRemoval": {
                                       "type": "string",

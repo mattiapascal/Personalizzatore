@@ -125,7 +125,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
       ...('fill' in object ? [object.fill] : []), ...('stroke' in object ? [object.stroke] : []),
       ...(object.type === 'text' ? object.characterStyles?.flatMap(run => [run.style.fill, run.style.stroke]) ?? [] : []),
     ];
-    if (paints.some(paint => !isMonochromePaint(paint)) || object.type === 'image' && (object.raster.mode === 'original' || !isMonochromePaint(object.raster.tintColor))) ctx.addIssue({ code: 'custom', message: 'Il documento monocromatico ammette soltanto nero/bianco. Per conservare i colori usa un progetto a colori, senza montatura timbro.' });
+    if (paints.some(paint => !isMonochromePaint(paint)) || object.type === 'image' && (object.raster.mode === 'original' || object.raster.mode === 'color' || !isMonochromePaint(object.raster.tintColor))) ctx.addIssue({ code: 'custom', message: 'Il documento monocromatico ammette soltanto nero/bianco. Per conservare i colori usa un progetto a colori, senza montatura timbro.' });
   }
   if(d.plaque){if(d.shape!=='rectangle')ctx.addIssue({code:'custom',message:'La targa a misura richiede una sagoma rettangolare'});try{plaqueMountingPoints(d.areaMm,d.plaque);}catch(cause){ctx.addIssue({code:'custom',message:cause instanceof Error?cause.message:'Fissaggi non validi'});}}
   if(d.objects.reduce((count,object)=>count+(object.type==='text'?Array.from(object.text).length:0),0)>EDITOR_LIMITS.documentTextCharacters)ctx.addIssue({code:'custom',message:`Massimo ${EDITOR_LIMITS.documentTextCharacters} caratteri Unicode nell’intero documento`});
