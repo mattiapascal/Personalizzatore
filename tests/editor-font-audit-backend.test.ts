@@ -21,6 +21,21 @@ async function setup(kind:'sqlite'|'json',readOnly=false){
  const initial=await seed(),item=await archive(kind,initial),running=await start(item,readOnly),sourceDirectory=join(root,'sources');await mkdir(sourceDirectory);const file=join(sourceDirectory,'sample.source.json');await writeFile(file,JSON.stringify({pages:[{canvas:{objects:[{type:'i-text',text:'TEST',fontFamily:'ABeeZee'}]}},{canvas:{objects:[{type:'i-text',text:'RETRO',fontFamily:'ABeeZee'}]}}]}));
  const options={sourceDirectory,outputDirectory:join(root,'reports'),...(kind==='sqlite'?{sqliteFile:item.file}:{libraryDirectory:item.directory}),installGoogle:true,origin:running.origin};return{initial,item,...running,options,sourceFile:file};
 }
+it('riavvio Vite reale: resolver e indice condividono il nuovo runtime SQLite senza modificare il file',async()=>{
+ const initial=await seed(),item=await archive('sqlite',initial),running=await start(item,true),before=await readFile(item.file),identity=running.runtime.identity;
+ let previous=running.runtime;
+ for(let iteration=0;iteration<3;iteration++){
+  if(iteration){await server!.restart();await expect(previous.store.readSnapshot()).rejects.toThrow('database is not open');}
+  const address=server!.httpServer!.address();if(!address||typeof address==='string')throw Error('Porta assente');
+  const origin='http://127.0.0.1:'+address.port,headers={'X-Editor-Local':'1',Origin:origin},runtime=editorAdminRuntime(server!);
+  expect(runtime.identity).toBe(identity);expect((await runtime.store.readSnapshot()).revision).toBe(5);
+  const index=await fetch(origin+'/__editor-local/admin/',{headers});expect(index.status).toBe(200);expect(index.headers.get('X-Editor-Archive-Id')).toBe(identity);expect(await index.json()).toMatchObject({revision:5,environment:{kind:'storage-trial',readOnly:true}});
+  const font=await fetch(origin+'/__editor-local/pitchprint/font?family=Arimo&weight=400&italic=0',{headers});expect(font.status).toBe(200);expect((await font.json()).asset).toMatchObject({id:'font-'+initial.fonts[0]!.id,dataBase64:initial.fonts[0]!.dataBase64});
+  const write=await fetch(origin+'/__editor-local/admin/',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({tool:'settings',expectedRevision:5,arguments:DEFAULT_ADMIN_SETTINGS})});expect(write.status).toBe(403);
+  previous=runtime;
+ }
+ expect(await readFile(item.file)).toEqual(before);
+},30000);
 async function google(){const prepared={family:'ABeeZee',familyGroup:'ABeeZee',format:'woff2' as const,weight:400,italic:false,styleName:'400 Normale',categories:['Sans-serif'],notes:'Google TEST',source:'google' as const,sourceUrl:'https://fonts.google.com/specimen/ABeeZee',licenseText:await readFile('fixtures/fonts/ABeeZee-OFL.txt','utf8'),dataBase64:(await readFile('fixtures/fonts/ABeeZee-subset.TEST.woff2')).toString('base64')},catalog=vi.spyOn(GoogleFontLibrary.prototype,'catalog').mockResolvedValue([{family:'ABeeZee',category:'Sans Serif',variants:['400']}]),prepare=vi.spyOn(GoogleFontLibrary.prototype,'prepare').mockResolvedValue(prepared);return{prepared,catalog,prepare};}
 async function loaded(item:Awaited<ReturnType<typeof archive>>){if(item.kind==='json')return JSON.parse(await readFile(item.file,'utf8'))as AdminState;const db=EditorAdminSqlite.open(item.file,true);try{return await db.exportState();}finally{db.close();}}
 for(const kind of ['json','sqlite']as const)it(`font audit ${kind}: installazione esatta sullo stesso archivio, backup nuovo, progetti/font conservati e ripetizione senza duplicati`,async()=>{

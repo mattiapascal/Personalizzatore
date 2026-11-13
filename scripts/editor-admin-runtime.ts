@@ -17,5 +17,5 @@ export async function openEditorAdminRuntime(storage:EditorAdminStorage,root:str
  return{store,directory:dirname(file),backend:'sqlite',identity:archiveIdentity('sqlite',file),...(storage.kind==='sqlite-copy'?{copy:{readOnly}}:{}),close:async()=>{if(closed)return;closed=true;await store.whenIdle();store.releaseReadCaches();database.close();}};
 }
 const runtimeKey=Symbol.for('incisoria.editor.admin.runtime');
-export function registerEditorAdminRuntime(server:object,runtime:EditorAdminRuntime){Object.defineProperty(server,runtimeKey,{value:runtime,configurable:true});}
+export function registerEditorAdminRuntime(server:object,runtime:EditorAdminRuntime){Object.defineProperty(server,runtimeKey,{value:runtime,configurable:true,enumerable:true,writable:true});}
 export function editorAdminRuntime(server:object):EditorAdminRuntime{const runtime=(server as Record<symbol,unknown>)[runtimeKey]as EditorAdminRuntime|undefined;if(!runtime)throw Error('Archivio editor non inizializzato');return runtime;}

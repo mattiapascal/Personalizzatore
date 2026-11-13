@@ -9,3 +9,23 @@ it('rifiuta file assenti, cartella attiva, alias e collegamenti fisici senza att
 it('chiusura del runtime libera lo snapshot JSON per i successivi riavvii senza modificare il file',async()=>{const{sharedEditorAdminReadCache}=await import('../scripts/editor-admin-read-cache'),runtime=await openEditorAdminRuntime({kind:'json',directory:join(root,'json')},root);runtimes.push(runtime);await runtime.store.dispatch({tool:'settings',expectedRevision:0,arguments:DEFAULT_ADMIN_SETTINGS});const cache=sharedEditorAdminReadCache(runtime.directory),old=await cache.get(),before=await readFile(join(runtime.directory,'state.json'));await runtime.close();const next=await cache.get();expect(next).not.toBe(old);expect(next.state).toEqual(old.state);expect(await readFile(join(runtime.directory,'state.json'))).toEqual(before);});
 
 it('cache di sviluppo distinte fra archivio corrente, copie diverse e modalità di prova',async()=>{const{editorLabConfig}=await import('../scripts/editor-lab-config'),normal=editorLabConfig(),readonly=editorLabConfig({trial:true,storage:{kind:'sqlite-copy',file:'copia-a.sqlite',readOnly:true}}),writable=editorLabConfig({trial:true,storage:{kind:'sqlite-copy',file:'copia-a.sqlite',readOnly:false}}),other=editorLabConfig({trial:true,storage:{kind:'sqlite-copy',file:'copia-b.sqlite',readOnly:true}});expect(normal.cacheDir).toBeUndefined();expect(readonly.cacheDir).toBeTruthy();expect(readonly.cacheDir).not.toContain('.local/');expect(new Set([readonly.cacheDir,writable.cacheDir,other.cacheDir]).size).toBe(3);});
+
+/** Vite 8 creates a server, then copies its enumerable properties into the
+ * existing server and redirects the configureServer proxy to that object. */
+function viteFacade(){
+ const target:Record<PropertyKey,unknown>={};let current=target;
+ target._setInternalServer=(next:Record<PropertyKey,unknown>)=>{current=next;};
+ const proxy=new Proxy(target,{get:(_target,key)=>current[key],set:(_target,key,value)=>{current[key]=value;return true;}});
+ return{target,proxy,redirect:(next:Record<PropertyKey,unknown>)=>(target._setInternalServer as (next:Record<PropertyKey,unknown>)=>void)(next)};
+}
+it('riavvio Vite: il resolver usa il nuovo SQLite, mai la connessione già chiusa del processo precedente',async()=>{
+ const oldFile=await copy(join(root,'old','archive.sqlite')),newFile=join(root,'new','archive.sqlite'),db=await EditorAdminSqlite.create(newFile,{...initial,revision:7});db.close();
+ const oldRuntime=await openEditorAdminRuntime({kind:'sqlite-copy',file:oldFile,readOnly:true},root),nextRuntime=await openEditorAdminRuntime({kind:'sqlite-copy',file:newFile,readOnly:true},root);runtimes.push(oldRuntime,nextRuntime);
+ const old=viteFacade(),next=viteFacade();registerEditorAdminRuntime(old.proxy,oldRuntime);registerEditorAdminRuntime(next.proxy,nextRuntime);await oldRuntime.close();Object.assign(old.target,next.target);next.redirect(old.target);
+ expect(editorAdminRuntime(next.proxy)).toBe(nextRuntime);expect(editorAdminRuntime(old.proxy)).toBe(nextRuntime);expect((await editorAdminRuntime(next.proxy).store.readSnapshot()).revision).toBe(7);expect(await editorAdminRuntime(next.proxy).store.readFonts()).toEqual([]);expect(JSON.stringify(old.target)).not.toContain('archive.sqlite');
+});
+it('riavvii ripetuti sul medesimo file: identità invariata, nuova connessione leggibile e dati conservati',async()=>{
+ const file=await copy(),original=await readFile(file),first=viteFacade();let previous=await openEditorAdminRuntime({kind:'sqlite-copy',file,readOnly:true},root);runtimes.push(previous);registerEditorAdminRuntime(first.proxy,previous);
+ for(let i=0;i<3;i++){const next=viteFacade(),runtime=await openEditorAdminRuntime({kind:'sqlite-copy',file,readOnly:true},root);runtimes.push(runtime);registerEditorAdminRuntime(next.proxy,runtime);await previous.close();Object.assign(first.target,next.target);next.redirect(first.target);expect(editorAdminRuntime(next.proxy)).toBe(runtime);expect((await editorAdminRuntime(first.proxy).store.readSnapshot()).revision).toBe(5);expect(await editorAdminRuntime(next.proxy).store.readFonts()).toEqual([]);previous=runtime;}
+ expect(await readFile(file)).toEqual(original);
+});
