@@ -796,6 +796,18 @@
                       "exclusiveMinimum": 0,
                       "maximum": 3000
                     },
+                    "clearanceMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "holeDiameterMm": {
                       "anyOf": [
                         {
@@ -4906,6 +4918,18 @@
                             "type": "number",
                             "exclusiveMinimum": 0,
                             "maximum": 3000
+                          },
+                          "clearanceMm": {
+                            "anyOf": [
+                              {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           },
                           "holeDiameterMm": {
                             "anyOf": [
@@ -10076,6 +10100,18 @@
                       "exclusiveMinimum": 0,
                       "maximum": 3000
                     },
+                    "clearanceMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "holeDiameterMm": {
                       "anyOf": [
                         {
@@ -14186,6 +14222,18 @@
                             "type": "number",
                             "exclusiveMinimum": 0,
                             "maximum": 3000
+                          },
+                          "clearanceMm": {
+                            "anyOf": [
+                              {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           },
                           "holeDiameterMm": {
                             "anyOf": [
@@ -18304,6 +18352,18 @@
                       "exclusiveMinimum": 0,
                       "maximum": 3000
                     },
+                    "clearanceMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "holeDiameterMm": {
                       "anyOf": [
                         {
@@ -22414,6 +22474,18 @@
                             "type": "number",
                             "exclusiveMinimum": 0,
                             "maximum": 3000
+                          },
+                          "clearanceMm": {
+                            "anyOf": [
+                              {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           },
                           "holeDiameterMm": {
                             "anyOf": [

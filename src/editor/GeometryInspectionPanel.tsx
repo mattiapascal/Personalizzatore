@@ -20,7 +20,7 @@ export function GeometryInspectionPanel({document:doc,disabled,onLocate,onResetF
  const current=report&&geometryReportCurrent(report,doc)?report:null;
  return <section aria-label="Controllo visuale di margini e zone" className="production-geometry-check">
   <button type="button" disabled={disabled||busy} onClick={()=>void inspect()}>Controlla margini e zone</button>
-  <p className="caption">Controllo visuale a passi di 0,025 mm. Non sostituisce il collaudo produttivo; fissaggi e limiti d’incisione non sono inclusi.</p>
+  <p className="caption">Controllo visuale a passi di 0,025 mm. Non sostituisce il collaudo produttivo; Include i fori scelti e le distanze di rispetto definite. Diametri/distanze mancanti restano da verificare; i limiti d’incisione non sono inclusi.</p>
   {busy&&<p role="status">Controllo della grafica in corso…</p>}{error&&<p role="alert">{error}</p>}
   {report&&!current&&!busy&&<p role="status">Design modificato: ripeti il controllo di margini e zone.</p>}
   {current&&<div role="status" aria-label="Esito controllo visuale">

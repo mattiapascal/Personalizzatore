@@ -422,7 +422,16 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     if(image){if(next.objects.some(o=>o.id===image.id))throw new Error('ID dello sfondo già presente');next.objects.unshift(cloneSceneObject(image));next.backgroundImageId=image.id;}
   }
   else if(command.tool==='setBackgroundObjects')replaceBackgroundObjects(next,command.objectId,command.arguments);
-  else if(command.tool==='configurePlaque'){if(!doc.plaque)throw new Error('Il documento non è una targa a misura.');plaqueMountingPoints(command.arguments.areaMm,command.arguments.mounting);const dx=(command.arguments.areaMm.width-doc.areaMm.width)/2,dy=(command.arguments.areaMm.height-doc.areaMm.height)/2;next.areaMm={...command.arguments.areaMm};next.plaque={...command.arguments.mounting};next.objects=next.objects.map(object=>({...object,xMm:object.xMm+dx,yMm:object.yMm+dy}));}
+  else if(command.tool==='configurePlaque'){
+    if(!doc.plaque)throw new Error('Il documento non è una targa a misura.');
+    if(role==='customer'&&(command.arguments.mounting.holeDiameterMm!==doc.plaque.holeDiameterMm||(command.arguments.mounting.clearanceMm??null)!==(doc.plaque.clearanceMm??null)))throw Error('Le misure tecniche dei fissaggi si configurano in modalità amministrativa.');
+    next.plaque={...command.arguments.mounting};
+    // New hardware must not inherit old measurements. Validate the effective
+    // configuration, including legacy glue documents carrying a dormant size.
+    if(next.plaque.method!==doc.plaque.method){next.plaque.holeDiameterMm=null;if(next.plaque.clearanceMm!==undefined)next.plaque.clearanceMm=null;}
+    plaqueMountingPoints(command.arguments.areaMm,next.plaque);
+    const dx=(command.arguments.areaMm.width-doc.areaMm.width)/2,dy=(command.arguments.areaMm.height-doc.areaMm.height)/2;next.areaMm={...command.arguments.areaMm};next.objects=next.objects.map(object=>({...object,xMm:object.xMm+dx,yMm:object.yMm+dy}));
+  }
   else if(command.tool==='setInkColor') {
     const product=catalog?.products.find(item=>item.productId===doc.productId&&item.variantIds.includes(doc.variantId??''));
     if(product?.mechanism==='emboss'&&command.arguments.color!=='black')throw new Error('Il timbro a secco non usa un tampone inchiostrato.');

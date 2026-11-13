@@ -28,13 +28,14 @@ export async function inspectProductionGeometry(raw:GraphicDocument,limits:{maxP
    for(const object of artwork.objects)if(object.type==='image'&&!uniqueSources.has(object.source.dataUrl)){uniqueSources.add(object.source.dataUrl);sourcePixels+=object.source.pixelWidth*object.source.pixelHeight;}
    if(sourcePixels>GEOMETRY_INSPECTION.maxSourcePixels)throw Error('Le immagini superano il budget del controllo visuale; il progetto resta modificabile.');
    for(const rule of rules){
-    const item:GeometryRuleResult={id:rule.id,label:rule.label,kind:rule.kind,status:rule.kind==='margin'&&rule.marginMm===undefined?'unconfigured':'clear',pixels:0};result.rules.push(item);
-    if(item.status==='unconfigured'){item.message='Il margine non è stato definito nel profilo.';continue;}
+    const renderKey=rule.kind==='margin'?'margin':'reserved';
+    const item:GeometryRuleResult={id:rule.id,label:rule.label,kind:rule.kind,status:rule.unconfigured||rule.kind==='margin'&&rule.marginMm===undefined?'unconfigured':'clear',pixels:0};result.rules.push(item);
+    if(item.status==='unconfigured'){item.message=rule.unconfigured??'Il margine non è stato definito nel profilo.';continue;}
     let boundary:ReturnType<typeof scanGeometryTile>;
     for(const tile of geometryRuleTiles(rule)){
      if(report.pixels+tile.width*tile.height>maxPixels||performance.now()-start>=maxMilliseconds){item.status='incomplete';item.message='Budget del controllo visuale raggiunto; nessun esito positivo attribuito alla parte non esaminata.';break;}
      const fullBleed=profile.kind==='printed-plaque'&&(backgroundObjectIds(artwork).size>0||!!artwork.paperColor);
-     let renderer=renderers.get(rule.kind)??(fullBleed?undefined:renderers.values().next().value);
+     let renderer=renderers.get(renderKey)??(fullBleed?undefined:renderers.values().next().value);
      if(!renderer){
       let source=artwork;
       // Printed supports allow an explicitly linked full-bleed background.
@@ -45,7 +46,7 @@ export async function inspectProductionGeometry(raw:GraphicDocument,limits:{maxP
       }
       renderer=await createGraphicTileRenderer(source);
      }
-     renderers.set(rule.kind,renderer);
+     renderers.set(renderKey,renderer);
      const pixels=renderer.read(tile);item.pixels+=tile.width*tile.height;report.pixels+=tile.width*tile.height;
      const witness=scanGeometryTile(pixels,tile,rule,profile.kind==='stamp-ink');
      if(witness?.status==='overlap'){item.status='overlap';item.witness={xMm:witness.xMm,yMm:witness.yMm};const candidates=renderer.candidates(witness.xMm,witness.yMm);item.candidateObjectIds=candidates.slice(0,8);item.candidateObjectCount=candidates.length;break;}
@@ -53,7 +54,7 @@ export async function inspectProductionGeometry(raw:GraphicDocument,limits:{maxP
      // Yield so the timeout and browser remain responsive between bounded tiles.
      if(++tilesSinceYield%8===0)await new Promise<void>(resolve=>setTimeout(resolve,0));
     }
-    if(item.status==='clear'&&boundary){item.status='boundary';item.witness={xMm:boundary.xMm,yMm:boundary.yMm};const candidates=renderers.get(rule.kind)!.candidates(boundary.xMm,boundary.yMm);item.candidateObjectIds=candidates.slice(0,8);item.candidateObjectCount=candidates.length;}
+    if(item.status==='clear'&&boundary){item.status='boundary';item.witness={xMm:boundary.xMm,yMm:boundary.yMm};const candidates=renderers.get(renderKey)!.candidates(boundary.xMm,boundary.yMm);item.candidateObjectIds=candidates.slice(0,8);item.candidateObjectCount=candidates.length;}
    }
   }catch(error){
    const message=(error instanceof Error?error.message:'Controllo visuale non disponibile').slice(0,1000);

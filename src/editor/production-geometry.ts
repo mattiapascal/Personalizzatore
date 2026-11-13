@@ -1,3 +1,4 @@
+import {plaqueMountingPoints} from './plaque';
 import {z} from 'zod';
 import type {GraphicDocument} from './model';
 import type {ReservedRegion} from './regions';
@@ -8,14 +9,14 @@ export const GEOMETRY_INSPECTION={pixelsPerMm:40,tileSide:512,maxPixels:64_000_0
 export const GeometryStatusSchema=z.enum(['clear','overlap','boundary','unconfigured','incomplete']);
 export type GeometryStatus=z.infer<typeof GeometryStatusSchema>;
 const point=z.strictObject({xMm:z.number().finite(),yMm:z.number().finite()});
-export const GeometryRuleResultSchema=z.strictObject({id:z.string().max(64),label:z.string().max(120),kind:z.enum(['margin','reserved']),status:GeometryStatusSchema,pixels:z.number().int().nonnegative(),witness:point.optional(),candidateObjectIds:z.array(z.string().max(64)).max(8).optional(),candidateObjectCount:z.number().int().nonnegative().optional(),message:z.string().max(1000).optional()});
+export const GeometryRuleResultSchema=z.strictObject({id:z.string().max(64),label:z.string().max(120),kind:z.enum(['margin','reserved','mounting-hole','mounting-clearance']),status:GeometryStatusSchema,pixels:z.number().int().nonnegative(),witness:point.optional(),candidateObjectIds:z.array(z.string().max(64)).max(8).optional(),candidateObjectCount:z.number().int().nonnegative().optional(),message:z.string().max(1000).optional()});
 export type GeometryRuleResult=z.infer<typeof GeometryRuleResultSchema>;
 export const ProductionGeometryReportSchema=z.strictObject({
  schemaVersion:z.literal(1),documentId:z.string().uuid(),revision:z.number().int().nonnegative(),contentRevision:z.number().int().nonnegative(),resolutionMm:z.number().finite().positive(),status:GeometryStatusSchema,pixels:z.number().int().nonnegative(),
- pages:z.array(z.strictObject({id:z.string().max(64),name:z.string().max(120),profile:z.strictObject({id:z.string().uuid(),version:z.number().int().positive(),label:z.string().max(120)}).optional(),status:GeometryStatusSchema,rules:z.array(GeometryRuleResultSchema).max(21),message:z.string().max(1000).optional()})).min(1).max(100),
+ pages:z.array(z.strictObject({id:z.string().max(64),name:z.string().max(120),profile:z.strictObject({id:z.string().uuid(),version:z.number().int().positive(),label:z.string().max(120)}).optional(),status:GeometryStatusSchema,rules:z.array(GeometryRuleResultSchema).max(29),message:z.string().max(1000).optional()})).min(1).max(100),
 });
 export type ProductionGeometryReport=z.infer<typeof ProductionGeometryReportSchema>;
-export interface GeometryRule {id:string;label:string;kind:'margin'|'reserved';area:{width:number;height:number};round:boolean;marginMm?:number;region?:ReservedRegion;}
+export interface GeometryRule {id:string;label:string;kind:'margin'|'reserved'|'mounting-hole'|'mounting-clearance';unconfigured?:string;area:{width:number;height:number};round:boolean;marginMm?:number;region?:ReservedRegion;}
 export interface GeometryTile {x:number;y:number;width:number;height:number;pixelsPerMm:number;}
 export interface GeometryWitness {status:'overlap'|'boundary';xMm:number;yMm:number;}
 export function geometryStatus(values:readonly GeometryStatus[]):GeometryStatus{
@@ -28,7 +29,20 @@ export function geometryReportCurrent(report:ProductionGeometryReport,document:G
 export function pageGeometryRules(document:GraphicDocument):GeometryRule[]{
  const profile=document.productionProfile;if(!profile)return[];
  const base={area:{...document.areaMm},round:document.shape==='round'};
- return [{...base,id:'margin',label:'Margine della pagina',kind:'margin',...(profile.safeMarginMm===null?{}:{marginMm:profile.safeMarginMm})},...profile.reservedAreas.map(region=>({...base,id:region.id,label:region.label,kind:'reserved' as const,region:{...region}}))];
+ return [{...base,id:'margin',label:'Margine della pagina',kind:'margin',...(profile.safeMarginMm===null?{}:{marginMm:profile.safeMarginMm})},...profile.reservedAreas.map(region=>({...base,id:region.id,label:region.label,kind:'reserved' as const,region:{...region}})),...mountingGeometryRules(document)];
+}
+/** Only the selected document mounting creates obstacles; available kits do not. */
+export function mountingGeometryRules(document:GraphicDocument):GeometryRule[]{
+ const mounting=document.plaque;if(!mounting)return[];
+ const points=plaqueMountingPoints(document.areaMm,mounting),base={area:{...document.areaMm},round:document.shape==='round'};
+ return points.flatMap((point,index)=>{
+  const diameter=mounting.holeDiameterMm,clearance=mounting.clearanceMm;
+  const rule=(kind:'mounting-hole'|'mounting-clearance',radius:number|undefined,message?:string):GeometryRule=>{
+   const id=`${kind}-${index+1}`,label=`${kind==='mounting-hole'?'Foro':'Rispetto fissaggio'} ${index+1}`;
+   return {...base,id,label,kind,...(radius===undefined?{unconfigured:message}:{region:{id,label,shape:'ellipse',xMm:point.xMm-radius,yMm:point.yMm-radius,widthMm:radius*2,heightMm:radius*2}})};
+  };
+  return [rule('mounting-hole',diameter===null?undefined:diameter/2,'Diametro reale del foro non definito: il simbolo indica soltanto la posizione.'),rule('mounting-clearance',diameter===null||clearance==null?undefined:diameter/2+clearance,diameter===null?'Definisci il diametro del foro prima di verificare la zona di rispetto.':'Distanza extra di rispetto dal bordo del foro non definita. Zero deve essere indicato esplicitamente.')];
+ });
 }
 interface Box{x:number;y:number;right:number;bottom:number;}
 function* boxTiles(box:Box,ppm:number,side:number):Generator<GeometryTile>{

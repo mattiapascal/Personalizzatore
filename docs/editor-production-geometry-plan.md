@@ -1,3 +1,5 @@
+**13 novembre — fissaggi scelti:** [foro e area di rispetto nel controllo visuale](iteration-editor-mounting-geometry.md) completati con dati tecnici espliciti, client/backend identici e campione TEST. Il report resta diagnostico; conferma atomica e lavorabilità restano da completare.
+
 # Controlli geometrici dei profili — diagnosi e ordine di implementazione
 
 13 novembre 2026. Preparazione iniziale in sola lettura durante il collaudo generale del [collegamento dei profili](iteration-editor-production-profile-link.md); nessuna modifica ai sorgenti durante quella suite. Dopo il prerequisito PDF è stato implementato il [primo controllo visuale di margini e zone](iteration-editor-production-geometry.md): analisi della pittura per riquadri, report diagnostico e API locale, senza blocco della conferma. Le guide restano distinte dalle regole finali di produzione. Il piano sotto riguarda anche il lavoro ancora necessario, non dichiara completato il motore produttivo.
