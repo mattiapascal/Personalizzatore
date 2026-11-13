@@ -8,8 +8,8 @@ import {TEST_DEFAULT_FONT,createTestDocument} from './editor-fonts';
 /** Real TEST font bytes, compressed according to WOFF 1.0, not a renamed TTF.
  * Preserve the original tables/checksums and choose compression independently
  * for each table. No font conversion or substitution in application code. */
-export function compressedTestWoff(){
- const ttf=Buffer.from(TEST_DEFAULT_FONT.dataBase64,'base64'),count=ttf.readUInt16BE(4),align=(n:number)=>(n+3)&~3,header=Buffer.alloc(44+count*20),chunks:Buffer[]=[];
+export function compressedTestWoff(source=TEST_DEFAULT_FONT){
+ const ttf=Buffer.from(source.dataBase64,'base64'),count=ttf.readUInt16BE(4),align=(n:number)=>(n+3)&~3,header=Buffer.alloc(44+count*20),chunks:Buffer[]=[];
  let offset=header.length,total=12+count*16,compressedCmap=false;
  header.write('wOFF');header.writeUInt32BE(ttf.readUInt32BE(0),4);header.writeUInt16BE(count,12);header.writeUInt16BE(1,20);
  for(let i=0;i<count;i++){

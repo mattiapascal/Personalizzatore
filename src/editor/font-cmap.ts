@@ -42,7 +42,10 @@ export function readCmapCoverage(bytes: Uint8Array): UnicodeRange[] | undefined 
       for (let i = 0; i < segments; i++) {
         const end = view.getUint16(base + 14 + i * 2), start = view.getUint16(base + 16 + segments * 2 + i * 2);
         const delta = view.getInt16(base + 16 + segments * 4 + i * 2), pointer = base + 16 + segments * 6 + i * 2, offset = view.getUint16(pointer);
-        if (start > end || start <= previous || offset % 2) return;
+        // Legacy writers may put FFFF in the empty closing segment. It is
+        // never dereferenced; offsets for actual characters remain strict.
+        const emptyLegacyEnd = i === segments - 1 && start === 0xffff && end === 0xffff && offset === 0xffff;
+        if (start > end || start <= previous || (offset % 2 && !emptyLegacyEnd)) return;
         previous = end;
         for (let code = start; code <= end && code < 0xffff; code++) {
           let glyph = 0;
