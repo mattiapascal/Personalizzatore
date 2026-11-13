@@ -43,7 +43,7 @@
     "check": "npm test && npm run build && npm run check:secrets && npm run test:e2e",
     "eval:knowledge": "node --import tsx scripts/eval-store-knowledge.ts",
     "editor:collaudo": "node --import tsx scripts/export-editor-acceptance.ts",
-    "pitchprint:fonts": "node --import tsx scripts/pitchprint-font-inventory.ts",
+    "pitchprint:fonts": "node --max-old-space-size=4096 --import tsx scripts/pitchprint-font-inventory.ts",
     "editor:storage": "node --max-old-space-size=6144 --import tsx scripts/editor-archive-storage.ts",
     "editor:storage:volume": "node --max-old-space-size=4096 --import tsx scripts/check-editor-storage-volume.ts",
     "editor:archive": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js --config vite.archive.config.ts --host 127.0.0.1",
