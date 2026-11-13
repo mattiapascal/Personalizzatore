@@ -1,5 +1,7 @@
 # Maschere del testo: prossimo incremento — 13 novembre 2026
 
+**Seguito implementato:** [controllo dell’inchiostro nascosto nell’ispettore](iteration-editor-text-mask-inspection.md), derivato dal documento e aggiornato dopo modifiche manuali/AI. È una diagnostica limitata dell’anteprima, non una certificazione produttiva. I due cartelli reali non producono falsi avvisi sui 12 testi mascherati.
+
 Piano successivo all'[importazione affine](iteration-editor-pitchprint-affine-text.md). **Capacità canonica/manuale e adattatore implementati:** [maschere locali del testo](iteration-editor-text-masks.md), [conversione PitchPrint e confronti completi](iteration-editor-pitchprint-text-masks.md). I due cartelli superano ora la conversione integrale, con testi e maschere conservati; sono ancora preparazioni private, senza salvataggi nel principale. I punti seguenti conservano contratto e criteri di accettazione; non dichiarano completata l'importazione nell'archivio o il collaudo Illustrator.
 
 ## Comportamento nativo verificato

@@ -166,6 +166,14 @@ export function measureTextFrame(object: TextObject) {
   const box = renderObject(object.textClipMasks?{...object,textClipMasks:undefined}:object) as EditorTextBox;
   return { widthMm: box.width * box.scaleX / PX_PER_MM, heightMm: box.height * box.scaleY / PX_PER_MM, overflow: box.overflow, justificationLimited: box.justificationResults.some(line => line.underfull || line.overfull), lines: box.textLines.length };
 }
+/** Local glyph plane for a bounded read-only mask inspection. Same styles,
+ * font/layout and wrapping clip as the editor, without the user masks. */
+export function textMaskInspectionView(object:TextObject):EditorTextBox{
+ if(object.textPath)throw Error('Il testo su tracciato non ha una maschera del box');
+ const view=renderObject({...object,textClipMasks:undefined}) as EditorTextBox;
+ view.set({left:0,top:0,angle:0,scaleX:1,scaleY:1,skewX:0,skewY:0,objectCaching:false});
+ return view;
+}
 /** The canonical project stays untouched. Only its productive objects and used
  * files are prepared, after the nominal glyph check and before Fabric renders. */
 async function prepareGraphicOutput(document: GraphicDocument): Promise<GraphicDocument> {

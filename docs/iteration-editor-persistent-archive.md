@@ -1,5 +1,7 @@
 # Scelta persistente dell’archivio e proposta pronta — 13 novembre 2026
 
+**Aggiornamento successivo:** il titolare ha autorizzato il passaggio e il [laboratorio ordinario ora usa SQLite](iteration-editor-sqlite-activation.md). Le indicazioni «non applicata» sotto descrivono il checkpoint precedente; originale JSON e backup sono conservati.
+
 ## Risultato
 
 Il normale `npm run dev` e il censimento font senza opzioni esplicite possono ora condividere un registro privato della scelta dell’archivio. **Il principale è ancora sul JSON R627:** il registro reale non è stato creato e nessuna migrazione è stata attivata.

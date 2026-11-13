@@ -33,6 +33,7 @@ import { preserveDraftSnapshot } from '../editor-workflow/drafts';
 import { fitTemplate, templateCommand } from '../editor-workflow/template-fit';
 import { profileKey } from '../catalog/schema';
 import { FontCheckPanel } from './FontCheckPanel';
+import { TextMaskCheckPanel } from './TextMaskCheckPanel';
 import { InkPreviewFilter } from './InkPreviewFilter';
 import { refreshLibraryFonts,initializeLibraryFonts,showProjectFontChoices } from '../editor-admin/library-fonts';
 import { loadFontAssets, fontAssetArguments, defaultLibraryFont, registeredFontAsset } from './fonts';
@@ -557,6 +558,10 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         <p className="caption">Bordi al margine TEST di 1 mm, centri al centro dell’area. Nessun ridimensionamento.</p>
         </>}
       /> : <p className="caption">Seleziona un oggetto per visualizzarne le proprietà nell’ispettore.</p>}
+      <TextMaskCheckPanel document={doc} busy={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onLocate={(pageId,objectId)=>{
+        if(pageId!==(doc.pageId??'page-1'))act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'selectPage',objectId:pageId,expectedRevision:storeRef.current!.document.revision,arguments:{pageId}},'manual'),[]);
+        select(objectId);adapter.current?.selectObjects(selectedRef.current);
+      }}/>
     </fieldset>}
     workflow={<>
       <CustomerFieldsPanel document={doc} onValidity={setFieldsValid} disabled={editing||drawing||assetBusy||archiveBusy} onText={(objectId,text)=>act(()=>storeRef.current!.dispatch({schemaVersion:1,tool:'setText',objectId,expectedRevision:storeRef.current!.document.revision,arguments:{text}},'manual'))} onSelect={id=>{select(id);adapter.current?.selectObjects(selectedRef.current);}} onImage={(objectId,file)=>{void prepareAndAct(async store=>{if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);return()=>store.dispatch({schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision:store.document.revision,arguments:{source}},'manual');});}}/>

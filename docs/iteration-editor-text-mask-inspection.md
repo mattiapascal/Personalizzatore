@@ -1,0 +1,31 @@
+# Controllo del testo nascosto dalle maschere — 13 novembre 2026
+
+Segue l’[importazione delle maschere PitchPrint](iteration-editor-pitchprint-text-masks.md). L’ispettore segnala ora quando una maschera nasconde effettivamente parte dei caratteri o delle loro decorazioni. È un controllo generale del documento, senza condizioni su nome o ID del template. Non modifica contenuti o maschere, non aggiunge conferme e non blocca salvataggio o esportazione.
+
+## Comportamento per l’utente
+
+La sezione **Testo e maschere** elenca gli oggetti interessati e permette di raggiungerli con **Mostra**. Il controllo segue le modifiche manuali e i comandi AI simulati, Undo/Redo e i documenti multipagina già supportati. Comprende le pagine non attive; esclude i riferimenti non produttivi, anche quando la proprietà è ereditata da un gruppo. La selezione e il cambio pagina usano i percorsi esistenti, senza spostare il canvas.
+
+Durante la digitazione o un’altra operazione in corso il controllo attende la fine della modifica. Le verifiche partono dopo 220 ms e vengono eseguite in serie. Risultati superati da un nuovo documento non aggiornano l’interfaccia. Posizione, rotazione, nome e livello non cambiano il ritaglio locale e riusano la prova precedente. Testo, impaginazione, stili, geometria della maschera e file del font la invalidano. La cache mantiene al massimo 24 prove e un budget stimato di 16 MiB, libera quelle espulse e rende ritentabili gli errori.
+
+## Inchiostro effettivo e limiti
+
+Il solo rettangolo di ingombro non è sufficiente: un box può superare la maschera lasciando tutti i caratteri visibili, mentre un font calligrafico può sporgere oltre la propria larghezza di avanzamento. Il controllo usa le chiamate native del renderer per misurare i glifi effettivi, contorni e decorazioni, con gli esatti file incorporati. I controlli di copertura dei font precedono la misura; nessun fallback al computer o a un altro carattere.
+
+Il testo viene dipinto una sola volta, nel piano locale del font. Una seconda superficie applica le intersezioni vettoriali delle maschere a quella stessa pittura. Il confronto della sola alpha evita falsi tagli dovuti a differenze fra SVG, hinting e cache dei glifi. Tiene conto anche di testo bianco, trasparenze e stili locali. Il ritaglio ordinario del box a larghezza fissa rimane distinto dalle maschere dell’utente.
+
+Si tratta di una **diagnostica dell’anteprima, non di una certificazione produttiva**. Campionamento 2× rispetto agli 8 px/mm locali, lato massimo 4096 px, massimo due milioni di pixel; niente raster della pagina completa o riduzione automatica di risoluzione per dichiarare un esito positivo. Vengono considerate alpha da 8/255, con perdita almeno 2/255 e 25% del valore iniziale. Dettagli più fini o trasparenti possono richiedere il controllo visivo. Se la superficie o la cache nativa del box superano i budget, o il disegno non è misurabile, l’interfaccia richiede una verifica visiva. Un font non verificabile produce un esito non disponibile e un pulsante per riprovare, mai un falso «nessun taglio».
+
+Il JSON, gli schemi, i comandi di modifica e i file esportati rimangono invariati: questo risultato è derivato dallo stesso stato canonico e non viene salvato come autorità nel documento. Non certifica Illustrator, la lavorabilità o tutti i dettagli a qualunque scala.
+
+## Campioni e verifiche
+
+Il campione portabile rimane [text-masks.TEST.json](../fixtures/illustrator/text-masks.TEST.json) con il relativo [SVG](../fixtures/illustrator/text-masks.TEST.svg), 160 × 110 mm e font Arimo TEST incorporato. Il generatore `node --import tsx scripts/capture-editor-text-mask-inspection.ts` riapre quel campione, verifica gli avvisi, allarga manualmente una maschera e controlla che sparisca soltanto la segnalazione corretta. Schermate prima/dopo e rapporto in `.local/text-mask-inspection-capture/`; nessuna nuova copia pubblica di grafica personale. Collaudo umano Illustrator non eseguito.
+
+Otto unitari coprono confronto alpha, chiavi e file dei font, snapshot immutabili, richieste condivise, errori ritentabili, limiti espliciti, Undo, LRU/budget, serializzazione e cancellazione della coda. Cinque nuovi scenari browser verificano 13 casi grafici, sporgenze reali del font, avviso nell’ispettore, modifica manuale e AI, digitazione, Undo/Redo, riuso dopo spostamento, pagine non attive e riferimenti ereditati. Nessuna mutazione del contenuto da parte del controllo.
+
+Le copie private dei due cartelli «Esiste la morte dopo la vita?» passano con tutti i **12 testi mascherati senza inchiostro nascosto**, usando il font originale. I controlli negativi con maschera spostata rilevano invece testo interamente nascosto. Font, copie sorgenti e archivio principale invariati; rapporto `.local/pitchprint-text-mask-real/ink-inspection-report.json`, zero rete esterna, errori browser o scritture amministrative. Le copie reali restano preparazioni diagnostiche, senza nuovi record nell’archivio.
+
+**1.041 unitari in 154 file, 225 browser pertinenti, 13 browser pubblici e 63 campioni riaperti/esportati passati.** Build TypeScript/laboratorio, schemi, pacchetto Worker dry-run, runtime Worker locale e controlli segreti passati; schemi invariati e JavaScript pubblico ancora `index-BG2r_x-8.js`. Non è una nuova esecuzione di tutti gli scenari browser del laboratorio. La prima esecuzione unitaria nel sandbox ha fallito gli avvii HTTP ed è stata interrotta; la suite completa con i permessi per i socket locali è passata. La build ha rilevato un’unione TypeScript non ristretta nel solo nuovo test di navigazione: aggiunto il controllo esplicito del tipo e ripetuta con successo, senza modificare il comportamento del prodotto.
+
+Rapporti `.local/text-mask-inspection-{unit-authorized,build-final,regressions,public,artifacts,worker-package,worker-runtime,schemas,secrets,public-secrets,real,capture-final}.log`. API e hash prima del passaggio confermavano il JSON R627 invariato. Durante lo stesso lavoro il titolare ha autorizzato l’[attivazione SQLite](iteration-editor-sqlite-activation.md), completata e verificata dopo le regressioni: stessi 337 template, due composizioni e 219 font, con JSON originale e backup conservati. Nessun nuovo record, deploy o modifica alla chat pubblicata. Illustrator rimane da collaudare.
