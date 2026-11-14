@@ -1,3 +1,4 @@
+import {ShopSelectionPanel} from './ShopSelectionPanel';
 import {InsertionFileControl} from './InsertionFileControl';
 import {INSPECTOR_COMMIT_ERROR} from './inspector-controller';
 import {QrInsertDialog} from './QrInsertDialog';
@@ -59,7 +60,7 @@ import { MAX_SVG_BYTES,SVG_SIZE_LABEL } from './svg-sanitize';
 import { EditorButton, EditorIcon } from './EditorButton';
 import { useCallback, useEffect, useId, useRef, useState, useMemo, type CSSProperties } from 'react';
 import { FabricAdapter, measureFabric, measureTextFrame } from './fabric-adapter';
-import { createDocument, DocumentStore, GraphicCommandSchema, parseGraphicDocument, cloneGraphicDocument, type GraphicDocument, type SceneObject } from './model';
+import { createDocument, DocumentStore, type GraphicCatalogContext, GraphicCommandSchema, parseGraphicDocument, cloneGraphicDocument, type GraphicDocument, type SceneObject } from './model';
 import type { ProductProfile } from '../catalog/schema';
 import './editor.css';
 import { ObjectInspector,type InspectorSection } from './ObjectInspector';
@@ -106,10 +107,10 @@ function example(revision: number, objectId = 'text-1'): string {
   return JSON.stringify({ schemaVersion: 1, tool: 'moveObject', expectedRevision: revision, objectId, arguments: { xMm: 10, yMm: 8 } }, null, 2);
 }
 const GESTURE_RETRY_NOTICE='Le misure sono state applicate. Riprendi il gesto dalla posizione aggiornata.';
-function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition',initialSource }: { initialSource?:{record:ArchiveRecord;mode:'archive'|'template'};initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[]; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
+function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, shopContext, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition',initialSource }: { initialSource?:{record:ArchiveRecord;mode:'archive'|'template'};initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[];shopContext?:GraphicCatalogContext; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
   const projectFonts=useProjectFontPreparation();
   const mode=editorMode(),policyRole=mode==='customer'?'customer':'admin';const archiveBusyRef=useRef(false);
-  const graphicCatalog=availableProducts||product?{version:catalogVersion,products:availableProducts??[product!]}:undefined;
+  const graphicCatalog=availableProducts||product||shopContext?{...shopContext,version:catalogVersion,products:availableProducts??(product?[product]:[])}:undefined;
   const inkFilterId=`editor-ink-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
   const inspectorController=useRef<{flush:()=>boolean}|null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -710,12 +711,13 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       }}/>
     </fieldset>}
     workflow={<>
+      <ShopSelectionPanel document={doc} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onInk={color=>sceneCommand('setInkColor','project',{color})}/>
       <CustomerFieldsPanel key={`${doc.documentId}:${doc.pageId??'page-1'}`} document={doc} onValidity={reportFieldsValidity} disabled={editing||drawing||assetBusy||archiveBusy} onText={(objectId,text)=>sceneCommand('setText',objectId,{text})} onSelect={id=>{select(id);adapter.current?.selectObjects(selectedRef.current);}} onImage={(objectId,file)=>{void prepareInsertion(async store=>{if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);return()=>dispatch(store,{schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision:store.document.revision,arguments:{source}},'manual');});}}/>
 
       {doc.plaque&&<PlaqueConfigurationPanel admin={mode!=='customer'} document={doc} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onChange={(areaMm,mounting)=>sceneCommand('configurePlaque','project',{areaMm,mounting})}/>}
 
       {import.meta.env.DEV && autosave && <DraftPanel templateContext={{templateId:sourceRecord?.kind==='template'?sourceRecord.id:doc.templateOrigin?.id,templateDocumentId:sourceRecord?.kind==='template'?sourceRecord.document.documentId:undefined}} api={{...workflowApi,busy:editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated}} leaving={leaving} emergency={mode!=='test'} dirty={dirty} control={draftControl}/>}
-      {import.meta.env.DEV && availableProducts && !doc.plaque && <ProductPanel api={workflowApi} products={availableProducts} catalogVersion={catalogVersion} onInk={color=>sceneCommand('setInkColor','project',{color})} onConfirm={(key,source)=>validateCapturedSnapshot(source,true)&&act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'changeFormat',objectId:'project',expectedRevision:source.revision,arguments:{profileKey:key,catalogVersion,allowShrink:true}},'manual'))}/>}
+      {import.meta.env.DEV && availableProducts && !doc.plaque && !doc.shopSelection && <ProductPanel api={workflowApi} products={availableProducts} catalogVersion={catalogVersion} onInk={color=>sceneCommand('setInkColor','project',{color})} onConfirm={(key,source)=>validateCapturedSnapshot(source,true)&&act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'changeFormat',objectId:'project',expectedRevision:source.revision,arguments:{profileKey:key,catalogVersion,allowShrink:true}},'manual'))}/>}
       {import.meta.env.DEV && (new URLSearchParams(window.location.search).has('configurations') || new URLSearchParams(window.location.search).has('configuration')) && <ConfigurationPanel api={workflowApi}/>}
     </>}
     project={<>

@@ -1,4 +1,6 @@
 import {QrParametersSchema} from './qr-code';
+import {ShopSelectionSchema,assertShopSelection,shopSelectionFor} from './shop-selection';
+import type {ShopProductDetail} from '../editor-admin/shop-catalog';
 import {PathStrokeFields,ShapeJoinFields,pathStrokeExtras,resizedPathStrokeFrame} from './path-stroke';
 import {assertTextPathPolicies} from './text-path-policy';
 import {replacementLineStyles,lineAlignments} from './text-lines';
@@ -98,6 +100,7 @@ export type SceneObject = z.infer<typeof SceneObjectSchema>;
 export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),visible:z.boolean().optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
 export type SceneGroup=z.infer<typeof SceneGroupSchema>;
 const documentFields = z.strictObject({
+  shopSelection:ShopSelectionSchema.optional(),
   layoutGuides:LayoutGuidesSchema.optional(),
   productionProfile:ProductionProfileSchema.optional(),
   plaque:PlaqueMountingSchema.optional(),
@@ -119,6 +122,8 @@ const documentFields = z.strictObject({
   groups: z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups).optional(),
 });
 function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>, ctx: z.RefinementCtx) {
+  if(d.productionProfile?.kind==='stamp-emboss'&&d.inkColor&&d.inkColor!=='black')ctx.addIssue({code:'custom',message:'Il timbro a secco non usa un tampone inchiostrato.'});
+  if(d.shopSelection)try{assertShopSelection(d.shopSelection,d.productionProfile,d.productId);}catch(error){ctx.addIssue({code:'custom',message:error instanceof Error?error.message:'Scelta prodotto non valida'});}
   if(d.productionProfile)try{assertProfileForPage(d.productionProfile,d);}catch(error){ctx.addIssue({code:'custom',message:error instanceof Error?error.message:'Profilo tecnico non valido'});}
   // The typed catalog currently contains stamp mounts only. Commercial plaque
   // associations live in the archive adapter, not in these stamp binding fields.
@@ -243,7 +248,7 @@ export function cloneSceneObject<T extends SceneObject>(object: T): T {
   return object.type === 'image' ? { ...object, ...(object.editor?{editor:{...object.editor}}:{}), source: { ...object.source }, raster: { ...object.raster }, ...(object.crop ? { crop: { ...object.crop } } : {}),...(object.clipMasks?{clipMasks:structuredClone(object.clipMasks)}:{}) } : structuredClone(object);
 }
 export function cloneGraphicDocument(document: GraphicDocument): GraphicDocument {
-  return { ...document, ...(document.layoutGuides?{layoutGuides:structuredClone(document.layoutGuides)}:{}), ...(document.productionProfile?{productionProfile:structuredClone(document.productionProfile)}:{}), ...(document.pageOrder?{pageOrder:[...document.pageOrder]}:{}),...(document.otherPages?{otherPages:document.otherPages.map(page=>{const{objects,groups,areaMm,...rest}=page;return{...structuredClone(rest),areaMm:{...areaMm},objects:objects.map(cloneSceneObject),...(groups?{groups:groups.map(cloneSceneGroup)}:{})};})}:{}), ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
+  return { ...document, ...(document.shopSelection?{shopSelection:{...document.shopSelection}}:{}), ...(document.layoutGuides?{layoutGuides:structuredClone(document.layoutGuides)}:{}), ...(document.productionProfile?{productionProfile:structuredClone(document.productionProfile)}:{}), ...(document.pageOrder?{pageOrder:[...document.pageOrder]}:{}),...(document.otherPages?{otherPages:document.otherPages.map(page=>{const{objects,groups,areaMm,...rest}=page;return{...structuredClone(rest),areaMm:{...areaMm},objects:objects.map(cloneSceneObject),...(groups?{groups:groups.map(cloneSceneGroup)}:{})};})}:{}), ...(document.plaque?{plaque:{...document.plaque}}:{}), ...(document.templateOrigin?{templateOrigin:{...document.templateOrigin}}:{}), areaMm: { ...document.areaMm }, objects: document.objects.map(cloneSceneObject), ...(document.fontAssets ? { fontAssets: document.fontAssets.map(asset=>({...asset})) } : {}), ...(document.groups ? { groups: document.groups.map(cloneSceneGroup) } : {}) };
 }
 export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('qr'), widthMm:z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm),heightMm:z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
@@ -285,6 +290,7 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setBackgroundImage'),arguments:z.strictObject({object:SceneObjectSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('setBackgroundObjects'),arguments:z.strictObject({objects:z.array(SceneObjectSchema).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundGroupId:id.optional(),fontAssets:FontAssetsSchema.optional()})}),
   z.strictObject({...objectBase,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema,fit:z.enum(['contain','cover']).optional()})}),
+  z.strictObject({...base,tool:z.literal('setShopSelection'),arguments:z.strictObject({selection:ShopSelectionSchema.nullable()})}),
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
   z.strictObject({...base,tool:z.literal('changeFormat'),arguments:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1),allowShrink:z.boolean()})}),
@@ -414,7 +420,7 @@ function validateSinglePageLayout(doc: GraphicDocument, measure: Measure, mode: 
     }
   }
 }
-export interface GraphicCatalogContext {version:string;products:readonly ProductProfile[];}
+export interface GraphicCatalogContext {version:string;products:readonly ProductProfile[];shopProducts?:readonly ShopProductDetail[];shopProfiles?:readonly z.infer<typeof ProductionProfileSchema>[];}
 export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure: Measure, catalog?:GraphicCatalogContext,role:EditorRole='customer'): GraphicDocument {
   DocumentSchema.parse(doc);
   const command = GraphicCommandSchema.parse(raw);
@@ -424,7 +430,18 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   if(isPageCommand(command))return applyPageCommand(doc,command,measure,role);
   const next = cloneGraphicDocument(doc);
   if ('fontAssets' in command.arguments && command.arguments.fontAssets?.length) { const resources = [...next.fontAssets ?? []]; for (const asset of command.arguments.fontAssets) { const old = resources.find(a=>a.id===asset.id); if (old && (old.dataBase64!==asset.dataBase64 || old.format!==asset.format || old.family!==asset.family)) throw new Error('La risorsa originale del font è immutabile'); if (!old) resources.push({...asset}); } next.fontAssets=resources; }
-  if(command.tool==='setProductionProfile'){
+  if(command.tool==='setShopSelection'){
+    const selection=command.arguments.selection;
+    if(!selection){if(role!=='admin'&&doc.shopSelection)throw Error('Il prodotto si cambia dal percorso guidato.');delete next.shopSelection;}
+    else{
+      const product=catalog?.shopProducts?.find(item=>item.id===selection.productId),profile=catalog?.shopProfiles?.find(item=>item.id===selection.profileId&&item.version===selection.profileVersion);
+      if(!product||!profile||JSON.stringify(ProductionProfileSchema.parse(profile))!==JSON.stringify(doc.productionProfile))throw Error('Prodotto o profilo aggiornato non disponibili nel contesto: ripeti la scelta.');
+      const verified=shopSelectionFor(profile,product,selection.variantId);
+      if(JSON.stringify(verified)!==JSON.stringify(selection))throw Error('La lettura del prodotto è cambiata: ripeti la scelta della variante.');
+      assertShopSelection(verified,doc.productionProfile,doc.productId);next.shopSelection={...verified};
+    }
+  }
+  else if(command.tool==='setProductionProfile'){
     if(role!=='admin')throw Error('Il profilo produttivo si collega in modalità amministrativa.');
     if(command.arguments.profile){assertProfileForPage(command.arguments.profile,doc,catalog,true);next.productionProfile=structuredClone(command.arguments.profile);}else delete next.productionProfile;
   }
@@ -448,7 +465,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   }
   else if(command.tool==='setInkColor') {
     const product=catalog?.products.find(item=>item.productId===doc.productId&&item.variantIds.includes(doc.variantId??''));
-    if(product?.mechanism==='emboss'&&command.arguments.color!=='black')throw new Error('Il timbro a secco non usa un tampone inchiostrato.');
+    if((product?.mechanism==='emboss'||doc.productionProfile?.kind==='stamp-emboss')&&command.arguments.color!=='black')throw new Error('Il timbro a secco non usa un tampone inchiostrato.');
     next.inkColor=command.arguments.color;
   }
   else if(command.tool==='changeFormat') {
@@ -666,6 +683,10 @@ export class DocumentStore {
   }
   import(raw: unknown): void {
     let next = parseGraphicDocument(raw);
+    if(this.document.shopSelection&&this.role==='customer'){
+      if(next.shopSelection&&JSON.stringify(next.shopSelection)!==JSON.stringify(this.document.shopSelection))throw Error('Il JSON usa un altro prodotto o variante: aprilo come nuovo progetto.');
+      next={...next,shopSelection:{...this.document.shopSelection}};
+    }
     if(this.document.productionProfile&&this.role==='customer'){
       if(next.productionProfile&&JSON.stringify(next.productionProfile)!==JSON.stringify(this.document.productionProfile))throw Error('Il JSON usa un altro profilo tecnico: aprilo come nuovo progetto.');
       next={...next,productionProfile:structuredClone(this.document.productionProfile)};

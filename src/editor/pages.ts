@@ -33,6 +33,7 @@ export function applyPageCommand(document:GraphicDocument,command:PageCommand,me
  if(command.tool==='selectPage'){get(command.arguments.pageId);active=command.arguments.pageId;}
  else if(command.tool==='addPage'){
   const page=command.arguments.page;if(pages.some(current=>current.id===page.id))throw Error('ID pagina già presente');if(pages.length>=MAX_GRAPHIC_PAGES)throw Error('Limite delle pagine raggiunto');
+  if(role==='customer'&&JSON.stringify(page.shopSelection)!==JSON.stringify(document.shopSelection))throw Error('Il prodotto della nuova pagina deve seguire la scelta corrente.');
   if(role==='customer'&&JSON.stringify(page.productionProfile)!==JSON.stringify(document.productionProfile))throw Error('Il profilo della nuova pagina si configura in modalità amministrativa.');
   const fonts=[...copy.fontAssets??[]];for(const asset of command.arguments.fontAssets??[]){const old=fonts.find(font=>font.id===asset.id);if(old&&(old.dataBase64!==asset.dataBase64||old.format!==asset.format||old.family!==asset.family))throw Error('La risorsa originale del font è immutabile');if(!old)fonts.push({...asset});}if(fonts.length)copy.fontAssets=fonts;
   pages.push(clonedPage(page,page.id,page.name));order.push(page.id);active=page.id;

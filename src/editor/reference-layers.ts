@@ -7,7 +7,7 @@ export interface ReferenceLayers{artwork:GraphicDocument;background:GraphicDocum
 export function boundReferenceTexts(document:GraphicDocument){return document.objects.filter(object=>object.type==='text'&&objectIsVisible(document,object)&&object.textPath?.showGuide&&object.textPath.originalPathMetadata?.editor?.reference);}
 function subset(document:GraphicDocument,ids:Set<string>):GraphicDocument{
  const scene=cloneGraphicDocument(document);scene.objects=scene.objects.map(object=>({...object,editor:{...object.editor,reference:!ids.has(object.id)}}));scene.groups=scene.groups?.map(group=>({...group,editor:{...group.editor,reference:false}}));
- const output=productionDocument(scene);delete output.paperColor;delete output.productionProfile;output.colorMode='color';output.productId=output.variantId=output.catalogVersion=output.catalogProductProfileVersion=null;return output;
+ const output=productionDocument(scene);delete output.paperColor;delete output.productionProfile;delete output.shopSelection;output.colorMode='color';output.productId=output.variantId=output.catalogVersion=output.catalogProductProfileVersion=null;return output;
 }
 /** Single-page export projections only. The canonical references are never changed. */
 export function referenceLayers(document:GraphicDocument):ReferenceLayers{

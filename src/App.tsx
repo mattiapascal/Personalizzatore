@@ -12,6 +12,7 @@ import type { SelectionSession } from './selection/schema';
 import { adviseProducts } from './selection/advisor';
 const EditorLab = lazy(() => import('./editor/EditorLab').then(module => ({ default: module.EditorLab })));
 const PitchprintImport=lazy(()=>import('./editor-admin/PitchprintImport'));
+const ShopProductEditor=lazy(()=>import('./editor/ShopProductEditor'));
 const PlaqueEditor=lazy(()=>import('./editor/PlaqueEditor'));
 const ConfirmedDesign=lazy(()=>import('./editor-workflow/ConfirmedDesign'));
 const EditorAdmin = lazy(() => import('./editor-admin/AdminPanel'));
@@ -22,7 +23,7 @@ function load(catalog: CatalogAdapter): SelectionSession {
   try { return restoreSession(localStorage.getItem(SESSION_KEY), catalog); } catch { return newSession(catalog); }
 }
 export function App() {
-  const standalone = window.location.pathname === '/editor', admin = import.meta.env.DEV && window.location.pathname === '/editor/admin', templates = import.meta.env.DEV && window.location.pathname === '/editor/templates', plaque=import.meta.env.DEV&&window.location.pathname==='/editor/plaque',confirmed=import.meta.env.DEV&&window.location.pathname==='/editor/confirmed', pitchImport=import.meta.env.DEV&&window.location.pathname==='/editor/import-pitchprint',localOnly = standalone || admin || templates || confirmed || plaque || pitchImport;
+  const standalone = window.location.pathname === '/editor', admin = import.meta.env.DEV && window.location.pathname === '/editor/admin', templates = import.meta.env.DEV && window.location.pathname === '/editor/templates', plaque=import.meta.env.DEV&&window.location.pathname==='/editor/plaque',confirmed=import.meta.env.DEV&&window.location.pathname==='/editor/confirmed', pitchImport=import.meta.env.DEV&&window.location.pathname==='/editor/import-pitchprint',shopProduct=import.meta.env.DEV&&window.location.pathname==='/editor/product',localOnly = shopProduct || standalone || admin || templates || confirmed || plaque || pitchImport;
   const [initial, setInitial] = useState<RuntimeState | null>(null);
   useEffect(() => {
     if (localOnly) return;
@@ -34,6 +35,7 @@ export function App() {
     });
     return () => { active = false; };
   }, [localOnly]);
+  if(shopProduct)return <Suspense fallback={<p>Caricamento prodotto…</p>}><ShopProductEditor/></Suspense>;
   if(pitchImport)return <Suspense fallback={<p>Caricamento importazione…</p>}><PitchprintImport/></Suspense>;
   if(plaque)return <Suspense fallback={<p>Caricamento targa…</p>}><PlaqueEditor/></Suspense>;
   if(confirmed)return <Suspense fallback={<p>Caricamento design…</p>}><ConfirmedDesign/></Suspense>;
