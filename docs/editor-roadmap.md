@@ -1,6 +1,8 @@
-**14 novembre — proprietà del testo su tracciato:** [Correzione, campione e collaudi](iteration-editor-text-path-properties.md). Label, ordine, visibilità e blocchi del percorso conservati e ripristinati; riferimenti separati dalla grafica produttiva senza spostare o duplicare i glifi. Stessi comandi manuali/AI, Undo e appunti; **1.327 unitari, 35 browser pertinenti, 13 pubblici e 83 campioni passati**. SQLite R638 invariato, nessun deploy.
+**14 novembre — giunzioni ed estremità dei tracciati:** [Controlli, cornice e collaudi](iteration-editor-path-stroke.md). Polilinee/Bézier/SVG e rettangoli con icone e limite delle punte; cornice versionata senza spostare i legacy, maniglie/nodi e comandi manuali/AI condivisi. **1.345 unitari, 68 browser pertinenti, 13 pubblici e 84 campioni passati**. SQLite R638 invariato, nessun deploy.
 
-**Prossimo incremento manuale:** giunzioni dei contorni ed estremità per tracciati a punti/Bézier, con misure, maniglie e output coerenti; conservare preferenze legacy e controlli produttivi.
+**Prossimo incremento di usabilità:** renderer limitato alla vista per ingrandire i dettagli di formati grandi, mantenendo limiti bitmap, zoom/PAN, coordinate e maniglie. Analizzare le dipendenze del canvas prima di modificare la vista; nessuna nuova funzione multipagina.
+
+**14 novembre — proprietà del testo su tracciato:** [Correzione, campione e collaudi](iteration-editor-text-path-properties.md). Label, ordine, visibilità e blocchi del percorso conservati e ripristinati; riferimenti separati dalla grafica produttiva senza spostare o duplicare i glifi. Stessi comandi manuali/AI, Undo e appunti; **1.327 unitari, 35 browser pertinenti, 13 pubblici e 83 campioni passati**. SQLite R638 invariato, nessun deploy.
 
 **13 novembre — estremità delle linee:** [Funzione e collaudi](iteration-editor-stroke-caps.md). Tre icone per linee e vettori SVG, anche in selezione multipla; centri/lunghezza nominale e maniglie coerenti, stesso comando manuale/AI e Undo. Guide del testo RGB ammesse nei progetti a colori e controlli timbro conservati. Nessuna modifica agli archivi personali o alla chat pubblicata.
 

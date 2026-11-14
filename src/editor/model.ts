@@ -1,3 +1,4 @@
+import {PathStrokeFields,ShapeJoinFields,pathStrokeExtras,resizedPathStrokeFrame} from './path-stroke';
 import {assertTextPathPolicies} from './text-path-policy';
 import {replacementLineStyles,lineAlignments} from './text-lines';
 import {LayoutGuidesSchema,assertGuideChange} from './layout-guides';
@@ -82,14 +83,14 @@ export const TextBoxSchema = z.strictObject({ widthMm: z.number().finite().posit
 const textContent = z.string().max(EDITOR_LIMITS.textCharacters*2).refine(t => !/[\r\u0000-\u0009\u000b-\u001f]/.test(t) && Array.from(t).length<=EDITOR_LIMITS.textCharacters && t.split('\n').length <= EDITOR_LIMITS.textLines, `Massimo ${EDITOR_LIMITS.textCharacters} caratteri Unicode e ${EDITOR_LIMITS.textLines} righe per box nel laboratorio`);
 export const SceneObjectSchema = z.discriminatedUnion('type', [
   z.strictObject({ id, type: z.literal('text'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), text: textContent, fontSizePt: z.number().min(EDITOR_LIMITS.minFontSizePt).max(EDITOR_LIMITS.maxFontSizePt), fontFamily, fill: color, ...textAppearance, textBox: TextBoxSchema.optional(), characterStyles: characterRuns }),
-  z.strictObject({ id, type: z.literal('rect'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance, cornerRadiusMm: z.number().finite().min(0).max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2).optional() }),
+  z.strictObject({ id, type: z.literal('rect'), ...ShapeJoinFields, ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance, cornerRadiusMm: z.number().finite().min(0).max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2).optional() }),
   z.strictObject({ id, type: z.literal('circle'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), radiusMm: z.number().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
   z.strictObject({ id, type: z.literal('line'), ...PaintOpacityFields, ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), lengthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), strokeMm: StrokeWidthSchema, stroke: color, fill: z.literal('none').optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), strokeLineCap: z.enum(['butt','round','square']).optional() }),
   z.strictObject({ id, type: z.literal('ellipse'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), rxMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ryMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), strokeMm: StrokeWidthSchema, stroke: paint, ...shapeAppearance }),
-  z.strictObject({ id, type: z.literal('path'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), points: z.array(z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) })).min(2).max(512), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('path'), ...PathStrokeFields, ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), points: z.array(z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) })).min(2).max(512), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }).refine(object=>object.strokeFrameVersion===1||object.strokeLineCap===undefined&&object.strokeLineJoin===undefined&&object.strokeMiterLimit===undefined,'I nuovi stili del tracciato richiedono la cornice versione 1.'),
   z.strictObject({ id, type: z.literal('image'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), source: RasterSourceSchema, raster: RasterParametersSchema,clipMasks:ClipMasksSchema.optional(), pixelAspectRatio: z.number().finite().min(0.01).max(100).optional(), crop: RasterCropSchema.optional(), flipX: z.boolean().optional(), flipY: z.boolean().optional() }),
-  z.strictObject({ id, type: z.literal('vector'), ...PaintOpacityFields, ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), commands: VectorCommandsSchema,clipMasks:ClipMasksSchema.optional(), clipRect: VectorClipSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), fillRule: z.enum(['evenodd', 'nonzero']), fill: paint, stroke: paint, strokeMm: StrokeWidthSchema, strokeLineCap: z.enum(['butt', 'round', 'square']), strokeLineJoin: z.enum(['miter', 'round', 'bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
-  z.strictObject({ id, type: z.literal('bezier'), ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }),
+  z.strictObject({ id, type: z.literal('vector'), ...PaintOpacityFields, ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), commands: VectorCommandsSchema,clipMasks:ClipMasksSchema.optional(), clipRect: VectorClipSchema.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional(), fillRule: z.enum(['evenodd', 'nonzero']), fill: paint, stroke: paint, strokeMm: StrokeWidthSchema, strokeLineCap: z.enum(['butt', 'round', 'square']), strokeLineJoin: z.enum(['miter', 'round', 'bevel']), strokeMiterLimit: z.number().finite().min(1).max(100),strokeFrameVersion:PathStrokeFields.strokeFrameVersion }),
+  z.strictObject({ id, type: z.literal('bezier'), ...PathStrokeFields, ...position, ...affineFields, editor:ObjectPropertiesSchema.optional(), rotationDeg: rotation.optional(), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), strokeMm: StrokeWidthSchema, stroke: color, ...shapeAppearance }).refine(object=>object.strokeFrameVersion===1||object.strokeLineCap===undefined&&object.strokeLineJoin===undefined&&object.strokeMiterLimit===undefined,'I nuovi stili del tracciato richiedono la cornice versione 1.'),
 ]);
 export type SceneObject = z.infer<typeof SceneObjectSchema>;
 export const SceneGroupSchema = z.strictObject({ id, parentId:id.optional(),visible:z.boolean().optional(),editor:GroupPropertiesSchema.optional(),objectIds: z.array(id).min(1).max(EDITOR_LIMITS.objects) });
@@ -253,7 +254,7 @@ export const ObjectSizeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('image'), widthMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm),pixelAspectRatio:z.number().finite().min(.01).max(100).optional() }),
   z.strictObject({ type: z.literal('bezier'), widthMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm), heightMm: z.number().finite().nonnegative().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm) }),
 ]);
-export const TransformArgumentsSchema = z.strictObject({ ...position, skewXDeg:textSkew.optional(), rotationDeg: rotation, size: ObjectSizeSchema });
+export const TransformArgumentsSchema = z.strictObject({ ...position, skewXDeg:textSkew.optional(), rotationDeg: rotation, size: ObjectSizeSchema,strokeFrameScale:z.strictObject({x:z.number().finite().positive().max(1000),y:z.number().finite().positive().max(1000)}).optional() });
 export type TransformArguments = z.infer<typeof TransformArgumentsSchema>;
 const base = { schemaVersion: z.literal(1), expectedRevision: z.number().int().nonnegative(), objectId: id,pageId:id.optional() };
 const objectBase={...base,targetScope:z.literal('object').optional()};
@@ -261,7 +262,7 @@ const ids = z.array(id).min(1).max(EDITOR_LIMITS.objects);
 const alignment = z.enum(['left', 'centerX', 'right', 'top', 'centerY', 'bottom']);
 export const SelectionTransformSchema = z.strictObject({ objectIds: ids.min(2), scale: z.number().finite().min(0.01).max(100), rotationDeg: rotation, center: z.strictObject(position) });
 export type SelectionTransformArguments = z.infer<typeof SelectionTransformSchema>;
-export const SelectionStyleSchema = z.strictObject({ ...PaintOpacityFields, strokeLineCap: z.enum(['butt','round','square']).optional(), fill: paint.optional(), stroke: paint.optional(), strokeMm: textStrokeWidth.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }).refine(style => Object.values(style).some(value => value !== undefined), 'Scegli almeno una proprietà di stile');
+export const SelectionStyleSchema = z.strictObject({ ...PaintOpacityFields, ...ShapeJoinFields, strokeLineCap: z.enum(['butt','round','square']).optional(), fill: paint.optional(), stroke: paint.optional(), strokeMm: textStrokeWidth.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() }).refine(style => Object.values(style).some(value => value !== undefined), 'Scegli almeno una proprietà di stile');
 export type SelectionStyle = z.infer<typeof SelectionStyleSchema>;
 export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setProductionProfile'),arguments:z.strictObject({profile:ProductionProfileSchema.nullable()})}),
@@ -341,6 +342,12 @@ export function placeObjectAtCenter(object: SceneObject, center: { xMm: number; 
 export function objectIntersectsArea(doc: Pick<GraphicDocument, 'areaMm' | 'shape'>, object: SceneObject, measure: Measure): boolean {
   const bounds = objectGeometry(object, measure), center = objectCenter(object, measure), epsilon = 1e-8;
   if (object.xMm + bounds.widthMm <= epsilon || object.yMm + bounds.heightMm <= epsilon || object.xMm >= doc.areaMm.width - epsilon || object.yMm >= doc.areaMm.height - epsilon) return false;
+  if((object.type==='path'||object.type==='bezier'||object.type==='vector')&&object.strokeFrameVersion===1){
+    for(const polygon of pathStrokeExtras(object)){
+      const world=polygon.map(p=>{const q=frameToWorld(object,p.x-object.widthMm/2,p.y-object.heightMm/2);return{x:q.x+center.xMm,y:q.y+center.yMm};}),xs=world.map(p=>p.x),ys=world.map(p=>p.y),left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;
+      if(width>1e-10&&height>1e-10&&pathIntersectsArea(world.map(p=>({x:(p.x-left)/width,y:(p.y-top)/height})),width,height,{x:left+width/2,y:top+height/2},0,0,true,true,doc.areaMm,doc.shape==='round'))return true;
+    }
+  }
   if(hasObjectAffine(object)){const hit=affinePathIntersects(doc,object,center);if(hit!==null)return hit;}
   if (object.type === 'vector') {
     if (object.clipRect) { const c = object.clipRect; if (!pathIntersectsArea([{x:c.left,y:c.top},{x:c.right,y:c.top},{x:c.right,y:c.bottom},{x:c.left,y:c.bottom}], object.widthMm, object.heightMm, {x:center.xMm,y:center.yMm}, object.rotationDeg ?? 0, 0, true, true, doc.areaMm, doc.shape === 'round')) return false; }
@@ -552,7 +559,12 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
         next.objects[next.objects.indexOf(object)] = cloneSceneObject(update); break;
       }
       case 'transformObject': {
-        const { size, ...transform } = command.arguments;
+        const {size:requestedSize,strokeFrameScale,...transform}=command.arguments;
+        let size=requestedSize;
+        if(strokeFrameScale){
+          if((object.type!=='path'&&object.type!=='bezier'&&object.type!=='vector')||object.strokeFrameVersion!==1||requestedSize.type!==object.type||!('widthMm'in requestedSize)||requestedSize.widthMm!==object.widthMm||requestedSize.heightMm!==object.heightMm)throw Error('La scala della cornice richiede un tracciato aggiornato e le sue dimensioni nominali correnti.');
+          size={...requestedSize,...resizedPathStrokeFrame(object,strokeFrameScale.x,strokeFrameScale.y)};
+        }
         if(object.type==='circle'&&size.type==='ellipse'){const{radiusMm:_radius,...appearance}=object;const changed:SceneObject={...appearance,type:'ellipse',rxMm:size.rxMm,ryMm:size.ryMm};next.objects[next.objects.indexOf(object)]=changed;object=changed;}
         if (object.type !== size.type) throw new Error('Dimensioni incompatibili con il tipo di oggetto');
         if (object.type === 'text' && size.type === 'text') {
@@ -586,8 +598,9 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
   validateLayout(parsed, measure, 'edit');
   const sameGeometry=(a:SceneObject,b:SceneObject)=>{
     if((a.rotationDeg??0)!==(b.rotationDeg??0))return false;
-    const keys=['skewXDeg','mirrorX','mirrorY','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textSkewXDeg','textClipMasks','clipMasks','textBox','points','nodes','commands','textPath'];
+    const keys=['strokeFrameVersion','skewXDeg','mirrorX','mirrorY','widthMm','heightMm','radiusMm','rxMm','ryMm','lengthMm','fontSizePt','textScaleX','textScaleY','textSkewXDeg','textClipMasks','clipMasks','textBox','points','nodes','commands','textPath'];
     if(keys.some(key=>JSON.stringify((a as unknown as Record<string,unknown>)[key])!==JSON.stringify((b as unknown as Record<string,unknown>)[key])))return false;
+    if((a.type==='path'||a.type==='bezier'||a.type==='vector')&&a.strokeFrameVersion===1){const ac=objectCenter(a,measure),bc=objectCenter(b,measure);return Math.abs(ac.xMm-bc.xMm)<1e-6&&Math.abs(ac.yMm-bc.yMm)<1e-6;}
     if(a.type==='text'&&b.type==='text'){try{const ac=objectCenter(a,measure),bc=objectCenter(b,measure);return Math.abs(ac.xMm-bc.xMm)<1e-6&&Math.abs(ac.yMm-bc.yMm)<1e-6;}catch(error){if(!(error instanceof UnverifiedTextGeometryError))throw error;return a.xMm===b.xMm&&a.yMm===b.yMm;}}return Math.abs(a.xMm-b.xMm)<1e-6&&Math.abs(a.yMm-b.yMm)<1e-6;
   };
   assertObjectPolicies(doc,parsed,command,role,sameGeometry);

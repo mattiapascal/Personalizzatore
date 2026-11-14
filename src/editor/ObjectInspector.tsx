@@ -1,3 +1,5 @@
+import {StrokeJoinControl} from './StrokeJoinControl';
+import {hasEditableStrokeJoin,effectiveStrokeJoin,effectiveMiterLimit} from './path-stroke';
 import {StrokeCapControl} from './StrokeCapControl';
 import {hasEditableStrokeCap,effectiveStrokeCap} from './stroke-cap';
 import { TextMaskPanel } from './TextMaskPanel';
@@ -213,7 +215,8 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, doc
         <PaintPicker colors={documentColors} allowColor={allowColor} label="Contorno" value={current.type === 'text' ? characterScope?.mixed.includes('stroke') ? 'mixed' : character?.stroke ?? current.stroke ?? 'none' : current.stroke} allowNone={current.type !== 'line' && current.type !== 'path' && current.type !== 'bezier'} onChange={stroke => { if(current.type==='text')characterPatch({stroke,...(stroke!=='none'&&(character?.stroke??current.stroke??'none')==='none'&&(character?.strokeMm??current.strokeMm??.25)===0?{strokeMm:.25}:{})},true);else if (current.type !== 'line' && current.type !== 'path' && current.type !== 'bezier' || stroke !== 'none') patch({ stroke }, true); }}/>
         <NumberField {...fields} label="Spessore contorno (mm)" value={current.type === 'text' ? character?.strokeMm ?? current.strokeMm ?? .25 : current.strokeMm} mixed={current.type === 'text' && characterScope?.mixed.includes('strokeMm')} min={current.type==='text'?0:.01} max={EDITOR_LIMITS.maxStrokeMm} step={0.05} disabled={current.type === 'text' ? noCharacters || (character?.stroke ?? current.stroke ?? 'none') === 'none' : current.stroke === 'none'} onChange={strokeMm => {if(current.type==='text')characterPatch({strokeMm});else patch({strokeMm});}}/>
         {current.type !== 'text' && <label>Tipo di contorno<select disabled={current.stroke === 'none'} value={current.strokeDash ?? 'solid'} onChange={event => patch({ strokeDash: event.target.value as 'solid' | 'dashed' | 'dotted' }, true)}><option value="solid">Continuo</option><option value="dashed">Tratteggiato</option><option value="dotted">Punteggiato</option></select></label>}
-        {hasEditableStrokeCap(current)&&<StrokeCapControl value={effectiveStrokeCap(current)} dotted={current.strokeDash==='dotted'} disabled={current.stroke==='none'} onChange={strokeLineCap=>patch({strokeLineCap},true)}/>}
+        {hasEditableStrokeCap(current)&&<StrokeCapControl value={effectiveStrokeCap(current)} dotted={current.strokeDash==='dotted'} disabled={current.stroke==='none'} onChange={strokeLineCap=>patch({strokeLineCap,...(current.type==='path'||current.type==='bezier'||current.type==='vector'?{strokeFrameVersion:1}:{})},true)}/>}
+        {hasEditableStrokeJoin(current)&&<StrokeJoinControl value={effectiveStrokeJoin(current)} limit={effectiveMiterLimit(current)} revision={draft.revision} disabled={current.stroke==='none'} onChange={strokeLineJoin=>patch({strokeLineJoin,...(current.type==='rect'?{}:{strokeFrameVersion:1})},true)} onLimit={strokeMiterLimit=>patch({strokeMiterLimit,...(current.type==='rect'?{}:{strokeFrameVersion:1})})}/>}
         {opacityControls}
       </>}
       {section === 'image' && current.type === 'image' && <>

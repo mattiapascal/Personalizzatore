@@ -1,3 +1,4 @@
+import {PathStrokeFields} from './path-stroke';
 import {PaintSchema,ColorSchema} from './paint';
 import {ObjectPropertiesSchema} from './object-properties';
 import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
@@ -10,13 +11,14 @@ const size = z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSi
 const appearance = { ...PaintOpacityFields, stroke: paint, strokeMm: StrokeWidthSchema, fill: paint.optional(), strokeDash: z.enum(['solid', 'dashed', 'dotted']).optional() };
 const point = z.strictObject({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) });
 export const TextPathGuideSchema = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('vector'), widthMm: dimension, heightMm: dimension, commands: VectorCommandsSchema.max(4096), ...appearance, fill: paint, fillRule: z.enum(['evenodd','nonzero']), strokeLineCap: z.enum(['butt','round','square']), strokeLineJoin: z.enum(['miter','round','bevel']), strokeMiterLimit: z.number().finite().min(1).max(100) }),
+  z.strictObject({ type: z.literal('vector'), widthMm: dimension, heightMm: dimension, commands: VectorCommandsSchema.max(4096), ...appearance, fill: paint, fillRule: z.enum(['evenodd','nonzero']), strokeLineCap: z.enum(['butt','round','square']), strokeLineJoin: z.enum(['miter','round','bevel']), strokeMiterLimit: z.number().finite().min(1).max(100),strokeFrameVersion:PathStrokeFields.strokeFrameVersion }),
   z.strictObject({ type: z.literal('line'), lengthMm: size, ...appearance, stroke: ColorSchema, fill: z.literal('none').optional(), strokeLineCap: z.enum(['butt','round','square']).optional() }),
   z.strictObject({ type: z.literal('circle'), radiusMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ...appearance }),
   z.strictObject({ type: z.literal('ellipse'), rxMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ryMm: z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.objectSideMm/2), ...appearance }),
-  z.strictObject({ type: z.literal('path'), widthMm: dimension, heightMm: dimension, points: z.array(point).min(2).max(512), closed: z.boolean(), ...appearance, stroke: ColorSchema }),
-  z.strictObject({ type: z.literal('bezier'), widthMm: dimension, heightMm: dimension, nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), ...appearance, stroke: ColorSchema }),
+  z.strictObject({ type: z.literal('path'), ...PathStrokeFields, widthMm: dimension, heightMm: dimension, points: z.array(point).min(2).max(512), closed: z.boolean(), ...appearance, stroke: ColorSchema }),
+  z.strictObject({ type: z.literal('bezier'), ...PathStrokeFields, widthMm: dimension, heightMm: dimension, nodes: z.array(BezierNodeSchema).min(2).max(MAX_BEZIER_NODES), closed: z.boolean(), ...appearance, stroke: ColorSchema }),
 ]).superRefine((guide, ctx) => {
+  if((guide.type==='path'||guide.type==='bezier')&&guide.strokeFrameVersion!==1&&(guide.strokeLineCap!==undefined||guide.strokeLineJoin!==undefined||guide.strokeMiterLimit!==undefined))ctx.addIssue({code:'custom',message:'I nuovi stili del tracciato richiedono la cornice versione 1.'});
   if (guide.type === 'vector') { const b = vectorBounds(guide.commands), near = (a:number,b:number) => Math.abs(a-b)<1e-7; if (guide.commands.filter(c=>c[0]==='M').length!==1 || !guide.widthMm && !guide.heightMm || !near(b.x,0) || !near(b.y,0) || !near(b.width,guide.widthMm?1:0) || !near(b.height,guide.heightMm?1:0)) ctx.addIssue({code:'custom',message:'La guida SVG richiede un solo contorno normalizzato'}); return; }
   if (guide.type !== 'path' && guide.type !== 'bezier') return;
   if (!guide.closed && guide.fill && guide.fill !== 'none') ctx.addIssue({ code: 'custom', message: 'Guida aperta senza riempimento' });

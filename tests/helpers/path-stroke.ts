@@ -1,0 +1,6 @@
+import {createTestDocument} from './editor-fonts';
+import {DocumentSchema} from '../../src/editor/model';
+export function pathStrokeFixture(){
+ const doc=createTestDocument();doc.documentId='27272727-2727-4727-8727-272727272727';doc.colorMode='color';doc.productId=doc.variantId=doc.catalogVersion=doc.catalogProductProfileVersion=null;doc.areaMm={width:140,height:100};delete doc.fontAssets;
+ doc.objects=[{id:'poly',type:'path',xMm:12,yMm:12,widthMm:35,heightMm:24,points:[{x:0,y:1},{x:.5,y:0},{x:1,y:1}],closed:false,stroke:'#0088cc',strokeMm:3,fill:'none',rotationDeg:0},{id:'curve',type:'bezier',xMm:72,yMm:12,widthMm:35,heightMm:24,nodes:[{x:0,y:1,out:{x:.16,y:.8}},{x:.5,y:0,in:{x:.45,y:.2},out:{x:.55,y:.2}},{x:1,y:1,in:{x:.84,y:.8}}],closed:false,stroke:'#cc3300',strokeMm:3,fill:'none',rotationDeg:0},{id:'svg',type:'vector',xMm:12,yMm:60,widthMm:35,heightMm:24,commands:[['M',0,1],['L',.5,0],['L',1,1]],fillRule:'nonzero',fill:'none',stroke:'#0088cc',strokeMm:3,strokeLineCap:'butt',strokeLineJoin:'miter',strokeMiterLimit:4,rotationDeg:0},{id:'box',type:'rect',xMm:72,yMm:60,widthMm:35,heightMm:24,stroke:'#cc3300',strokeMm:3,fill:'none',rotationDeg:0}];return DocumentSchema.parse(doc);
+}

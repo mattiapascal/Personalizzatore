@@ -1290,6 +1290,10 @@
                             "type": "number",
                             "minimum": 1,
                             "maximum": 100
+                          },
+                          "strokeFrameVersion": {
+                            "type": "number",
+                            "const": 1
                           }
                         },
                         "required": [
@@ -1516,6 +1520,31 @@
                             "type": "string",
                             "const": "path"
                           },
+                          "strokeLineCap": {
+                            "type": "string",
+                            "enum": [
+                              "butt",
+                              "round",
+                              "square"
+                            ]
+                          },
+                          "strokeLineJoin": {
+                            "type": "string",
+                            "enum": [
+                              "miter",
+                              "round",
+                              "bevel"
+                            ]
+                          },
+                          "strokeMiterLimit": {
+                            "type": "number",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "strokeFrameVersion": {
+                            "type": "number",
+                            "const": 1
+                          },
                           "widthMm": {
                             "type": "number",
                             "minimum": 0,
@@ -1611,6 +1640,31 @@
                           "type": {
                             "type": "string",
                             "const": "bezier"
+                          },
+                          "strokeLineCap": {
+                            "type": "string",
+                            "enum": [
+                              "butt",
+                              "round",
+                              "square"
+                            ]
+                          },
+                          "strokeLineJoin": {
+                            "type": "string",
+                            "enum": [
+                              "miter",
+                              "round",
+                              "bevel"
+                            ]
+                          },
+                          "strokeMiterLimit": {
+                            "type": "number",
+                            "minimum": 1,
+                            "maximum": 100
+                          },
+                          "strokeFrameVersion": {
+                            "type": "number",
+                            "const": 1
                           },
                           "widthMm": {
                             "type": "number",
@@ -2225,6 +2279,19 @@
               "type": {
                 "type": "string",
                 "const": "rect"
+              },
+              "strokeLineJoin": {
+                "type": "string",
+                "enum": [
+                  "miter",
+                  "round",
+                  "bevel"
+                ]
+              },
+              "strokeMiterLimit": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 100
               },
               "xMm": {
                 "type": "number",
@@ -2842,6 +2909,31 @@
               "type": {
                 "type": "string",
                 "const": "path"
+              },
+              "strokeLineCap": {
+                "type": "string",
+                "enum": [
+                  "butt",
+                  "round",
+                  "square"
+                ]
+              },
+              "strokeLineJoin": {
+                "type": "string",
+                "enum": [
+                  "miter",
+                  "round",
+                  "bevel"
+                ]
+              },
+              "strokeMiterLimit": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "strokeFrameVersion": {
+                "type": "number",
+                "const": 1
               },
               "xMm": {
                 "type": "number",
@@ -3906,6 +3998,10 @@
                 "type": "number",
                 "minimum": 1,
                 "maximum": 100
+              },
+              "strokeFrameVersion": {
+                "type": "number",
+                "const": 1
               }
             },
             "required": [
@@ -3936,6 +4032,31 @@
               "type": {
                 "type": "string",
                 "const": "bezier"
+              },
+              "strokeLineCap": {
+                "type": "string",
+                "enum": [
+                  "butt",
+                  "round",
+                  "square"
+                ]
+              },
+              "strokeLineJoin": {
+                "type": "string",
+                "enum": [
+                  "miter",
+                  "round",
+                  "bevel"
+                ]
+              },
+              "strokeMiterLimit": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "strokeFrameVersion": {
+                "type": "number",
+                "const": 1
               },
               "xMm": {
                 "type": "number",
@@ -5426,6 +5547,10 @@
                                   "type": "number",
                                   "minimum": 1,
                                   "maximum": 100
+                                },
+                                "strokeFrameVersion": {
+                                  "type": "number",
+                                  "const": 1
                                 }
                               },
                               "required": [
@@ -5652,6 +5777,31 @@
                                   "type": "string",
                                   "const": "path"
                                 },
+                                "strokeLineCap": {
+                                  "type": "string",
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLineJoin": {
+                                  "type": "string",
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                },
+                                "strokeMiterLimit": {
+                                  "type": "number",
+                                  "minimum": 1,
+                                  "maximum": 100
+                                },
+                                "strokeFrameVersion": {
+                                  "type": "number",
+                                  "const": 1
+                                },
                                 "widthMm": {
                                   "type": "number",
                                   "minimum": 0,
@@ -5747,6 +5897,31 @@
                                 "type": {
                                   "type": "string",
                                   "const": "bezier"
+                                },
+                                "strokeLineCap": {
+                                  "type": "string",
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLineJoin": {
+                                  "type": "string",
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                },
+                                "strokeMiterLimit": {
+                                  "type": "number",
+                                  "minimum": 1,
+                                  "maximum": 100
+                                },
+                                "strokeFrameVersion": {
+                                  "type": "number",
+                                  "const": 1
                                 },
                                 "widthMm": {
                                   "type": "number",
@@ -6361,6 +6536,19 @@
                     "type": {
                       "type": "string",
                       "const": "rect"
+                    },
+                    "strokeLineJoin": {
+                      "type": "string",
+                      "enum": [
+                        "miter",
+                        "round",
+                        "bevel"
+                      ]
+                    },
+                    "strokeMiterLimit": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 100
                     },
                     "xMm": {
                       "type": "number",
@@ -6978,6 +7166,31 @@
                     "type": {
                       "type": "string",
                       "const": "path"
+                    },
+                    "strokeLineCap": {
+                      "type": "string",
+                      "enum": [
+                        "butt",
+                        "round",
+                        "square"
+                      ]
+                    },
+                    "strokeLineJoin": {
+                      "type": "string",
+                      "enum": [
+                        "miter",
+                        "round",
+                        "bevel"
+                      ]
+                    },
+                    "strokeMiterLimit": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 100
+                    },
+                    "strokeFrameVersion": {
+                      "type": "number",
+                      "const": 1
                     },
                     "xMm": {
                       "type": "number",
@@ -8042,6 +8255,10 @@
                       "type": "number",
                       "minimum": 1,
                       "maximum": 100
+                    },
+                    "strokeFrameVersion": {
+                      "type": "number",
+                      "const": 1
                     }
                   },
                   "required": [
@@ -8072,6 +8289,31 @@
                     "type": {
                       "type": "string",
                       "const": "bezier"
+                    },
+                    "strokeLineCap": {
+                      "type": "string",
+                      "enum": [
+                        "butt",
+                        "round",
+                        "square"
+                      ]
+                    },
+                    "strokeLineJoin": {
+                      "type": "string",
+                      "enum": [
+                        "miter",
+                        "round",
+                        "bevel"
+                      ]
+                    },
+                    "strokeMiterLimit": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 100
+                    },
+                    "strokeFrameVersion": {
+                      "type": "number",
+                      "const": 1
                     },
                     "xMm": {
                       "type": "number",

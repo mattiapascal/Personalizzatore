@@ -1,3 +1,5 @@
+**14 novembre — contorni dei tracciati:** [JSON](../fixtures/illustrator/path-stroke.TEST.json) e [SVG](../fixtures/illustrator/path-stroke.TEST.svg), 140×100 mm con polilinea, Bézier, vettore e rettangolo. [Giunzioni, estremità, cornice e confronti indipendenti](iteration-editor-path-stroke.md). **Illustrator non collaudato.**
+
 **14 novembre — proprietà dei tracciati associati al testo:** [JSON](../fixtures/illustrator/text-path-properties.TEST.json), [SVG produttivo](../fixtures/illustrator/text-path-properties.TEST.svg) e [SVG tecnico](../fixtures/illustrator/text-path-properties.technical.TEST.svg), 100×70 mm con Arimo OFL ed ellisse di riferimento. [Conservazione proprietà, separazione dei livelli e verifiche](iteration-editor-text-path-properties.md). **Illustrator non collaudato.**
 
 **13 novembre — estremità delle linee:** [JSON](../fixtures/illustrator/stroke-caps.TEST.json) e [SVG](../fixtures/illustrator/stroke-caps.TEST.svg), 100 × 70 mm con cap piatti/rotondi/quadrati, linea affine, SVG aperto e Arimo OFL. [Comandi, misure e confronto pixel](iteration-editor-stroke-caps.md). **Illustrator non collaudato.**

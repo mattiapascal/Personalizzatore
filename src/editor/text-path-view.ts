@@ -1,3 +1,4 @@
+import {pathStrokeFrame} from './path-stroke';
 import {textStrokeEnvelope} from './text-stroke';
 import { util, type TextboxProps, type TOptions, type TPointerEvent } from 'fabric';
 import { EditorTextBox } from './text-box';
@@ -61,7 +62,7 @@ export class EditorPathText extends EditorTextBox {
       for (const decoration of ['underline', 'overline', 'linethrough'] as const) if (style[decoration]) { const y = shift + this.offsets[decoration] * style.fontSize; top = Math.min(top, y); bottom = Math.max(bottom, y + style.fontSize / 12); }
       for (const [x, y] of [[left, top], [right, top], [right, bottom], [left, bottom]]) include(box.renderLeft! + x! * Math.cos(angle) - y! * Math.sin(angle), box.renderTop! + x! * Math.sin(angle) + y! * Math.cos(angle));
     });
-    if (!Number.isFinite(minX) || this.binding.showGuide) { const half = this.binding.guide.stroke === 'none' ? 0 : this.binding.guide.strokeMm * 4; include(-this.path.width / 2 - half, -this.path.height / 2 - half); include(this.path.width / 2 + half, this.path.height / 2 + half); }
+    if (!Number.isFinite(minX) || this.binding.showGuide) { const guide=this.binding.guide,half=guide.stroke==='none'?0:guide.strokeMm*4,frame=(guide.type==='path'||guide.type==='bezier'||guide.type==='vector')&&guide.strokeFrameVersion===1?pathStrokeFrame(guide):null;const x=frame?frame.widthMm*4:this.path.width/2+half,y=frame?frame.heightMm*4:this.path.height/2+half;include(-x,-y);include(x,y); }
     this.pathCenterOffset = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }; this.width = Math.max(.001, maxX - minX); this.height = Math.max(.001, maxY - minY);
     for (const box of this.__charBounds[0]!.slice(0, -1)) { box.renderLeft! -= this.pathCenterOffset.x; box.renderTop! -= this.pathCenterOffset.y; }
     this.contentWidth = this.width; this.contentHeight = this.height; this.geometryReady = true;

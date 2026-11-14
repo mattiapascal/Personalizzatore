@@ -1,0 +1,146 @@
+{
+  "colorMode": "color",
+  "schemaVersion": 2,
+  "documentId": "27272727-2727-4727-8727-272727272727",
+  "revision": 2,
+  "productId": null,
+  "variantId": null,
+  "catalogVersion": null,
+  "catalogProductProfileVersion": null,
+  "productProfileVersion": "TEST-stamp-v1",
+  "fixture": true,
+  "validatedForProduction": false,
+  "areaMm": {
+    "width": 140,
+    "height": 100
+  },
+  "shape": "rectangle",
+  "objects": [
+    {
+      "id": "poly",
+      "type": "path",
+      "strokeLineCap": "square",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4,
+      "strokeFrameVersion": 1,
+      "xMm": 11.404230468501272,
+      "yMm": 10.954054844523574,
+      "rotationDeg": 0,
+      "widthMm": 35,
+      "heightMm": 24,
+      "points": [
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0.5,
+          "y": 0
+        },
+        {
+          "x": 1,
+          "y": 1
+        }
+      ],
+      "closed": false,
+      "strokeMm": 3,
+      "stroke": "#0088cc",
+      "fill": "none"
+    },
+    {
+      "id": "curve",
+      "type": "bezier",
+      "strokeLineCap": "square",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4,
+      "strokeFrameVersion": 1,
+      "xMm": 71.3849280362681,
+      "yMm": 9.120805217990927,
+      "rotationDeg": 0,
+      "widthMm": 35,
+      "heightMm": 24,
+      "nodes": [
+        {
+          "x": 0,
+          "y": 1,
+          "out": {
+            "x": 0.16,
+            "y": 0.8
+          }
+        },
+        {
+          "x": 0.5,
+          "y": 0,
+          "in": {
+            "x": 0.45,
+            "y": 0.2
+          },
+          "out": {
+            "x": 0.55,
+            "y": 0.2
+          }
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "in": {
+            "x": 0.84,
+            "y": 0.8
+          }
+        }
+      ],
+      "closed": false,
+      "strokeMm": 3,
+      "stroke": "#cc3300",
+      "fill": "none"
+    },
+    {
+      "id": "svg",
+      "type": "vector",
+      "xMm": 11.404230468501272,
+      "yMm": 58.954054844523576,
+      "rotationDeg": 0,
+      "widthMm": 35,
+      "heightMm": 24,
+      "commands": [
+        [
+          "M",
+          0,
+          1
+        ],
+        [
+          "L",
+          0.5,
+          0
+        ],
+        [
+          "L",
+          1,
+          1
+        ]
+      ],
+      "fillRule": "nonzero",
+      "fill": "none",
+      "stroke": "#0088cc",
+      "strokeMm": 3,
+      "strokeLineCap": "square",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4,
+      "strokeFrameVersion": 1
+    },
+    {
+      "id": "box",
+      "type": "rect",
+      "strokeLineJoin": "miter",
+      "strokeMiterLimit": 4,
+      "xMm": 72,
+      "yMm": 60,
+      "rotationDeg": 0,
+      "widthMm": 35,
+      "heightMm": 24,
+      "strokeMm": 3,
+      "stroke": "#cc3300",
+      "fill": "none"
+    }
+  ]
+}

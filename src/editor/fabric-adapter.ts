@@ -1,3 +1,5 @@
+import {pathStrokeFrame,effectiveStrokeJoin,effectiveMiterLimit} from './path-stroke';
+import {pathStrokeFrameView} from './path-stroke-view';
 import {effectiveStrokeCap,scaledLineLength} from './stroke-cap';
 import {EditorLine} from './line-view';
 import {affineFrameView} from './affine-frame-view';
@@ -139,11 +141,12 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
       ? new Circle({ ...common, ...appearance, radius: o.radiusMm * PX_PER_MM })
       : o.type === 'ellipse' ? new Ellipse({ ...common, ...appearance, rx: o.rxMm * PX_PER_MM, ry: o.ryMm * PX_PER_MM })
       : o.type === 'vector' ? new FabricPath(mapVector(o.commands, (x, y) => ({ x: x * o.widthMm * PX_PER_MM, y: y * o.heightMm * PX_PER_MM })), { ...common, ...appearance, fillRule: o.fillRule, perPixelTargetFind: true, strokeLineCap: o.strokeDash === 'dotted' ? 'round' : o.strokeLineCap, strokeLineJoin: o.strokeLineJoin, strokeMiterLimit: o.strokeMiterLimit, lockScalingX: o.widthMm === 0, lockScalingY: o.heightMm === 0 })
-      : o.type === 'bezier' ? new FabricPath(bezierCommands(o.nodes, o.closed, o.widthMm * PX_PER_MM, o.heightMm * PX_PER_MM), { ...common, ...appearance, fillRule: 'evenodd', strokeLineCap: 'round', strokeLineJoin: 'round', lockScalingX: o.widthMm === 0, lockScalingY: o.heightMm === 0 })
-      : o.type === 'path' ? new (o.closed ? Polygon : Polyline)(o.points.map(p => ({ x: p.x * o.widthMm * PX_PER_MM, y: p.y * o.heightMm * PX_PER_MM })), { ...common, ...appearance, fillRule: 'evenodd', strokeLineCap: 'round', strokeLineJoin: 'round', lockScalingX: o.widthMm === 0, lockScalingY: o.heightMm === 0 })
+      : o.type === 'bezier' ? new FabricPath(bezierCommands(o.nodes, o.closed, o.widthMm * PX_PER_MM, o.heightMm * PX_PER_MM), { ...common, ...appearance, fillRule: 'evenodd', strokeLineCap: effectiveStrokeCap(o), strokeLineJoin: effectiveStrokeJoin(o), strokeMiterLimit:effectiveMiterLimit(o), lockScalingX: o.widthMm === 0, lockScalingY: o.heightMm === 0 })
+      : o.type === 'path' ? new (o.closed ? Polygon : Polyline)(o.points.map(p => ({ x: p.x * o.widthMm * PX_PER_MM, y: p.y * o.heightMm * PX_PER_MM })), { ...common, ...appearance, fillRule: 'evenodd', strokeLineCap: effectiveStrokeCap(o), strokeLineJoin: effectiveStrokeJoin(o), strokeMiterLimit:effectiveMiterLimit(o), lockScalingX: o.widthMm === 0, lockScalingY: o.heightMm === 0 })
       : o.type === 'line' ? new EditorLine([0, 0, o.lengthMm * PX_PER_MM, 0], { ...common, ...appearance, strokeLineCap: effectiveStrokeCap(o), lockScalingY: true })
-      : new Rect({ ...common, ...appearance, width: o.widthMm * PX_PER_MM, height: o.heightMm * PX_PER_MM, rx: (o.cornerRadiusMm ?? 0) * PX_PER_MM, ry: (o.cornerRadiusMm ?? 0) * PX_PER_MM });
+      : new Rect({ ...common, ...appearance, width: o.widthMm * PX_PER_MM, height: o.heightMm * PX_PER_MM, rx: (o.cornerRadiusMm ?? 0) * PX_PER_MM, ry: (o.cornerRadiusMm ?? 0) * PX_PER_MM,strokeLineJoin:effectiveStrokeJoin(o),strokeMiterLimit:effectiveMiterLimit(o) });
   }
+  if((o.type==='path'||o.type==='bezier'||o.type==='vector')&&o.strokeFrameVersion===1)pathStrokeFrameView(object,pathStrokeFrame(o));
   if(o.type!=='text')object.set('skewX',fabricTextSkew(o.skewXDeg??0,object.scaleX*(object.flipX?-1:1),object.scaleY*(object.flipY?-1:1)));
   if (o.type === 'vector' && o.clipRect) { const c = o.clipRect; object.clipPath = new Rect({ left: ((c.left + c.right) / 2 - .5) * o.widthMm * PX_PER_MM, top: ((c.top + c.bottom) / 2 - .5) * o.heightMm * PX_PER_MM, width: (c.right - c.left) * o.widthMm * PX_PER_MM, height: (c.bottom - c.top) * o.heightMm * PX_PER_MM, originX: 'center', originY: 'center', strokeWidth: 0, fill: '#000000' }); }
   if((o.type==='image'||o.type==='vector')&&o.clipMasks)applyClipMasks(object,o.clipMasks);
@@ -515,10 +518,10 @@ export class FabricAdapter {
             ? Math.abs(object.scaleX-object.scaleY)>1e-9 ? {type:'ellipse',rxMm:((source.radiusMm*2+strokeMm)*object.scaleX-strokeMm)/2,ryMm:((source.radiusMm*2+strokeMm)*object.scaleY-strokeMm)/2} : { type: 'circle', radiusMm: ((source.radiusMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2 }
             : source.type === 'line' ? { type: 'line', lengthMm: scaledLineLength(source,object.scaleX) }
             : source.type === 'ellipse' ? { type: 'ellipse', rxMm: ((source.rxMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2, ryMm: ((source.ryMm * 2 + strokeMm) * object.scaleY - strokeMm) / 2 }
-            : source.type === 'path' || source.type === 'bezier' || source.type === 'vector' ? { type: source.type, widthMm: source.widthMm === 0 ? 0 : (source.widthMm + strokeMm) * object.scaleX - strokeMm, heightMm: source.heightMm === 0 ? 0 : (source.heightMm + strokeMm) * object.scaleY - strokeMm }
+            : source.type === 'path' || source.type === 'bezier' || source.type === 'vector' ? { type: source.type, ...(source.strokeFrameVersion===1?{widthMm:source.widthMm,heightMm:source.heightMm}:{widthMm: source.widthMm === 0 ? 0 : (source.widthMm + strokeMm) * object.scaleX - strokeMm, heightMm: source.heightMm === 0 ? 0 : (source.heightMm + strokeMm) * object.scaleY - strokeMm}) }
             : { type: 'rect', widthMm: (source.widthMm + strokeMm) * object.scaleX - strokeMm, heightMm: (source.heightMm + strokeMm) * object.scaleY - strokeMm };
         const rotationDeg = source.type === 'circle'&&!source.skewXDeg ? 0 : ((object.angle + 180) % 360 + 360) % 360 - 180;
-        queueMicrotask(() => { if (!this.disposed) onTransform?.(id, { xMm, yMm, rotationDeg, size,...(hasObjectAffine(source)&&source.type!=='text'?{skewXDeg:physicalTextSkew(object.skewX,object.scaleX*(object.flipX?-1:1),object.scaleY*(object.flipY?-1:1))}:{}) }, expectedRevision); });
+        queueMicrotask(() => { if (!this.disposed) onTransform?.(id, { xMm, yMm, rotationDeg, size,...((source.type==='path'||source.type==='bezier'||source.type==='vector')&&source.strokeFrameVersion===1?{strokeFrameScale:{x:object.scaleX,y:object.scaleY}}:{}),...(hasObjectAffine(source)&&source.type!=='text'?{skewXDeg:physicalTextSkew(object.skewX,object.scaleX*(object.flipX?-1:1),object.scaleY*(object.flipY?-1:1))}:{}) }, expectedRevision); });
         return;
       }
       // Fabric deve terminare il gesto prima del render canonico: clear() durante

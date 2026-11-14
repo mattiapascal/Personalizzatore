@@ -1,6 +1,9 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const icons = {
+  joinMiter:<path d="M3 21V3H21V9H9V21Z" fill="currentColor" stroke="none"/>,
+  joinRound:<path d="M3 21V9A6 6 0 0 1 9 3H21V9H9V21Z" fill="currentColor" stroke="none"/>,
+  joinBevel:<path d="M3 21V9L9 3H21V9H9V21Z" fill="currentColor" stroke="none"/>,
   capButt:<><path d="M6 5v14M18 5v14" strokeDasharray="2 2"/><rect x="6" y="9" width="12" height="6"/></>,
   capRound:<><path d="M6 5v14M18 5v14" strokeDasharray="2 2"/><rect x="3" y="9" width="18" height="6" rx="3"/></>,
   capSquare:<><path d="M6 5v14M18 5v14" strokeDasharray="2 2"/><rect x="3" y="9" width="18" height="6"/></>,
