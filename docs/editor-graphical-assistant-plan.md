@@ -13,3 +13,5 @@ L’ispettore e il modulo devono essere acquisiti prima della richiesta. Antepri
 Collaudi: atomicità manuale/AI, privacy e rifiuti server, riferimenti sconosciuti, font mancanti, protezioni, revisioni/pagina, cancellazione letture, immagini, UI desktop/telefono, JSON/SVG e regressioni pubbliche. Archivio principale invariato. Nessuna migrazione, deploy, modifica a Shopify/BSS/prezzi/acquisti. GitHub sincronizzato dopo le verifiche.
 
 Incremento implementato e collaudato: [resoconto](iteration-editor-graphical-assistant.md). Il modello reale non è stato invocato durante i test automatici.
+
+Seguito: [conversazione affiancata](iteration-editor-graphical-conversation.md) e [ingresso dalla selezione locale](iteration-editor-selection-graphic.md). Il cliente può ora passare dal prodotto verificato alla bozza con il testo raccolto, ritornare alla conversazione e usare la vista compatta/completa senza creare un altro documento. Nessuna chiamata automatica, quota condivisa e profili reali ancora da completare.

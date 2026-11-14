@@ -12,8 +12,8 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom,onViewportChange, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,onBeginLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds,assistant,assistantOpen=false,onToggleAssistant,assistantToggleDisabled=false }: {
-  assistant?:ReactNode;assistantOpen?:boolean;onToggleAssistant?:()=>void;assistantToggleDisabled?:boolean;
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom,onViewportChange, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,onBeginLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds,compact=false,assistant,assistantOpen=false,onToggleAssistant,assistantToggleDisabled=false }: {
+  compact?:boolean;assistant?:ReactNode;assistantOpen?:boolean;onToggleAssistant?:()=>void;assistantToggleDisabled?:boolean;
   layoutGuidesDisabled?:boolean;
   selectionKey?:string;getSelectionBounds?:()=>SelectionViewBounds|null;
   onBeginLayoutGuides?:(revision:number)=>GraphicDocument|null;
@@ -29,10 +29,11 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const [objectsOpen, setObjectsOpen] = useState(() => window.innerWidth >= 900);
   const [propertiesOpen, setPropertiesOpen] = useState(() => window.innerWidth >= 900);
   useEffect(()=>{if(assistantOpen&&innerWidth>=900&&innerWidth<1400)setObjectsOpen(false);},[assistantOpen]);
-  const handledInspectorRequest=useRef(0);
+  const handledInspectorRequest=useRef(0),focusInspectorOnExpand=useRef(false);
   useLayoutEffect(()=>{
     if(!inspectorRequest||handledInspectorRequest.current===inspectorRequest.sequence||inspectorRequest.documentId!==doc.documentId||inspectorRequest.pageId!==(doc.pageId??'page-1')||!doc.objects.some(object=>object.id===inspectorRequest.objectId))return;
     handledInspectorRequest.current=inspectorRequest.sequence;
+    if(compact&&!expanded){focusInspectorOnExpand.current=true;setExpanded(true);}
     setPropertiesOpen(true);if(innerWidth<900)setObjectsOpen(false);
     const frame=requestAnimationFrame(()=>{const panel=root.current?.querySelector<HTMLElement>('.properties-panel');if(panel){const invalid=inspectorRequest.focusInvalid?panel.querySelector<HTMLElement>('input:invalid,select:invalid,textarea:invalid'):null;if(invalid){for(let ancestor=invalid.parentElement;ancestor&&ancestor!==panel;ancestor=ancestor.parentElement)if(ancestor instanceof HTMLDetailsElement)ancestor.open=true;invalid.scrollIntoView({block:'center'});invalid.focus({preventScroll:true});}else{panel.scrollTop=0;panel.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')?.focus({preventScroll:true});}}});return()=>cancelAnimationFrame(frame);
   },[inspectorRequest?.sequence,doc.documentId,doc.pageId]);
@@ -134,13 +135,13 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     area.scrollLeft=0;area.scrollTop=0;
     updateZoom(Math.min((area.clientWidth - 48) / (doc.areaMm.width * PX_PER_MM), (area.clientHeight - 48) / (doc.areaMm.height * PX_PER_MM)),undefined,true);
   };
-  useLayoutEffect(()=>{setViewReady(!expanded);},[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
+  useLayoutEffect(()=>{setViewReady(!expanded);},[expanded,compact,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   useEffect(()=>{
-    if(!expanded)return;
+    if(!expanded&&!compact)return;
     const locating=!!live.current.focus&&geometryFocusCurrent(live.current.focus,doc);autoFit.current=!locating;
     const frame=requestAnimationFrame(()=>{if(!locating)fit();setViewReady(true);});
     return()=>cancelAnimationFrame(frame);
-  },[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
+  },[expanded,compact,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   useLayoutEffect(()=>{
     if(!focus||!viewReady)return;cancelSelectionView();autoFit.current=false;
     if(innerWidth<900){setObjectsOpen(false);setPropertiesOpen(false);setLayersOpen(false);setWorkflowOpen(false);}
@@ -155,9 +156,9 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     });return()=>cancelAnimationFrame(frame);
   },[focus?.sequence,focus?.documentId,focus?.contentRevision,doc.pageId,doc.areaMm.width,doc.areaMm.height,viewReady,expanded]);
   useEffect(()=>{
-    const area=viewport.current?.querySelector<HTMLElement>('.canvas-scroll');if(!expanded||!area)return;
+    const area=viewport.current?.querySelector<HTMLElement>('.canvas-scroll');if((!expanded&&!compact)||!area)return;
     const observer=new ResizeObserver(()=>{if(autoFit.current&&!live.current.editing)fit();});observer.observe(area);return()=>observer.disconnect();
-  },[expanded,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
+  },[expanded,compact,doc.documentId,doc.pageId,doc.areaMm.width,doc.areaMm.height]);
   const close = () => {
     onClearGeometryFocus?.();
     if (document.fullscreenElement === root.current) void document.exitFullscreen();
@@ -173,7 +174,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
       }
       if (current.parentElement === document.body) break;
     }
-    const frame = requestAnimationFrame(() => { root.current?.querySelector<HTMLButtonElement>('.workspace-close')?.focus(); });
+    const frame = requestAnimationFrame(() => { if(!focusInspectorOnExpand.current)root.current?.querySelector<HTMLButtonElement>('.workspace-close')?.focus();focusInspectorOnExpand.current=false; });
     return () => { document.body.style.overflow = overflow; blocked.forEach(({ element, inert }) => { element.inert = inert; }); cancelAnimationFrame(frame); root.current?.querySelector<HTMLButtonElement>('.workspace-toolbar button')?.focus(); };
   }, [expanded]);
   useEffect(() => {
@@ -200,7 +201,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     const changed = () => setNativeFullscreen(document.fullscreenElement === root.current);
     document.addEventListener('fullscreenchange', changed); return () => document.removeEventListener('fullscreenchange', changed);
   }, []);
-  return <section ref={root} role={expanded ? 'dialog' : 'region'} aria-modal={expanded || undefined} data-editor-mode={mode} className={`lab panel${expanded ? ' editor-workspace' : ''}`} aria-labelledby={expanded ? 'workspace-title' : 'lab-title'} data-testid="editor-workspace" data-view-ready={viewReady}>
+  return <section ref={root} role={expanded ? 'dialog' : 'region'} aria-modal={expanded || undefined} data-editor-mode={mode} data-compact={compact} data-single-page={!doc.otherPages?.length} className={`lab panel${expanded ? ' editor-workspace' : ''}`} aria-labelledby={expanded ? 'workspace-title' : 'lab-title'} data-testid="editor-workspace" data-view-ready={viewReady}>
     <div className="workspace-toolbar">
       {expanded ? <>
         <strong id="workspace-title">Area di disegno <span className="caption">· {mode==='admin'?'Amministrazione':mode==='customer'?'Cliente':'TEST'}</span></strong>
@@ -233,10 +234,10 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     {!expanded && context}
     <div className="workspace-layout" data-objects-open={objectsOpen} data-properties-open={propertiesOpen} data-layers-open={layersOpen} data-assistant-open={assistantOpen}>
       <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onBegin={onBeginLayoutGuides} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{rulersVisible&&<p className="ruler-help" role="status">Righelli in mm · trascina dal righello verso il foglio per aggiungere una guida.</p>}{selectionViewMessage&&<div className="geometry-focus-status selection-view-status" role="status"><span>{selectionViewMessage}</span><EditorButton className="panel-close" icon="close" label="Nascondi avviso zoom" onClick={()=>setSelectionViewMessage('')}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
-      <aside className="workspace-panel objects-panel" aria-label="Strumenti" hidden={expanded && !objectsOpen}>{mode==='test'&&workflow}{tools}{project}{diagnostics}</aside>
+      <aside className="workspace-panel objects-panel" aria-label="Strumenti" hidden={(!expanded&&compact)||(expanded&&!objectsOpen)}>{mode==='test'&&workflow}{tools}{project}{diagnostics}</aside>
       {assistant&&<aside className="workspace-assistant" hidden={!assistantOpen}>{assistant}</aside>}
-      <div className="workspace-right-panels" hidden={expanded && !propertiesOpen}>
-        <aside className="workspace-panel properties-panel" aria-label="Ispettore oggetto" hidden={expanded && !propertiesOpen}>{properties}</aside>
+      <div className="workspace-right-panels" hidden={(!expanded&&compact)||(expanded&&!propertiesOpen)}>
+        <aside className="workspace-panel properties-panel" aria-label="Ispettore oggetto" hidden={(!expanded&&compact)||(expanded&&!propertiesOpen)}>{properties}</aside>
       </div>
     </div>
   </section>;

@@ -405,3 +405,11 @@
  .editor-workspace .workspace-assistant{border-left:0;border-top:1px solid #c8dce9}
  .editor-workspace .workspace-layout[data-assistant-open=true]>.objects-panel,.editor-workspace .workspace-layout[data-assistant-open=true]>.workspace-right-panels{grid-area:canvas}
 }
+.lab[data-compact=true]:not(.editor-workspace) .workspace-layout{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:'canvas' 'assistant';gap:12px;min-width:0}
+.lab[data-compact=true]:not(.editor-workspace) .drawing-stage{grid-area:canvas;min-width:0}
+.lab[data-compact=true]:not(.editor-workspace) .canvas-scroll{height:360px;margin:0;box-sizing:border-box;display:flex;align-items:safe center;justify-content:safe center;padding:24px}
+.lab[data-compact=true]:not(.editor-workspace) .workspace-assistant{grid-area:assistant;max-height:620px;margin:0}
+@media(min-width:1000px){.lab[data-compact=true]:not(.editor-workspace) .workspace-layout[data-assistant-open=true]{grid-template-columns:minmax(0,1fr) 330px;grid-template-areas:'canvas assistant'}}
+.compact-context-help{display:none}
+.lab[data-compact=true]:not(.editor-workspace) .compact-context-help{display:block}
+.lab[data-compact=true]:not(.editor-workspace) .full-context-help,.lab[data-compact=true]:not(.editor-workspace) [data-testid=revision],.lab[data-compact=true][data-single-page=true]:not(.editor-workspace) .page-strip{display:none}
