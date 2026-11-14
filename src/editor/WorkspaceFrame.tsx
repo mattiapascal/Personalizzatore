@@ -1,3 +1,4 @@
+import {popupAnchor,observePopupToolbar} from './popup-anchor';
 import {selectionViewFit,type SelectionViewBounds} from './selection-view';
 import {LayoutGuidesOverlay} from './LayoutGuidesOverlay';
 import type {LayoutGuides} from './layout-guides';
@@ -107,24 +108,24 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   useLayoutEffect(() => {
     if (!layersOpen) return;
     const position = () => {
-      const anchor = layerAnchor.current?.getBoundingClientRect(); if (!anchor) return;
+      const anchor = popupAnchor(layerAnchor.current); if (!anchor) return;
       const width = Math.min(360, innerWidth - 16), below = innerHeight - anchor.bottom - 16, above = anchor.top - 16;
       const height = Math.max(1, Math.min(600, innerHeight - 16, Math.max(below, above))), top = below >= Math.min(300, height) || below >= above ? Math.max(8, anchor.bottom + 8) : Math.max(8, anchor.top - height - 8);
       setLayerPosition({ left: Math.max(8, Math.min(anchor.left, innerWidth - width - 8)), top: Math.min(top, innerHeight - height - 8), width, height });
     };
-    position();
+    position();const stopObserving=observePopupToolbar(layerAnchor.current,position);
     const outside = (event: PointerEvent) => { if (event.target instanceof Node && !layerAnchor.current?.contains(event.target)) setLayersOpen(false); };
     const focusOutside = (event: FocusEvent) => { if (event.target instanceof Node && !layerAnchor.current?.contains(event.target)) setLayersOpen(false); };
     const key = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); setLayersOpen(false); layerAnchor.current?.querySelector<HTMLButtonElement>('button')?.focus(); } };
     window.addEventListener('pointerdown', outside, true); window.addEventListener('focusin', focusOutside, true); window.addEventListener('keydown', key, true); window.addEventListener('resize', position); window.addEventListener('scroll', position, true);
-    return () => { window.removeEventListener('pointerdown', outside, true); window.removeEventListener('focusin', focusOutside, true); window.removeEventListener('keydown', key, true); window.removeEventListener('resize', position); window.removeEventListener('scroll', position, true); };
+    return () => { stopObserving();window.removeEventListener('pointerdown', outside, true); window.removeEventListener('focusin', focusOutside, true); window.removeEventListener('keydown', key, true); window.removeEventListener('resize', position); window.removeEventListener('scroll', position, true); };
   }, [layersOpen]);
   useLayoutEffect(()=>{
     if(!workflowOpen||mode==='test')return;
-    const position=()=>{const anchor=workflowAnchor.current?.getBoundingClientRect(),panel=workflowPanel.current;if(!anchor||!panel)return;const width=Math.min(360,innerWidth-16),below=innerHeight-anchor.bottom-16,above=anchor.top-16,height=Math.min(680,Math.max(below,above),innerHeight-16),top=below>=Math.min(260,height)||below>=above?anchor.bottom+8:anchor.top-height-8;setWorkflowPosition({position:'fixed',left:Math.max(8,Math.min(anchor.left,innerWidth-width-8)),top:Math.max(8,top),width,maxHeight:Math.max(100,height)});};
+    const position=()=>{const anchor=popupAnchor(workflowAnchor.current),panel=workflowPanel.current;if(!anchor||!panel)return;const width=Math.min(360,innerWidth-16),below=innerHeight-anchor.bottom-16,above=anchor.top-16,height=Math.min(680,Math.max(below,above),innerHeight-16),top=below>=Math.min(260,height)||below>=above?anchor.bottom+8:anchor.top-height-8;setWorkflowPosition({position:'fixed',left:Math.max(8,Math.min(anchor.left,innerWidth-width-8)),top:Math.max(8,top),width,maxHeight:Math.max(1,height)});};
     const outside=(event:Event)=>{if(event.target instanceof Node&&!workflowAnchor.current?.contains(event.target))setWorkflowOpen(false);};const key=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();setWorkflowOpen(false);workflowAnchor.current?.querySelector<HTMLButtonElement>('button')?.focus();}};
     const focusOutside=(event:FocusEvent)=>{if(event.relatedTarget instanceof Node&&workflowAnchor.current?.contains(event.relatedTarget))outside(event);};
-    position();window.addEventListener('pointerdown',outside,true);window.addEventListener('focusin',focusOutside,true);window.addEventListener('keydown',key,true);window.addEventListener('resize',position);return()=>{window.removeEventListener('pointerdown',outside,true);window.removeEventListener('focusin',focusOutside,true);window.removeEventListener('keydown',key,true);window.removeEventListener('resize',position);};
+    position();const stopObserving=observePopupToolbar(workflowAnchor.current,position);window.addEventListener('pointerdown',outside,true);window.addEventListener('focusin',focusOutside,true);window.addEventListener('keydown',key,true);window.addEventListener('resize',position);return()=>{stopObserving();window.removeEventListener('pointerdown',outside,true);window.removeEventListener('focusin',focusOutside,true);window.removeEventListener('keydown',key,true);window.removeEventListener('resize',position);};
   },[workflowOpen,mode]);
   const fit = () => {
     const area = viewport.current?.querySelector<HTMLElement>('.canvas-scroll'); if (!area||area.clientWidth<=48||area.clientHeight<=48) return;

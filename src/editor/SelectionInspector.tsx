@@ -19,7 +19,7 @@ const format = (value: number) => String(Math.round(value * 1000) / 1000);
 function MeasuredSelectionInspector({ document, ids, onMove, onTransform, onStyle, onAttachText,onGroupProperties,onControllerChange }: {
   onControllerChange?:InspectorControllerChange;
   document: GraphicDocument; ids: string[]; onAttachText: (textId: string, pathId: string) => void;
-  onGroupProperties?:(id:string,properties:GroupProperties)=>void;
+  onGroupProperties?:(id:string,properties:GroupProperties)=>void|boolean;
   onMove: (x: number, y: number, revision: number) => number | null;
   onTransform: (args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => number | null;
   onStyle: (style: SelectionStyle, revision: number) => boolean;

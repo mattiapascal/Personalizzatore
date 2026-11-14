@@ -58,13 +58,13 @@ function inspectorTabs(current:SceneObject,admin:boolean){
   return tabs;
 }
 
-function MeasuredObjectInspector({ onControllerChange,minimumFontPt = null, allowColor = false, documentColors = [], onProperties, effectiveProperties, sectionMemory, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { onControllerChange?:InspectorControllerChange;sectionMemory?:{current:InspectorSection};minimumFontPt?:number|null;allowColor?:boolean;documentColors?:readonly string[];effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
+function MeasuredObjectInspector({ onControllerChange,minimumFontPt = null, allowColor = false, documentColors = [], onProperties, effectiveProperties, sectionMemory, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { onControllerChange?:InspectorControllerChange;sectionMemory?:{current:InspectorSection};minimumFontPt?:number|null;allowColor?:boolean;documentColors?:readonly string[];effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void|boolean;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
   const form = useRef<HTMLFormElement>(null);
   const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
   useInspectorController(flush,onControllerChange);
   const [preferredSection,setPreferredSection]=useState<InspectorSection>(()=>sectionMemory?.current??'geometry');
   const tabs=inspectorTabs(object,!!onProperties),section=tabs.some(tab=>tab.id===preferredSection)?preferredSection:'geometry';
-  const setSection=(value:InspectorSection)=>{if(sectionMemory)sectionMemory.current=value;setPreferredSection(value);};
+  const setSection=(value:InspectorSection)=>{if(!flush()){form.current?.querySelector<HTMLElement>('input:invalid,select:invalid,textarea:invalid')?.focus();return false;}if(sectionMemory)sectionMemory.current=value;setPreferredSection(value);return true;};
   // The visible fallback becomes the active section for subsequent objects.
   useLayoutEffect(()=>{if(sectionMemory)sectionMemory.current=section;if(preferredSection!==section)setPreferredSection(section);},[section,preferredSection,sectionMemory]);
   const [opacityLinked, setOpacityLinked] = useState(true);
@@ -128,9 +128,9 @@ function MeasuredObjectInspector({ onControllerChange,minimumFontPt = null, allo
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault(); const index = tabs.findIndex(tab => tab.id === section);
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
-      const tab = tabs[next]!; setSection(tab.id); document.getElementById(`inspector-tab-${tab.id}`)?.focus();
+      const tab = tabs[next]!; if(!setSection(tab.id))return; document.getElementById(`inspector-tab-${tab.id}`)?.focus();
     }}>
-      {tabs.map(tab => <EditorButton key={tab.id} role="tab" tabIndex={section === tab.id ? 0 : -1} id={`inspector-tab-${tab.id}`} aria-selected={section === tab.id} aria-controls="inspector-content" icon={tab.icon} label={tab.label} onClick={() => setSection(tab.id)}/>)}
+      {tabs.map(tab => <EditorButton preserveFocus key={tab.id} role="tab" tabIndex={section === tab.id ? 0 : -1} id={`inspector-tab-${tab.id}`} aria-selected={section === tab.id} aria-controls="inspector-content" icon={tab.icon} label={tab.label} onClick={() => setSection(tab.id)}/>)}
     </div>
     <div id="inspector-content" role="tabpanel" aria-labelledby={`inspector-tab-${section}`} className="inspector-content">
       <h3>{title}</h3>

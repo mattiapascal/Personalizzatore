@@ -1,3 +1,4 @@
+import {popupAnchor,observePopupToolbar} from './popup-anchor';
 import {useMovablePanel} from './use-movable-panel';
 import {useLayoutEffect,useRef,useState,useId,type CSSProperties} from 'react';
 import {EditorButton} from './EditorButton';
@@ -20,11 +21,11 @@ export function TransformPanel({document:doc,ids,masterId,page,customer,busy,onP
  const [open,setOpen]=useState(false),anchor=useRef<HTMLDivElement>(null),panelId=useId(),[position,setPosition]=useState<CSSProperties>({});
  useLayoutEffect(()=>{
   if(!open)return;
-  const place=()=>{const box=anchor.current?.getBoundingClientRect();if(!box)return;const width=Math.min(320,innerWidth-16),height=Math.min(540,innerHeight-24);setPosition({position:'fixed',left:Math.max(8,Math.min(box.left,innerWidth-width-8)),top:Math.max(8,Math.min(box.bottom+8,innerHeight-height-8)),width,maxHeight:height});};
+  const place=()=>{const box=popupAnchor(anchor.current);if(!box)return;const width=Math.min(320,innerWidth-16),height=Math.max(1,Math.min(540,innerHeight-box.bottom-16));setPosition({position:'fixed',left:Math.max(8,Math.min(box.left,innerWidth-width-8)),top:Math.max(8,box.bottom+8),width,maxHeight:height});};
   const outside=(event:Event)=>{if(event.target instanceof Element&&!anchor.current?.contains(event.target)&&!event.target.closest('.drawing-stage'))setOpen(false);};
   const key=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();setOpen(false);anchor.current?.querySelector('button')?.focus();}};
-  place();window.addEventListener('pointerdown',outside,true);window.addEventListener('keydown',key,true);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
-  return()=>{window.removeEventListener('pointerdown',outside,true);window.removeEventListener('keydown',key,true);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
+  place();const stopObserving=observePopupToolbar(anchor.current,place);window.addEventListener('pointerdown',outside,true);window.addEventListener('keydown',key,true);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
+  return()=>{stopObserving();window.removeEventListener('pointerdown',outside,true);window.removeEventListener('keydown',key,true);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
  },[open]);
  const hasQr=doc.objects.some(o=>ids.includes(o.id)&&o.type==='qr');
  const floating=useMovablePanel(open,position);
