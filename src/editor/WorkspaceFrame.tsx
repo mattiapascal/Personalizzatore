@@ -11,9 +11,10 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom,onViewportChange, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds }: {
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom,onViewportChange, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,onBeginLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds }: {
   layoutGuidesDisabled?:boolean;
   selectionKey?:string;getSelectionBounds?:()=>SelectionViewBounds|null;
+  onBeginLayoutGuides?:(revision:number)=>GraphicDocument|null;
   onLayoutGuides?:(guides:LayoutGuides,revision:number)=>void;
   edit?:ReactNode;transforms?:ReactNode;context: ReactNode; stage: ReactNode; tools: ReactNode; properties: ReactNode; project: ReactNode; diagnostics: ReactNode;
   document: GraphicDocument; editing: boolean; onZoom: (zoom: number) => void;
@@ -227,7 +228,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     </div>
     {!expanded && context}
     <div className="workspace-layout" data-objects-open={objectsOpen} data-properties-open={propertiesOpen} data-layers-open={layersOpen}>
-      <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{rulersVisible&&<p className="ruler-help" role="status">Righelli in mm · trascina dal righello verso il foglio per aggiungere una guida.</p>}{selectionViewMessage&&<div className="geometry-focus-status selection-view-status" role="status"><span>{selectionViewMessage}</span><EditorButton className="panel-close" icon="close" label="Nascondi avviso zoom" onClick={()=>setSelectionViewMessage('')}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
+      <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onBegin={onBeginLayoutGuides} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{rulersVisible&&<p className="ruler-help" role="status">Righelli in mm · trascina dal righello verso il foglio per aggiungere una guida.</p>}{selectionViewMessage&&<div className="geometry-focus-status selection-view-status" role="status"><span>{selectionViewMessage}</span><EditorButton className="panel-close" icon="close" label="Nascondi avviso zoom" onClick={()=>setSelectionViewMessage('')}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
       <aside className="workspace-panel objects-panel" aria-label="Strumenti" hidden={expanded && !objectsOpen}>{mode==='test'&&workflow}{tools}{project}{diagnostics}</aside>
       <div className="workspace-right-panels" hidden={expanded && !propertiesOpen}>
         <aside className="workspace-panel properties-panel" aria-label="Ispettore oggetto" hidden={expanded && !propertiesOpen}>{properties}</aside>

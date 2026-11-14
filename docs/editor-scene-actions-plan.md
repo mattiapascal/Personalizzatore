@@ -1,0 +1,9 @@
+# AI simulata, visibilità e guide — piano del 14 novembre 2026
+
+Dopo `e64b91d`, consolidare le azioni che possono sostituire il render mentre l’ispettore contiene un input incompleto o una modifica valida ancora in attesa. Riprodurre prima AI simulata, visibilità e guide; stessi comandi di dominio, nessuna nuova integrazione AI reale.
+
+- Comandi JSON simulati: parsing prima del controllo; revisione verificata prima e dopo l’applicazione dell’ispettore, senza aggiornarla. Un vecchio comando non deve sovrascrivere la nuova modifica manuale né caricare risorse inutilmente. Anche il pulsante di preparazione deve acquisire la revisione dopo la verifica degli input.
+- Azioni manuali immediate: verificare la revisione mostrata prima di applicare l’ispettore, poi costruire il comando sulla revisione ottenuta da quella sola applicazione. Conservare documento/pagina, ambito diretto, ruoli e Undo separati. Nascondere oggetti/gruppi non deve scartare le misure pendenti.
+- Guide da pannello, tastiera e righello: controllo prima dell’acquisizione del documento; drag e menu conservano la revisione catturata. Al comando finale ricontrollare gli input sopraggiunti, senza riaggiornare la revisione del gesto. In caso di nuova modifica valida, conservarla e rifiutare il gesto obsoleto. Menu e preview devono riconoscere l’avanzamento prodotto dal controllo iniziale senza chiudersi subito.
+- Verifiche native desktop/telefono, mouse/touch/tastiera/menu, dati invalidi e validi prima del timer, concorrenza, manuale/AI e Undo/Redo, JSON/SVG e regressioni. Il controllo riguarda gli input dell’ispettore degli oggetti; non dichiarare certificati tutti i campi degli altri pannelli.
+- Nessun deploy, migrazione, nuova funzione multipagina, generazione immagini AI o modifica commerciale. API simulate/SQLite temporaneo, archivio personale in sola lettura. Documentazione e commit/push dopo le verifiche.

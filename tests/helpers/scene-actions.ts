@@ -1,0 +1,2 @@
+import {gestureCommitFixture} from './gesture-commit';
+export function sceneActionsFixture(){const doc=gestureCommitFixture();doc.documentId='92929292-9292-4292-8292-929292929292';doc.layoutGuides={visible:true,locked:false,items:[{id:'vertical',axis:'x',positionMm:95},{id:'horizontal',axis:'y',positionMm:50}]};const caption=doc.objects.find(o=>o.id==='caption');if(caption?.type==='text')caption.text='TEST · Guide e livelli';return doc;}

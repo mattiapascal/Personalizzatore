@@ -10,6 +10,6 @@ export function GuideContextMenu({point,onDelete,onClose}:{point:{x:number;y:num
   return()=>{window.removeEventListener('pointerdown',outside,true);window.removeEventListener('resize',cancel);window.removeEventListener('blur',cancel);window.removeEventListener('scroll',cancel,true);};
  },[point.x,point.y]);
  return createPortal(<div ref={menu} className="canvas-context-menu" role="menu" aria-label="Menu guida" style={{left:point.x,top:point.y}} onContextMenu={event=>event.preventDefault()} onKeyDown={event=>{event.stopPropagation();if(event.key==='Escape'||event.key==='Tab'){if(event.key==='Escape')event.preventDefault();onClose();}else if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();menu.current?.querySelector('button')?.focus();}}}>
-  <button type="button" role="menuitem" onClick={onDelete}><EditorIcon name="delete"/>Elimina guida<span aria-hidden="true">Canc</span></button>
+  <button type="button" role="menuitem" onPointerDown={event=>{if(event.isPrimary&&event.button===0)event.preventDefault();}} onClick={onDelete}><EditorIcon name="delete"/>Elimina guida<span aria-hidden="true">Canc</span></button>
  </div>,document.body);
 }
