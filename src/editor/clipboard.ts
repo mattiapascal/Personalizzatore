@@ -1,7 +1,7 @@
 import {effectiveObjectProperties} from './object-properties';
 import {objectIsVisible} from './scene-visibility';
 import { cloneSceneObject, type GraphicDocument, type SceneGroup,type SceneObject, type GraphicCommand,type Measure } from './model';
-import {cloneSceneGroup,remapSceneGroups} from './scene-groups';
+import {cloneSceneGroup,remapSceneGroups,rootGroupFor} from './scene-groups';
 import type { FontAsset } from './font-assets';
 import { expandSelection,selectionBounds,transformSelection } from './selection';
 
@@ -10,6 +10,14 @@ export interface GraphicClipboard {
   fontAssets?: FontAsset[];
   objects: SceneObject[];
   groups: SceneGroup[];
+}
+/** The target and direct-member scope belong to the copy that was requested,
+ * never to the selection that happens to be active after IndexedDB completes. */
+export function clipboardDeletion(document:GraphicDocument,clipboard:GraphicClipboard,direct=false):Extract<GraphicCommand,{tool:'deleteObject'|'deleteObjects'}>{
+ const ids=clipboard.objects.map(object=>object.id);
+ if(!ids.length||new Set(ids).size!==ids.length||ids.some(id=>!document.objects.some(object=>object.id===id))||direct&&ids.length!==1)throw Error('Selezione da tagliare non valida');
+ const base={schemaVersion:1 as const,objectId:ids[0]!,expectedRevision:document.revision};
+ return ids.length===1&&(direct||!rootGroupFor(document,ids[0]!))?{...base,tool:'deleteObject',...(direct?{targetScope:'object' as const}:{}),arguments:{}}:{...base,tool:'deleteObjects',arguments:{objectIds:ids}};
 }
 export function captureSelection(document: GraphicDocument, objectIds: readonly string[],direct=false): GraphicClipboard {
   if (!objectIds.length || new Set(objectIds).size !== objectIds.length || objectIds.some(id => !document.objects.some(object => object.id === id))) throw new Error('Selezione da copiare non valida');
