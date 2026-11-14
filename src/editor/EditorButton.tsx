@@ -131,8 +131,8 @@ export type EditorIconName = keyof typeof icons;
 export function EditorIcon({ name }: { name: EditorIconName }) {
   return <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{icons[name]}</svg>;
 }
-export function EditorButton({ icon, label, badge, className = '', type = 'button', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { icon: EditorIconName; label: string; badge?: string | number }) {
-  return <button {...props} type={type} className={`editor-icon-button ${className}`} aria-label={label} title={label}>
+export function EditorButton({ icon, label, badge, preserveFocus=false,onPointerDown,className = '', type = 'button', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { icon: EditorIconName; label: string; badge?: string | number;preserveFocus?:boolean }) {
+  return <button {...props} onPointerDown={event=>{if(preserveFocus&&event.isPrimary&&event.button===0)event.preventDefault();onPointerDown?.(event);}} type={type} className={`editor-icon-button ${className}`} aria-label={label} title={label}>
     <EditorIcon name={icon}/>{badge !== undefined && <span className="editor-icon-badge" aria-hidden="true">{badge}</span>}
   </button>;
 }

@@ -1,3 +1,4 @@
+import {useInspectorController,type InspectorControllerChange} from './inspector-controller';
 import {QrFields} from './QrFields';
 import {StrokeJoinControl} from './StrokeJoinControl';
 import {hasEditableStrokeJoin,effectiveStrokeJoin,effectiveMiterLimit} from './path-stroke';
@@ -57,10 +58,10 @@ function inspectorTabs(current:SceneObject,admin:boolean){
   return tabs;
 }
 
-function MeasuredObjectInspector({ onControllerChange,minimumFontPt = null, allowColor = false, documentColors = [], onProperties, effectiveProperties, sectionMemory, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { onControllerChange?:(value:{flush:()=>boolean}|null)=>void;sectionMemory?:{current:InspectorSection};minimumFontPt?:number|null;allowColor?:boolean;documentColors?:readonly string[];effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
+function MeasuredObjectInspector({ onControllerChange,minimumFontPt = null, allowColor = false, documentColors = [], onProperties, effectiveProperties, sectionMemory, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { onControllerChange?:InspectorControllerChange;sectionMemory?:{current:InspectorSection};minimumFontPt?:number|null;allowColor?:boolean;documentColors?:readonly string[];effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
   const form = useRef<HTMLFormElement>(null);
   const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
-  const controller=useRef(flush);controller.current=flush;useLayoutEffect(()=>{onControllerChange?.({flush:()=>controller.current()});return()=>onControllerChange?.(null);},[onControllerChange]);
+  useInspectorController(flush,onControllerChange);
   const [preferredSection,setPreferredSection]=useState<InspectorSection>(()=>sectionMemory?.current??'geometry');
   const tabs=inspectorTabs(object,!!onProperties),section=tabs.some(tab=>tab.id===preferredSection)?preferredSection:'geometry';
   const setSection=(value:InspectorSection)=>{if(sectionMemory)sectionMemory.current=value;setPreferredSection(value);};
@@ -268,5 +269,5 @@ function MeasuredObjectInspector({ onControllerChange,minimumFontPt = null, allo
 export function ObjectInspector(props: Parameters<typeof MeasuredObjectInspector>[0]) {
  useSyncExternalStore(subscribeFontCoverage,fontCoverageVersion);useSyncExternalStore(subscribeFonts,fontCatalogVersion);
  const object=props.characterSelection?.object??props.object;
- return object.type==='text'&&!textGeometryVerified(object)?<UnverifiedTextInspector object={object} revision={props.revision} onApply={props.onApply} onFontMenuOpen={props.onFontMenuOpen}/>:<MeasuredObjectInspector {...props}/>;
+ return object.type==='text'&&!textGeometryVerified(object)?<UnverifiedTextInspector onControllerChange={props.onControllerChange} object={object} revision={props.revision} onApply={props.onApply} onFontMenuOpen={props.onFontMenuOpen}/>:<MeasuredObjectInspector {...props}/>;
 }

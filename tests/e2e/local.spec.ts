@@ -539,7 +539,7 @@ test('proprietà numeriche: geometria e rotazione condivise, rifiuto atomico e J
   expect((await state()).objects).toEqual(final.objects);
   const pendingSvg = page.waitForEvent('download'); await page.getByRole('button', { name: 'Esporta SVG' }).click();
   const svg = await readFile(await (await pendingSvg).path(), 'utf8'); expect(svg).toContain('matrix(0.866'); expect(svg).toContain('width="58mm"');
-  await page.setViewportSize({ width: 390, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 }); await expect.poll(()=>page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });
 
@@ -1252,7 +1252,7 @@ test('ispettore del gruppo: dimensioni proporzionali, rotazione live, rifiuto at
   await page.getByRole('button', { name: 'Annulla', exact: true }).click(); expect((await state()).objects).toEqual(scaled.objects);
   await page.getByRole('button', { name: 'Annulla', exact: true }).click(); expect((await state()).objects).toEqual(original.objects);
   await page.getByRole('button', { name: 'Ripristina', exact: true }).click(); await page.getByRole('button', { name: 'Ripristina', exact: true }).click();
-  const beforeSmall = await state(); await width.fill('1'); await expect.poll(async()=>(await state()).revision).toBeGreaterThan(beforeSmall.revision); expect((await state()).objects[1].fontSizePt).toBeLessThan(7); await page.getByRole('button', { name: 'Annulla', exact: true }).click(); expect((await state()).objects).toEqual(beforeSmall.objects); const beforeInvalid = await state(); await width.fill('0.01'); await expect(page.getByRole('alert')).toBeVisible(); expect(await state()).toEqual(beforeInvalid);
+  const beforeSmall = await state(); await width.fill('1'); await expect.poll(async()=>(await state()).revision).toBeGreaterThan(beforeSmall.revision); expect((await state()).objects[1].fontSizePt).toBeLessThan(7); await page.getByRole('button', { name: 'Annulla', exact: true }).click(); expect((await state()).objects).toEqual(beforeSmall.objects); const beforeInvalid = await state(); await width.fill('0.01'); await expect(page.getByRole('form',{name:'Proprietà selezione',exact:true}).getByRole('status').filter({hasText:'Completa o correggi'})).toHaveCount(1);expect(await state()).toEqual(beforeInvalid);await page.getByRole('button',{name:'Esporta JSON',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Correggi i valori');expect(await state()).toEqual(beforeInvalid);
   await width.press('Escape');
   const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Esporta JSON', exact: true }).click(); await page.getByLabel('Riapri progetto JSON').setInputFiles(await (await download).path());
   expect((await state()).objects).toEqual(rotated.objects); expect((await state()).groups).toEqual(rotated.groups);

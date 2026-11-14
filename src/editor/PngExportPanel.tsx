@@ -25,7 +25,7 @@ export function PngExportPanel({ document, snapshot: capture }: { document: Grap
     <label>Risoluzione PNG<select aria-label="Risoluzione PNG" value={dpi} disabled={busy} onChange={event => setDpi(Number(event.target.value) as PngDpi)}>{PNG_EXPORT_DPI.map(value => <option value={value} key={value}>{value} dpi</option>)}</select></label>
     <label className="ratio-toggle"><input type="checkbox" checked={transparent} disabled={busy} onChange={event => setTransparent(event.target.checked)}/> Sfondo PNG trasparente</label>
     <p className="caption">{size ? `${size.width} × ${size.height} px · revisione ${document.revision}` : sizeError}. Il PNG è una bozza raster; conserva JSON e SVG per modifiche e misure fisiche. Non aumenta il dettaglio delle immagini importate.</p>
-    <EditorButton icon="download" badge="PNG" label="Esporta PNG" disabled={busy || !size} onClick={() => { void save(); }}/>
+    <EditorButton preserveFocus icon="download" badge="PNG" label="Esporta PNG" disabled={busy || !size} onClick={() => { void save(); }}/>
     {status && <p className="caption" role="status">{status}</p>}
   </details>;
 }

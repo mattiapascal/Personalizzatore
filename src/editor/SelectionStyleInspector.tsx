@@ -1,4 +1,5 @@
 import {ImageOpacityControl} from './ImageOpacityControl';
+import {useInspectorController,inspectorControlsValid,inspectorStyleRevision,type InspectorControllerChange,type InspectorRevisionAdvance} from './inspector-controller';
 import {StrokeJoinControl} from './StrokeJoinControl';
 import {hasEditableStrokeJoin,effectiveStrokeJoin,effectiveMiterLimit} from './path-stroke';
 import {StrokeCapControl} from './StrokeCapControl';
@@ -11,7 +12,8 @@ import type { GraphicDocument, SelectionStyle } from './model';
 import { PaintPicker } from './PaintPicker';
 import { NumberField } from './InspectorNumberField';
 import { selectionStyle } from './text-style';
-export function SelectionStyleInspector({ document, ids, onStyle }: { document: GraphicDocument; ids: string[]; onStyle: (style: SelectionStyle, revision: number) => boolean }) {
+export function SelectionStyleInspector({ document, ids, onStyle,onControllerChange,onCommit }: {onControllerChange?:InspectorControllerChange;onCommit?:()=>boolean; document: GraphicDocument; ids: string[]; onStyle: (style: SelectionStyle, revision: number) => boolean }) {
+  const root=useRef<HTMLDivElement>(null);
   const objects = document.objects.filter(object => ids.includes(object.id)),documentColors=useMemo(()=>documentPaintColors(document),[document]);
   const hasImage = objects.some(object => object.type === 'image'||object.type==='qr'), hasText = objects.some(object => object.type === 'text');
   const canImageOpacity=objects.length>0&&objects.every(object=>object.type==='image');
@@ -30,20 +32,25 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
   const [status, setStatus] = useState(''), timer = useRef<ReturnType<typeof setTimeout> | null>(null), pending = useRef<{ style: SelectionStyle; revision: number } | null>(null), ownRevision = useRef(-1);
   const apply = useRef(onStyle); apply.current = onStyle;
   const cancel = () => { if (timer.current) clearTimeout(timer.current); timer.current = null; pending.current = null; };
-  const flush = () => {
-    const change = pending.current; if (!change) return; cancel();
-    if (apply.current(change.style, change.revision)) { ownRevision.current = change.revision + 1; setStatus('Stile salvato nella bozza'); } else setStatus('Stile non applicato.');
+  const flush = (advance?:InspectorRevisionAdvance) => {
+    if(timer.current)clearTimeout(timer.current);timer.current=null;
+    if(!inspectorControlsValid(root.current)){setStatus('Completa o correggi il valore. Esc ripristina.');return false;}
+    const change = pending.current; if (!change) return true;
+    const revision=inspectorStyleRevision(change.revision,advance);
+    if (apply.current(change.style, revision)) { pending.current=null;ownRevision.current = revision + 1; setStatus('Stile salvato nella bozza');return true; }
+    setStatus('Stile non applicato. Correggi il valore o premi Esc.');return false;
   };
+  useInspectorController(flush,onControllerChange);
   const change = (style: SelectionStyle, immediate = true) => {
     const previous = pending.current; if (timer.current) clearTimeout(timer.current);
     pending.current = { style: { ...previous?.style, ...style }, revision: previous?.revision ?? document.revision };
     setStatus('Aggiornamento…');
-    if (immediate) flush(); else timer.current = setTimeout(flush, 250);
+    if (immediate) (onCommit??flush)(); else timer.current = setTimeout(()=>{(onCommit??flush)();}, 250);
   };
   useEffect(() => { cancel(); if (document.revision !== ownRevision.current) setStatus(''); }, [document.revision, ids.join(',')]);
   useEffect(() => cancel, []);
   if (!canFill && !canStroke && !canImageOpacity) return <p className="caption">Riempimento e contorno comuni richiedono elementi compatibili. Seleziona separatamente testi, forme o immagini per modificarne lo stile.</p>;
-  return <div className="selection-style" onBlur={flush} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); cancel(); setStatus('Stile ripristinato'); } }}>
+  return <div ref={root} className="selection-style" onBlur={onCommit?undefined:()=>{flush();}} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); cancel(); setStatus('Stile ripristinato'); } }}>
     <h3>Stile comune</h3>
     {canFill && <><h4>Riempimento</h4><PaintPicker colors={documentColors} allowColor={document.colorMode==='color'} label="Riempimento selezione" value={fill ?? 'mixed'} allowNone={!hasText} onChange={fill => change({ fill })}/>{(fill === null || fill === 'mixed') && <p className="caption">Riempimenti misti</p>}</>}
     {canStroke && <>

@@ -5,4 +5,4 @@ export function fontIssueSelectionTarget(document:GraphicDocument,issue:FontIssu
  if(!page||object?.type!=='text')return null;
  return{pageId,object,selectable:selectableObjectIds(page,[object.id],role,true).includes(object.id)};
 }
-export interface InspectorRequest{documentId:string;pageId:string;objectId:string;sequence:number;}
+export interface InspectorRequest{documentId:string;pageId:string;objectId:string;sequence:number;focusInvalid?:boolean;}
