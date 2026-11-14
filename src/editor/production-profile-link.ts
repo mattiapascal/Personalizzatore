@@ -1,19 +1,20 @@
 import type {GraphicDocument,GraphicCatalogContext} from './model';
 import {profileKey} from '../catalog/schema';
 import {assertRegionsFit} from './regions';
-import {validateProductionProfile,type ProductionProfile} from './production-profile';
+import {profileAreaConfiguration,validateProductionProfile,type ProductionProfile} from './production-profile';
 
 /** Technical rules travel with each page. No resizing, scaling of physical
  * regions, product assignment, or silent refresh of an older profile version. */
-export function profileForPage(profile:ProductionProfile,page:Pick<GraphicDocument,'areaMm'|'shape'>):ProductionProfile{
+export function profileForPage(profile:ProductionProfile,page:Pick<GraphicDocument,'areaMm'|'shape'|'shopSelection'>):ProductionProfile{
  const resolved=structuredClone(profile);
- if(profile.sizeMode==='document')resolved.usableArea={widthMm:page.areaMm.width,heightMm:page.areaMm.height,shape:profile.usableArea?.shape??page.shape};
+ const configuration=profileAreaConfiguration(profile,page.shopSelection?.variantId);resolved.sizeMode=configuration.sizeMode;resolved.usableArea=structuredClone(configuration.usableArea);
+ if(configuration.sizeMode==='document')resolved.usableArea={widthMm:page.areaMm.width,heightMm:page.areaMm.height,shape:configuration.usableArea?.shape??page.shape};
  return resolved;
 }
-export function assertProfileForPage(profile:ProductionProfile,page:Pick<GraphicDocument,'areaMm'|'shape'|'plaque'|'productId'|'variantId'|'catalogVersion'|'catalogProductProfileVersion'|'colorMode'>,catalog?:GraphicCatalogContext,requireCatalog=false):void{
+export function assertProfileForPage(profile:ProductionProfile,page:Pick<GraphicDocument,'areaMm'|'shape'|'plaque'|'productId'|'variantId'|'catalogVersion'|'catalogProductProfileVersion'|'colorMode'|'shopSelection'>,catalog?:GraphicCatalogContext,requireCatalog=false):void{
  if(profile.archived)throw Error('Il profilo archiviato non può essere collegato alla pagina.');
  validateProductionProfile(profile);
- if(!profile.usableArea)throw Error('Definisci la sagoma dell’area utile nel profilo prima di collegarlo.');
+ if(profile.sizeMode!=='variant'&&!profile.usableArea)throw Error('Definisci la sagoma dell’area utile nel profilo prima di collegarlo.');
  const resolved=profileForPage(profile,page),area=resolved.usableArea!;
  if(area.widthMm===null||area.heightMm===null)throw Error('Completa le misure del profilo oppure scegli «Misure della pagina».');
  if(Math.abs(area.widthMm-page.areaMm.width)>1e-7||Math.abs(area.heightMm-page.areaMm.height)>1e-7||area.shape!==page.shape)throw Error('Area del profilo diversa dalla pagina: scegli un profilo compatibile o usa le misure della pagina. Nessuna grafica è stata ridimensionata.');

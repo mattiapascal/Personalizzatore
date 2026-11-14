@@ -217,8 +217,78 @@
                     "type": "string",
                     "enum": [
                       "fixed",
-                      "document"
+                      "document",
+                      "variant"
                     ]
+                  },
+                  "variantAreas": {
+                    "maxItems": 2000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "variantId": {
+                          "type": "string",
+                          "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                        },
+                        "sizeMode": {
+                          "type": "string",
+                          "enum": [
+                            "fixed",
+                            "document"
+                          ]
+                        },
+                        "usableArea": {
+                          "type": "object",
+                          "properties": {
+                            "widthMm": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 3000
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "heightMm": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 3000
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "rectangle",
+                                "square",
+                                "round"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "widthMm",
+                            "heightMm",
+                            "shape"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "variantId",
+                        "sizeMode",
+                        "usableArea"
+                      ],
+                      "additionalProperties": false
+                    }
                   },
                   "label": {
                     "type": "string",
@@ -4824,8 +4894,78 @@
                           "type": "string",
                           "enum": [
                             "fixed",
-                            "document"
+                            "document",
+                            "variant"
                           ]
+                        },
+                        "variantAreas": {
+                          "maxItems": 2000,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "variantId": {
+                                "type": "string",
+                                "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                              },
+                              "sizeMode": {
+                                "type": "string",
+                                "enum": [
+                                  "fixed",
+                                  "document"
+                                ]
+                              },
+                              "usableArea": {
+                                "type": "object",
+                                "properties": {
+                                  "widthMm": {
+                                    "anyOf": [
+                                      {
+                                        "type": "number",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 3000
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "heightMm": {
+                                    "anyOf": [
+                                      {
+                                        "type": "number",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 3000
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "shape": {
+                                    "type": "string",
+                                    "enum": [
+                                      "rectangle",
+                                      "square",
+                                      "round"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "widthMm",
+                                  "heightMm",
+                                  "shape"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "variantId",
+                              "sizeMode",
+                              "usableArea"
+                            ],
+                            "additionalProperties": false
+                          }
                         },
                         "label": {
                           "type": "string",
@@ -9543,8 +9683,78 @@
             "type": "string",
             "enum": [
               "fixed",
-              "document"
+              "document",
+              "variant"
             ]
+          },
+          "variantAreas": {
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "variantId": {
+                  "type": "string",
+                  "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                },
+                "sizeMode": {
+                  "type": "string",
+                  "enum": [
+                    "fixed",
+                    "document"
+                  ]
+                },
+                "usableArea": {
+                  "type": "object",
+                  "properties": {
+                    "widthMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 3000
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "heightMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 3000
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "rectangle",
+                        "square",
+                        "round"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "widthMm",
+                    "heightMm",
+                    "shape"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "variantId",
+                "sizeMode",
+                "usableArea"
+              ],
+              "additionalProperties": false
+            }
           },
           "label": {
             "type": "string",
@@ -10000,8 +10210,78 @@
             "type": "string",
             "enum": [
               "fixed",
-              "document"
+              "document",
+              "variant"
             ]
+          },
+          "variantAreas": {
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "variantId": {
+                  "type": "string",
+                  "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                },
+                "sizeMode": {
+                  "type": "string",
+                  "enum": [
+                    "fixed",
+                    "document"
+                  ]
+                },
+                "usableArea": {
+                  "type": "object",
+                  "properties": {
+                    "widthMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 3000
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "heightMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 3000
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "rectangle",
+                        "square",
+                        "round"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "widthMm",
+                    "heightMm",
+                    "shape"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "variantId",
+                "sizeMode",
+                "usableArea"
+              ],
+              "additionalProperties": false
+            }
           },
           "label": {
             "type": "string",
