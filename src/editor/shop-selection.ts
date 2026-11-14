@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {ShopProductDetailSchema,type ShopProductDetail} from '../editor-admin/shop-catalog';
-import type {ProductionProfile} from './production-profile';
+import {profileShopBinding,type ProductionProfile} from './production-profile';
 export const ShopSelectionSchema=z.strictObject({
  source:z.enum(['shopify','test']),productId:ShopProductDetailSchema.shape.id,variantId:ShopProductDetailSchema.shape.variants.element.shape.id,
  productTitle:z.string().min(1).max(1000),variantTitle:z.string().max(1000),checkedAt:z.string().datetime(),
@@ -8,8 +8,10 @@ export const ShopSelectionSchema=z.strictObject({
 });
 export type ShopSelection=z.infer<typeof ShopSelectionSchema>;
 export function profileShopVariants(profile:ProductionProfile,product:ShopProductDetail){
- const binding=profile.shopBinding;if(profile.archived||!binding||binding.productId!==product.id||binding.source!==product.source)return[];
- const allowed=profile.kind.startsWith('stamp-')?[binding.variantId]:binding.allVariants?product.variants.map(item=>item.id):binding.variantIds??[binding.variantId];
+ const binding=profileShopBinding(profile,product.id);if(profile.archived||!binding||binding.source!==product.source)return[];
+ // A versioned technical profile uses the variants verified when it was saved.
+ // Refreshing “all variants” in administration creates a new explicit version.
+ const allowed=profile.kind.startsWith('stamp-')?[binding.variantId]:binding.variantIds??[binding.variantId];
  return product.variants.filter(item=>allowed.includes(item.id));
 }
 export function shopSelectionFor(profile:ProductionProfile,product:ShopProductDetail,variantId:string):ShopSelection{
@@ -20,6 +22,6 @@ export function shopSelectionFor(profile:ProductionProfile,product:ShopProductDe
 export function assertShopSelection(selection:ShopSelection,profile:ProductionProfile|undefined,legacyProductId:string|null){
  if(legacyProductId)throw Error('La scelta commerciale non si combina con una montatura del catalogo storico.');
  if(!profile||profile.archived||profile.id!==selection.profileId||profile.version!==selection.profileVersion)throw Error('La scelta prodotto richiede la stessa versione del profilo tecnico.');
- const binding=profile.shopBinding;if(!binding||binding.productId!==selection.productId||binding.source!==selection.source)throw Error('Prodotto diverso dall’associazione del profilo tecnico.');
- if(profile.kind.startsWith('stamp-')?selection.variantId!==binding.variantId:!binding.allVariants&&!(binding.variantIds??[binding.variantId]).includes(selection.variantId))throw Error('Variante diversa da quelle ammesse nel profilo tecnico.');
+ const binding=profileShopBinding(profile,selection.productId);if(!binding||binding.source!==selection.source)throw Error('Prodotto diverso dall’associazione del profilo tecnico.');
+ if(profile.kind.startsWith('stamp-')?selection.variantId!==binding.variantId:!(binding.variantIds??[binding.variantId]).includes(selection.variantId))throw Error('Variante diversa da quelle ammesse nel profilo tecnico.');
 }

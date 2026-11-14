@@ -1,7 +1,7 @@
 import type {GraphicDocument,GraphicCatalogContext} from './model';
 import {profileKey} from '../catalog/schema';
 import {assertRegionsFit} from './regions';
-import {profileAreaConfiguration,validateProductionProfile,type ProductionProfile} from './production-profile';
+import {profileShopBinding,profileShopBindings,profileAreaConfiguration,validateProductionProfile,type ProductionProfile} from './production-profile';
 
 /** Technical rules travel with each page. No resizing, scaling of physical
  * regions, product assignment, or silent refresh of an older profile version. */
@@ -22,7 +22,7 @@ export function assertProfileForPage(profile:ProductionProfile,page:Pick<Graphic
  if(profile.kind.startsWith('stamp-')&&(page.colorMode==='color'||page.plaque))throw Error('Il profilo timbro richiede una pagina monocromatica, senza configurazione di targa.');
  if(page.productId&&!profile.kind.startsWith('stamp-'))throw Error('Una montatura timbro non può usare un profilo per targhe.');
  if(profile.plaqueFamily&&page.plaque&&(page.plaque.family??'flat-plaque')!==profile.plaqueFamily)throw Error('Famiglia del profilo diversa dalla targa corrente.');
- if(profile.shopBinding&&page.productId&&(profile.shopBinding.productId!==page.productId||!profile.shopBinding.allVariants&&!(profile.shopBinding.variantIds??[profile.shopBinding.variantId]).includes(page.variantId??'')))throw Error('Il profilo è associato a un altro prodotto o variante.');
+ if(profileShopBindings(profile).length&&page.productId){const binding=profileShopBinding(profile,page.productId);if(!binding||!(binding.allVariants&&!binding.variantIds)&&!(binding.variantIds??[binding.variantId]).includes(page.variantId??''))throw Error('Il profilo è associato a un altro prodotto o variante.');}
  const model=catalog?.products.find(product=>product.productId===page.productId&&product.variantIds.includes(page.variantId??''));
  if(page.productId&&requireCatalog&&(!model||catalog!.version!==page.catalogVersion||model.profileVersion!==page.catalogProductProfileVersion))throw Error('Catalogo del modello non disponibile o cambiato: riapri la pagina prima di collegare il profilo.');
  if(model){

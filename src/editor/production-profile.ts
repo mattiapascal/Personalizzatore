@@ -14,6 +14,8 @@ export const ProductionProfileDataSchema=z.strictObject({
  label,kind:z.enum(['stamp-ink','stamp-emboss','engraved-plaque','printed-plaque']),
  binding:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1)}).nullable(),
  shopBinding:ShopProfileBindingSchema.nullable().optional(),
+ /** Shared rules across explicit products; alternative to the historical single binding. */
+ shopBindings:z.array(ShopProfileBindingSchema).min(1).max(200).optional(),
  usableArea:ProfileAreaSchema.nullable(),
  safeMarginMm:z.number().finite().min(0).max(100).nullable(),
  minFontSizePt:z.number().finite().positive().max(1000).nullable(),
@@ -25,6 +27,8 @@ export const ProductionProfileDataSchema=z.strictObject({
 export const ProductionProfileSchema=ProductionProfileDataSchema.extend({id:z.string().uuid(),version:z.number().int().positive(),archived:z.boolean(),createdAt:z.string().datetime(),updatedAt:z.string().datetime(),validatedForProduction:z.literal(false)});
 export type ProductionProfile=z.infer<typeof ProductionProfileSchema>;
 export type ProductionProfileData=z.infer<typeof ProductionProfileDataSchema>;
+export function profileShopBindings(profile:Pick<ProductionProfileData,'shopBinding'|'shopBindings'>){return profile.shopBindings??(profile.shopBinding?[profile.shopBinding]:[]);}
+export function profileShopBinding(profile:Pick<ProductionProfileData,'shopBinding'|'shopBindings'>,productId:string){return profileShopBindings(profile).find(binding=>binding.productId===productId);}
 /** Resolve geometry only. The versioned source profile is never rewritten. */
 export function profileAreaConfiguration(profile:ProductionProfileData,variantId?:string){
  if(profile.sizeMode!=='variant')return{sizeMode:profile.sizeMode??'fixed',usableArea:profile.usableArea};
@@ -36,10 +40,16 @@ export const profileKindLabel=(kind:ProductionProfileData['kind'])=>({'stamp-ink
 export function defaultProductionProfile(kind:ProductionProfileData['kind']):ProductionProfileData{return{label:'',kind,binding:null,usableArea:null,safeMarginMm:null,minFontSizePt:kind==='stamp-ink'?7:null,minEngravedFeatureMm:kind==='engraved-plaque'?.5:null,minDifferentPaintGapMm:kind==='engraved-plaque'?30:null,rasterMode:kind==='stamp-ink'?'binary':kind==='printed-plaque'?'color':'unconfigured',reservedAreas:[],fixings:[],notes:''};}
 /** Profile compilation checks; never a certification of glyph/logo manufacturability. */
 export function validateProductionProfile(data:ProductionProfileData):void {
- if(data.binding&&data.shopBinding)throw new Error('Scegli un’associazione TEST oppure Shopify, non entrambe.');
- if(data.sizeMode==='variant'&&!data.shopBinding)throw Error('Le misure per variante richiedono un prodotto Shopify associato.');
+ if(data.shopBinding&&data.shopBindings)throw Error('Usa l’elenco dei prodotti oppure l’associazione singola storica, non entrambi.');
+ const bindings=profileShopBindings(data);
+ if(new Set(bindings.map(binding=>binding.productId)).size!==bindings.length)throw Error('Prodotto duplicato nel profilo condiviso.');
+ if(data.binding&&bindings.length)throw new Error('Scegli un’associazione TEST oppure Shopify, non entrambe.');
+ if(data.sizeMode==='variant'&&!bindings.length)throw Error('Le misure per variante richiedono un prodotto Shopify associato.');
+ for(const binding of bindings)if(binding.variantIds&&(new Set(binding.variantIds).size!==binding.variantIds.length||!binding.variantIds.includes(binding.variantId)))throw Error('Le varianti associate devono contenere la variante primaria, senza duplicati.');
+ const knownVariantIds=bindings.flatMap(binding=>binding.variantIds??[binding.variantId]);
+ if(new Set(knownVariantIds).size!==knownVariantIds.length)throw Error('Una variante compare in più prodotti del profilo.');
  if(new Set(data.variantAreas?.map(item=>item.variantId)).size!==(data.variantAreas?.length??0))throw Error('Misure duplicate per la stessa variante.');
- if(data.variantAreas?.length){const binding=data.shopBinding;if(!binding||data.variantAreas.some(item=>!binding.allVariants&&!(binding.variantIds??[binding.variantId]).includes(item.variantId)))throw Error('Le misure devono appartenere alle varianti associate al profilo.');}
+ if(data.variantAreas?.some(item=>!bindings.some(binding=>binding.allVariants||(binding.variantIds??[binding.variantId]).includes(item.variantId))))throw Error('Le misure devono appartenere alle varianti associate al profilo.');
  if(data.kind!=='engraved-plaque'&&(data.minEngravedFeatureMm!==null||data.minDifferentPaintGapMm!==null))throw new Error('I limiti della punta e della distanza fra vernici riguardano soltanto le targhe incise.');
  if(data.kind==='engraved-plaque'&&(data.minEngravedFeatureMm!==null&&data.minEngravedFeatureMm<.5||data.minDifferentPaintGapMm!==null&&data.minDifferentPaintGapMm<30))throw new Error('Regole confermate: punta minima 0,5 mm e distanza fra colori differenti 30 mm.');
  if(data.kind==='stamp-ink'&&(data.minFontSizePt!==null&&data.minFontSizePt<7||data.rasterMode!=='binary'))throw new Error('Per i timbri inchiostrati: testo minimo 7 pt e immagini B/N.');
@@ -51,9 +61,9 @@ export function validateProductionProfile(data:ProductionProfileData):void {
  for(const fixing of data.fixings){if(fixing.kind==='holes-only'&&!fixing.drilling)throw new Error('La sola foratura richiede uno schema di fori.');const drilling=fixing.drilling;if(drilling?.diameterMm&&area?.widthMm&&area.heightMm&&drilling.offsetXMm&&drilling.offsetYMm)fixingPositions(data,fixing.id);}
 }
 export function missingProductionData(data:ProductionProfileData):string[]{
- const missing:string[]=[];if(!data.binding&&!data.shopBinding)missing.push('associazione prodotto/variante');
+ const bindings=profileShopBindings(data),missing:string[]=[];if(!data.binding&&!bindings.length)missing.push('associazione prodotto/variante');
  if(data.sizeMode==='variant'){
-  const ids=data.kind.startsWith('stamp-')?[data.shopBinding?.variantId]:data.shopBinding?.variantIds??[data.shopBinding?.variantId];
+  const ids=bindings.flatMap(binding=>data.kind.startsWith('stamp-')?[binding.variantId]:binding.variantIds??[binding.variantId]);
   if(ids.some(id=>!data.variantAreas?.some(item=>item.variantId===id)))missing.push('misure delle varianti associate');
   if(data.variantAreas?.some(item=>item.sizeMode==='fixed'&&(!item.usableArea.widthMm||!item.usableArea.heightMm)))missing.push('area utile verificata delle varianti');
  }else if(!data.usableArea||data.sizeMode!=='document'&&(!data.usableArea.widthMm||!data.usableArea.heightMm))missing.push('area utile verificata');
