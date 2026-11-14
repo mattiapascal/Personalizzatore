@@ -1,3 +1,5 @@
+**14 novembre — misure e fissaggi protetti:** [Correzioni e collaudi](iteration-editor-plaque-commit.md). Il pannello targa acquisisce l’ispettore prima del comando; campi respinti ripristinati, dati tecnici coerenti anche al cambio accessorio con casella attiva. Stessi comandi manuali/AI e Undo. **1.399 unitari, 53 browser pertinenti distinti fra esecuzioni/ricontrolli, 13 pubblici e 96 campioni verificati**. SQLite R638 invariato, nessun deploy.
+
 [Stato generale del progetto al 14 novembre](stato-progetto-2026-11-14.md): editor, amministrazione, chat/Fabric e associazioni commerciali, distinti dai checkpoint storici.
 
 **14 novembre — acquisizioni, modello e profilo:** [Correzioni e collaudi](iteration-editor-workflow-commit.md). Anteprime e profili acquisiscono gli input validi prima dell’attesa, senza aggiornare revisioni catturate alla conferma. Modulo pendente protetto, concorrenze e bozza deduplicata conservate. **1.399 unitari, 143 browser pertinenti distinti fra esecuzioni/ricontrolli, 13 pubblici e 95 campioni verificati**. SQLite R638 invariato, nessun deploy.

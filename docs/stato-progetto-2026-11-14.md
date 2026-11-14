@@ -32,4 +32,4 @@ La verifica dell’archivio attuale trova **zero template con associazioni comme
 
 Completare in locale un percorso reale per una famiglia di timbri e una di targhe: associazioni, misure/varianti, profili e zone, scelta template, salvataggio/riapertura e collaudo del file produttivo. Collegare poi l’AI grafica al motore già validato. Pubblicazione e sostituzione online richiedono una fase autorizzata separata, con prova e rollback.
 
-Ultimo incremento: **1.399 unitari, 143 casi browser pertinenti verificati tra esecuzioni/ricontrolli, 13 test della chat pubblica locale e 95 campioni JSON/SVG**. Dettagli e limiti in [acquisizioni, modello e profilo](iteration-editor-workflow-commit.md). Questi numeri non certificano una nuova suite browser generale o la produzione fisica.
+Ultimo incremento: **1.399 unitari, 53 casi browser pertinenti verificati tra esecuzioni/ricontrolli, 13 test della chat pubblica locale e 96 campioni JSON/SVG**. Dettagli e limiti in [misure e fissaggi protetti](iteration-editor-plaque-commit.md). Questi numeri non certificano una nuova suite browser generale o la produzione fisica.
