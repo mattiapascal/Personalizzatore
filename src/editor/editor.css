@@ -388,3 +388,7 @@
 .paint-palette-paging button{min-width:32px;width:32px;height:32px;padding:2px}
 
 .ruler-help{position:absolute;left:30px;top:28px;max-width:calc(100% - 50px);margin:0;padding:4px 7px;border:1px solid #abc5d4;border-radius:4px;background:#eaf4fa;color:#15455e;font-size:11px;pointer-events:none;z-index:6}
+
+/* A logical large paper has no full-sheet paint layer: only its bounded canvas. */
+.canvas-container[data-canvas-windowed=true]{box-shadow:none}
+.lab:not(.editor-workspace) .canvas-scroll[data-canvas-windowed=true]{max-height:70vh;display:flex;align-items:safe center;justify-content:safe center}

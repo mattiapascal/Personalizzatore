@@ -1,3 +1,5 @@
+import {WindowCanvas} from './window-canvas';
+import {canvasWindow,canvasWindowContains,boundedBackingDensity,sameCanvasWindow,type CanvasWindow} from './canvas-window';
 import {pathStrokeFrame,effectiveStrokeJoin,effectiveMiterLimit} from './path-stroke';
 import {pathStrokeFrameView} from './path-stroke-view';
 import {effectiveStrokeCap,scaledLineLength} from './stroke-cap';
@@ -30,7 +32,7 @@ import { prepareRasterSource } from './raster-cache';
 export { prepareRasterSource } from './raster-cache';
 import { RasterCropControls } from './raster-crop-controls';
 import { checkedRasterCrop, type ImageObject } from './raster-geometry';
-import { Canvas, StaticCanvas, IText, Rect, Path as FabricPath, Circle, Ellipse, Polyline, Polygon, FabricImage, Control, Group, ActiveSelection, controlsUtils, util, type FabricObject, type TPointerEvent } from 'fabric';
+import { StaticCanvas, IText, Rect, Path as FabricPath, Circle, Ellipse, Polyline, Polygon, FabricImage, Control, Group, ActiveSelection, controlsUtils, util, type FabricObject, type TPointerEvent } from 'fabric';
 import type { GraphicDocument, Measure, SceneObject, TransformArguments, SelectionTransformArguments } from './model';
 import {profileForPage} from './production-profile-link';
 import { DocumentSchema, validateLayout, objectGeometry, objectIntersectsArea, objectCenter, placeObjectAtCenter, type CharacterStyle } from './model';
@@ -283,10 +285,56 @@ export class FabricAdapter {
   private readonly externalControls:ExternalCanvasControls;
   private readonly geometryPointMarker:GeometryPointMarker;
   private geometryFocus:GeometryFocus|null=null;
-  readonly canvas: Canvas;
+  readonly canvas: WindowCanvas;
   private idByObject = new WeakMap<FabricObject, string>();
   private sourceByObject = new WeakMap<FabricObject, SceneObject>();
   private membersByObject = new WeakMap<FabricObject, string[]>();
+  private displayWindow:CanvasWindow|null=null;
+  private viewportSize={width:0,height:0};
+  private viewportCleanup:(()=>void)|null=null;
+  private viewportFrame=0;
+  private scheduleViewport=()=>{if(!this.viewportFrame&&!this.disposed)this.viewportFrame=requestAnimationFrame(()=>{this.viewportFrame=0;this.syncViewport();});};
+  private observeViewport():void{
+    const wrapper=this.canvas.wrapperEl,area=wrapper.closest<HTMLElement>('.canvas-scroll');if(!area)return;
+    const resize=new ResizeObserver(this.scheduleViewport);resize.observe(area);
+    const mutation=new MutationObserver(this.scheduleViewport);mutation.observe(wrapper,{attributes:true,attributeFilter:['style']});
+    window.addEventListener('resize',this.scheduleViewport);window.addEventListener('scroll',this.scheduleViewport,true);
+    this.viewportCleanup=()=>{resize.disconnect();mutation.disconnect();window.removeEventListener('resize',this.scheduleViewport);window.removeEventListener('scroll',this.scheduleViewport,true);cancelAnimationFrame(this.viewportFrame);};
+  }
+  /** DOM camera only: retain all Fabric objects, selection and editing state. */
+  syncViewport():void{
+    if(this.disposed||this.rendering||this.dragging||!this.document)return;
+    if(this.configureDisplaySurface(this.document)){
+      this.canvas.calcOffset();this.canvas.getActiveObject()?.setCoords();this.canvas.requestRenderAll();
+      const active=this.canvas.getActiveObject();if(active instanceof IText&&active.isEditing)active.updateTextareaPosition();
+    }
+  }
+  private configureDisplaySurface(document:GraphicDocument):boolean{
+    const wrapper=this.canvas.wrapperEl,area=wrapper.closest<HTMLElement>('.canvas-scroll');
+    if(!area)this.zoom=Math.min(this.zoom,canvasZoomLimit(document.areaMm,this.canvas.requestedRetina()));
+    const width=document.areaMm.width*PX_PER_MM*this.zoom,height=document.areaMm.height*PX_PER_MM*this.zoom;
+    // Establish the logical page before reading flex centering or the camera.
+    if(!Number.isFinite(parseFloat(wrapper.style.width))||Math.abs(parseFloat(wrapper.style.width)-width)>1e-6)wrapper.style.width=`${width}px`;
+    if(!Number.isFinite(parseFloat(wrapper.style.height))||Math.abs(parseFloat(wrapper.style.height)-height)>1e-6)wrapper.style.height=`${height}px`;
+    const paper=wrapper.getBoundingClientRect(),host=area?.getBoundingClientRect(),left=host?Math.max(host.left+area!.clientLeft,0):paper.left,top=host?Math.max(host.top+area!.clientTop,0):paper.top;
+    const visible={x:left-paper.left,y:top-paper.top,width:Math.max(1,host?Math.min(host.left+area!.clientLeft+area!.clientWidth,innerWidth)-left:width),height:Math.max(1,host?Math.min(host.top+area!.clientTop+area!.clientHeight,innerHeight)-top:height)};
+    const candidate=canvasWindow({width,height},visible,this.canvas.requestedRetina()),previous=this.displayWindow;
+    const retain=previous&&candidate.windowed&&previous.paperWidth===width&&previous.paperHeight===height&&Math.abs(this.viewportSize.width-visible.width)<.5&&Math.abs(this.viewportSize.height-visible.height)<.5&&canvasWindowContains(previous,visible);
+    const plan=retain?previous:candidate,density=boundedBackingDensity(plan.width,plan.height,this.canvas.requestedRetina()),resize=this.canvas.width!==plan.width||this.canvas.height!==plan.height||Math.abs(this.canvas.getRetinaScaling()-density)>1e-9,changed=!sameCanvasWindow(previous,plan)||resize;
+    this.viewportSize={width:visible.width,height:visible.height};
+    this.canvas.windowPaper=plan.windowed?{width:document.areaMm.width*PX_PER_MM,height:document.areaMm.height*PX_PER_MM,round:document.shape==='round'}:null;
+    if(plan.windowed)this.canvas.clipPath=undefined;else if(document.shape==='round'&&!this.canvas.clipPath)this.canvas.clipPath=new Circle({radius:document.areaMm.width*PX_PER_MM/2,left:0,top:0,originX:'left',originY:'top',strokeWidth:0,absolutePositioned:true});
+    if(!changed)return false;
+    this.displayWindow=plan;
+    if(resize)this.canvas.setDimensions({width:plan.width,height:plan.height});
+    wrapper.style.width=`${width}px`;wrapper.style.height=`${height}px`;wrapper.dataset.canvasWindowed=String(plan.windowed);wrapper.dataset.canvasOriginX=String(plan.x);wrapper.dataset.canvasOriginY=String(plan.y);
+    if(area)area.dataset.canvasWindowed=String(plan.windowed);
+    for(const element of[this.canvas.lowerCanvasEl,this.canvas.upperCanvasEl]){element.style.position='absolute';element.style.left=`${plan.x}px`;element.style.top=`${plan.y}px`;}
+    this.canvas.setViewportTransform([this.zoom,0,0,this.zoom,-plan.x,-plan.y]);return true;
+  }
+  private overlayTransform(context:CanvasRenderingContext2D):void{
+    const retina=this.canvas.getRetinaScaling(),v=this.canvas.viewportTransform;context.setTransform(retina*v[0],retina*v[1],retina*v[2],retina*v[3],retina*v[4],retina*v[5]);
+  }
   private disposed = false;
   private editingRevision = 0;
   private editingText = '';
@@ -326,8 +374,8 @@ export class FabricAdapter {
   private drawMasterObject():void{
     if(!this.masterObjectId||!this.document||this.dragging)return;
     const unit=selectionUnits(this.document,this.selectedIds).find(unit=>unit.some(object=>object.id===this.masterObjectId));if(!unit)return;
-    const box=selectionBounds(unit,measureFabric),context=this.canvas.getContext(),retina=this.canvas.getRetinaScaling();
-    context.save();context.setTransform(retina*this.zoom,0,0,retina*this.zoom,0,0);context.strokeStyle='#005580';context.lineWidth=3/this.zoom;context.setLineDash([]);context.strokeRect(box.xMm*PX_PER_MM,box.yMm*PX_PER_MM,box.widthMm*PX_PER_MM,box.heightMm*PX_PER_MM);context.restore();
+    const box=selectionBounds(unit,measureFabric),context=this.canvas.getContext();
+    context.save();this.overlayTransform(context);context.strokeStyle='#005580';context.lineWidth=3/this.zoom;context.setLineDash([]);context.strokeRect(box.xMm*PX_PER_MM,box.yMm*PX_PER_MM,box.widthMm*PX_PER_MM,box.heightMm*PX_PER_MM);context.restore();
   }
   private directObjectId:string|null=null;
   private onDirectSelection?: (id:string|null)=>void;
@@ -397,7 +445,8 @@ export class FabricAdapter {
     visit(this.canvas.getObjects()); this.fontRenderStatus(blocked, pending);
   }
   constructor(element: HTMLCanvasElement, revision: () => number, onMove: (id: string, xMm: number, yMm: number, expectedRevision: number) => void, onText?: (id: string, object: TextObject, expectedRevision: number) => void, onEditing?: (editing: boolean) => void, onSelect?: (id: string | null) => void, onTransform?: (id: string, args: TransformArguments, expectedRevision: number) => void, onDeleteDrag?: (id: string, expectedRevision: number) => void, onTrash?: (visible: boolean) => void, onCharacterSelection?: (selection: CharacterSelection | null) => void, onSelection?: (ids: string[]) => void, onMoveSelection?: (ids: string[], deltaXmm: number, deltaYmm: number, revision: number) => void, onDeleteSelection?: (ids: string[], revision: number) => void, onTransformSelection?: (ids: string[], args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => void, onDirectSelection?:(id:string|null)=>void) {
-    this.canvas = new Canvas(element, { stopContextMenu:false,selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
+    this.canvas = new WindowCanvas(element, { stopContextMenu:false,selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
+    this.observeViewport();
     this.externalControls=new ExternalCanvasControls(this.canvas);
     this.geometryPointMarker=new GeometryPointMarker(this.canvas.wrapperEl);
     this.onDirectSelection=onDirectSelection;this.canvas.upperCanvasEl.addEventListener('mousedown',this.directMouseDown,true);
@@ -424,7 +473,7 @@ export class FabricAdapter {
     this.canvas.on('text:changed', () => { this.publishFontRenderStatus(); this.publishSelection(); });
     this.canvas.on('after:render', () => { this.drawGuides(); this.drawProductionProfileGuides(); this.drawPlaqueMounting(); this.drawNodeFocus(); this.drawRasterCropFocus(); this.drawTextPathGuide();this.drawMasterObject();this.externalControls.render();this.geometryPointMarker.update(this.geometryFocus,this.document); });
     let gestureRevision = revision(), gestureBounds = { left: 0, top: 0 }, gestureAngle = 0, gestureScale = 1;
-    this.canvas.on('before:transform', ({ transform }) => { gestureRevision = revision(); gestureBounds = transform.target.getBoundingRect(); gestureAngle = transform.target.angle; gestureScale = transform.target.scaleX; this.cancelled = false; });
+    this.canvas.on('before:transform', ({ transform }) => {this.dragging=true;const area=this.canvas.wrapperEl.closest<HTMLElement>('.canvas-scroll');if(area)area.dataset.canvasGesture='true'; gestureRevision = revision(); gestureBounds = transform.target.getBoundingRect(); gestureAngle = transform.target.angle; gestureScale = transform.target.scaleX; this.cancelled = false; });
     const delta = (object: FabricObject) => {
       const bounds = object.getBoundingRect();
       return { x: Math.round((bounds.left - gestureBounds.left) / PX_PER_MM * 1e9) / 1e9, y: Math.round((bounds.top - gestureBounds.top) / PX_PER_MM * 1e9) / 1e9 };
@@ -458,10 +507,10 @@ export class FabricAdapter {
     this.canvas.on('object:scaling', () => { this.dragging = true; });
     this.canvas.on('object:rotating', () => { this.dragging = true; });
     this.canvas.on('object:modifyPoly', () => { this.dragging = true; if (!this.nodeDragging) { this.nodeDragging = true; this.onNodeActive?.(true); } });
-    this.canvas.on('mouse:up', ({e}) => {const candidate=this.masterCandidate;this.masterCandidate=null;if(candidate&&'clientX'in e&&Math.hypot(e.clientX-candidate.x,e.clientY-candidate.y)<=3&&candidate.selection===this.selectedIds.join('\0'))this.onMasterSelection?.(candidate.id); this.dragging = false; if (this.nodeDragging) { this.nodeDragging = false; this.onNodeActive?.(false); } this.activeGuides = {}; this.canvas.requestRenderAll(); onTrash?.(false); });
+    this.canvas.on('mouse:up', ({e}) => {const candidate=this.masterCandidate;this.masterCandidate=null;if(candidate&&'clientX'in e&&Math.hypot(e.clientX-candidate.x,e.clientY-candidate.y)<=3&&candidate.selection===this.selectedIds.join('\0'))this.onMasterSelection?.(candidate.id); this.dragging = false;const area=this.canvas.wrapperEl.closest<HTMLElement>('.canvas-scroll');if(area)delete area.dataset.canvasGesture;this.scheduleViewport(); if (this.nodeDragging) { this.nodeDragging = false; this.onNodeActive?.(false); } this.activeGuides = {}; this.canvas.requestRenderAll(); onTrash?.(false); });
     this.cancelDrag = event => {
       if (event.key !== 'Escape' || !this.dragging) return;
-      event.preventDefault(); event.stopImmediatePropagation(); this.cancelled = true; this.canvas.endCurrentTransform(); this.dragging = false; onTrash?.(false);
+      event.preventDefault(); event.stopImmediatePropagation(); this.cancelled = true; this.canvas.endCurrentTransform(); this.dragging = false;const area=this.canvas.wrapperEl.closest<HTMLElement>('.canvas-scroll');if(area)delete area.dataset.canvasGesture;this.scheduleViewport(); onTrash?.(false);
       if (this.nodeDragging) { this.nodeDragging = false; this.onNodeActive?.(false); }
       if (this.document) this.render(this.document);
     };
@@ -588,15 +637,8 @@ export class FabricAdapter {
       if(serializationOnly){
         // SVG needs logical paper dimensions, never a paper-sized bitmap.
         this.canvas.width=document.areaMm.width*PX_PER_MM;this.canvas.height=document.areaMm.height*PX_PER_MM;
-      }else{
-        this.zoom=Math.min(this.zoom,canvasZoomLimit(document.areaMm,this.canvas.getRetinaScaling()));
-        const width=document.areaMm.width*PX_PER_MM*this.zoom,height=document.areaMm.height*PX_PER_MM*this.zoom;
-        // Reset before switching tall/wide surfaces: assigning width first must
-        // not temporarily combine the new width with the old large height.
-        if(Math.ceil(width*this.canvas.getRetinaScaling())*this.canvas.lowerCanvasEl.height>CANVAS_BITMAP_LIMITS.pixels)this.canvas.setDimensions({width:0,height:0});
-        this.canvas.setDimensions({width,height});
-      }
-      this.canvas.setZoom(this.zoom);
+        this.canvas.windowPaper=null;this.canvas.setZoom(this.zoom);
+      }else this.configureDisplaySurface(document);
       const rendered = new Set<string>();
       for (const object of document.objects) {
         if (rendered.has(object.id)) continue;
@@ -694,8 +736,8 @@ export class FabricAdapter {
   private drawRasterCropFocus(): void {
     const target = this.canvas.getActiveObject(), original = this.document?.objects.find(object => object.id === this.cropFocus);
     if (!(target instanceof FabricImage) || original?.type !== 'image' || this.idByObject.get(target) !== this.cropFocus || !this.document) return;
-    const object = this.cropControls.preview ?? original, crop = checkedRasterCrop(object.source, object.crop), bitmap = object.raster.mode==='original'?originalRasterImage(object.source):rasterCanvas(object.source, object.raster), context = this.canvas.getContext(), retina = this.canvas.getRetinaScaling();
-    context.save(); context.setTransform(retina * this.zoom, 0, 0, retina * this.zoom, 0, 0); context.beginPath();
+    const object = this.cropControls.preview ?? original, crop = checkedRasterCrop(object.source, object.crop), bitmap = object.raster.mode==='original'?originalRasterImage(object.source):rasterCanvas(object.source, object.raster), context = this.canvas.getContext();
+    context.save(); this.overlayTransform(context); context.beginPath();
     if (this.document.shape === 'round') context.arc(this.document.areaMm.width * 4, this.document.areaMm.height * 4, this.document.areaMm.width * 4, 0, Math.PI * 2); else context.rect(0, 0, this.document.areaMm.width * 8, this.document.areaMm.height * 8);
     context.clip(); context.transform(...target.calcTransformMatrix());
     const x = -crop.leftPx - crop.widthPx / 2, y = -crop.topPx - crop.heightPx / 2;
@@ -712,8 +754,8 @@ export class FabricAdapter {
       const cached = this.guideMeasurements.get(source); if (cached) return cached;
       const size = measureFabric(source); this.guideMeasurements.set(source, size); return size;
     });
-    const context = this.canvas.getContext(), retina = this.canvas.getRetinaScaling(); context.save();
-    context.setTransform(retina * this.zoom, 0, 0, retina * this.zoom, 0, 0); context.beginPath();
+    const context = this.canvas.getContext(); context.save();
+    this.overlayTransform(context); context.beginPath();
     if (doc.shape === 'round') context.arc(doc.areaMm.width * PX_PER_MM / 2, doc.areaMm.height * PX_PER_MM / 2, doc.areaMm.width * PX_PER_MM / 2, 0, Math.PI * 2);
     else context.rect(0, 0, doc.areaMm.width * PX_PER_MM, doc.areaMm.height * PX_PER_MM);
     context.clip(); context.lineWidth = 1.5 / this.zoom; context.strokeStyle = '#0088cc';
@@ -727,7 +769,7 @@ export class FabricAdapter {
   private drawBezierFocus(object: BezierObject, index: number): void {
     const doc = this.document; if (!doc) return;
     const nodes = bezierWorldNodes(object, measureFabric), node = nodes[index]; if (!node) return;
-    const context = this.canvas.getContext(), retina = this.canvas.getRetinaScaling(); context.save(); context.setTransform(retina * this.zoom, 0, 0, retina * this.zoom, 0, 0); context.beginPath();
+    const context = this.canvas.getContext(); context.save(); this.overlayTransform(context); context.beginPath();
     if (doc.shape === 'round') context.arc(doc.areaMm.width * PX_PER_MM / 2, doc.areaMm.height * PX_PER_MM / 2, doc.areaMm.width * PX_PER_MM / 2, 0, Math.PI * 2); else context.rect(0, 0, doc.areaMm.width * PX_PER_MM, doc.areaMm.height * PX_PER_MM);
     context.clip(); context.strokeStyle = '#0088cc'; context.lineWidth = 1 / this.zoom;
     for (const side of ['in', 'out'] as const) {
@@ -739,8 +781,8 @@ export class FabricAdapter {
   /** Visual technical guides only. No Fabric objects are added, so these
    * never enter SVG, PNG/PDF production or persistent archive thumbnails. */
   private drawProductionProfileGuides():void{
-    const doc=this.document;if(!doc?.productionProfile)return;const profile=profileForPage(doc.productionProfile,doc),context=this.canvas.getContext(),scale=this.canvas.getRetinaScaling()*this.zoom;
-    context.save();context.setTransform(scale,0,0,scale,0,0);const width=doc.areaMm.width*PX_PER_MM,height=doc.areaMm.height*PX_PER_MM;
+    const doc=this.document;if(!doc?.productionProfile)return;const profile=profileForPage(doc.productionProfile,doc),context=this.canvas.getContext();
+    context.save();this.overlayTransform(context);const width=doc.areaMm.width*PX_PER_MM,height=doc.areaMm.height*PX_PER_MM;
     context.beginPath();if(doc.shape==='round')context.arc(width/2,height/2,width/2,0,Math.PI*2);else context.rect(0,0,width,height);context.clip();context.lineWidth=1/this.zoom;context.strokeStyle='#0088cc';context.setLineDash([4/this.zoom,3/this.zoom]);
     const margin=profile.safeMarginMm;if(margin!==null&&margin>0){const inset=margin*PX_PER_MM;context.beginPath();if(doc.shape==='round')context.arc(width/2,height/2,width/2-inset,0,Math.PI*2);else context.rect(inset,inset,width-2*inset,height-2*inset);context.stroke();}
     context.fillStyle='rgba(255,183,99,.22)';context.strokeStyle='#a95b16';
@@ -748,8 +790,8 @@ export class FabricAdapter {
     context.restore();
   }
   private drawPlaqueMounting():void{
-    const doc=this.document;if(!doc?.plaque)return;const points=plaqueMountingPoints(doc.areaMm,doc.plaque),context=this.canvas.getContext(),scale=this.canvas.getRetinaScaling()*this.zoom;
-    context.save();context.setTransform(scale,0,0,scale,0,0);context.lineWidth=1.5/this.zoom;context.strokeStyle='#006b9d';
+    const doc=this.document;if(!doc?.plaque)return;const points=plaqueMountingPoints(doc.areaMm,doc.plaque),context=this.canvas.getContext();
+    context.save();this.overlayTransform(context);context.lineWidth=1.5/this.zoom;context.strokeStyle='#006b9d';
     for(const point of points){const x=point.xMm*PX_PER_MM,y=point.yMm*PX_PER_MM,r=doc.plaque.holeDiameterMm?doc.plaque.holeDiameterMm*PX_PER_MM/2:6/this.zoom;context.beginPath();context.arc(x,y,r,0,Math.PI*2);context.fillStyle=doc.plaque.method==='holes'?'#ffffff':'#c4d9e3';context.fill();context.stroke();if(doc.plaque.method==='screws'){context.beginPath();context.moveTo(x-r*.6,y-r*.6);context.lineTo(x+r*.6,y+r*.6);context.moveTo(x+r*.6,y-r*.6);context.lineTo(x-r*.6,y+r*.6);context.stroke();}else if(doc.plaque.method.startsWith('spacer')){context.beginPath();context.arc(x,y,r*.45,0,Math.PI*2);context.stroke();}}
     if(doc.plaque.holeDiameterMm!==null&&doc.plaque.clearanceMm!=null&&doc.plaque.clearanceMm>0){context.strokeStyle='#0088cc';context.lineWidth=1/this.zoom;context.setLineDash([4/this.zoom,3/this.zoom]);for(const point of points){context.beginPath();context.arc(point.xMm*PX_PER_MM,point.yMm*PX_PER_MM,(doc.plaque.holeDiameterMm/2+doc.plaque.clearanceMm)*PX_PER_MM,0,Math.PI*2);context.stroke();}}
     context.restore();
@@ -757,19 +799,20 @@ export class FabricAdapter {
   private drawGuides(): void {
     const doc = this.document, guides = this.activeGuides;
     if (!doc || !this.guides.gridVisible && guides.guideXmm === undefined && guides.guideYmm === undefined) return;
-    const context = this.canvas.getContext(), retina = this.canvas.getRetinaScaling(), width = doc.areaMm.width * PX_PER_MM, height = doc.areaMm.height * PX_PER_MM;
+    const context = this.canvas.getContext(), width = doc.areaMm.width * PX_PER_MM, height = doc.areaMm.height * PX_PER_MM;
     context.save();
-    context.setTransform(retina * this.zoom, 0, 0, retina * this.zoom, 0, 0);
+    this.overlayTransform(context);
     context.beginPath();
     if (doc.shape === 'round') context.arc(width / 2, height / 2, width / 2, 0, Math.PI * 2);
     else context.rect(0, 0, width, height);
     context.clip(); context.lineWidth = 1 / this.zoom;
     if (this.guides.gridVisible) {
       const nominal = this.guides.gridMm * PX_PER_MM;
-      const jump = Math.max(1, Math.ceil(8 / (nominal * this.zoom)), Math.ceil(width / nominal / 400), Math.ceil(height / nominal / 400));
+      const v=this.canvas.viewportTransform,windowed=!!this.canvas.windowPaper,left=windowed?Math.max(0,-v[4]/this.zoom):0,top=windowed?Math.max(0,-v[5]/this.zoom):0,right=windowed?Math.min(width,(this.canvas.width-v[4])/this.zoom):width,bottom=windowed?Math.min(height,(this.canvas.height-v[5])/this.zoom):height;
+      const jump = Math.max(1, Math.ceil(8 / (nominal * this.zoom)), Math.ceil((right-left) / nominal / 400), Math.ceil((bottom-top) / nominal / 400)),step=nominal*jump;
       context.globalCompositeOperation = 'multiply'; context.strokeStyle = '#d6dfd3'; context.beginPath();
-      for (let x = nominal * jump; x < width; x += nominal * jump) { context.moveTo(x, 0); context.lineTo(x, height); }
-      for (let y = nominal * jump; y < height; y += nominal * jump) { context.moveTo(0, y); context.lineTo(width, y); }
+      for (let x = Math.max(step,Math.ceil(left/step)*step); x < right; x += step) { context.moveTo(x, top); context.lineTo(x, bottom); }
+      for (let y = Math.max(step,Math.ceil(top/step)*step); y < bottom; y += step) { context.moveTo(left, y); context.lineTo(right, y); }
       context.stroke();
     }
     context.globalCompositeOperation = 'source-over'; context.strokeStyle = '#0088cc'; context.setLineDash([4 / this.zoom, 3 / this.zoom]); context.beginPath();
@@ -886,5 +929,5 @@ export class FabricAdapter {
     const active = this.canvas.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
   }
-  dispose(): void { this.disposed = true;this.canvas.upperCanvasEl.removeEventListener('mousedown',this.directMouseDown,true);this.externalControls.dispose();this.geometryPointMarker.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
+  dispose(): void { this.disposed = true;this.viewportCleanup?.();this.canvas.upperCanvasEl.removeEventListener('mousedown',this.directMouseDown,true);this.externalControls.dispose();this.geometryPointMarker.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
 }

@@ -9,7 +9,7 @@ export function selectionViewBounds(document:Pick<GraphicDocument,'objects'>,ids
  if(selected.size!==ids.length||objects.length!==ids.length)throw Error('Selezione non disponibile: seleziona di nuovo gli oggetti.');
  return selectionBounds(objects,measure);
 }
-/** Display-only scale and center. The whole-canvas/Retina budget remains authoritative. */
+/** Display-only scale and center. The caller supplies the working-view limit. */
 export function selectionViewFit(bounds:SelectionViewBounds,viewport:{width:number;height:number},maximumZoom:number,padding=48){
  if(![bounds.xMm,bounds.yMm,bounds.widthMm,bounds.heightMm,viewport.width,viewport.height,maximumZoom,padding].every(Number.isFinite)||bounds.widthMm<=0||bounds.heightMm<=0||maximumZoom<.01||maximumZoom>4||padding<0||viewport.width<=2*padding||viewport.height<=2*padding)throw Error('Spazio insufficiente per inquadrare la selezione.');
  const desired=Math.min((viewport.width-2*padding)/(bounds.widthMm*PX_PER_MM),(viewport.height-2*padding)/(bounds.heightMm*PX_PER_MM));

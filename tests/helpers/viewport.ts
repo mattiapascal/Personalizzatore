@@ -1,0 +1,3 @@
+import {createTestDocument} from './editor-fonts';
+import {DocumentSchema} from '../../src/editor/model';
+export function viewportFixture(){const doc=createTestDocument();doc.documentId='28282828-2828-4828-8828-282828282828';doc.colorMode='color';doc.productId=doc.variantId=doc.catalogVersion=doc.catalogProductProfileVersion=null;doc.areaMm={width:3000,height:2000};doc.objects=[{id:'detail',type:'rect',xMm:1490,yMm:990,widthMm:20,heightMm:10,stroke:'#0088cc',strokeMm:.25,fill:'none'},{id:'caption',type:'text',xMm:1492,yMm:1003,text:'TEST · Dettaglio',fontFamily:doc.fontAssets![0]!.id,fontSizePt:8,fill:'#000000',textAlign:'center'},{id:'line',type:'line',xMm:1500,yMm:1008,lengthMm:10,stroke:'#cc3300',strokeMm:.5,strokeLineCap:'square'}];return DocumentSchema.parse(doc);}

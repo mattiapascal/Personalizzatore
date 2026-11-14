@@ -1,6 +1,8 @@
+**14 novembre — dettagli sui formati grandi:** [Zoom, rendering e collaudi](iteration-editor-viewport.md). Vista espansa al 400% anche su tavole di 3 m, backing limitato alla zona visibile, PAN/rotella e puntatori Retina coerenti; testo, maniglie esterne, nodi, crop, guide e fissaggi condividono la camera. Documento e output completi invariati. **1.356 unitari, 141 browser pertinenti distinti e 13 pubblici passati; 85 campioni riaperti/esportati**. SQLite R638 invariato, nessun deploy.
+
 **14 novembre — giunzioni ed estremità dei tracciati:** [Controlli, cornice e collaudi](iteration-editor-path-stroke.md). Polilinee/Bézier/SVG e rettangoli con icone e limite delle punte; cornice versionata senza spostare i legacy, maniglie/nodi e comandi manuali/AI condivisi. **1.345 unitari, 68 browser pertinenti, 13 pubblici e 84 campioni passati**. SQLite R638 invariato, nessun deploy.
 
-**Prossimo incremento di usabilità:** renderer limitato alla vista per ingrandire i dettagli di formati grandi, mantenendo limiti bitmap, zoom/PAN, coordinate e maniglie. Analizzare le dipendenze del canvas prima di modificare la vista; nessuna nuova funzione multipagina.
+**Prossimo lavoro:** riallineare la matrice delle capacità alle funzioni realmente presenti, distinguendo lacune di usabilità quotidiana da funzioni avanzate sospese; scegliere e collaudare il successivo incremento manuale. Il renderer limitato alla vista è completato e documentato sopra. Nessuna nuova funzione multipagina o integrazione online.
 
 **14 novembre — proprietà del testo su tracciato:** [Correzione, campione e collaudi](iteration-editor-text-path-properties.md). Label, ordine, visibilità e blocchi del percorso conservati e ripristinati; riferimenti separati dalla grafica produttiva senza spostare o duplicare i glifi. Stessi comandi manuali/AI, Undo e appunti; **1.327 unitari, 35 browser pertinenti, 13 pubblici e 83 campioni passati**. SQLite R638 invariato, nessun deploy.
 

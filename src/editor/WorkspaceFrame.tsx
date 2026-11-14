@@ -11,13 +11,13 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds }: {
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom,onViewportChange, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds }: {
   layoutGuidesDisabled?:boolean;
   selectionKey?:string;getSelectionBounds?:()=>SelectionViewBounds|null;
   onLayoutGuides?:(guides:LayoutGuides,revision:number)=>void;
   edit?:ReactNode;transforms?:ReactNode;context: ReactNode; stage: ReactNode; tools: ReactNode; properties: ReactNode; project: ReactNode; diagnostics: ReactNode;
   document: GraphicDocument; editing: boolean; onZoom: (zoom: number) => void;
-  showForm?:boolean;actions?:ReactNode;mode?:'customer'|'admin'|'test';workflow?: ReactNode; layers: ReactNode; panTool: boolean; onTemporaryPan: (active: boolean) => void;
+  onViewportChange?:()=>void;showForm?:boolean;actions?:ReactNode;mode?:'customer'|'admin'|'test';workflow?: ReactNode; layers: ReactNode; panTool: boolean; onTemporaryPan: (active: boolean) => void;
   geometryFocus?:GeometryFocus|null;onClearGeometryFocus?:()=>void;
   inspectorRequest?:InspectorRequest|null;
 }) {
@@ -39,7 +39,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const [layersOpen, setLayersOpen] = useState(false), layerAnchor = useRef<HTMLDivElement>(null), layerId = useId();
   const [layerPosition, setLayerPosition] = useState<CSSProperties>({});
   const floatingLayers=useMovablePanel(layersOpen,layerPosition),floatingWorkflow=useMovablePanel(workflowOpen,workflowPosition,workflowPanel);
-  const maximumZoom=canvasZoomLimit(doc.areaMm,Math.max(fabricConfig.devicePixelRatio??window.devicePixelRatio??1,1));
+  const maximumZoom=expanded?4:canvasZoomLimit(doc.areaMm,Math.max(fabricConfig.devicePixelRatio??window.devicePixelRatio??1,1));
   const [zoom, setZoom] = useState(()=>Math.min(1,maximumZoom)), [screenError, setScreenError] = useState('');
   const [viewReady,setViewReady]=useState(false),autoFit=useRef(true);
   const [rulersVisible,setRulersVisible]=useState(false),[selectionViewMessage,setSelectionViewMessage]=useState('');
@@ -47,10 +47,10 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const cancelSelectionView=()=>{if(pendingSelectionView.current!==null)cancelAnimationFrame(pendingSelectionView.current);pendingSelectionView.current=null;};
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
   const focus=geometryFocus&&geometryFocusCurrent(geometryFocus,doc)?geometryFocus:null;
-  const view = useRef({ zoom: Math.min(1,maximumZoom), panX: 0, panY: 0 }), live = useRef({ onZoom, editing,focus,selectionKey,documentKey:`${doc.documentId}:${doc.pageId??'page-1'}:${doc.revision}` }); live.current = { onZoom, editing,focus,selectionKey,documentKey:`${doc.documentId}:${doc.pageId??'page-1'}:${doc.revision}` };
-  useCanvasPan(viewport, view, panTool, editing, onTemporaryPan);
+  const view = useRef({ zoom: Math.min(1,maximumZoom), panX: 0, panY: 0 }), live = useRef({ onZoom,onViewportChange, editing,focus,selectionKey,documentKey:`${doc.documentId}:${doc.pageId??'page-1'}:${doc.revision}` }); live.current = { onZoom,onViewportChange, editing,focus,selectionKey,documentKey:`${doc.documentId}:${doc.pageId??'page-1'}:${doc.revision}` };
+  useCanvasPan(viewport, view, panTool, editing, onTemporaryPan,()=>live.current.onViewportChange?.());
   const updateZoom = (value: number, anchor?: { x: number; y: number }, fitting=false) => {
-    cancelSelectionView();setSelectionViewMessage('');autoFit.current=fitting;
+    if(viewport.current?.querySelector('[data-canvas-gesture=true]'))return;cancelSelectionView();setSelectionViewMessage('');autoFit.current=fitting;
     const next = Math.max(0.01, Math.min(maximumZoom, value)), container = viewport.current?.querySelector<HTMLElement>('.canvas-container'), before = container?.getBoundingClientRect(), previous = view.current.zoom;
     if (anchor && Math.abs(next - previous) < 1e-9) return;
     const point = anchor && before ? { x: (anchor.x - before.left) / previous, y: (anchor.y - before.top) / previous } : null;
@@ -63,6 +63,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
         container.style.transform = `translate(${view.current.panX}px, ${view.current.panY}px)`;
       }
     }
+    live.current.onViewportChange?.();
   };
   useEffect(()=>{if(view.current.zoom>maximumZoom)updateZoom(maximumZoom);},[maximumZoom]);
   useEffect(()=>{cancelSelectionView();setSelectionViewMessage('');return cancelSelectionView;},[doc.documentId,doc.pageId,doc.revision,selectionKey,editing]);
@@ -87,7 +88,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
           view.current.panX+=delta.x;view.current.panY+=delta.y;container.style.transform=`translate(${view.current.panX}px, ${view.current.panY}px)`;
         }
         if(!fit.fits)setSelectionViewMessage('La selezione supera lo spazio disponibile anche allo zoom minimo.');
-        container.querySelector<HTMLCanvasElement>('.upper-canvas')?.focus({preventScroll:true});
+        live.current.onViewportChange?.();container.querySelector<HTMLCanvasElement>('.upper-canvas')?.focus({preventScroll:true});
       }catch{setSelectionViewMessage('Spazio insufficiente per inquadrare la selezione.');}
     });
   };
@@ -96,7 +97,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
     const parent=viewport.current,area = parent?.querySelector<HTMLElement>('.canvas-scroll'); if (!area||!parent) return;
     const wheel = (event: WheelEvent) => {
       if(!(event.target instanceof Element)||!event.target.closest('.canvas-scroll,.layout-guides-overlay'))return;
-      event.preventDefault(); if (live.current.editing || area.dataset.panDragging === 'true'||parent.querySelector('[data-guide-dragging=true]')) return;
+      event.preventDefault(); if (live.current.editing || area.dataset.panDragging === 'true'||area.dataset.canvasGesture==='true'||parent.querySelector('[data-guide-dragging=true]')) return;
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? area.clientHeight : 1, delta = Math.max(-200, Math.min(200, event.deltaY * unit));
       if (delta) updateZoom(view.current.zoom * Math.exp(-delta * (event.ctrlKey ? 0.01 : 0.0015)), { x: event.clientX, y: event.clientY });
     };
@@ -146,7 +147,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
         const box=area.getBoundingClientRect(),delta=geometryFocusTranslation(container.getBoundingClientRect(),{left:box.left+area.clientLeft,top:box.top+area.clientTop,width:area.clientWidth,height:area.clientHeight},doc.areaMm,focus);
         view.current.panX+=delta.x;view.current.panY+=delta.y;container.style.transform=`translate(${view.current.panX}px, ${view.current.panY}px)`;
       }
-      container.querySelector<HTMLCanvasElement>('.upper-canvas')?.focus({preventScroll:true});
+      live.current.onViewportChange?.();container.querySelector<HTMLCanvasElement>('.upper-canvas')?.focus({preventScroll:true});
     });return()=>cancelAnimationFrame(frame);
   },[focus?.sequence,focus?.documentId,focus?.contentRevision,doc.pageId,doc.areaMm.width,doc.areaMm.height,viewReady,expanded]);
   useEffect(()=>{

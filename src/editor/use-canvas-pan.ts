@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
 interface PanView { zoom: number; panX: number; panY: number; }
-export function useCanvasPan(viewport: RefObject<HTMLDivElement | null>, view: RefObject<PanView>, persistent: boolean, blocked: boolean, onTemporary: (active: boolean) => void) {
-  const live = useRef({ persistent, blocked, onTemporary }); live.current = { persistent, blocked, onTemporary };
+export function useCanvasPan(viewport: RefObject<HTMLDivElement | null>, view: RefObject<PanView>, persistent: boolean, blocked: boolean, onTemporary: (active: boolean) => void,onViewChange?:()=>void) {
+  const live = useRef({ persistent, blocked, onTemporary,onViewChange }); live.current = { persistent, blocked, onTemporary,onViewChange };
   const refresh = useRef<() => void>(() => {});
   useEffect(() => {
     const area = viewport.current?.querySelector<HTMLElement>('.canvas-scroll'); if (!area) return;
@@ -18,7 +18,7 @@ export function useCanvasPan(viewport: RefObject<HTMLDivElement | null>, view: R
     const releaseKey = (event: KeyboardEvent) => { if (event.code !== 'Space' || !held) return; event.preventDefault(); event.stopImmediatePropagation(); held = false; stop(); live.current.onTemporary(false); update(); };
     const blur = () => { held = false; stop(); live.current.onTemporary(false); update(); };
     const pointerDown = (event: PointerEvent) => { if (!active() || event.button !== 0) return; event.preventDefault(); event.stopImmediatePropagation(); drag = { id: event.pointerId, x: event.clientX, y: event.clientY, panX: view.current.panX, panY: view.current.panY }; area.setPointerCapture(event.pointerId); area.dataset.panDragging = 'true'; };
-    const pointerMove = (event: PointerEvent) => { if (!active()) return; event.preventDefault(); event.stopImmediatePropagation(); if (!drag || event.pointerId !== drag.id) return; const container = area.querySelector<HTMLElement>('.canvas-container'); if (!container) return; view.current.panX = drag.panX + event.clientX - drag.x; view.current.panY = drag.panY + event.clientY - drag.y; container.style.transform = `translate(${view.current.panX}px, ${view.current.panY}px)`; };
+    const pointerMove = (event: PointerEvent) => { if (!active()) return; event.preventDefault(); event.stopImmediatePropagation(); if (!drag || event.pointerId !== drag.id) return; const container = area.querySelector<HTMLElement>('.canvas-container'); if (!container) return; view.current.panX = drag.panX + event.clientX - drag.x; view.current.panY = drag.panY + event.clientY - drag.y; container.style.transform = `translate(${view.current.panX}px, ${view.current.panY}px)`;live.current.onViewChange?.(); };
     const pointerUp = (event: PointerEvent) => { if (!drag || event.pointerId !== drag.id) return; event.preventDefault(); event.stopImmediatePropagation(); stop(); update(); };
     const mouse = (event: MouseEvent) => { if (active()) { event.preventDefault(); event.stopImmediatePropagation(); } };
     window.addEventListener('keydown', downKey, true); window.addEventListener('keyup', releaseKey, true); window.addEventListener('blur', blur);
