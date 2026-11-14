@@ -1,3 +1,4 @@
+import {InsertionFileControl} from './InsertionFileControl';
 import {INSPECTOR_COMMIT_ERROR} from './inspector-controller';
 import {QrInsertDialog} from './QrInsertDialog';
 import type{QrParameters}from'./qr-code';
@@ -113,8 +114,6 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const inspectorController=useRef<{flush:()=>boolean}|null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
-  const pdfImportRef = useRef<HTMLInputElement>(null);
-  const svgImportRef = useRef<HTMLInputElement>(null);
   const [qrOpen,setQrOpen]=useState(false);
   const [mediaLibrary,setMediaLibrary]=useState<MediaKind|null>(null);
   const [contextPoint,setContextPoint]=useState<{x:number;y:number}|null>(null);
@@ -126,7 +125,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const [fieldsValid,setFieldsValid]=useState(true);
   const [pdfBusy,setPdfBusy]=useState(false),[customerPdfEnabled,setCustomerPdfEnabled]=useState(false);
   const [archiveTags,setArchiveTags]=useState(initialTags?.join(', ')??''),[archiveVocabulary,setArchiveVocabulary]=useState<string[]>([]);
-  const imageImportRef = useRef<HTMLInputElement>(null), assetBusyRef = useRef(false);
+  const assetBusyRef = useRef(false);
   const adapter = useRef<FabricAdapter | null>(null);
   const storeRef = useRef<DocumentStore | null>(null);
   const [doc, setDoc] = useState<GraphicDocument>(() => initialDocument?parseGraphicDocument(initialDocument):createEditorDocument(product, catalogVersion));
@@ -192,11 +191,11 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const objectArguments = (object: SceneObject) => fontAssetArguments(object, storeRef.current?.document.fontAssets);
   const prepareAndAct = async (prepare: (store: DocumentStore) => Promise<() => void>, selectAfter?: string | string[]) => {
     const store = storeRef.current; if (!store || assetBusyRef.current) return false;
-    const revision = store.document.revision, documentId = store.document.documentId;
+    const revision = store.document.revision, documentId = store.document.documentId, pageId=store.document.pageId??'page-1';
     assetBusyRef.current = true; setAssetBusy(true); setDrawingTool(null); onEditingChange(true);
     try {
       const commit = await prepare(store);
-      if (storeRef.current !== store || store.document.revision !== revision || store.document.documentId !== documentId) throw new Error('Documento cambiato durante il caricamento: importazione annullata');
+      if (storeRef.current !== store || store.document.revision !== revision || store.document.documentId !== documentId || (store.document.pageId??'page-1')!==pageId) throw new Error('Documento cambiato durante il caricamento: importazione annullata');
       return act(commit, selectAfter);
     } catch (e) { if (storeRef.current) setError(e instanceof Error ? e.message : 'Importazione non riuscita'); return false; }
     finally { assetBusyRef.current = false; if (storeRef.current) { setAssetBusy(false); onEditingChange(false); } }
@@ -217,6 +216,12 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     if(storeRef.current!==store||store.document.documentId!==before.documentId||(store.document.pageId??'page-1')!==(before.pageId??'page-1')){setError('Il documento è cambiato: ripeti l’operazione sulla vista aggiornata.');return null;}
     return store;
   };
+  const beginInsertion=(open:()=>void)=>{if(inspectorAction())open();};
+  const prepareFileInsertion=(insert:(file:File)=>void)=>{
+    const store=inspectorAction();if(!store)return null;const target=store.document;
+    return(file:File)=>{if(storeRef.current!==store||store.document!==target){setError('Il documento è cambiato durante la scelta del file: importazione annullata.');return;}insert(file);};
+  };
+  const prepareInsertion:typeof prepareAndAct=(prepare,selectAfter)=>inspectorAction()?prepareAndAct(prepare,selectAfter):Promise.resolve(false);
   const changeGuidePanel=(guides:LayoutGuides|null,expectedRevision:number)=>{
     const store=inspectorAction(expectedRevision);if(!store)return false;
     return act(()=>dispatch(store,{schemaVersion:1,tool:'setLayoutGuides',objectId:'canvas',expectedRevision:store.document.revision,arguments:{guides}},'manual'));
@@ -246,7 +251,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   useEffect(()=>{const warn=(event:BeforeUnloadEvent)=>{if(!leaving.current&&dirty){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
   const exportPdf=async(includeReferences=false)=>{if(!flushInspector())return;const snapshot=structuredClone(storeRef.current!.document);setPdfBusy(true);setError('');try{const response=await fetch(`/__editor-local/export-pdf${includeReferences?'?references=1':''}`,{method:'POST',headers:{'Content-Type':'application/json','X-Editor-Local':'1'},body:JSON.stringify(snapshot)});if(!response.ok){const data=await response.json();throw new Error(data.error??'PDF non esportato');}const blob=await response.blob();if(sessionDocumentKey(storeRef.current!.document)!==sessionDocumentKey(snapshot))throw new Error('Il design è cambiato durante l’esportazione: PDF non scaricato. Ripeti l’operazione.');const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=includeReferences?'design-con-riferimenti.pdf':'design.pdf';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(cause){setError(cause instanceof Error?cause.message:'PDF non esportato');}finally{setPdfBusy(false);}};
   const importPdf = (file: File) => {
-    void prepareAndAct(async store => {
+    void prepareInsertion(async store => {
       if (file.size > 2 * 1024 * 1024) throw new Error('PDF oltre 2 MB');
       const response = await fetch('/__editor-local/pdf', { method: 'POST', headers: { 'Content-Type': 'application/pdf', 'X-Editor-Local': '1', 'X-Editor-Text-Mode': importTextMode }, body: file });
       const converted = await response.json(); if (!response.ok) throw new Error(converted.error ?? 'Conversione PDF locale non disponibile');
@@ -256,7 +261,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   };
   const importSvg = (file: File) => {
     let ids: string[] = [];
-    void prepareAndAct(async store => {
+    void prepareInsertion(async store => {
       if (file.size > MAX_SVG_BYTES) throw new Error(`SVG oltre ${SVG_SIZE_LABEL}`);
       const prepared = await prepareSvg(new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()), vectorMonochrome, importTextMode), insertion = svgInsertion(prepared, store.document, measureFabric,minimumFontForDocument(store.document,graphicCatalog)); ids = insertion.command.arguments.objects.map(object => object.id);
       return () => { dispatch(store,insertion.command, 'manual'); select(ids); setImportNotice(insertion.report); };
@@ -264,7 +269,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   };
   const importImage = (file: File) => {
     const objectId = `object-${crypto.randomUUID()}`;
-    void prepareAndAct(async store => {
+    void prepareInsertion(async store => {
       if (file.size > MAX_RASTER_BYTES) throw new Error('Immagine oltre 20 MB');
       const source = rasterSourceFromBytes(`asset-${crypto.randomUUID()}`, new Uint8Array(await file.arrayBuffer())); await prepareRasterSource(source);
       const area = store.document.areaMm, scale = Math.min(Math.min(30, area.width - 4) / source.pixelWidth, Math.min(12, area.height - 4) / source.pixelHeight);
@@ -275,7 +280,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     }, objectId);
   };
   const insertLibraryAsset=async(asset:MediaAsset,asRaster:boolean)=>{
-    let failure:unknown;const ok=await prepareAndAct(async store=>{try{const bytes=await readMediaOriginal(asset);
+    let failure:unknown;const ok=await prepareInsertion(async store=>{try{const bytes=await readMediaOriginal(asset);
       if(asset.mime==='image/svg+xml'&&!asRaster){const prepared=await prepareSvg(new TextDecoder('utf-8',{fatal:true}).decode(bytes),store.document.colorMode!=='color','outlines'),insertion=asset.kind==='background'?librarySvgBackground(prepared,store.document,asset.title,minimumFontForDocument(store.document,graphicCatalog)):librarySvgInsertion(prepared,store.document,asset.defaultWidthMm,minimumFontForDocument(store.document,graphicCatalog));return()=>{dispatch(store,insertion.command,'manual');select(insertion.command.arguments.objects.map(o=>o.id));setImportNotice(insertion.report);};}
       const source=await mediaRasterSource(asset,bytes);await prepareRasterSource(source);const command=mediaRasterCommand(store.document,source,asset.title,asset.kind==='background',asset.defaultWidthMm);return()=>{dispatch(store,command,'manual');select(command.objectId);};
     }catch(e){failure=e;throw e;}});if(!ok)throw failure??new Error('Inserimento annullato: il documento è cambiato o il contenuto non rispetta i vincoli.');return true;
@@ -294,11 +299,11 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     } catch (e) { setError(e instanceof Error ? e.message : 'Comando non valido'); }
   };
   const prepareCommand=()=>{const store=inspectorAction();if(store)setCommand(JSON.stringify(withObjectTargetScope(JSON.parse(example(store.document.revision,selectedRef.current[0]??store.document.objects.find(object=>object.type==='text')?.id??store.document.objects[0]!.id)),directRef.current),null,2));};
-  const insertQr=(qr:QrParameters,side:number)=>act(()=>{const store=storeRef.current!,id=`qr-${crypto.randomUUID()}`,object:SceneObject={id,type:'qr',xMm:(store.document.areaMm.width-side)/2,yMm:(store.document.areaMm.height-side)/2,widthMm:side,heightMm:side,qr,fill:'#000000',stroke:'none',strokeMm:0};store.dispatch({schemaVersion:1,tool:'addObject',objectId:id,expectedRevision:store.document.revision,arguments:{object}},'manual');select([id]);});
+  const insertQr=(qr:QrParameters,side:number)=>{const store=inspectorAction();if(!store)return false;return act(()=>{const id=`qr-${crypto.randomUUID()}`,object:SceneObject={id,type:'qr',xMm:(store.document.areaMm.width-side)/2,yMm:(store.document.areaMm.height-side)/2,widthMm:side,heightMm:side,qr,fill:'#000000',stroke:'none',strokeMm:0};store.dispatch({schemaVersion:1,tool:'addObject',objectId:id,expectedRevision:store.document.revision,arguments:{object}},'manual');select([id]);});};
   const addObject = (type: Exclude<SceneObject['type'], 'path' | 'image' | 'bezier' | 'vector' | 'qr'>) => {
+    const store=inspectorAction();if(!store)return;
     const objectId = `object-${crypto.randomUUID()}`;
     act(() => {
-      const store = storeRef.current!;
       const object: SceneObject = type === 'text'
         ? { id: objectId, type, xMm: 0, yMm: 0, text: 'TEST', fontSizePt: 7, fontFamily: defaultLibraryFont()??'', fill: '#000000', textAlign: 'center', textBox: { widthMm: Math.min(30, store.document.areaMm.width - 4), heightMm: 6, autoWidth: true, autoHeight: true } }
         : type === 'rect'
@@ -315,16 +320,18 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     }, objectId);
   };
   const addBezier = () => {
+    const store=inspectorAction();if(!store)return;
     const objectId = `object-${crypto.randomUUID()}`;
     act(() => {
-      const store = storeRef.current!, object = placeObjectAtCenter({ id: objectId, type: 'bezier', ...normalizedBezier([{ x: 0, y: 3, out: { x: 3, y: -3 } }, { x: 12, y: 3, in: { x: 9, y: 9 } }], false), closed: false, strokeMm: 0.25, stroke: '#000000' }, { xMm: store.document.areaMm.width / 2, yMm: store.document.areaMm.height / 2 }, measureFabric);
+      const object = placeObjectAtCenter({ id: objectId, type: 'bezier', ...normalizedBezier([{ x: 0, y: 3, out: { x: 3, y: -3 } }, { x: 12, y: 3, in: { x: 9, y: 9 } }], false), closed: false, strokeMm: 0.25, stroke: '#000000' }, { xMm: store.document.areaMm.width / 2, yMm: store.document.areaMm.height / 2 }, measureFabric);
       dispatch(store,{ schemaVersion: 1, tool: 'addObject', expectedRevision: store.document.revision, objectId, arguments: objectArguments(object) }, 'manual');
     }, objectId);
   };
   const addPolygon = (preset: 'triangle' | 'pentagon' | 'star') => {
+    const store=inspectorAction();if(!store)return;
     const objectId = `object-${crypto.randomUUID()}`;
     act(() => {
-      const store = storeRef.current!, points = preset === 'star' ? starPoints(5, 4, 0.45) : regularPolygonPoints(preset === 'triangle' ? 3 : 5, 4);
+      const points = preset === 'star' ? starPoints(5, 4, 0.45) : regularPolygonPoints(preset === 'triangle' ? 3 : 5, 4);
       const object: SceneObject = { id: objectId, type: 'path', ...strokeGeometry(points), closed: true, strokeMm: 0.25, stroke: '#000000' };
       const bounds = measureFabric(object); object.xMm = (store.document.areaMm.width - bounds.widthMm) / 2; object.yMm = (store.document.areaMm.height - bounds.heightMm) / 2;
       dispatch(store,{ schemaVersion: 1, tool: 'addObject', objectId, expectedRevision: store.document.revision, arguments: objectArguments(object) }, 'manual');
@@ -592,18 +599,18 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       <EditorButton icon="closePath" label="Chiudi tracciato disegnato" disabled={polylineCount < 3} onClick={() => drawingTool === 'bezier' ? adapter.current?.finishBezier(true) : adapter.current?.finishPolyline(true)}/>
       <EditorButton icon="return" label="Annulla costruzione tracciato" onClick={() => drawingTool === 'bezier' ? adapter.current?.cancelBezier() : adapter.current?.cancelPolyline()}/>
     </div> : null}</div><fieldset className="editor-actions" disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated}><legend className="sr-only">Disegno e oggetti</legend>
-      <div className="button-row"><EditorButton onClick={() => addObject('text')} icon="addText" label="Aggiungi testo"/><EditorButton onClick={() => addObject('rect')} icon="addRect" label="Aggiungi rettangolo"/><EditorButton onClick={() => addObject('circle')} icon="addCircle" label="Aggiungi cerchio"/><EditorButton onClick={() => addObject('line')} icon="addLine" label="Aggiungi linea"/><EditorButton onClick={() => addObject('ellipse')} icon="addEllipse" label="Aggiungi ellisse"/><EditorButton onClick={() => addPolygon('triangle')} icon="addTriangle" label="Aggiungi triangolo"/><EditorButton onClick={() => addPolygon('pentagon')} icon="addPolygon" label="Aggiungi pentagono"/><EditorButton onClick={() => addPolygon('star')} icon="addStar" label="Aggiungi stella"/><EditorButton icon="qr" label="Aggiungi codice QR" onClick={()=>setQrOpen(true)}/><EditorButton onClick={addBezier} icon="bezier" label="Aggiungi curva Bézier"/></div>
-      <div className="button-row"><EditorButton icon="importImage" label="Importa immagine PNG o JPEG" onClick={() => imageImportRef.current?.click()}/></div>
-      <div className="button-row"><EditorButton icon="pictures" label="Apri libreria immagini" onClick={()=>setMediaLibrary('picture')}/><EditorButton icon="background" label="Apri libreria sfondi" onClick={()=>setMediaLibrary('background')}/>{(doc.backgroundImageId||doc.backgroundGroupId)&&<EditorButton icon="delete" label="Rimuovi sfondo" onClick={()=>act(()=>{const current=storeRef.current!;current.dispatch(current.document.backgroundGroupId?{schemaVersion:1,tool:'setBackgroundObjects',objectId:current.document.backgroundGroupId,expectedRevision:current.document.revision,arguments:{objects:[],groups:[]}}:{schemaVersion:1,tool:'setBackgroundImage',objectId:current.document.backgroundImageId!,expectedRevision:current.document.revision,arguments:{object:null}},'manual');})}/>}</div>
+      <div className="button-row"><EditorButton preserveFocus onClick={() => addObject('text')} icon="addText" label="Aggiungi testo"/><EditorButton preserveFocus onClick={() => addObject('rect')} icon="addRect" label="Aggiungi rettangolo"/><EditorButton preserveFocus onClick={() => addObject('circle')} icon="addCircle" label="Aggiungi cerchio"/><EditorButton preserveFocus onClick={() => addObject('line')} icon="addLine" label="Aggiungi linea"/><EditorButton preserveFocus onClick={() => addObject('ellipse')} icon="addEllipse" label="Aggiungi ellisse"/><EditorButton preserveFocus onClick={() => addPolygon('triangle')} icon="addTriangle" label="Aggiungi triangolo"/><EditorButton preserveFocus onClick={() => addPolygon('pentagon')} icon="addPolygon" label="Aggiungi pentagono"/><EditorButton preserveFocus onClick={() => addPolygon('star')} icon="addStar" label="Aggiungi stella"/><EditorButton preserveFocus icon="qr" label="Aggiungi codice QR" onClick={()=>beginInsertion(()=>setQrOpen(true))}/><EditorButton preserveFocus onClick={addBezier} icon="bezier" label="Aggiungi curva Bézier"/></div>
+      <InsertionFileControl id="png-import" icon="importImage" label="Importa immagine PNG o JPEG" fileLabel="File immagine locale" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onPrepare={()=>prepareFileInsertion(importImage)}/>
+      <div className="button-row"><EditorButton preserveFocus icon="pictures" label="Apri libreria immagini" onClick={()=>beginInsertion(()=>setMediaLibrary('picture'))}/><EditorButton preserveFocus icon="background" label="Apri libreria sfondi" onClick={()=>beginInsertion(()=>setMediaLibrary('background'))}/>{(doc.backgroundImageId||doc.backgroundGroupId)&&<EditorButton icon="delete" label="Rimuovi sfondo" onClick={()=>act(()=>{const current=storeRef.current!;current.dispatch(current.document.backgroundGroupId?{schemaVersion:1,tool:'setBackgroundObjects',objectId:current.document.backgroundGroupId,expectedRevision:current.document.revision,arguments:{objects:[],groups:[]}}:{schemaVersion:1,tool:'setBackgroundImage',objectId:current.document.backgroundImageId!,expectedRevision:current.document.revision,arguments:{object:null}},'manual');})}/>}</div>
       <PaperColorPanel document={doc} onChange={color=>act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'setPaperColor',objectId:'canvas',expectedRevision:storeRef.current!.document.revision,arguments:{color}},'manual'))}/>
       <label>Importa testi SVG/PDF come<select aria-label="Importa testi SVG/PDF come" value={importTextMode} disabled={assetBusy} onChange={event=>setImportTextMode(event.target.value as 'outlines'|'editable')}><option value="outlines">Contorni vettoriali</option><option value="editable">Testo editabile</option></select></label><p className="caption">Il testo editabile richiede il font nella libreria. Nei PDF la ricostruzione va controllata; le lettere già convertite in tracciati restano vettori.</p>
       <label className="ratio-toggle"><input type="checkbox" checked={vectorMonochrome} onChange={event => setVectorMonochrome(event.target.checked)}/> Converti colori SVG/PDF in nero</label>
-      <div className="button-row"><EditorButton icon="importSvg" label="Importa SVG vettoriale" onClick={() => svgImportRef.current?.click()}/></div>
-      {import.meta.env.DEV && <><div className="button-row"><EditorButton icon="importSvg" label="Importa PDF vettoriale locale" badge="PDF" onClick={() => pdfImportRef.current?.click()}/></div><label htmlFor="pdf-import" className="sr-only">File PDF vettoriale locale</label><input ref={pdfImportRef} id="pdf-import" className="sr-only" type="file" accept=".pdf,application/pdf" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) importPdf(file); }}/></>}
-      <label htmlFor="svg-import" className="sr-only">File SVG locale</label><input ref={svgImportRef} id="svg-import" className="sr-only" type="file" accept=".svg,image/svg+xml" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) importSvg(file); }}/>
+      <InsertionFileControl id="svg-import" icon="importSvg" label="Importa SVG vettoriale" fileLabel="File SVG locale" accept=".svg,image/svg+xml" onPrepare={()=>prepareFileInsertion(importSvg)}/>
+      {import.meta.env.DEV&&<InsertionFileControl id="pdf-import" icon="importSvg" badge="PDF" label="Importa PDF vettoriale locale" fileLabel="File PDF vettoriale locale" accept=".pdf,application/pdf" onPrepare={()=>prepareFileInsertion(importPdf)}/>}
+
       {fontNotice && <p className="caption" role="status">{fontNotice}</p>}
       {importNotice && <p className="caption" role="status">{importNotice}</p>}
-      <label htmlFor="png-import" className="sr-only">File immagine locale</label><input ref={imageImportRef} id="png-import" className="sr-only" type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) importImage(file); }}/>
+
       <p className="caption">PNG/JPEG locali: massimo 20 MB e 24 milioni di pixel. Originale conservato; conversione bianco/nero modificabile nell’ispettore.</p>
       <div className="button-row"><EditorButton preserveFocus icon="drawLine" label="Disegna linea nel canvas" aria-pressed={drawingTool === 'line'} onClick={() => chooseDrawingTool(drawingTool === 'line' ? null : 'line')}/><EditorButton preserveFocus icon="drawRect" label="Disegna rettangolo nel canvas" aria-pressed={drawingTool === 'rect'} onClick={() => chooseDrawingTool(drawingTool === 'rect' ? null : 'rect')}/><EditorButton preserveFocus icon="drawCircle" label="Disegna cerchio nel canvas" aria-pressed={drawingTool === 'circle'} onClick={() => chooseDrawingTool(drawingTool === 'circle' ? null : 'circle')}/><EditorButton preserveFocus icon="drawEllipse" label="Disegna ellisse nel canvas" aria-pressed={drawingTool === 'ellipse'} onClick={() => chooseDrawingTool(drawingTool === 'ellipse' ? null : 'ellipse')}/><EditorButton preserveFocus icon="freehand" label="Disegna a mano libera" aria-pressed={drawingTool === 'freehand'} onClick={() => chooseDrawingTool(drawingTool === 'freehand' ? null : 'freehand')}/><EditorButton preserveFocus icon="pen" label="Disegna tracciato per punti" aria-pressed={drawingTool === 'polyline'} onClick={() => chooseDrawingTool(drawingTool === 'polyline' ? null : 'polyline')}/><EditorButton preserveFocus icon="bezier" label="Disegna curva Bézier" aria-pressed={drawingTool === 'bezier'} onClick={() => chooseDrawingTool(drawingTool === 'bezier' ? null : 'bezier')}/></div>
       {drawingTool && <p className="caption">{drawingTool === 'bezier' ? 'Clicca per un nodo angoloso; clicca e trascina per le maniglie simmetriche. Invio o doppio clic termina; clic sul primo nodo chiude. Maiusc vincola a 45°, Backspace elimina l’ultimo nodo. Usa anche i pulsanti nella barra in alto.' : drawingTool === 'polyline' ? 'Clicca i vertici. Invio o doppio clic termina; clic sul primo punto chiude. Maiusc vincola a 45°, Backspace rimuove l’ultimo nodo. Usa anche i pulsanti nella barra in alto.' : drawingTool === 'freehand' ? 'Trascina per disegnare un tracciato vettoriale. I punti vengono semplificati al rilascio.' : drawingTool === 'circle' ? 'Trascina dal centro alla circonferenza.' : drawingTool === 'rect' || drawingTool === 'ellipse' ? `Trascina tra due angoli opposti. Maiusc disegna ${drawingTool === 'rect' ? 'un quadrato' : 'un cerchio'}.` : 'Trascina tra due punti nel foglio. Maiusc vincola a 45°.'} Alt sospende gli agganci. Esc annulla. {drawingTool === 'bezier' || drawingTool === 'polyline' ? 'Al completamento torni alla selezione.' : 'Al rilascio torni alla selezione.'}</p>}
@@ -669,7 +676,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       }}/>
     </fieldset>}
     workflow={<>
-      <CustomerFieldsPanel document={doc} onValidity={setFieldsValid} disabled={editing||drawing||assetBusy||archiveBusy} onText={(objectId,text)=>act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'setText',objectId,expectedRevision:storeRef.current!.document.revision,arguments:{text}},'manual'))} onSelect={id=>{select(id);adapter.current?.selectObjects(selectedRef.current);}} onImage={(objectId,file)=>{void prepareAndAct(async store=>{if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);return()=>dispatch(store,{schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision:store.document.revision,arguments:{source}},'manual');});}}/>
+      <CustomerFieldsPanel document={doc} onValidity={setFieldsValid} disabled={editing||drawing||assetBusy||archiveBusy} onText={(objectId,text)=>act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'setText',objectId,expectedRevision:storeRef.current!.document.revision,arguments:{text}},'manual'))} onSelect={id=>{select(id);adapter.current?.selectObjects(selectedRef.current);}} onImage={(objectId,file)=>{void prepareInsertion(async store=>{if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);return()=>dispatch(store,{schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision:store.document.revision,arguments:{source}},'manual');});}}/>
 
       {doc.plaque&&<PlaqueConfigurationPanel admin={mode!=='customer'} document={doc} disabled={editing||drawing||assetBusy} onChange={(areaMm,mounting)=>act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'configurePlaque',objectId:'project',expectedRevision:storeRef.current!.document.revision,arguments:{areaMm,mounting}},'manual'))}/>}
 
