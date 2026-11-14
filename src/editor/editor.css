@@ -126,6 +126,7 @@
 
 .stage-messages { position: relative; }
 .stage-messages .editing-notice { position: absolute; bottom: calc(100% + 8px); left: 12px; right: 12px; margin: 0; z-index: 2; box-shadow: 0 4px 18px #163b5222; }
+.editor-workspace .stage-messages > .error { position: absolute; bottom: calc(100% + 8px); left: 12px; right: 12px; margin: 0; z-index: 3; max-height: min(30dvh, 200px); overflow: auto; box-shadow: 0 4px 18px #163b5222; }
 .editor-workspace .stage-messages { overflow: visible; }
 
 .workspace-layers-popover .panel-close { width: 28px; height: 28px; min-width: 28px; border: 0; border-radius: 4px; background: transparent; }

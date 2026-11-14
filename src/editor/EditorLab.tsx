@@ -358,9 +358,12 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       });
     }catch(error){setError(error instanceof Error?error.message:'Incolla non riuscito');}
   };
-  const selectionCommand = (tool: string, args: unknown, objectId = selectedRef.current[0]) => act(() => {
-    const store = storeRef.current!; dispatch(store,{ schemaVersion: 1, tool, expectedRevision: store.document.revision, objectId, arguments: args }, 'manual');
-  });
+  const selectionCommand = (tool: string, args: unknown, objectId = selectedRef.current[0]) => {
+    if(!flushInspector())return false;
+    return act(() => {
+      const store = storeRef.current!; dispatch(store,{ schemaVersion: 1, tool, expectedRevision: store.document.revision, objectId, arguments: args }, 'manual');
+    });
+  };
   const locateGeometry=(report:ProductionGeometryReport,pageId:string,ruleId:string)=>{
     const store=storeRef.current;if(!store)return;
     const focus=geometryFocusFromReport(store.document,report,pageId,ruleId,++geometryFocusSequence.current);
@@ -480,7 +483,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     const direction = ({ arrowleft: [-1, 0], arrowright: [1, 0], arrowup: [0, -1], arrowdown: [0, 1] } as const)[key as 'arrowleft' | 'arrowright' | 'arrowup' | 'arrowdown'];
     if (!direction) return;
     const step = event.altKey ? 0.01 : event.shiftKey ? 1 : 0.1, deltaXmm = direction[0] * step, deltaYmm = direction[1] * step;
-    run(() => act(() => {
+    run(() => {if(!flushInspector())return;act(() => {
       const store = storeRef.current!, object = store.document.objects.find(object => object.id === ids[0])!;
       if (ids.length === 1 && object.type === 'image' && cropContentsFocus.current === object.id) {
         const next = panRasterContents(object, deltaXmm, deltaYmm);
@@ -488,11 +491,11 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         return;
       }
       const single=ids.length===1&&(!!directRef.current||!rootGroupFor(store.document,ids[0]!));dispatch(store,{ schemaVersion: 1, tool: single ? 'moveObject' : 'moveObjects', expectedRevision: store.document.revision, objectId: ids[0], arguments: single ? { xMm: object.xMm + deltaXmm, yMm: object.yMm + deltaYmm } : { objectIds: ids, deltaXmm, deltaYmm } }, 'manual');
-    }));
+    });});
   };
   useEffect(() => { const handle = (event: KeyboardEvent) => keyboard.current(event); window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, []);
   const alignSelection=(alignment:import('./align-area').AreaAlignment)=>{
-    const ids=selectedRef.current; if(alignPage){if(ids.length===1&&(!rootGroupFor(doc,ids[0]!)||directRef.current))act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'alignObject',objectId:ids[0],expectedRevision:doc.revision,arguments:{alignment,marginMm:0}},'manual'));else selectionCommand('alignObjectsToArea',{objectIds:ids,alignment,marginMm:0,individually:true});}
+    const ids=selectedRef.current; if(alignPage){if(ids.length===1&&(!rootGroupFor(storeRef.current!.document,ids[0]!)||directRef.current))selectionCommand('alignObject',{alignment,marginMm:0});else selectionCommand('alignObjectsToArea',{objectIds:ids,alignment,marginMm:0,individually:true});}
     else selectionCommand('alignObjects',{objectIds:ids,alignment,...(masterRef.current?{referenceObjectId:masterRef.current}:{})});
   };
   const workflowApi: WorkflowEditorApi = { document: doc, peek: () => cloneGraphicDocument(storeRef.current?.document ?? doc), busy: editing || drawing || assetBusy || conflict || catalogOutdated || graphicPageIds(doc).length>1, busyReason: graphicPageIds(doc).length>1 ? 'Il riepilogo prodotto è disponibile per progetti a pagina singola. Puoi salvare il progetto completo nell’archivio.' : editing ? 'Termina la scrittura con Esc o con il pulsante di conferma sul foglio.' : drawing ? 'Termina il disegno prima di controllare il progetto.' : assetBusy ? 'Attendi il caricamento della risorsa.' : 'Risolvi il cambio di formato prima di continuare.', capture: async () => { if(!flushInspector())throw Error('Correggi i valori non applicati nell’ispettore.');const store = storeRef.current; if (!store || !adapter.current) throw new Error('Editor non ancora disponibile'); const document = cloneGraphicDocument(store.document), svg = await exportDocumentSvg(document); if (storeRef.current !== store || store.document.documentId !== document.documentId || store.document.revision !== document.revision) throw new Error('Il progetto è cambiato durante il controllo dei font. Ripeti l’anteprima.'); return { document, svg }; }, open: next => prepareExport(async store => { if(autosave)await preserveDraftSnapshot(store.document,{templateId:sourceRecord?.kind==='template'?sourceRecord.id:store.document.templateOrigin?.id,templateDocumentId:sourceRecord?.kind==='template'?sourceRecord.document.documentId:undefined}); next=await projectFonts.prepare(next);await Promise.all([...allGraphicObjects(next).filter(o => o.type === 'image').map(o => prepareRasterSource(o.source))]); return () => {if(portable)store.open(next);else store.import(next);setSourceRecord(null);}; }) };
@@ -512,14 +515,14 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     transforms={<TransformPanel document={doc} ids={selectedIds} masterId={masterId} page={alignPage} customer={mode==='customer'} busy={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onPage={value=>{setAlignPage(value);if(value)chooseMaster(null);}} onAlign={alignSelection} onIncline={angleDeg=>selectionCommand('inclineObjects',{objectIds:selectedRef.current,angleDeg})} onReflect={axis=>selectionCommand('reflectObjects',{objectIds:selectedRef.current,axis})} onDistribute={axis=>selectionCommand('distributeObjects',{objectIds:selectedRef.current,axis})} onSpace={(axis,gapMm)=>selectionCommand('spaceObjects',{objectIds:selectedRef.current,axis,gapMm,...(masterRef.current?{referenceObjectId:masterRef.current}:{})})}/>}
     layers={<LayersPanel customer={mode==='customer'} onVisibility={(kind,objectId,visible,expectedRevision)=>act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:kind==='group'?'setGroupVisibility':'setObjectVisibility',objectId,expectedRevision,...(kind==='object'?{targetScope:'object'}:{}),arguments:{visible}},'manual'))} actions={<>
       <p className="caption layer-selection-status" role="status">{selectedIds.length > 1 ? `Selezionati: ${selectedIds.length} elementi${selectedGroups.length ? ` · ${selectedGroups.length} gruppi` : ''}` : selectedId ? `Selezionato: ${selectedId}` : doc.objects.length ? 'Seleziona un oggetto nel canvas o nell’elenco.' : 'Il progetto è vuoto. Aggiungi un testo o una forma per iniziare.'}</p>
-      <h3 className="layers-section-title">Gruppi</h3><div className="button-row"><EditorButton icon="group" label="Raggruppa selezione" disabled={selectedIds.length < 2 || !!selectedGroups.length} onClick={() => selectionCommand('groupObjects', { objectIds: selectedRef.current, groupId: `group-${crypto.randomUUID()}` })}/><EditorButton icon="ungroup" label="Separa gruppi selezionati" disabled={!selectedGroups.length} onClick={() => selectionCommand('ungroupObjects', { groupIds: selectedGroups.map(group => group.id) }, selectedGroups[0]?.objectIds[0])}/></div>
+      <h3 className="layers-section-title">Gruppi</h3><div className="button-row"><EditorButton preserveFocus icon="group" label="Raggruppa selezione" disabled={selectedIds.length < 2 || !!selectedGroups.length} onClick={() => selectionCommand('groupObjects', { objectIds: selectedRef.current, groupId: `group-${crypto.randomUUID()}` })}/><EditorButton preserveFocus icon="ungroup" label="Separa gruppi selezionati" disabled={!selectedGroups.length} onClick={() => selectionCommand('ungroupObjects', { groupIds: selectedGroups.map(group => group.id) }, selectedGroups[0]?.objectIds[0])}/></div>
       <details className="layers-help"><summary>Aiuto livelli</summary><p className="caption">Maiusc + clic o riquadro nel canvas per selezioni multiple; il pulsante Selezione multipla serve anche su touch. Option/Alt + clic nel canvas o il pulsante Seleziona solo nella riga del livello selezionano un solo elemento del gruppo.</p></details>
     </>} document={doc} selectedIds={selectedIds} directObjectId={directRef.current} onSelectObject={id=>{setDrawingTool(null);setPanTool(false);adapter.current?.setNodeFocus(null);adapter.current?.setRasterCropFocus(null);setNodeMode(false);setCropMode(false);select(id,true);adapter.current?.selectObjects(selectedRef.current);}} disabled={editing || drawing || assetBusy || archiveBusy || conflict || catalogOutdated} multiple={multiple}
       onSelect={(id, additive) => {
         setDrawingTool(null); const unit = expandSelection(doc, [id]);
         const next = additive ? unit.every(id => selectedIds.includes(id)) ? selectedIds.filter(id => !unit.includes(id)) : [...selectedIds, ...unit] : unit;
         select([...new Set(next)]); adapter.current?.selectObjects(selectedRef.current);
-      }} onReorder={position => !directRef.current&&(selectedIds.length > 1||selectedGroups.length) ? selectionCommand('reorderObjects', { objectIds: selectedRef.current, position }) : act(() => dispatch(storeRef.current!,{ schemaVersion: 1, tool: 'reorderObject', objectId: selectedId, expectedRevision: doc.revision, arguments: { position } }, 'manual'))}
+      }} onReorder={position => !directRef.current&&(selectedIds.length > 1||selectedGroups.length) ? selectionCommand('reorderObjects', { objectIds: selectedRef.current, position }) : selectionCommand('reorderObject',{position})}
       onPlaceMember={(objectId,parentGroupId,targetObjectId,side,expectedRevision)=>{
         const saved=act(()=>dispatch(storeRef.current!,{schemaVersion:1,tool:'placeGroupMember',objectId,expectedRevision,arguments:{parentGroupId,targetObjectId,side}},'manual'));
         if(saved){select(objectId,true);adapter.current?.selectObjects(selectedRef.current);}
