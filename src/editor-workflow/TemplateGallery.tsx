@@ -1,3 +1,4 @@
+import ShopTemplateGallery from '../editor/ShopTemplateGallery';
 import {editorMode} from '../editor/design-session';
 import { useEffect, useState } from 'react';
 import { fixtureCatalog } from '../catalog/adapter';
@@ -11,7 +12,8 @@ import '../editor-admin/admin.css';
 import { DocumentPreview } from './DocumentPreview';
 import { assertFontGeometry } from '../editor/verified-font-geometry';
 
-export default function TemplateGallery(){
+export default function TemplateGallery(){const params=new URLSearchParams(location.search);return params.get('catalog')==='test'||params.has('model')&&params.get('catalog')!=='shop'?<TestTemplateGallery/>:<ShopTemplateGallery/>;}
+function TestTemplateGallery(){
  const[state,setState]=useState<AdminSnapshot|null>(null),[record,setRecord]=useState<ArchiveRecord|null>(null),[fit,setFit]=useState<TemplateFit|null>(null),[product,setProduct]=useState<ProductProfile|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [repairSource,setRepairSource]=useState<ArchiveRecord|null>(null);
  const mode=editorMode();

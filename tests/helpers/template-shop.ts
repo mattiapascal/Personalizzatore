@@ -1,0 +1,8 @@
+import {shopProductChangeFixture} from './shop-product-change';
+import {ProductionProfileSchema} from '../../src/editor/production-profile';
+import {ArchiveRecordSchema} from '../../src/editor-admin/schema';
+export function templateShopFixture(){
+ const f=shopProductChangeFixture(),medium={...structuredClone(f.detail),id:'gid://shopify/Product/3',title:'Supporto medio TEST',variants:[{...f.detail.variants[0]!,id:'gid://shopify/ProductVariant/31'}]},profile=ProductionProfileSchema.parse({...f.profile,version:2,shopBindings:[...f.profile.shopBindings!,{...f.profile.shopBindings![0]!,productId:medium.id,productTitle:medium.title,variantId:medium.variants[0]!.id,variantIds:[medium.variants[0]!.id],variantTitle:medium.variants[0]!.title,variantTitles:[medium.variants[0]!.title]}],variantAreas:[...f.profile.variantAreas!.map(area=>area.variantId===f.detail.variants[0]!.id?{...area,usableArea:{widthMm:100,heightMm:60,shape:'rectangle'}}:area),{variantId:medium.variants[0]!.id,sizeMode:'fixed',usableArea:{widthMm:200,heightMm:100,shape:'rectangle'}}]});
+ const record=ArchiveRecordSchema.parse({id:'91919191-9191-4919-8919-919191919191',kind:'template',title:'Template aziendale TEST',tags:['Targhe','Azienda'],clientRef:'',version:2,archived:false,createdAt:'2026-11-14T12:00:00.000Z',updatedAt:'2026-11-14T12:00:00.000Z',document:f.source,shopProducts:profile.shopBindings!.map(binding=>({...binding,allVariants:true}))});
+ return{...f,medium,profile,record,products:[f.detail,f.second,medium],state:{...f.state,records:[record],productionProfiles:[profile]},fontAsset:f.source.fontAssets![0]!};
+}

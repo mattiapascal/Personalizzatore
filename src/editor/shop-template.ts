@@ -20,7 +20,7 @@ export function shopTemplatePage(record:ArchiveRecord,pageId:string):GraphicDocu
 export interface ShopTemplateFit {document:GraphicDocument;scale:number;sourcePageId:string;}
 /** Geometry only, followed by the same typed command and the asynchronous
  * production/paint checks in the browser. Never changes the source archive. */
-export function fitShopTemplate(record:ArchiveRecord,pageId:string,target:GraphicDocument,context:GraphicCatalogContext,measure:Measure):ShopTemplateFit{
+export function fitShopTemplate(record:ArchiveRecord,pageId:string,target:GraphicDocument,context:GraphicCatalogContext,measure:Measure,allowShrink=true):ShopTemplateFit{
  if(!target.shopSelection||!templateMatchesSelection(record,target.shopSelection))throw Error('Template non associato al prodotto e alla variante scelti.');
  DocumentSchema.parse(record.document);DocumentSchema.parse(target);
  const source=shopTemplatePage(record,pageId);
@@ -37,7 +37,7 @@ export function fitShopTemplate(record:ArchiveRecord,pageId:string,target:Graphi
  // Colour/font policy errors cannot be cured by shrinking. Check the original
  // candidate before searching only the containment geometry.
  const original=adapt(1);assertDocumentTextProduction(original,context,true);DocumentSchema.parse(original);
- try{return{document:validate(original),scale:1,sourcePageId:pageId};}catch(error){if(target.productionProfile?.safeMarginMm==null)throw Error('Definisci il margine del profilo prima di proporre una riduzione automatica.');}
+ try{return{document:validate(original),scale:1,sourcePageId:pageId};}catch(error){if(!allowShrink)throw error;if(target.productionProfile?.safeMarginMm==null)throw Error('Definisci il margine del profilo prima di proporre una riduzione automatica.');}
  let low=0,high=1;
  for(let step=0;step<32;step++){const scale=(low+high)/2;try{const trial=adapt(scale);validateLayout({...trial,productionProfile:{...trial.productionProfile!,safeMarginMm:trial.productionProfile!.safeMarginMm!+SHOP_TEMPLATE_SAMPLING_GUARD_MM}},measure);low=scale;}catch{high=scale;}}
  if(low<.00001)throw Error('Il template non entra in questo formato. Scegli un formato maggiore o modifica la grafica.');
