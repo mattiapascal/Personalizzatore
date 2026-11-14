@@ -60,13 +60,13 @@ export function assertObjectPolicies(before:GraphicDocument,after:GraphicDocumen
   if(!next&&command.tool!=='placeGroupMember'&&group.editor&&Object.values(group.editor).some(Boolean)&&group.objectIds.some(id=>after.objects.some(object=>object.id===id)))throw new Error('Un gruppo con proprietà del template può essere separato solo in modalità amministrativa.');
  }
  const argumentsWithIds=command.arguments as {objectIds?:string[];groupIds?:string[];copies?:{objectId:string}[];objects?:SceneObject[]};
- const targets=new Set([...(command.tool==='setPaperColor'?[]:[command.objectId]),...argumentsWithIds.objectIds??[],...argumentsWithIds.copies?.map(copy=>copy.objectId)??[],...argumentsWithIds.objects?.map(object=>object.id)??[],...(before.groups??[]).filter(group=>argumentsWithIds.groupIds?.includes(group.id)).flatMap(group=>group.objectIds)]);
+ const targets=new Set([...(command.tool==='setPaperColor'||command.tool==='changeShopProduct'?[]:[command.objectId]),...argumentsWithIds.objectIds??[],...argumentsWithIds.copies?.map(copy=>copy.objectId)??[],...argumentsWithIds.objects?.map(object=>object.id)??[],...(before.groups??[]).filter(group=>argumentsWithIds.groupIds?.includes(group.id)).flatMap(group=>group.objectIds)]);
  for(const object of before.objects){
   const next=after.objects.find(item=>item.id===object.id),properties=effectiveObjectProperties(before,object.id);
   if(!next){if(properties?.deleteLocked||properties?.selectionLocked)throw new Error(`Eliminazione bloccata: ${properties.label||object.id}.`);continue;}
   if(JSON.stringify(object.editor??{})!==JSON.stringify(next.editor??{}))throw new Error('Il cliente non può cambiare le proprietà del template.');
   if(properties?.selectionLocked&&targets.has(object.id)&&!(properties.includeInForm&&(command.tool==='setText'||command.tool==='replaceImageSource')))throw new Error(`Selezione bloccata: ${properties.label||object.id}. Usa il modulo, se previsto.`);
-  if(properties?.transformLocked&&command.tool!=='replaceImageSource'&&command.tool!=='setText'&&!sameGeometry(object,next))throw new Error(`Trasformazioni bloccate: ${properties.label||object.id}.`);
+  if(properties?.transformLocked&&command.tool!=='changeShopProduct'&&command.tool!=='replaceImageSource'&&command.tool!=='setText'&&!sameGeometry(object,next))throw new Error(`Trasformazioni bloccate: ${properties.label||object.id}.`);
  }
  for(const object of after.objects){const previous=before.objects.find(item=>item.id===object.id);if(!previous||object.type==='text'&&previous.type==='text'&&object.text!==previous.text){const error=textInputProblem(object);if(error)throw new Error(error);}}
 }

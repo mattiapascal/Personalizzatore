@@ -1,0 +1,19 @@
+import {sharedProfilesFixture} from './shared-profiles';
+import {ProductionProfileSchema} from '../../src/editor/production-profile';
+import {shopProductDocument} from '../../src/editor/shop-product-document';
+import {shopSelectionFor} from '../../src/editor/shop-selection';
+import type {Measure,GraphicCommand} from '../../src/editor/model';
+import {TEST_DEFAULT_FONT} from './editor-fonts';
+export const shopChangeMeasure:Measure=object=>object.type==='text'?{widthMm:Math.max(1,object.text.length)*object.fontSizePt*.2,heightMm:object.fontSizePt*.4}:'widthMm'in object?{widthMm:object.widthMm,heightMm:object.heightMm}:object.type==='circle'?{widthMm:object.radiusMm*2,heightMm:object.radiusMm*2}:object.type==='ellipse'?{widthMm:object.rxMm*2,heightMm:object.ryMm*2}:{widthMm:object.lengthMm,heightMm:object.strokeMm};
+export function shopProductChangeFixture(options:{small?:boolean;stamp?:boolean;round?:boolean;square?:boolean;custom?:boolean;targetFamily?:'doorplate'|'boxed-sign'}={}){
+ const f=sharedProfilesFixture();if(options.small)f.profile.variantAreas!.find(item=>item.variantId===f.second.variants[0]!.id)!.usableArea={widthMm:60,heightMm:40,shape:'rectangle'};
+ if(options.round||options.square)f.profile.variantAreas!.find(item=>item.variantId===f.second.variants[0]!.id)!.usableArea={widthMm:250,heightMm:250,shape:options.round?'round':'square'};
+ if(options.stamp){f.profile.kind='stamp-ink';f.profile.minFontSizePt=7;f.profile.rasterMode='binary';}
+ if(options.custom)f.profile.variantAreas!.find(item=>item.variantId===f.second.variants[0]!.id)!.sizeMode='document';
+ let targetProfile=f.profile;if(options.targetFamily){const original=f.profile;f.profile=ProductionProfileSchema.parse({...original,shopBindings:[original.shopBindings![0]],variantAreas:original.variantAreas!.filter(item=>f.detail.variants.some(variant=>variant.id===item.variantId))});targetProfile=ProductionProfileSchema.parse({...original,id:'76767676-7676-4767-8767-767676767676',label:'Supporto '+options.targetFamily+' TEST',plaqueFamily:options.targetFamily,shopBindings:[original.shopBindings![1]],variantAreas:original.variantAreas!.filter(item=>f.second.variants.some(variant=>variant.id===item.variantId))});f.state.productionProfiles=[f.profile,targetProfile];}
+ const result=shopProductDocument(f.detail,f.profile,f.detail.variants[0]!.id,{width:200,height:100},shopChangeMeasure),source=result.document;source.fontAssets=[TEST_DEFAULT_FONT];
+ source.objects=[{id:'change-box',type:'rect',xMm:20,yMm:20,widthMm:160,heightMm:60,fill:options.stamp?'#000000':'#0088cc',stroke:'none',strokeMm:.1},{id:'change-text',type:'text',xMm:80,yMm:40,text:'TEST',fontSizePt:14,fontFamily:TEST_DEFAULT_FONT.id,fill:options.stamp?'#000000':'#cc0000',textAlign:'center',textBox:{widthMm:40,heightMm:8,autoWidth:true,autoHeight:true},editor:{label:'Nome',order:1,includeInForm:true}}];source.groups=[{id:'change-group',objectIds:source.objects.map(item=>item.id)}];source.templateOrigin={id:'73737373-7373-4737-8737-737373737373',version:1,pageId:'page-1'};
+ if(source.plaque)source.plaque={...source.plaque,method:'screws',pattern:options.targetFamily?'four-corners':'horizontal-pair',holeDiameterMm:4,clearanceMm:1};
+ const area=targetProfile.variantAreas!.find(item=>item.variantId===f.second.variants[0]!.id)!.usableArea,command:GraphicCommand={schemaVersion:1,tool:'changeShopProduct',objectId:'project',expectedRevision:source.revision,arguments:{selection:shopSelectionFor(targetProfile,f.second,f.second.variants[0]!.id),areaMm:{width:area.widthMm!,height:area.heightMm!},mounting:source.plaque?{...source.plaque}:null,...(options.stamp?{inkColor:'blue' as const}:{}),allowShrink:true}},context={...result.context,shopProducts:[f.detail,f.second],shopProfiles:f.state.productionProfiles};
+ return {...f,targetProfile,source,command,context};
+}

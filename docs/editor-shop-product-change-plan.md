@@ -1,0 +1,15 @@
+# Cambio prodotto/materiale nel documento
+
+14 novembre 2026, dopo `ede0380`. Riutilizzare profili condivisi, scelte reali, font esatti, adattamento e diagnostica per cambiare prodotto/variante dall’editor senza ricreare la composizione. Nessuna inferenza da nomi, prezzo inventato o modifica online.
+
+Un comando canonico `changeShopProduct`, con revisione, scelta commerciale, misure e fissaggio espliciti, risolve profilo/prodotto dal contesto letto dal laboratorio. Conservare documento/oggetti/ID/gruppi/font, origine template, pagine inattive e storico. Anteprima e comando devono usare la stessa trasformazione, riferita al centro della pagina; sfondi collegati coprono il formato. Nessun ingrandimento automatico della grafica; riduzione proporzionale solo con vincoli noti e rispettati, senza ridurre automaticamente incisioni non verificabili. Operazioni manuali e AI simulate condividono validatore, Undo/Redo e verifiche di appartenenza/versione.
+
+Fissaggi compatibili conservati in mm, riposizionati sul nuovo supporto. Metodi/schemi incompatibili richiedono una scelta esplicita. Diametro/rispetto tecnici conservabili soltanto per lo stesso metodo e profilo/versione; diversamente restano da verificare. Dati mancanti possono restare avvisi durante un cambio senza riduzione; sovrapposizioni, controlli incompleti/al limite e riduzioni non verificabili non abilitano la conferma. Nessuna certificazione produttiva. I riferimenti grafici conservati devono essere verificati sul nuovo supporto.
+
+Consentire anche i fissaggi sulle sagome quadrate/tonde già rappresentabili: stesso pannello e stessi comandi, con fori realmente interni al cerchio e quote accoppiate per diametro/lato. Non aggiungere nuove geometrie di disegno. Le proprietà che bloccano i singoli oggetti restano intatte; il solo comando deterministico di cambio formato può adattare globalmente gli oggetti protetti, senza rendere modificabili i loro campi.
+
+UI locale con scelte da profili attivi della stessa categoria (timbri o targhe), varianti controllate, misure fisse/personalizzate, fissaggi e confronto prima/dopo. Timbri: variante del corpo decisa dal laboratorio, tinta separata. Acquisire ispettore/modulo prima della proposta, invalidare risposte/anteprime obsolete, rileggere prodotto e profilo alla conferma, conservare una bozza dell’originale prima del commit. Il contesto commerciale aggiornato entra nel DocumentStore insieme al comando solo se esso passa; non azzerare lo storico. Nessun catalogo arbitrario nel JSON del comando.
+
+Collaudare regole, proprietà protette, fonte/versione, rifiuti atomici e contesto, sagome/fissaggi, pagine esistenti, salvataggio/riapertura JSON/SVG e UI desktop/telefono; regressioni della chat. Principale R639 e dati privati invariati, GitHub sincronizzato senza deploy. Prezzi, texture realistiche dei supporti, BSS e filiera produttiva online restano fasi successive.
+
+Implementato e collaudato: [resoconto dell’incremento](iteration-editor-shop-product-change.md). Nessuna configurazione produttiva reale salvata automaticamente.

@@ -6,7 +6,7 @@ import {shopSelectionFor} from './shop-selection';
 export function shopProductDocument(product:ShopProductDetail,profile:ProductionProfile,variantId:string,area:GraphicDocument['areaMm'],measure:Measure){
  validateProductionProfile(profile);const selection=shopSelectionFor(profile,product,variantId),configured=profileAreaConfiguration(profile,variantId).usableArea;
  if(!configured)throw Error('Definisci la sagoma e le misure utili nel profilo.');
- const document=DocumentSchema.parse({...createDocument(),objects:[],shopSelection:selection,areaMm:{...area},shape:configured.shape,colorMode:profile.kind.startsWith('stamp-')?'monochrome':'color',productionProfile:structuredClone(profile),...(profile.kind.startsWith('stamp-')?{inkColor:'black'}:configured.shape==='rectangle'?{plaque:defaultMountingFor(profile.plaqueFamily??'flat-plaque')}:{})});
+ const document=DocumentSchema.parse({...createDocument(),objects:[],shopSelection:selection,areaMm:{...area},shape:configured.shape,colorMode:profile.kind.startsWith('stamp-')?'monochrome':'color',productionProfile:structuredClone(profile),...(profile.kind.startsWith('stamp-')?{inkColor:'black'}:{plaque:defaultMountingFor(profile.plaqueFamily??'flat-plaque',configured.shape)})});
  const context:GraphicCatalogContext={version:'local-shop-selection-v1',products:[],shopProducts:[structuredClone(product)],shopProfiles:[structuredClone(profile)]},store=new DocumentStore(document,measure,context);
  store.dispatch({schemaVersion:1,tool:'setShopSelection',objectId:'project',expectedRevision:document.revision,arguments:{selection}},'manual');
  return{document:store.document,context};

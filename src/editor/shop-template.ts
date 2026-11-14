@@ -1,7 +1,6 @@
 import {cloneGraphicDocument,DocumentSchema,DocumentStore,validateLayout,type GraphicDocument,type GraphicCatalogContext,type Measure,type GraphicCommand} from './model';
 import {graphicPages} from './pages';
-import {backgroundObjectIds} from './background';
-import {transformSelection,selectionBounds} from './selection';
+import {adaptArtworkToPage} from './background';
 import {assertDocumentTextProduction} from './text-production';
 import {templateCommand} from './format-adaptation';
 import {GEOMETRY_INSPECTION,geometryReportCurrent,type ProductionGeometryReport} from './production-geometry';
@@ -26,11 +25,9 @@ export function fitShopTemplate(record:ArchiveRecord,pageId:string,target:Graphi
  DocumentSchema.parse(record.document);DocumentSchema.parse(target);
  const source=shopTemplatePage(record,pageId);
  if(!source.objects.length&&!source.paperColor)throw Error('Il template è vuoto.');
- const backgrounds=backgroundObjectIds(source),adapt=(scale:number)=>{
-  const document=cloneGraphicDocument(target),objects=source.objects;
-  const moved=(ids:boolean,factor:number)=>{const selected=objects.filter(object=>backgrounds.has(object.id)===ids);if(!selected.length)return[];const box=selectionBounds(selected,measure),center={xMm:target.areaMm.width/2+(box.xMm+box.widthMm/2-source.areaMm.width/2)*factor,yMm:target.areaMm.height/2+(box.yMm+box.heightMm/2-source.areaMm.height/2)*factor};return transformSelection(selected,{scale:factor,rotationDeg:0,center},measure);};
-  const mapped=new Map([...moved(false,scale),...moved(true,Math.max(target.areaMm.width/source.areaMm.width,target.areaMm.height/source.areaMm.height))].map(object=>[object.id,object]));
-  document.objects=objects.map(object=>mapped.get(object.id)!);document.groups=structuredClone(source.groups);document.fontAssets=structuredClone(source.fontAssets);
+ const adapt=(scale:number)=>{
+  const document=cloneGraphicDocument(target);
+  document.objects=adaptArtworkToPage(source,target.areaMm,measure,scale);document.groups=structuredClone(source.groups);document.fontAssets=structuredClone(source.fontAssets);
   if(source.paperColor)document.paperColor=source.paperColor;else delete document.paperColor;
   if(source.backgroundImageId)document.backgroundImageId=source.backgroundImageId;else delete document.backgroundImageId;
   if(source.backgroundGroupId)document.backgroundGroupId=source.backgroundGroupId;else delete document.backgroundGroupId;

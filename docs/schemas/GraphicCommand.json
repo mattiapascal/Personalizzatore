@@ -14023,6 +14023,225 @@
         },
         "objectId": {
           "type": "string",
+          "const": "project"
+        },
+        "pageId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
+        },
+        "tool": {
+          "type": "string",
+          "const": "changeShopProduct"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "selection": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "shopify",
+                    "test"
+                  ]
+                },
+                "productId": {
+                  "type": "string",
+                  "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"
+                },
+                "variantId": {
+                  "type": "string",
+                  "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+                },
+                "productTitle": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "variantTitle": {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                "checkedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "profileId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "profileVersion": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "source",
+                "productId",
+                "variantId",
+                "productTitle",
+                "variantTitle",
+                "checkedAt",
+                "profileId",
+                "profileVersion"
+              ],
+              "additionalProperties": false
+            },
+            "areaMm": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 3000
+                },
+                "height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 3000
+                }
+              },
+              "required": [
+                "width",
+                "height"
+              ],
+              "additionalProperties": false
+            },
+            "mounting": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "policyVersion": {
+                      "type": "string",
+                      "const": "local-mounting-v1"
+                    },
+                    "family": {
+                      "type": "string",
+                      "enum": [
+                        "flat-plaque",
+                        "doorplate",
+                        "boxed-sign"
+                      ]
+                    },
+                    "method": {
+                      "type": "string",
+                      "enum": [
+                        "glue",
+                        "holes",
+                        "screws",
+                        "spacer-midi",
+                        "spacer-maxi",
+                        "brackets"
+                      ]
+                    },
+                    "pattern": {
+                      "type": "string",
+                      "enum": [
+                        "horizontal-pair",
+                        "vertical-pair",
+                        "four-corners"
+                      ]
+                    },
+                    "offsetXMm": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 3000
+                    },
+                    "offsetYMm": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 3000
+                    },
+                    "clearanceMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "holeDiameterMm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 100
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "pattern",
+                    "offsetXMm",
+                    "offsetYMm",
+                    "holeDiameterMm"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "inkColor": {
+              "type": "string",
+              "enum": [
+                "black",
+                "blue",
+                "red",
+                "green",
+                "violet"
+              ]
+            },
+            "allowShrink": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "selection",
+            "areaMm",
+            "mounting",
+            "allowShrink"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "expectedRevision",
+        "objectId",
+        "tool",
+        "arguments"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "objectId": {
+          "type": "string",
           "pattern": "^[a-zA-Z][a-zA-Z0-9-]{0,63}$"
         },
         "pageId": {

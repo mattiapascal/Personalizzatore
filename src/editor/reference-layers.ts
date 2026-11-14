@@ -22,7 +22,7 @@ export function referenceLayers(document:GraphicDocument):ReferenceLayers{
   const copy=cloneSceneObject(source);copy.id=unique('reference-text-guide');copy.editor={...copy.editor,reference:false};copy.visible=true;
   foreground.objects.push(copy);foregroundGuideIds.push(copy.id);
  }
- if(document.plaque){const mounting=document.plaque;for(const point of plaqueMountingPoints(document.areaMm,mounting)){
+ if(document.plaque){const mounting=document.plaque;for(const point of plaqueMountingPoints(document.areaMm,mounting,document.shape)){
   // Without a configured hole diameter these are position symbols, not hardware dimensions.
   const radius=mounting.holeDiameterMm?mounting.holeDiameterMm/2:Math.min(document.areaMm.width,document.areaMm.height)/80,strokeMm=Math.min(.25,radius/3),base={xMm:point.xMm-radius,yMm:point.yMm-radius,radiusMm:radius,stroke:'#006b9d',strokeMm,fill:mounting.method==='holes'?'#ffffff':'#c4d9e3'};
   foreground.objects.push({id:unique('reference-mounting'),type:'circle',...base});
@@ -32,4 +32,4 @@ export function referenceLayers(document:GraphicDocument):ReferenceLayers{
  if(foreground.objects.length)foreground.colorMode='color';
  return{artwork,background,foreground:foreground.objects.length?foreground:null,...(foregroundGuideIds.length?{foregroundGuideIds}:{})};
 }
-export function hasReferenceLayers(document:GraphicDocument):boolean{return boundReferenceTexts(document).length>0||document.objects.some(object=>objectIsVisible(document,object)&&effectiveObjectProperties(document,object.id).reference)||!!document.plaque&&plaqueMountingPoints(document.areaMm,document.plaque).length>0;}
+export function hasReferenceLayers(document:GraphicDocument):boolean{return boundReferenceTexts(document).length>0||document.objects.some(object=>objectIsVisible(document,object)&&effectiveObjectProperties(document,object.id).reference)||!!document.plaque&&plaqueMountingPoints(document.areaMm,document.plaque,document.shape).length>0;}

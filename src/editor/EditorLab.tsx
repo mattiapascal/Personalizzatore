@@ -1,3 +1,4 @@
+import {ShopProductChangePanel} from './ShopProductChangePanel';
 import {ShopSelectionPanel} from './ShopSelectionPanel';
 import {InsertionFileControl} from './InsertionFileControl';
 import {INSPECTOR_COMMIT_ERROR} from './inspector-controller';
@@ -110,7 +111,8 @@ const GESTURE_RETRY_NOTICE='Le misure sono state applicate. Riprendi il gesto da
 function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated = false, autosave = false, availableProducts, shopContext, onEditingChange, onKeepProduct, portable=false,onDocumentState,initialDocument,initialTitle,initialTags,initialKind='composition',initialSource }: { initialSource?:{record:ArchiveRecord;mode:'archive'|'template'};initialKind?:'composition'|'template';initialTitle?:string;initialTags?:string[];initialDocument?:GraphicDocument;onDocumentState?:(document:GraphicDocument)=>void;portable?:boolean;product?: ProductProfile; draftText?: string; catalogVersion: string; catalogOutdated?: boolean; autosave?: boolean; availableProducts?: readonly ProductProfile[];shopContext?:GraphicCatalogContext; onEditingChange: (editing: boolean) => void; onKeepProduct: (productId: string, variantId: string) => void }) {
   const projectFonts=useProjectFontPreparation();
   const mode=editorMode(),policyRole=mode==='customer'?'customer':'admin';const archiveBusyRef=useRef(false);
-  const graphicCatalog=availableProducts||product||shopContext?{...shopContext,version:catalogVersion,products:availableProducts??(product?[product]:[])}:undefined;
+  const [runtimeShopContext,setRuntimeShopContext]=useState<GraphicCatalogContext|undefined>(shopContext);
+  const graphicCatalog=availableProducts||product||runtimeShopContext?{...runtimeShopContext,version:catalogVersion,products:availableProducts??(product?[product]:[])}:undefined;
   const inkFilterId=`editor-ink-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
   const inspectorController=useRef<{flush:()=>boolean}|null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -712,6 +714,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     </fieldset>}
     workflow={<>
       <ShopSelectionPanel document={doc} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onInk={color=>sceneCommand('setInkColor','project',{color})}/>
+      {import.meta.env.DEV&&doc.shopSelection&&<ShopProductChangePanel api={workflowApi} context={graphicCatalog} role={policyRole} onConfirm={(command,source,context)=>validateCapturedSnapshot(source,true)&&act(()=>{const store=storeRef.current!;store.dispatch(command,'manual',context);setRuntimeShopContext(store.catalogContext);})}/>}
       <CustomerFieldsPanel key={`${doc.documentId}:${doc.pageId??'page-1'}`} document={doc} onValidity={reportFieldsValidity} disabled={editing||drawing||assetBusy||archiveBusy} onText={(objectId,text)=>sceneCommand('setText',objectId,{text})} onSelect={id=>{select(id);adapter.current?.selectObjects(selectedRef.current);}} onImage={(objectId,file)=>{void prepareInsertion(async store=>{if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);return()=>dispatch(store,{schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision:store.document.revision,arguments:{source}},'manual');});}}/>
 
       {doc.plaque&&<PlaqueConfigurationPanel admin={mode!=='customer'} document={doc} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onChange={(areaMm,mounting)=>sceneCommand('configurePlaque','project',{areaMm,mounting})}/>}

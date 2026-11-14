@@ -4,6 +4,11 @@ import {selectionBounds,transformSelection} from './selection';
 
 export function backgroundObjectIds(document:GraphicDocument):Set<string>{return new Set(document.backgroundGroupId?document.groups?.find(g=>g.id===document.backgroundGroupId)?.objectIds??[]:document.backgroundImageId?[document.backgroundImageId]:[]);}
 export function foregroundObjects(document:GraphicDocument):SceneObject[]{const ids=backgroundObjectIds(document);return document.objects.filter(o=>!ids.has(o.id));}
+/** Keep page-relative placement; linked backgrounds cover the destination. */
+export function adaptArtworkToPage(source:GraphicDocument,area:GraphicDocument['areaMm'],measure:Measure,scale:number):SceneObject[]{
+ const backgrounds=backgroundObjectIds(source),adapt=(background:boolean,factor:number)=>{const objects=source.objects.filter(object=>backgrounds.has(object.id)===background);if(!objects.length)return[];const box=selectionBounds(objects,measure);return transformSelection(objects,{scale:factor,rotationDeg:0,center:{xMm:area.width/2+(box.xMm+box.widthMm/2-source.areaMm.width/2)*factor,yMm:area.height/2+(box.yMm+box.heightMm/2-source.areaMm.height/2)*factor}},measure);};
+ const mapped=new Map([...adapt(false,scale),...adapt(true,Math.max(area.width/source.areaMm.width,area.height/source.areaMm.height))].map(object=>[object.id,object]));return source.objects.map(object=>mapped.get(object.id)!);
+}
 /** A linked background covers the new sheet; the artwork keeps its page-relative
  * placement. Ordinary documents keep the existing ink-centred fit behaviour. */
 export function adaptCompositionObjects(source:GraphicDocument,area:GraphicDocument['areaMm'],measure:Measure,artworkScale:number):SceneObject[]{

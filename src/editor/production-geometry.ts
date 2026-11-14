@@ -34,7 +34,7 @@ export function pageGeometryRules(document:GraphicDocument):GeometryRule[]{
 /** Only the selected document mounting creates obstacles; available kits do not. */
 export function mountingGeometryRules(document:GraphicDocument):GeometryRule[]{
  const mounting=document.plaque;if(!mounting)return[];
- const points=plaqueMountingPoints(document.areaMm,mounting),base={area:{...document.areaMm},round:document.shape==='round'};
+ const points=plaqueMountingPoints(document.areaMm,mounting,document.shape),base={area:{...document.areaMm},round:document.shape==='round'};
  return points.flatMap((point,index)=>{
   const diameter=mounting.holeDiameterMm,clearance=mounting.clearanceMm;
   const rule=(kind:'mounting-hole'|'mounting-clearance',radius:number|undefined,message?:string):GeometryRule=>{

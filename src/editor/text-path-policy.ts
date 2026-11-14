@@ -30,7 +30,7 @@ export function assertTextPathPolicies(
   if (JSON.stringify(metadata ?? {}) !== JSON.stringify(next.textPath.originalPathMetadata ?? {}) || source.textPath.originalPathId !== next.textPath.originalPathId) {
    throw Error('Il cliente non può cambiare le proprietà originali del tracciato.');
   }
-  if (props?.transformLocked || props?.selectionLocked) {
+  if ((props?.transformLocked || props?.selectionLocked) && command.tool !== 'changeShopProduct') {
    const path = restoredTextPathGuide(source, source.textPath.originalPathId, measure);
    const updated = restoredTextPathGuide(next, source.textPath.originalPathId, measure);
    if (!sameGeometry(path, updated)) {

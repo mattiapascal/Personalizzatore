@@ -814,7 +814,7 @@ export class FabricAdapter {
     context.restore();
   }
   private drawPlaqueMounting():void{
-    const doc=this.document;if(!doc?.plaque)return;const points=plaqueMountingPoints(doc.areaMm,doc.plaque),context=this.canvas.getContext();
+    const doc=this.document;if(!doc?.plaque)return;const points=plaqueMountingPoints(doc.areaMm,doc.plaque,doc.shape),context=this.canvas.getContext();
     context.save();this.overlayTransform(context);context.lineWidth=1.5/this.zoom;context.strokeStyle='#006b9d';
     for(const point of points){const x=point.xMm*PX_PER_MM,y=point.yMm*PX_PER_MM,r=doc.plaque.holeDiameterMm?doc.plaque.holeDiameterMm*PX_PER_MM/2:6/this.zoom;context.beginPath();context.arc(x,y,r,0,Math.PI*2);context.fillStyle=doc.plaque.method==='holes'?'#ffffff':'#c4d9e3';context.fill();context.stroke();if(doc.plaque.method==='screws'){context.beginPath();context.moveTo(x-r*.6,y-r*.6);context.lineTo(x+r*.6,y+r*.6);context.moveTo(x+r*.6,y-r*.6);context.lineTo(x-r*.6,y+r*.6);context.stroke();}else if(doc.plaque.method.startsWith('spacer')){context.beginPath();context.arc(x,y,r*.45,0,Math.PI*2);context.stroke();}}
     if(doc.plaque.holeDiameterMm!==null&&doc.plaque.clearanceMm!=null&&doc.plaque.clearanceMm>0){context.strokeStyle='#0088cc';context.lineWidth=1/this.zoom;context.setLineDash([4/this.zoom,3/this.zoom]);for(const point of points){context.beginPath();context.arc(point.xMm*PX_PER_MM,point.yMm*PX_PER_MM,(doc.plaque.holeDiameterMm/2+doc.plaque.clearanceMm)*PX_PER_MM,0,Math.PI*2);context.stroke();}}

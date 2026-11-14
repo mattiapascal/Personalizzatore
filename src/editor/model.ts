@@ -1,5 +1,7 @@
 import {QrParametersSchema} from './qr-code';
 import {ShopSelectionSchema,assertShopSelection,shopSelectionFor} from './shop-selection';
+import {fitShopProductChange} from './shop-product-change';
+import {mergeShopProductContext} from './shop-context';
 import type {ShopProductDetail} from '../editor-admin/shop-catalog';
 import {PathStrokeFields,ShapeJoinFields,pathStrokeExtras,resizedPathStrokeFrame} from './path-stroke';
 import {assertTextPathPolicies} from './text-path-policy';
@@ -137,7 +139,7 @@ function refineDocument(d: Omit<z.infer<typeof documentFields>, 'schemaVersion'>
     ];
     if (paints.some(paint => !isMonochromePaint(paint)) || object.type === 'image' && (object.raster.mode === 'original' || object.raster.mode === 'color' || !isMonochromePaint(object.raster.tintColor))) ctx.addIssue({ code: 'custom', message: 'Il documento monocromatico ammette soltanto nero/bianco. Per conservare i colori usa un progetto a colori, senza montatura timbro.' });
   }
-  if(d.plaque){if(d.shape!=='rectangle')ctx.addIssue({code:'custom',message:'La targa a misura richiede una sagoma rettangolare'});try{plaqueMountingPoints(d.areaMm,d.plaque);}catch(cause){ctx.addIssue({code:'custom',message:cause instanceof Error?cause.message:'Fissaggi non validi'});}}
+  if(d.plaque){try{plaqueMountingPoints(d.areaMm,d.plaque,d.shape);}catch(cause){ctx.addIssue({code:'custom',message:cause instanceof Error?cause.message:'Fissaggi non validi'});}}
   if(d.objects.reduce((count,object)=>count+(object.type==='text'?Array.from(object.text).length:0),0)>EDITOR_LIMITS.documentTextCharacters)ctx.addIssue({code:'custom',message:`Massimo ${EDITOR_LIMITS.documentTextCharacters} caratteri Unicode nell’intero documento`});
   if (new Set(d.objects.map(o => o.id)).size !== d.objects.length) ctx.addIssue({ code: 'custom', message: 'ID duplicati' });
   if(d.backgroundImageId&&!d.objects.some(o=>o.id===d.backgroundImageId&&o.type==='image'))ctx.addIssue({code:'custom',message:'Sfondo collegato a un’immagine inesistente'});
@@ -291,6 +293,7 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('setBackgroundObjects'),arguments:z.strictObject({objects:z.array(SceneObjectSchema).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundGroupId:id.optional(),fontAssets:FontAssetsSchema.optional()})}),
   z.strictObject({...objectBase,tool:z.literal('replaceImageSource'),arguments:z.strictObject({source:RasterSourceSchema,fit:z.enum(['contain','cover']).optional()})}),
   z.strictObject({...base,tool:z.literal('setShopSelection'),arguments:z.strictObject({selection:ShopSelectionSchema.nullable()})}),
+  z.strictObject({...base,tool:z.literal('changeShopProduct'),objectId:z.literal('project'),arguments:z.strictObject({selection:ShopSelectionSchema,areaMm:AreaSchema,mounting:PlaqueMountingSchema.nullable(),inkColor:InkColorSchema.optional(),allowShrink:z.boolean()})}),
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
   z.strictObject({...base,tool:z.literal('changeFormat'),arguments:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1),allowShrink:z.boolean()})}),
@@ -444,6 +447,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
       assertShopSelection(verified,doc.productionProfile,doc.productId);next.shopSelection={...verified};
     }
   }
+  else if(command.tool==='changeShopProduct'){Object.assign(next,fitShopProductChange(doc,command.arguments,catalog,measure).document);}
   else if(command.tool==='setProductionProfile'){
     if(role!=='admin')throw Error('Il profilo produttivo si collega in modalità amministrativa.');
     if(command.arguments.profile){assertProfileForPage(command.arguments.profile,doc,catalog,true);next.productionProfile=structuredClone(command.arguments.profile);}else delete next.productionProfile;
@@ -463,7 +467,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     // New hardware must not inherit old measurements. Validate the effective
     // configuration, including legacy glue documents carrying a dormant size.
     if(next.plaque.method!==doc.plaque.method){next.plaque.holeDiameterMm=null;if(next.plaque.clearanceMm!==undefined)next.plaque.clearanceMm=null;}
-    plaqueMountingPoints(command.arguments.areaMm,next.plaque);
+    plaqueMountingPoints(command.arguments.areaMm,next.plaque,doc.shape);
     const dx=(command.arguments.areaMm.width-doc.areaMm.width)/2,dy=(command.arguments.areaMm.height-doc.areaMm.height)/2;next.areaMm={...command.arguments.areaMm};next.objects=next.objects.map(object=>({...object,xMm:object.xMm+dx,yMm:object.yMm+dy}));
   }
   else if(command.tool==='setInkColor') {
@@ -659,14 +663,17 @@ export class DocumentStore {
   readonly events: HistoryEntry[] = [];
   private past: GraphicDocument[] = [];
   private future: GraphicDocument[] = [];
-  constructor(document: GraphicDocument, private readonly measure: Measure, private readonly catalog?:GraphicCatalogContext,private readonly role:EditorRole='customer') {
+  constructor(document: GraphicDocument, private readonly measure: Measure, private catalog?:GraphicCatalogContext,private readonly role:EditorRole='customer') {
     this.document = parseGraphicDocument(document); validateLayout(this.document, measure, 'edit');
   }
-  dispatch(raw: unknown, source: 'manual' | 'ai-simulation'): void {
-    const next = applyGraphicCommand(this.document, raw, this.measure, this.catalog,this.role);
-    if(GraphicCommandSchema.parse(raw).tool!=='selectPage'){this.past.push(cloneGraphicDocument(this.document));this.future=[];}
-    this.document = next;
-    this.events.push({ source, revision: next.revision, objectId: GraphicCommandSchema.parse(raw).objectId });
+  get catalogContext():GraphicCatalogContext|undefined{return this.catalog?structuredClone(this.catalog):undefined;}
+  dispatch(raw: unknown, source: 'manual' | 'ai-simulation',shopContext?:GraphicCatalogContext): void {
+    const command=GraphicCommandSchema.parse(raw);if(shopContext&&command.tool!=='changeShopProduct')throw Error('Il contesto commerciale si aggiorna soltanto con il cambio prodotto.');
+    const context=shopContext?mergeShopProductContext(this.catalog,shopContext):this.catalog;
+    const next = applyGraphicCommand(this.document, command, this.measure, context,this.role);
+    if(command.tool!=='selectPage'){this.past.push(cloneGraphicDocument(this.document));this.future=[];}
+    this.document = next;this.catalog=context;
+    this.events.push({ source, revision: next.revision, objectId:command.objectId });
   }
   clearHistory():void{this.past=[];this.future=[];}
   undo(): void { this.travel(this.past, this.future, 'undo'); }
