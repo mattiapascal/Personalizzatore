@@ -12,6 +12,8 @@ export const GraphicalActionSchema=z.union([
 export const GraphicalArgumentsSchema=z.strictObject({clarification:z.string().min(1).max(400).nullable(),actions:z.array(GraphicalActionSchema).max(16)});
 export const GraphicalRequestSchema=z.strictObject({
  schemaVersion:z.literal(1),sessionId:z.string().uuid(),requestId:z.string().uuid(),revision:z.number().int().nonnegative(),message:z.string().trim().min(1).max(6000),
+ history:z.array(z.strictObject({role:z.enum(['user','assistant']),text:z.string().min(1).max(6000)})).max(6).default([]),
+ focusObjectIds:z.array(handle).max(200).default([]),
  canvas:z.strictObject({widthMm:size,heightMm:size,shape:z.enum(['rectangle','square','round']),monochrome:z.boolean(),minFontSizePt:fontSize,safeMarginMm:z.number().nonnegative().nullable()}),
  exclusions:z.array(z.strictObject({shape:z.enum(['rect','ellipse']),xMm:coordinate,yMm:coordinate,widthMm:size,heightMm:size})).max(29),
  objects:z.array(z.strictObject({id:handle,type:z.enum(['text','image','other']),label:z.string().max(160),selected:z.boolean(),protected:z.boolean(),textEditable:z.boolean(),movable:z.boolean(),xMm:coordinate,yMm:coordinate,widthMm:z.number().nonnegative().max(20000),heightMm:z.number().nonnegative().max(20000),textToken:z.string().regex(/^\[RISERVATO_\d+\]$/).nullable(),characters:z.number().int().nonnegative(),lines:z.number().int().nonnegative(),fontId:handle.nullable(),fontSizePt:fontSize.nullable(),fill:color.nullable(),alignment:alignment.nullable()})).max(200),

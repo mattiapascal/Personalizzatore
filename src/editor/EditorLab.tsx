@@ -119,6 +119,7 @@ function EditorLabSession({ onDiscard,product, draftText, catalogVersion, catalo
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
   const [qrOpen,setQrOpen]=useState(false);
+  const [assistantOpen,setAssistantOpen]=useState(false),[assistantCommitting,setAssistantCommitting]=useState(false);
   const [mediaLibrary,setMediaLibrary]=useState<MediaKind|null>(null);
   const [contextPoint,setContextPoint]=useState<{x:number;y:number}|null>(null);
   const [importNotice, setImportNotice] = useState('');
@@ -713,8 +714,10 @@ function EditorLabSession({ onDiscard,product, draftText, catalogVersion, catalo
         select(objectId);adapter.current?.selectObjects(selectedRef.current);
       }}/>
     </fieldset>}
+    assistant={import.meta.env.DEV&&<GraphicAssistantPanel key={`assistant:${doc.documentId}:${doc.pageId??'page-1'}`} open={assistantOpen} onClose={()=>setAssistantOpen(false)} onCommitBusy={setAssistantCommitting} api={workflowApi} context={graphicCatalog} role={policyRole} selectedIds={selectedIds} onConfirm={(commands,source)=>validateCapturedSnapshot(source,true)&&act(()=>storeRef.current!.dispatchBatch(commands,'ai'))}/>}
+    assistantOpen={assistantOpen} assistantToggleDisabled={assistantCommitting} onToggleAssistant={()=>{if(assistantOpen)setAssistantOpen(false);else if(prepareWorkflowSnapshot())setAssistantOpen(true);}}
     workflow={<>
-      {import.meta.env.DEV&&<GraphicAssistantPanel key={`assistant:${doc.documentId}:${doc.pageId??'page-1'}`} api={workflowApi} context={graphicCatalog} role={policyRole} selectedIds={selectedIds} onConfirm={(commands,source)=>validateCapturedSnapshot(source,true)&&act(()=>storeRef.current!.dispatchBatch(commands,'ai'))}/>}
+      {import.meta.env.DEV&&<button type="button" disabled={workflowApi.busy||assistantCommitting} onPointerDown={event=>{if(event.button===0)event.preventDefault();}} onClick={()=>{if(prepareWorkflowSnapshot())setAssistantOpen(true);}}>Assistente grafico</button>}
       <ShopSelectionPanel document={doc} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onInk={color=>sceneCommand('setInkColor','project',{color})}/>
       {import.meta.env.DEV&&doc.shopSelection&&<ShopProductChangePanel api={workflowApi} context={graphicCatalog} role={policyRole} onConfirm={(command,source,context)=>validateCapturedSnapshot(source,true)&&act(()=>{const store=storeRef.current!;store.dispatch(command,'manual',context);setRuntimeShopContext(store.catalogContext);})}/>}
       <CustomerFieldsPanel key={`${doc.documentId}:${doc.pageId??'page-1'}`} document={doc} onValidity={reportFieldsValidity} disabled={editing||drawing||assetBusy||archiveBusy} onText={(objectId,text)=>sceneCommand('setText',objectId,{text})} onSelect={id=>{select(id);adapter.current?.selectObjects(selectedRef.current);}} onImage={(objectId,file)=>{void prepareInsertion(async store=>{if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);return()=>dispatch(store,{schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision:store.document.revision,arguments:{source}},'manual');});}}/>

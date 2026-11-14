@@ -1,1 +1,12 @@
 .graphical-assistant-dialog{width:min(920px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box;background:#fff;color:#173f52;border:1px solid #b9c8cc;border-radius:12px;padding:24px}.graphical-assistant-dialog fieldset{border:0;padding:0;margin:0}.graphical-assistant-dialog textarea{width:100%;box-sizing:border-box;resize:vertical}.graphical-assistant-dialog button{background:#edf8ff;color:#173f52;border:1px solid #aad7ef;border-radius:6px;padding:10px 12px}.graphical-assistant-dialog .configuration-dialog-heading button{padding:5px 9px;background:#fff}.graphical-assistant-dialog .configuration-dialog-actions button:last-child{background:#08c;color:#fff}.graphical-assistant-dialog button:disabled{opacity:.5}.graphical-assistant-images{display:flex;flex-wrap:wrap;gap:10px}.graphical-assistant-images>div{display:grid;grid-template-columns:64px auto auto;align-items:center;gap:6px}.graphical-assistant-images img{width:64px;height:64px;object-fit:contain}.graphical-assistant-question{padding:12px;background:#edf8ff;border-left:3px solid #08c}.graphical-assistant-dialog [role=alert]{padding:12px;background:#fff0ed;color:#8f2621}@media(max-width:600px){.graphical-assistant-dialog{padding:16px}.graphical-assistant-dialog .configuration-review{display:block}.graphical-assistant-dialog .configuration-dialog-actions{display:flex;flex-direction:column}.graphical-assistant-images>div{grid-template-columns:48px 1fr auto}.graphical-assistant-images img{width:48px;height:48px}}
+.graphical-assistant-pane{width:100%;max-height:none;border:0;border-radius:0;padding:14px;font-size:14px}
+.graphical-assistant-pane[hidden]{display:none}
+.graphical-assistant-pane h2{font-size:18px;margin:0}
+.graphical-assistant-pane .configuration-dialog-heading{position:sticky;top:0;background:#fff;z-index:1;padding:10px 0;border-bottom:1px solid #c8dce9;display:flex;align-items:center;justify-content:space-between}
+.graphical-assistant-pane .configuration-review{display:block}
+.graphical-assistant-pane .configuration-dialog-actions{display:flex;flex-wrap:wrap;gap:8px}
+.graphical-assistant-pane .configuration-dialog-actions button{flex:1 1 130px}
+.graphical-assistant-history{padding:0;list-style:none;margin:12px 0;overflow-wrap:anywhere}
+.graphical-assistant-history li{padding:8px 10px;border-radius:6px;background:#edf8ff;margin:8px 0}
+.graphical-assistant-history p{margin:5px 0;white-space:pre-wrap}
+.graphical-assistant-pane{overflow:visible}

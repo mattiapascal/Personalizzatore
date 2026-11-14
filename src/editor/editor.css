@@ -395,3 +395,13 @@
 .lab:not(.editor-workspace) .canvas-scroll[data-canvas-windowed=true]{max-height:70vh;display:flex;align-items:safe center;justify-content:safe center}
 
 .qr-fields{display:grid;gap:12px;min-width:0}.qr-fields label{display:grid;gap:5px}.qr-fields :is(select,textarea){box-sizing:border-box;width:100%;min-width:0;font:14px/1.45 Arial,sans-serif;padding:8px;border:1px solid #b7d3e3;border-radius:5px;background:#fff;color:#163b52}.qr-fields textarea{resize:vertical}.qr-fields .caption{margin:0}.qr-insert-dialog{width:min(520px,calc(100vw - 32px));box-sizing:border-box}.qr-insert-dialog form{display:grid;gap:16px}
+/* One canvas stays mounted when the graphical conversation is opened or expanded. */
+.workspace-assistant[hidden]{display:none}
+.workspace-assistant{min-width:0;min-height:0;background:#fff;border:1px solid #c8dce9;border-radius:8px;overflow:auto;margin:12px 0}
+.editor-workspace .workspace-assistant{grid-area:assistant;margin:0;border:0;border-left:1px solid #c8dce9;border-radius:0}
+.editor-workspace .workspace-layout[data-assistant-open=true]{grid-template-columns:var(--left-panel) minmax(0,1fr) 330px var(--right-panel);grid-template-areas:'objects canvas assistant details'}
+@media(max-width:899px){
+ .editor-workspace .workspace-layout[data-assistant-open=true]{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(140px,1fr) minmax(180px,1fr);grid-template-areas:'canvas' 'assistant'}
+ .editor-workspace .workspace-assistant{border-left:0;border-top:1px solid #c8dce9}
+ .editor-workspace .workspace-layout[data-assistant-open=true]>.objects-panel,.editor-workspace .workspace-layout[data-assistant-open=true]>.workspace-right-panels{grid-area:canvas}
+}

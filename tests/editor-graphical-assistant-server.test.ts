@@ -28,3 +28,7 @@ it('risposte incomplete, azioni ignote e domanda con azioni non producono una pr
 it('endpoint locale usa lo stesso blocco concorrente e registro consumi della selezione',async()=>{
  const root=await directory();let release:(value:Response)=>void=()=>{};const pending=new Promise<Response>(resolve=>{release=resolve;}),api=new LocalApi(config(),root,async()=>pending);await api.init();const request=input(),running=api.request('POST','/api/editor/propose',request);await new Promise(resolve=>setTimeout(resolve,20));await expect(api.request('POST','/api/editor/propose',request)).rejects.toThrow(/già in corso/);release(answer());expect(await running).toMatchObject({requestId:request.requestId});expect(api.status().ai.requests).toBe(1);
 });
+
+it('annullamento prima della richiesta non prenota consumi e non apre la rete',async()=>{
+ const meter=new Meter(join(await directory(),'meter.json')),abort=new AbortController();abort.abort();let calls=0;await expect(proposeGraphical(input(),config(),meter,async()=>{calls++;return answer();},abort.signal)).rejects.toThrow();expect(calls).toBe(0);expect(meter.state.requests).toBe(0);
+});

@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const icons = {
+  chat:<><path d="M4 3h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6 4V4a1 1 0 0 1 1-1zM7 7h10M7 11h7"/></>,
   joinMiter:<path d="M3 21V3H21V9H9V21Z" fill="currentColor" stroke="none"/>,
   joinRound:<path d="M3 21V9A6 6 0 0 1 9 3H21V9H9V21Z" fill="currentColor" stroke="none"/>,
   joinBevel:<path d="M3 21V9L9 3H21V9H9V21Z" fill="currentColor" stroke="none"/>,

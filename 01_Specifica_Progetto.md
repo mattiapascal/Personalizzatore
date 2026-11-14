@@ -400,3 +400,5 @@ La directory esatta deve adattarsi allo scaffold ufficiale scelto. Non adottare 
 ---
 
 **Nota finale:** questo documento è il riferimento iniziale, non un'affermazione che lo stato del negozio sia già stato ispezionato. Codex deve trasformare ipotesi e requisiti in verifiche, registrare ogni scelta e preservare la reversibilità delle modifiche. Qualsiasi intervento sul negozio reale richiede autorizzazione esplicita.
+
+**14 novembre — conversazione grafica locale:** [Pannello e prove](docs/iteration-editor-graphical-conversation.md). Richieste successive e modifiche manuali sullo stesso documento, memoria breve protetta e interruzioni propagate, anteprima/conferma/Undo conservati. 1.520 test, 106 browser pertinenti distinti fra esecuzioni/ricontrolli, 13 pubblici e 106 campioni passati. Principale R639 invariato; chat commerciale e mini-editor incorporato ancora distinti, nessun deploy.

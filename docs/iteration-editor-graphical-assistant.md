@@ -2,13 +2,15 @@
 
 14 novembre 2026, dopo `b12aa88`; [piano](editor-graphical-assistant-plan.md). Il laboratorio ora collega un pannello di richieste grafiche al provider AI configurato, con proposta strutturata, anteprima e conferma. Nessun deploy, modifica al negozio o chiamata AI a pagamento durante i collaudi automatici.
 
+Aggiornamento successivo: [conversazione affiancata e memoria breve](iteration-editor-graphical-conversation.md). Il pannello ora rimane aperto dopo la conferma; questo documento conserva le evidenze del primo incremento.
+
 ## Come provarlo
 
 Aprire una composizione nell’editor locale. In **Prodotto e fissaggi** oppure **Compila i dati**, premere **Assistente grafico**. Scrivere una richiesta completa, per esempio «Cambia il testo selezionato in “La mia azienda”, centrato e a 12 punti». Il testo tra virgolette resta opaco verso il modello; viene ripristinato nel browser. Si possono allegare fino a quattro PNG/JPEG, indicandoli come «immagine 1», «immagine 2» e così via.
 
 Premere **Proponi una bozza**, confrontare composizione attuale e proposta, poi **Applica la proposta AI**. **Modifica richiesta** invalida l’anteprima e riapre i campi; mantenere la composizione attuale chiude senza applicare. Un solo Annulla ripristina l’intera situazione precedente; Ripristina riapplica il gruppo. Il documento rimane lo stesso nella vista ridotta ed espansa già presenti: non viene creata una seconda scena. Non è ancora un mini-editor incorporato nella chat commerciale.
 
-Se il modello chiede una precisazione, questa viene aggiunta alla richiesta precedente nella chiamata successiva. Dopo una proposta applicata si lavora sul documento aggiornato; non viene inviato uno storico illimitato. La prima versione consente richieste fino a 2.000 caratteri, al massimo sedici azioni e contesti fino a 200 oggetti/500 font. Un documento oltre il limite resta utilizzabile manualmente: non viene troncato in silenzio.
+Se il modello chiede una precisazione, il successivo messaggio viene accompagnato dalla breve cronologia protetta, conservando il contesto della domanda. Dopo una proposta applicata si lavora sul documento aggiornato; non viene inviato uno storico illimitato. La prima versione consente richieste fino a 2.000 caratteri, al massimo sedici azioni e contesti fino a 200 oggetti/500 font. Un documento oltre il limite resta utilizzabile manualmente: non viene troncato in silenzio.
 
 ## Capacità e vincoli
 

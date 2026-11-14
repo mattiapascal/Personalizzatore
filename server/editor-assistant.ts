@@ -6,18 +6,21 @@ import type {UsageMeter} from './usage-meter';
 import {graphicalPolicy,GRAPHICAL_POLICY_SHA256} from './graphical-policy.generated';
 export function assertGraphicalPrivacy(input:GraphicalRequest):void{
  const vault=new PrivacyVault(input.fonts.map(font=>font.name));
- if([input.message,...input.objects.map(object=>object.label)].some(value=>vault.protect(value)!==value))throw Error('Protezione dati richiesta: ripeti il messaggio dal pannello grafico.');
+ if([input.message,...input.history.map(item=>item.text),...input.objects.map(object=>object.label)].some(value=>vault.protect(value)!==value))throw Error('Protezione dati richiesta: ripeti il messaggio dal pannello grafico.');
+ if(new Set(input.focusObjectIds).size!==input.focusObjectIds.length||input.focusObjectIds.some(id=>!input.objects.some(object=>object.id===id)))throw Error('Riferimenti conversazione non validi.');
  const ids=[...input.objects.map(item=>item.id),...input.fonts.map(item=>item.id),...input.images.map(item=>item.id)];if(new Set(ids).size!==ids.length)throw Error('Riferimenti grafici duplicati.');
  if(input.objects.some(item=>!item.id.startsWith('o')||item.fontId&&!input.fonts.some(font=>font.id===item.fontId))||input.fonts.some(item=>!item.id.startsWith('f'))||input.images.some(item=>!item.id.startsWith('i')))throw Error('Riferimenti grafici non validi.');
 }
 export function graphicalBody(input:GraphicalRequest,config:Config){
- assertGraphicalPrivacy(input);return{model:config.OPENAI_MODEL,store:false,instructions:graphicalPolicy,input:[{role:'user',content:JSON.stringify({policyVersion:GRAPHICAL_POLICY_SHA256,message:input.message,canvas:input.canvas,objects:input.objects,fonts:input.fonts,images:input.images,exclusions:input.exclusions})}],tools:[{type:'function',name:'propose_graphic_changes',description:'Propone una bozza o modifiche grafiche da validare localmente prima della conferma.',strict:true,parameters:z.toJSONSchema(GraphicalArgumentsSchema)}],tool_choice:{type:'function',name:'propose_graphic_changes'},parallel_tool_calls:false,reasoning:{effort:'low'},max_output_tokens:2400};
+ assertGraphicalPrivacy(input);return{model:config.OPENAI_MODEL,store:false,instructions:graphicalPolicy,input:[{role:'user',content:JSON.stringify({policyVersion:GRAPHICAL_POLICY_SHA256,message:input.message,history:input.history,focusObjectIds:input.focusObjectIds,canvas:input.canvas,objects:input.objects,fonts:input.fonts,images:input.images,exclusions:input.exclusions})}],tools:[{type:'function',name:'propose_graphic_changes',description:'Propone una bozza o modifiche grafiche da validare localmente prima della conferma.',strict:true,parameters:z.toJSONSchema(GraphicalArgumentsSchema)}],tool_choice:{type:'function',name:'propose_graphic_changes'},parallel_tool_calls:false,reasoning:{effort:'low'},max_output_tokens:2400};
 }
-export async function proposeGraphical(raw:unknown,config:Config,meter:UsageMeter,fetcher:typeof fetch=fetch,signal=AbortSignal.timeout(25000)){
+export async function proposeGraphical(raw:unknown,config:Config,meter:UsageMeter,fetcher:typeof fetch=fetch,cancellation?:AbortSignal){
+ const signal=cancellation?AbortSignal.any([cancellation,AbortSignal.timeout(25000)]):AbortSignal.timeout(25000);signal.throwIfAborted();
  const input=GraphicalRequestSchema.parse(raw);if(config.AI_PROVIDER!=='openai'||!config.OPENAI_API_KEY||config.AI_ENFORCE_LOCAL_LIMITS&&config.AI_BUDGET_USD<=0)throw Error('L’AI del laboratorio non è configurata: puoi usare tutti gli strumenti manuali.');
  const body=graphicalBody(input,config),serialized=JSON.stringify(body);if(new TextEncoder().encode(serialized).length>120000)throw Error('Contesto grafico troppo grande per questa richiesta.');
  const reserved=((new TextEncoder().encode(serialized).length+2048)*.75+body.max_output_tokens*4.5)/1e6;
  await meter.reserve(reserved,config.AI_BUDGET_USD,config.AI_MAX_REQUESTS,config.AI_ENFORCE_LOCAL_LIMITS,{id:input.sessionId,budgetUsd:config.AI_SESSION_BUDGET_USD});
+ signal.throwIfAborted();
  const response=await fetcher('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${config.OPENAI_API_KEY}`,'Content-Type':'application/json'},body:serialized,signal,redirect:'manual'});
  if(!response.ok)throw Error(response.status===429?'Limite del provider raggiunto: riprova più tardi.':'Il provider ha rifiutato la richiesta grafica.');
  const text=await response.text();if(text.length>100000)throw Error('Risposta grafica troppo grande.');

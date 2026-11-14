@@ -45,7 +45,7 @@ export class LocalApi {
       sync: { configured: this.catalog.configured, intervalSeconds: this.config.CATALOG_POLL_SECONDS, lastError: this.catalog.lastError, refreshing: this.catalog.refreshing, stale: this.catalog.configured && (!this.catalog.state.checkedAt || Date.now() - Date.parse(this.catalog.state.checkedAt) > Math.max(600, this.config.CATALOG_POLL_SECONDS * 2) * 1000) },
     };
   }
-  async request(method: string, path: string, body: unknown): Promise<unknown> {
+  async request(method: string, path: string, body: unknown,signal?:AbortSignal): Promise<unknown> {
     if (method === 'GET' && path === '/api/bootstrap') {
       try { await this.meter.load(); } catch (error) { this.meterError = (error as Error).message; }
       return this.status();
@@ -60,7 +60,7 @@ export class LocalApi {
       if (this.calls.length >= 10) throw new Error('Troppe richieste AI: attendi un minuto');
       if (this.activeAi) throw new Error('Una richiesta AI è già in corso');
       this.calls.push(now); this.activeAi = true;
-      try { return path==='/api/editor/propose'?await proposeGraphical(body,this.config,this.meter,this.fetcher):await proposeOpenAi(AiRequestSchema.parse(body), this.config, this.meter, this.fetcher, undefined, createCatalog(this.catalog.state.snapshot, this.catalog.state.version), this.knowledge.provider); }
+      try { return path==='/api/editor/propose'?await proposeGraphical(body,this.config,this.meter,this.fetcher,signal):await proposeOpenAi(AiRequestSchema.parse(body), this.config, this.meter, this.fetcher, undefined, createCatalog(this.catalog.state.snapshot, this.catalog.state.version), this.knowledge.provider); }
       finally { this.activeAi = false; }
     }
     throw new Error('Endpoint non disponibile');
@@ -106,14 +106,18 @@ export function localApiPlugin(): Plugin {
         if (!allowedRequest(request, port)) { send(response, 403, { error: 'Origine locale non valida' }); return; }
         if (request.method !== 'GET' && request.method !== 'POST') { send(response, 405, { error: 'Metodo non consentito' }); return; }
         if (request.method === 'POST' && request.headers['x-lab-token'] !== api.token) { send(response, 403, { error: 'Sessione locale scaduta. Ricarica la pagina.' }); return; }
+        const cancellation=path==='/api/editor/propose'?new AbortController():null;
+        const disconnected=()=>{if(!response.writableEnded)cancellation?.abort();};
+        if(cancellation)response.once('close',disconnected);
         try {
           const body = request.method === 'POST' ? await jsonBody(request,path==='/api/editor/propose'?131072:16_384) : null;
-          send(response, 200, await api.request(request.method, path, body));
+          const result=await api.request(request.method, path, body,cancellation?.signal);
+          if(!response.destroyed)send(response,200,result);
         } catch (error) {
           const message = error instanceof ZodError || error instanceof SyntaxError ? 'Dati della richiesta o del provider non validi' : error instanceof Error ? error.message : 'Servizio locale non disponibile';
           // Non stampare errori del trasporto: possono contenere header o contenuti privati.
-          send(response, 400, { error: /fetch|abort|timeout/i.test(message) ? 'Servizio esterno non raggiungibile entro il tempo previsto. Puoi riprovare: i requisiti sono conservati.' : message });
-        }
+          if(!response.destroyed)send(response, 400, { error: /fetch|abort|timeout/i.test(message) ? 'Servizio esterno non raggiungibile entro il tempo previsto. Puoi riprovare: i requisiti sono conservati.' : message });
+        }finally{if(cancellation)response.off('close',disconnected);}
       });
       let timer: ReturnType<typeof setInterval> | undefined;
       if (api.catalog.configured) {

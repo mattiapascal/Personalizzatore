@@ -12,7 +12,8 @@ import { useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties
 import type { GraphicDocument } from './model';
 import { PX_PER_MM,canvasZoomLimit } from './canvas-size';
 
-export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom,onViewportChange, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,onBeginLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds }: {
+export function WorkspaceFrame({ context, stage, tools, properties, project, diagnostics, transforms, edit, document: doc, editing, onZoom,onViewportChange, layers, panTool, onTemporaryPan, workflow, actions, showForm=false, mode='test',geometryFocus,onClearGeometryFocus,inspectorRequest,onLayoutGuides,onBeginLayoutGuides,layoutGuidesDisabled,selectionKey='',getSelectionBounds,assistant,assistantOpen=false,onToggleAssistant,assistantToggleDisabled=false }: {
+  assistant?:ReactNode;assistantOpen?:boolean;onToggleAssistant?:()=>void;assistantToggleDisabled?:boolean;
   layoutGuidesDisabled?:boolean;
   selectionKey?:string;getSelectionBounds?:()=>SelectionViewBounds|null;
   onBeginLayoutGuides?:(revision:number)=>GraphicDocument|null;
@@ -27,6 +28,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
   const [expanded, setExpanded] = useState(() => new URLSearchParams(window.location.search).get('workspace') === '1');
   const [objectsOpen, setObjectsOpen] = useState(() => window.innerWidth >= 900);
   const [propertiesOpen, setPropertiesOpen] = useState(() => window.innerWidth >= 900);
+  useEffect(()=>{if(assistantOpen&&innerWidth>=900&&innerWidth<1400)setObjectsOpen(false);},[assistantOpen]);
   const handledInspectorRequest=useRef(0);
   useLayoutEffect(()=>{
     if(!inspectorRequest||handledInspectorRequest.current===inspectorRequest.sequence||inspectorRequest.documentId!==doc.documentId||inspectorRequest.pageId!==(doc.pageId??'page-1')||!doc.objects.some(object=>object.id===inspectorRequest.objectId))return;
@@ -215,6 +217,7 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
         }}/>}
         <EditorButton className="workspace-close" disabled={editing} onClick={close} icon="return" label="Torna al laboratorio"/>
       </> : <EditorButton onClick={() => setExpanded(true)} disabled={editing} icon="workspace" label="Apri area di disegno a tutto schermo"/>}
+      {assistant&&<EditorButton icon="chat" label="Chat grafica" aria-pressed={assistantOpen} aria-expanded={assistantOpen} disabled={assistantToggleDisabled} onPointerDown={event=>{if(event.button===0)event.preventDefault();}} onClick={onToggleAssistant}/>}
       {onLayoutGuides&&<EditorButton icon="ruler" label={rulersVisible?"Nascondi righelli":"Mostra righelli"} aria-pressed={rulersVisible} onClick={()=>setRulersVisible(!rulersVisible)}/>}
       {edit}{transforms}
       <div ref={layerAnchor} className="workspace-layers-toggle">
@@ -228,9 +231,10 @@ export function WorkspaceFrame({ context, stage, tools, properties, project, dia
       {actions&&<div className="design-session-actions" aria-label="Azioni del design">{actions}</div>}
     </div>
     {!expanded && context}
-    <div className="workspace-layout" data-objects-open={objectsOpen} data-properties-open={propertiesOpen} data-layers-open={layersOpen}>
+    <div className="workspace-layout" data-objects-open={objectsOpen} data-properties-open={propertiesOpen} data-layers-open={layersOpen} data-assistant-open={assistantOpen}>
       <div ref={viewport} className="drawing-stage">{stage}{onLayoutGuides&&<LayoutGuidesOverlay host={viewport} document={doc} rulers={rulersVisible} disabled={editing||!!layoutGuidesDisabled||panTool} onBegin={onBeginLayoutGuides} onChange={onLayoutGuides}/>} {focus&&<div className="geometry-focus-status" data-testid="geometry-focus-status" role="status"><span><strong>{focus.label}</strong> · X {focus.xMm.toFixed(2)}, Y {focus.yMm.toFixed(2)} mm</span><EditorButton className="panel-close" icon="close" label="Nascondi punto segnalato" onClick={onClearGeometryFocus}/></div>}{rulersVisible&&<p className="ruler-help" role="status">Righelli in mm · trascina dal righello verso il foglio per aggiungere una guida.</p>}{selectionViewMessage&&<div className="geometry-focus-status selection-view-status" role="status"><span>{selectionViewMessage}</span><EditorButton className="panel-close" icon="close" label="Nascondi avviso zoom" onClick={()=>setSelectionViewMessage('')}/></div>}{screenError && <p role="status">{screenError}</p>}</div>
       <aside className="workspace-panel objects-panel" aria-label="Strumenti" hidden={expanded && !objectsOpen}>{mode==='test'&&workflow}{tools}{project}{diagnostics}</aside>
+      {assistant&&<aside className="workspace-assistant" hidden={!assistantOpen}>{assistant}</aside>}
       <div className="workspace-right-panels" hidden={expanded && !propertiesOpen}>
         <aside className="workspace-panel properties-panel" aria-label="Ispettore oggetto" hidden={expanded && !propertiesOpen}>{properties}</aside>
       </div>
