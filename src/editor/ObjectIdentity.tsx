@@ -1,6 +1,6 @@
 import type { SceneObject } from './model';
 import { EditorIcon } from './EditorButton';
-export const objectTypeLabel = (object: SceneObject): string => object.type === 'text' && object.textPath ? 'Testo su tracciato' : ({ vector: 'Vettore SVG', text: 'Testo', rect: 'Rettangolo', circle: 'Cerchio', ellipse: 'Ellisse', bezier: 'Curva Bézier', path: 'Tracciato', image: 'Immagine', line: 'Linea' })[object.type];
+export const objectTypeLabel = (object: SceneObject): string => object.type === 'text' && object.textPath ? 'Testo su tracciato' : ({ qr:'Codice QR', vector: 'Vettore SVG', text: 'Testo', rect: 'Rettangolo', circle: 'Cerchio', ellipse: 'Ellisse', bezier: 'Curva Bézier', path: 'Tracciato', image: 'Immagine', line: 'Linea' })[object.type];
 /** One representation of an object in both the inspector and Layers. */
 export function ObjectIdentity({ object }: { object: SceneObject }) {
   const preview = object.type === 'text' ? object.text.replace(/\s+/gu, ' ').trim() : '';

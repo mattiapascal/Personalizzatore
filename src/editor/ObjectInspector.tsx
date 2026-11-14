@@ -1,3 +1,4 @@
+import {QrFields} from './QrFields';
 import {StrokeJoinControl} from './StrokeJoinControl';
 import {hasEditableStrokeJoin,effectiveStrokeJoin,effectiveMiterLimit} from './path-stroke';
 import {StrokeCapControl} from './StrokeCapControl';
@@ -40,14 +41,15 @@ import { ObjectIdentity } from './ObjectIdentity';
 import { smallestPrintedFontPt } from './text-production';
 import { SelectedTextFontNotice } from './SelectedTextFontNotice';
 
-export type InspectorSection = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'template';
+export type InspectorSection = 'geometry' | 'text' | 'fill' | 'stroke' | 'nodes' | 'image' | 'crop' | 'template' | 'qr';
 
 function inspectorTabs(current:SceneObject,admin:boolean){
   const tabs: { id: InspectorSection; label: string; icon: EditorIconName }[] = [
     { id: 'geometry', label: 'Geometria', icon: 'geometry' },
+    ...(current.type==='qr'?[{id:'qr' as const,label:'Codice QR',icon:'qr' as const}]:[]),
     ...(current.type === 'text' ? [{ id: 'text' as const, label: 'Testo', icon: 'text' as const }] : []),
-    ...(current.type === 'image' || current.type === 'line' || (current.type === 'path' || current.type === 'bezier') && !current.closed ? [] : [{ id: 'fill' as const, label: 'Riempimento', icon: 'fill' as const }]),
-    ...(current.type !== 'image' ? [{ id: 'stroke' as const, label: 'Contorno', icon: 'stroke' as const }] : []),
+    ...(current.type === 'qr' || current.type === 'image' || current.type === 'line' || (current.type === 'path' || current.type === 'bezier') && !current.closed ? [] : [{ id: 'fill' as const, label: 'Riempimento', icon: 'fill' as const }]),
+    ...(current.type !== 'image' && current.type!=='qr' ? [{ id: 'stroke' as const, label: 'Contorno', icon: 'stroke' as const }] : []),
     ...(current.type === 'path' || current.type === 'bezier' ? [{ id: 'nodes' as const, label: 'Nodi', icon: 'nodes' as const }] : []),
     ...(current.type === 'image' ? [{ id: 'image' as const, label: 'Immagine', icon: 'image' as const }, { id: 'crop' as const, label: 'Ritaglio', icon: 'crop' as const }] : []),
     ...(admin?[{id:'template' as const,label:'Proprietà template',icon:'properties' as const}]:[]),
@@ -55,9 +57,10 @@ function inspectorTabs(current:SceneObject,admin:boolean){
   return tabs;
 }
 
-function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, documentColors = [], onProperties, effectiveProperties, sectionMemory, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { sectionMemory?:{current:InspectorSection};minimumFontPt?:number|null;allowColor?:boolean;documentColors?:readonly string[];effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
+function MeasuredObjectInspector({ onControllerChange,minimumFontPt = null, allowColor = false, documentColors = [], onProperties, effectiveProperties, sectionMemory, object, revision, onApply, characterSelection, onCharacterStyle, onKerning, onLineAlignment, onTextStretch, onCropFocus, onNodeFocus, onDetachText, onFontMenuOpen, onReplaceImage }: { onControllerChange?:(value:{flush:()=>boolean}|null)=>void;sectionMemory?:{current:InspectorSection};minimumFontPt?:number|null;allowColor?:boolean;documentColors?:readonly string[];effectiveProperties?:ObjectProperties; onProperties?:(properties:ObjectProperties)=>void;object: SceneObject; revision: number; onReplaceImage?:(file:File,revision:number)=>void;onFontMenuOpen: () => void; onDetachText: () => void; onApply: (object: SceneObject, expectedRevision: number) => InspectorSnapshot | null; characterSelection: CharacterSelection | null; onCharacterStyle: (style: CharacterStyle) => void; onKerning: (value: number) => void; onLineAlignment: (alignment: TextAlignment) => void; onTextStretch: (value: number) => void; onCropFocus: (id: string | null,moveContents?:boolean) => void; onNodeFocus: (focus: { objectId: string; index: number } | null) => void }) {
   const form = useRef<HTMLFormElement>(null);
   const { draft, status, patch, replaceAppearance, replaceObject, moveCenter, flush, reset, dirty } = useInspectorDraft(object, revision, onApply, () => form.current?.checkValidity() ?? true);
+  const controller=useRef(flush);controller.current=flush;useLayoutEffect(()=>{onControllerChange?.({flush:()=>controller.current()});return()=>onControllerChange?.(null);},[onControllerChange]);
   const [preferredSection,setPreferredSection]=useState<InspectorSection>(()=>sectionMemory?.current??'geometry');
   const tabs=inspectorTabs(object,!!onProperties),section=tabs.some(tab=>tab.id===preferredSection)?preferredSection:'geometry';
   const setSection=(value:InspectorSection)=>{if(sectionMemory)sectionMemory.current=value;setPreferredSection(value);};
@@ -149,9 +152,9 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, doc
           {current.type === 'circle' && <NumberField {...fields} label="Diametro (mm)" value={current.radiusMm * 2} min={0.01} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} onChange={diameter => patch({ radiusMm: diameter / 2 })}/>}
           {current.type === 'line' && <NumberField {...fields} label="Lunghezza linea (mm)" value={current.lengthMm} min={0.01} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} step={0.1} onChange={lengthMm => patch({ lengthMm })}/>}
           {current.type!=='text'&&current.type!=='circle'&&current.type!=='line'&&<div className="dimension-fields">
-            <NumberField {...fields} label="Larghezza (mm)" value={current.type==='ellipse'?current.rxMm*2:current.widthMm} min={0.001} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} disabled={current.type!=='ellipse'&&current.widthMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'width',value,ratioLocked,measureFabric));}}/>
-            <AspectRatioControl linked={ratioLocked} onChange={setRatioLocked}/>
-            <NumberField {...fields} label="Altezza (mm)" value={current.type==='ellipse'?current.ryMm*2:current.heightMm} min={0.001} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} disabled={current.type!=='ellipse'&&current.heightMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'height',value,ratioLocked,measureFabric));}}/>
+            <NumberField {...fields} label="Larghezza (mm)" value={current.type==='ellipse'?current.rxMm*2:current.widthMm} min={0.001} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} disabled={current.type!=='ellipse'&&current.widthMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'width',value,current.type==='qr'||ratioLocked,measureFabric));}}/>
+            <AspectRatioControl linked={current.type==='qr'||ratioLocked} disabled={current.type==='qr'} onChange={setRatioLocked}/>
+            <NumberField {...fields} label="Altezza (mm)" value={current.type==='ellipse'?current.ryMm*2:current.heightMm} min={0.001} max={GRAPHIC_GEOMETRY_LIMITS.objectSideMm} disabled={current.type!=='ellipse'&&current.heightMm===0} onChange={value=>{if(value>0)replaceObject(resizeObjectDimension(current,'height',value,current.type==='qr'||ratioLocked,measureFabric));}}/>
           </div>}
           {current.type==='rect'&&<NumberField {...fields} label="Raggio angoli (mm)" value={current.cornerRadiusMm??0} min={0} max={Math.min(current.widthMm,current.heightMm)/2} onChange={cornerRadiusMm=>patch({cornerRadiusMm})}/>}
           {current.type !== 'circle' && <NumberField {...fields} className="property-wide" label="Rotazione (°)" value={current.rotationDeg ?? 0} min={-180} max={180} onChange={rotationDeg => patch({ rotationDeg })}/>}
@@ -252,6 +255,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, doc
         <div className="button-row"><EditorButton icon="flipX" label="Rifletti immagine orizzontalmente" aria-pressed={current.flipX ?? false} onClick={() => patch({ flipX: !current.flipX }, true)}/><EditorButton icon="flipY" label="Rifletti immagine verticalmente" aria-pressed={current.flipY ?? false} onClick={() => patch({ flipY: !current.flipY }, true)}/></div>
         <p className="caption">{current.raster.mode === 'grayscale' ? 'Lo SVG contiene il raster elaborato; il JSON conserva originale e parametri. Nessuna vettorializzazione.' : current.raster.mode === 'color' ? 'Regolazioni locali: il JSON conserva originale e parametri; lo SVG contiene i pixel elaborati con la trasparenza originale. Nessuna vettorializzazione.' : current.raster.mode === 'original' ? 'Lo SVG contiene l’immagine con colori e trasparenza originali, mantenendo ritaglio e trasformazioni. Nessuna vettorializzazione.' : 'Conversione locale del profilo TEST. I mezzitoni riproducono le sfumature con punti bianchi/neri: la resa fisica richiede una prova di lavorazione. L’immagine originale resta nel progetto; lo SVG contiene il raster convertito. Nessuna vettorializzazione.'}</p>
       </>}
+      {section==='qr'&&current.type==='qr'&&<QrFields value={current.qr} widthMm={current.widthMm} onChange={qr=>patch({qr})}/>}
       {section === 'crop' && current.type === 'image' && <RasterCropInspector object={current} moveContents={cropContents} onMoveContents={setCropContents} revision={draft.revision} onChange={(next, immediate) => replaceObject(next, immediate)}/>}
       {section === 'nodes' && current.type === 'bezier' && <BezierNodeInspector object={current} revision={draft.revision} onChange={replaceObject} onFocusNode={onNodeFocus}/>}
       {section === 'nodes' && current.type === 'path' && <PathNodeInspector object={current} revision={draft.revision} onChange={replaceObject} onFocusNode={onNodeFocus}/>}

@@ -17,17 +17,17 @@ export function useInspectorDraft(object: SceneObject, revision: number, onApply
   const cancel = () => { if (timer.current) clearTimeout(timer.current); timer.current = null; };
   const publish = (next: typeof draft) => { current.current = next; setDraft(next); };
   const flush = () => {
-    cancel(); if (applying.current) return; const pending = current.current;
-    if (JSON.stringify(pending.object) === JSON.stringify(saved.current.object)) { setStatus(''); return; }
-    if (!valid.current()) { setStatus('Completa o correggi il valore. Esc ripristina.'); return; }
+    cancel(); if (applying.current) return false; const pending = current.current;
+    if (!valid.current()) { setStatus('Completa o correggi il valore. Esc ripristina.'); return false; }
+    if (JSON.stringify(pending.object) === JSON.stringify(saved.current.object)) { setStatus(''); return true; }
     const update = structuredClone(pending.object); update.rotationDeg ??= 0;
     applying.current = true;
     try {
       const result = apply.current(update, pending.revision);
-      if (!result) { setStatus('Modifica non applicata. Correggi il valore o premi Esc.'); return; }
+      if (!result) { setStatus('Modifica non applicata. Correggi il valore o premi Esc.'); return false; }
       ownRevision.current = result.revision; saved.current = result;
       try { publish(draftFor(result)); } catch(error) { if(!(error instanceof UnverifiedTextGeometryError))throw error; }
-      setStatus('Salvato nella bozza');
+      setStatus('Salvato nella bozza');return true;
     } finally { applying.current = false; }
 
   };

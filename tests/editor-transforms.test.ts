@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createDocument, DocumentStore, objectGeometry, validateLayout, parseGraphicDocument, type Measure, type TransformArguments } from '../src/editor/model';
 
-const measure: Measure = o => o.type === 'image' ? { widthMm: o.widthMm, heightMm: o.heightMm } : o.type === 'path' || o.type === 'bezier' || o.type === 'vector' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : o.type === 'ellipse' ? { widthMm: o.rxMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm), heightMm: o.ryMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm) } : o.type === 'line' ? { widthMm: o.lengthMm + o.strokeMm, heightMm: o.strokeMm } : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm }
+const measure: Measure = o => o.type==='qr'?{widthMm:o.widthMm,heightMm:o.heightMm}: o.type === 'image' ? { widthMm: o.widthMm, heightMm: o.heightMm } : o.type === 'path' || o.type === 'bezier' || o.type === 'vector' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : o.type === 'ellipse' ? { widthMm: o.rxMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm), heightMm: o.ryMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm) } : o.type === 'line' ? { widthMm: o.lengthMm + o.strokeMm, heightMm: o.strokeMm } : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm }
   : o.type === 'circle' ? { widthMm: o.radiusMm * 2 + o.strokeMm, heightMm: o.radiusMm * 2 + o.strokeMm }
     : { widthMm: o.text.length * o.fontSizePt * 0.2, heightMm: o.fontSizePt * 0.4 };
 const transform = (revision: number, objectId: string, args: TransformArguments) => ({ schemaVersion: 1, tool: 'transformObject', expectedRevision: revision, objectId, arguments: args });

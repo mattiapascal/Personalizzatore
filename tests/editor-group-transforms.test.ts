@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createDocument, DocumentStore, objectCenter, type GraphicDocument, type Measure, type SceneObject } from '../src/editor/model';
 import { selectionBounds } from '../src/editor/selection';
-const measure: Measure = o => o.type === 'image' ? { widthMm: o.widthMm, heightMm: o.heightMm } : o.type === 'path' || o.type === 'bezier' || o.type === 'vector' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : o.type === 'ellipse' ? { widthMm: o.rxMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm), heightMm: o.ryMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm) } : o.type === 'line' ? { widthMm: o.lengthMm + o.strokeMm, heightMm: o.strokeMm } : o.type === 'text'
+const measure: Measure = o => o.type==='qr'?{widthMm:o.widthMm,heightMm:o.heightMm}: o.type === 'image' ? { widthMm: o.widthMm, heightMm: o.heightMm } : o.type === 'path' || o.type === 'bezier' || o.type === 'vector' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : o.type === 'ellipse' ? { widthMm: o.rxMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm), heightMm: o.ryMm * 2 + (o.stroke === 'none' ? 0 : o.strokeMm) } : o.type === 'line' ? { widthMm: o.lengthMm + o.strokeMm, heightMm: o.strokeMm } : o.type === 'text'
   ? { widthMm: o.textBox?.autoWidth === false ? o.textBox.widthMm : o.fontSizePt * 2, heightMm: o.fontSizePt * 0.5 }
   : o.type === 'rect' ? { widthMm: o.widthMm + o.strokeMm, heightMm: o.heightMm + o.strokeMm } : { widthMm: o.radiusMm * 2 + o.strokeMm, heightMm: o.radiusMm * 2 + o.strokeMm };
 const source = (): GraphicDocument => ({ ...createDocument(), areaMm: { width: 200, height: 200 }, objects: [

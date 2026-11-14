@@ -13,7 +13,7 @@ import { NumberField } from './InspectorNumberField';
 import { selectionStyle } from './text-style';
 export function SelectionStyleInspector({ document, ids, onStyle }: { document: GraphicDocument; ids: string[]; onStyle: (style: SelectionStyle, revision: number) => boolean }) {
   const objects = document.objects.filter(object => ids.includes(object.id)),documentColors=useMemo(()=>documentPaintColors(document),[document]);
-  const hasImage = objects.some(object => object.type === 'image'), hasText = objects.some(object => object.type === 'text');
+  const hasImage = objects.some(object => object.type === 'image'||object.type==='qr'), hasText = objects.some(object => object.type === 'text');
   const canImageOpacity=objects.length>0&&objects.every(object=>object.type==='image');
   const canFill = !hasImage && objects.every(object => object.type !== 'line' && (object.type !== 'path' && object.type !== 'bezier' || object.closed)), canStroke = !hasImage;
   const common = <T,>(values: T[]): T | null => values.every(value => value === values[0]) ? values[0]! : null;

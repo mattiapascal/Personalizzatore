@@ -320,7 +320,7 @@
 .workspace-layers-popover .layer-list { flex: 1; min-height: 60px; max-height: none; }
 .workspace-layers-popover .layers-primary-actions { position: sticky; top: 0; z-index: 1; background: var(--editor-mode-panel,#f6fbfe); }
 
-.workspace-transform-popover { z-index: 100; padding: 12px; overflow: auto; background: var(--editor-mode-panel, #f6fbfe); color: #123c52; border: 1px solid #94b7c9; border-radius: 8px; box-shadow: 0 8px 30px #17374a30; }
+.workspace-transform-popover { position: fixed; z-index: 100; padding: 12px; overflow: auto; background: var(--editor-mode-panel, #f6fbfe); color: #123c52; border: 1px solid #94b7c9; border-radius: 8px; box-shadow: 0 8px 30px #17374a30; }
 .workspace-transform-popover[hidden] { display: none; }
 .workspace-transform-popover .layers-popover-heading { position: sticky; top: -12px; z-index: 1; margin-bottom: 12px; padding: 8px 0; background: var(--editor-mode-panel, #f6fbfe); }
 .workspace-transform-popover fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
@@ -392,3 +392,5 @@
 /* A logical large paper has no full-sheet paint layer: only its bounded canvas. */
 .canvas-container[data-canvas-windowed=true]{box-shadow:none}
 .lab:not(.editor-workspace) .canvas-scroll[data-canvas-windowed=true]{max-height:70vh;display:flex;align-items:safe center;justify-content:safe center}
+
+.qr-fields{display:grid;gap:12px;min-width:0}.qr-fields label{display:grid;gap:5px}.qr-fields :is(select,textarea){box-sizing:border-box;width:100%;min-width:0;font:14px/1.45 Arial,sans-serif;padding:8px;border:1px solid #b7d3e3;border-radius:5px;background:#fff;color:#163b52}.qr-fields textarea{resize:vertical}.qr-fields .caption{margin:0}.qr-insert-dialog{width:min(520px,calc(100vw - 32px));box-sizing:border-box}.qr-insert-dialog form{display:grid;gap:16px}

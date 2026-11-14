@@ -1,3 +1,4 @@
+import {qrView} from './qr-view';
 import {WindowCanvas} from './window-canvas';
 import {canvasWindow,canvasWindowContains,boundedBackingDensity,sameCanvasWindow,type CanvasWindow} from './canvas-window';
 import {pathStrokeFrame,effectiveStrokeJoin,effectiveMiterLimit} from './path-stroke';
@@ -108,7 +109,8 @@ function unverifiedTextMarker(o: TextObject): FabricObject {
 function renderObject(o: SceneObject, editable = false): FabricObject {
   const common = { flipX:o.mirrorX??false,flipY:o.mirrorY??false, borderColor: '#0088cc', cornerColor: '#0088cc', left: o.xMm * PX_PER_MM, top: o.yMm * PX_PER_MM, angle: o.rotationDeg ?? 0, originX: 'center' as const, originY: 'center' as const, lockScalingFlip: true, lockSkewingX: true, lockSkewingY: true, lockRotation: o.type === 'circle'&&!o.skewXDeg, hasControls: editable, objectCaching: false };
   let object: FabricObject;
-  if (o.type === 'text') {
+  if(o.type==='qr'){object=qrView(o,common);}
+  else if (o.type === 'text') {
     assertFontAvailable(o.fontFamily);
     for (const run of o.characterStyles ?? []) if (run.style.fontFamily) assertFontAvailable(run.style.fontFamily);
     assertTextGeometry(o);
@@ -152,7 +154,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
   if(o.type!=='text')object.set('skewX',fabricTextSkew(o.skewXDeg??0,object.scaleX*(object.flipX?-1:1),object.scaleY*(object.flipY?-1:1)));
   if (o.type === 'vector' && o.clipRect) { const c = o.clipRect; object.clipPath = new Rect({ left: ((c.left + c.right) / 2 - .5) * o.widthMm * PX_PER_MM, top: ((c.top + c.bottom) / 2 - .5) * o.heightMm * PX_PER_MM, width: (c.right - c.left) * o.widthMm * PX_PER_MM, height: (c.bottom - c.top) * o.heightMm * PX_PER_MM, originX: 'center', originY: 'center', strokeWidth: 0, fill: '#000000' }); }
   if((o.type==='image'||o.type==='vector')&&o.clipMasks)applyClipMasks(object,o.clipMasks);
-  if(editable&&o.type!=='text'&&o.type!=='line')objectDimensionControls(object);
+  if(editable&&o.type!=='text'&&o.type!=='line'&&o.type!=='qr')objectDimensionControls(object);if(editable&&o.type==='qr')selectionControls(object);
   if (o.type === 'line') {
     object.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, mt: false, mb: false, ml: true, mr: true, mtr: true });
     for (const name of ['ml', 'mr']) { const original = object.controls[name]!; object.controls[name] = new Control({ ...original, actionName: 'scaleX', getActionName: () => 'scaleX', actionHandler: controlsUtils.scalingX, cursorStyleHandler: controlsUtils.scaleCursorStyleHandler }); }
@@ -562,6 +564,7 @@ export class FabricAdapter {
         const size: TransformArguments['size'] = source.type === 'text'
           ? source.textPath ? { type: 'text', textScaleX: source.textScaleX, textScaleY: 1, fontSizePt: object instanceof IText ? fontPoints(object.fontSize * object.scaleX) : source.fontSizePt * object.scaleX, textPath: scaledTextPath(source.textPath, object.scaleX) } : { type: 'text', textScaleX: object.scaleX, textScaleY: object.scaleY, fontSizePt: object instanceof EditorTextBox ? fontPoints(object.fontSize) : source.fontSizePt,
             ...(object instanceof EditorTextBox && object.frame ? { textBox: { widthMm: object.width * object.scaleX / PX_PER_MM, heightMm: object.height * object.scaleY / PX_PER_MM, autoWidth: object.frame.autoWidth, autoHeight: object.frame.autoHeight } } : {}) }
+          : source.type==='qr'?{type:'qr',widthMm:source.widthMm*object.scaleX,heightMm:source.heightMm*object.scaleX}
           : source.type === 'image' ? transformedImageSize(source,object)
           : source.type === 'circle'
             ? Math.abs(object.scaleX-object.scaleY)>1e-9 ? {type:'ellipse',rxMm:((source.radiusMm*2+strokeMm)*object.scaleX-strokeMm)/2,ryMm:((source.radiusMm*2+strokeMm)*object.scaleY-strokeMm)/2} : { type: 'circle', radiusMm: ((source.radiusMm * 2 + strokeMm) * object.scaleX - strokeMm) / 2 }

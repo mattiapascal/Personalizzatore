@@ -3,7 +3,7 @@ import{cloneSceneObject,objectCenter,placeObjectAtCenter,type SceneObject,type M
 import{transformSelection}from'./selection';import{resizeTextHeight}from'./text-sizing';
 /** Inspector geometry uses the centre; graphic handles keep their opposite anchor. */
 export function resizeObjectDimension(source:SceneObject,axis:'width'|'height',value:number,linked:boolean,measure:Measure):SceneObject{
- if(!Number.isFinite(value)||value<=0)throw Error('La misura deve essere positiva');const object=cloneSceneObject(source),center=objectCenter(source,measure);
+ if(!Number.isFinite(value)||value<=0)throw Error('La misura deve essere positiva');const object=cloneSceneObject(source),center=objectCenter(source,measure);if(object.type==='qr')linked=true;
  if(object.type==='text'){
   const measured=measure(source),width=measured.textLayoutWidthMm??measured.widthMm,height=measured.textLayoutHeightMm??measured.heightMm;
   if(linked||object.textPath){const normalized=object.textScaleY&&object.textScaleY!==1?resizeTextHeight(object,height,measure):object,result=transformSelection([normalized],{scale:value/(axis==='width'?width:height),rotationDeg:0,center},measure)[0]!;if(result.type==='text')result.textScaleY=1;return result;}

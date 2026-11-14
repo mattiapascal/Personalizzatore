@@ -3,7 +3,7 @@ import { createDocument, DocumentStore, parseGraphicDocument, objectCenter, plac
 
 // Metriche deterministiche di dominio; le metriche Fabric effettive sono nei browser.
 const measure: Measure = object => {
-  if (object.type === 'image') return { widthMm: object.widthMm, heightMm: object.heightMm };
+  if (object.type === 'image'||object.type==='qr') return { widthMm: object.widthMm, heightMm: object.heightMm };
   if (object.type === 'text') return { widthMm: Math.max(...object.text.split('\n').map(line => line.length)) * object.fontSizePt * 0.2, heightMm: object.fontSizePt * 0.4 * object.text.split('\n').length * (object.lineHeight ?? 1.16) };
   if (object.type === 'line') return { widthMm: object.lengthMm + object.strokeMm, heightMm: object.strokeMm };
   const stroke = object.stroke === 'none' ? 0 : object.strokeMm;

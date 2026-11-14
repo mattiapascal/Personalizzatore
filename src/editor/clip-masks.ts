@@ -1,3 +1,4 @@
+import {qrSymbol,type QrParameters} from './qr-code';
 import{z}from'zod';
 import{VectorCommandsSchema,vectorBounds,type VectorCommand}from'./vector-geometry';
 import{EDITOR_LIMITS}from'./limits';
@@ -13,7 +14,7 @@ export const ClipMaskSchema=z.strictObject({commands:VectorCommandsSchema,frame:
 export const ClipMasksSchema=z.array(ClipMaskSchema).min(1).max(8).refine(masks=>masks.reduce((n,m)=>n+m.commands.length,0)<=EDITOR_LIMITS.vectorCommandsPerObject,'Maschere oltre il budget vettoriale per oggetto');
 export type ClipMask=z.infer<typeof ClipMaskSchema>;
 export function clipMaskCommands(mask:ClipMask,width:number,height:number):VectorCommand[]{const f=mask.frame;return mask.commands.map(c=>{if(c[0]==='Z')return['Z'];const out=[...c]as VectorCommand;for(let i=1;i<c.length;i+=2){(out as (string|number)[])[i]=(f.left+(c[i]as number)*f.width-.5)*width;(out as (string|number)[])[i+1]=(f.top+(c[i+1]as number)*f.height-.5)*height;}return out;});}
-export const maskedCommandCount=(object:{type:string;commands?:readonly unknown[];clipMasks?:readonly {commands:readonly unknown[]}[];textClipMasks?:readonly {commands:readonly unknown[]}[]})=>(object.type==='vector'?object.commands?.length??0:0)+(object.clipMasks?.reduce((n,m)=>n+m.commands.length,0)??0)+(object.textClipMasks?.reduce((n,m)=>n+m.commands.length,0)??0);
+export const maskedCommandCount=(object:{type:string;qr?:QrParameters;commands?:readonly unknown[];clipMasks?:readonly {commands:readonly unknown[]}[];textClipMasks?:readonly {commands:readonly unknown[]}[]})=>(object.type==='qr'&&object.qr?qrSymbol(object.qr).commands.length:object.type==='vector'?object.commands?.length??0:0)+(object.clipMasks?.reduce((n,m)=>n+m.commands.length,0)??0)+(object.textClipMasks?.reduce((n,m)=>n+m.commands.length,0)??0);
 /** Cutting a frame edge preserves the original portion of its mask. Photo PAN
  * and content zoom deliberately leave the mask fixed to the frame instead. */
 export function cropClipMasks(masks:readonly ClipMask[],before:{leftPx:number;topPx:number;widthPx:number;heightPx:number},after:typeof before):ClipMask[]{

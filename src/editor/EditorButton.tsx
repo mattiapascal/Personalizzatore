@@ -35,6 +35,7 @@ const icons = {
   rect: <rect x="4" y="6" width="16" height="12" rx="1"/>,
   circle: <circle cx="12" cy="12" r="8"/>,
   ellipse: <ellipse cx="12" cy="12" rx="9" ry="6"/>,
+  qr: <><path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 15h3v3h3v3h-6zM12 3v3M3 12h3M12 9v6M9 12h6M12 18v3M18 12h3"/></>,
   vector: <><path d="M3 18L12 3l9 15zM8 15l4-7 4 7z"/></>,
   importSvg: <><path d="M3 18L10 5l7 13zM17 2v8M13 6h8"/></>,
   image: <><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8" cy="8" r="2"/><path d="M3 17l5-5 4 4 4-6 5 7"/></>,

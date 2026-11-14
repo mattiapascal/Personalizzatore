@@ -5,6 +5,7 @@ import { cloneSceneObject, objectCenter, placeObjectAtCenter, type Measure, type
 import { applyCharacterStyle } from './text-style';
 /** Proprietà comuni valide per ogni membro: mai saltare gli incompatibili. */
 export function objectWithAppearance(object: SceneObject, style: SelectionStyle, measure: Measure): SceneObject {
+  if(object.type==='qr')throw new Error('Il QR conserva contrasto bianco/nero: modifica contenuto e dimensioni nella sua scheda.');
   if (object.type === 'image') {
     if(Object.entries(style).some(([key,value])=>value!==undefined&&key!=='opacity'))throw new Error('Le immagini ammettono soltanto la trasparenza nello stile comune');
     return {...cloneSceneObject(object),opacity:style.opacity??object.opacity};

@@ -26,6 +26,7 @@ export function TransformPanel({document:doc,ids,masterId,page,customer,busy,onP
   place();window.addEventListener('pointerdown',outside,true);window.addEventListener('keydown',key,true);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
   return()=>{window.removeEventListener('pointerdown',outside,true);window.removeEventListener('keydown',key,true);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
  },[open]);
+ const hasQr=doc.objects.some(o=>ids.includes(o.id)&&o.type==='qr');
  const floating=useMovablePanel(open,position);
  const [gapRaw,setGapRaw]=useState('2'),gap=gapRaw.trim()===''?null:Number(gapRaw),gapLimit=GRAPHIC_GEOMETRY_LIMITS.coordinateMm,validGap=gap!==null&&Number.isFinite(gap)&&gap>=0&&gap<=gapLimit;
  const gapLabel='Distanza tra oggetti (mm)';
@@ -39,10 +40,10 @@ export function TransformPanel({document:doc,ids,masterId,page,customer,busy,onP
    {!objects.length&&<p className="caption">Seleziona gli oggetti da trasformare.</p>}
    <fieldset disabled={locked} className="inspector-arrangement">
     <h3>Inclina</h3>
-    <NumberField label="Inclinazione orizzontale (°)" value={angle} mixed={mixed} revision={doc.revision} min={-MAX_TEXT_SKEW_DEG} max={MAX_TEXT_SKEW_DEG} step={0.1} onChange={value=>{if(Math.abs(value)<=MAX_TEXT_SKEW_DEG)onIncline(value);}}/>
+    <NumberField disabled={hasQr} label="Inclinazione orizzontale (°)" value={angle} mixed={mixed} revision={doc.revision} min={-MAX_TEXT_SKEW_DEG} max={MAX_TEXT_SKEW_DEG} step={0.1} onChange={value=>{if(Math.abs(value)<=MAX_TEXT_SKEW_DEG)onIncline(value);}}/>
     {objects.length>1&&<p className="caption">Imposta l’inclinazione del riquadro di ogni elemento, mantenendone il centro.</p>}
     <h3>Rifletti</h3>
-    <div className="button-row"><EditorButton icon="flipX" label="Rifletti orizzontalmente" onClick={()=>onReflect('horizontal')}/><EditorButton icon="flipY" label="Rifletti verticalmente" onClick={()=>onReflect('vertical')}/></div>
+    <div className="button-row"><EditorButton icon="flipX" label="Rifletti orizzontalmente" disabled={hasQr} onClick={()=>onReflect('horizontal')}/><EditorButton icon="flipY" label="Rifletti verticalmente" disabled={hasQr} onClick={()=>onReflect('vertical')}/></div>
     <h3>Allinea</h3>
     <label className="transform-page-option"><input type="checkbox" checked={page} onChange={event=>onPage(event.target.checked)}/>Allinea alla pagina</label>
     <p className="caption" role="status">{page?'Riferimento: bordi e centro della pagina.':master?`Oggetto master: ${name}`:'Riferimento: ingombro della selezione.'}</p>
