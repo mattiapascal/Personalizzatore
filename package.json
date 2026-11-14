@@ -7,8 +7,8 @@
     "node": ">=24.17.0 <25"
   },
   "scripts": {
-    "assistant:generate": "node --import tsx scripts/compile-assistant-policy.ts && node --import tsx scripts/compile-store-knowledge.ts",
-    "assistant:check": "node --import tsx scripts/compile-assistant-policy.ts --check && node --import tsx scripts/compile-store-knowledge.ts --check",
+    "assistant:generate": "node --import tsx scripts/compile-assistant-policy.ts && node --import tsx scripts/compile-store-knowledge.ts && node --import tsx scripts/compile-graphical-policy.ts",
+    "assistant:check": "node --import tsx scripts/compile-assistant-policy.ts --check && node --import tsx scripts/compile-store-knowledge.ts --check && node --import tsx scripts/compile-graphical-policy.ts --check",
     "predev": "npm run assistant:generate",
     "prebuild": "npm run assistant:check",
     "pretest": "npm run assistant:check",

@@ -657,7 +657,7 @@ function bindingFor(product: ProductProfile, catalogVersion: string) {
   return { productId: product.productId, variantId: product.variantIds[0], catalogVersion, catalogProductProfileVersion: product.profileVersion };
 }
 
-export interface HistoryEntry { source: 'manual' | 'ai-simulation' | 'undo' | 'redo' | 'import' | 'product-change'; revision: number; objectId?: string; }
+export interface HistoryEntry { source: 'manual' | 'ai' | 'ai-simulation' | 'undo' | 'redo' | 'import' | 'product-change'; revision: number; objectId?: string; }
 export class DocumentStore {
   document: GraphicDocument;
   readonly events: HistoryEntry[] = [];
@@ -667,7 +667,7 @@ export class DocumentStore {
     this.document = parseGraphicDocument(document); validateLayout(this.document, measure, 'edit');
   }
   get catalogContext():GraphicCatalogContext|undefined{return this.catalog?structuredClone(this.catalog):undefined;}
-  dispatch(raw: unknown, source: 'manual' | 'ai-simulation',shopContext?:GraphicCatalogContext): void {
+  dispatch(raw: unknown, source: 'manual' | 'ai' | 'ai-simulation',shopContext?:GraphicCatalogContext): void {
     const command=GraphicCommandSchema.parse(raw);if(shopContext&&command.tool!=='changeShopProduct')throw Error('Il contesto commerciale si aggiorna soltanto con il cambio prodotto.');
     const context=shopContext?mergeShopProductContext(this.catalog,shopContext):this.catalog;
     const next = applyGraphicCommand(this.document, command, this.measure, context,this.role);
@@ -676,6 +676,13 @@ export class DocumentStore {
     this.events.push({ source, revision: next.revision, objectId:command.objectId });
   }
   clearHistory():void{this.past=[];this.future=[];}
+  /** Validate the whole sequence before changing document, history or events. */
+  dispatchBatch(raw:readonly unknown[],source:'manual'|'ai'|'ai-simulation'):void{
+    if(!raw.length||raw.length>64)throw Error('Una proposta deve contenere da 1 a 64 comandi.');
+    let next=this.document;const events:HistoryEntry[]=[];
+    for(const value of raw){const command=GraphicCommandSchema.parse(value);if(command.tool==='selectPage')throw Error('Una proposta non cambia la pagina corrente.');next=applyGraphicCommand(next,command,this.measure,this.catalog,this.role);events.push({source,revision:next.revision,objectId:command.objectId});}
+    this.past.push(cloneGraphicDocument(this.document));this.future=[];this.document=next;this.events.push(...events);
+  }
   undo(): void { this.travel(this.past, this.future, 'undo'); }
   redo(): void { this.travel(this.future, this.past, 'redo'); }
   private travel(from: GraphicDocument[], to: GraphicDocument[], source: 'undo' | 'redo'): void {

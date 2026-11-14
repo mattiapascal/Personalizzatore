@@ -6,6 +6,8 @@ import { loadEnv } from 'vite';
 import { ZodError } from 'zod';
 import { readConfig, type Config } from './config.ts';
 import { AiRequestSchema, proposeOpenAi } from './openai.ts';
+import {proposeGraphical} from './editor-assistant';
+import {GraphicalRequestSchema} from '../src/editor-assistant/contract';
 import { CatalogService } from './catalog.ts';
 import { Meter } from './meter.ts';
 import type { RuntimeState } from '../src/runtime/schema.ts';
@@ -51,14 +53,14 @@ export class LocalApi {
     if (method === 'POST' && path === '/api/catalog/refresh') {
       await this.catalog.refresh(); await this.knowledge.refresh().catch(() => {}); return this.status();
     }
-    if (method === 'POST' && path === '/api/ai/interpret') {
-      const input = AiRequestSchema.parse(body);
+    if (method === 'POST' && (path === '/api/ai/interpret'||path==='/api/editor/propose')) {
+      if(path==='/api/editor/propose')GraphicalRequestSchema.parse(body);else AiRequestSchema.parse(body);
       if (this.meterError) throw new Error(this.meterError);
       const now = Date.now(); this.calls = this.calls.filter(time => now - time < 60_000);
       if (this.calls.length >= 10) throw new Error('Troppe richieste AI: attendi un minuto');
       if (this.activeAi) throw new Error('Una richiesta AI è già in corso');
       this.calls.push(now); this.activeAi = true;
-      try { return await proposeOpenAi(input, this.config, this.meter, this.fetcher, undefined, createCatalog(this.catalog.state.snapshot, this.catalog.state.version), this.knowledge.provider); }
+      try { return path==='/api/editor/propose'?await proposeGraphical(body,this.config,this.meter,this.fetcher):await proposeOpenAi(AiRequestSchema.parse(body), this.config, this.meter, this.fetcher, undefined, createCatalog(this.catalog.state.snapshot, this.catalog.state.version), this.knowledge.provider); }
       finally { this.activeAi = false; }
     }
     throw new Error('Endpoint non disponibile');
@@ -76,13 +78,13 @@ export function allowedRequest(request: Pick<IncomingMessage, 'headers'>, port: 
   const site = request.headers['sec-fetch-site'];
   return !!host && hosts.includes(host) && (!origin || origin === `http://${host}`) && (!site || site === 'same-origin' || site === 'none');
 }
-async function jsonBody(request: IncomingMessage): Promise<unknown> {
+async function jsonBody(request: IncomingMessage,maxBytes=16_384): Promise<unknown> {
   if (request.headers['content-type']?.split(';')[0] !== 'application/json') throw new Error('È richiesto application/json');
   let size = 0; const chunks: Buffer[] = [];
   for await (const chunk of request) {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
     size += buffer.length;
-    if (size > 16_384) throw new Error('Richiesta oltre 16 KB');
+    if (size > maxBytes) throw new Error(maxBytes===16_384?'Richiesta oltre 16 KB':'Richiesta oltre 128 KB');
     chunks.push(buffer);
   }
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
@@ -105,7 +107,7 @@ export function localApiPlugin(): Plugin {
         if (request.method !== 'GET' && request.method !== 'POST') { send(response, 405, { error: 'Metodo non consentito' }); return; }
         if (request.method === 'POST' && request.headers['x-lab-token'] !== api.token) { send(response, 403, { error: 'Sessione locale scaduta. Ricarica la pagina.' }); return; }
         try {
-          const body = request.method === 'POST' ? await jsonBody(request) : null;
+          const body = request.method === 'POST' ? await jsonBody(request,path==='/api/editor/propose'?131072:16_384) : null;
           send(response, 200, await api.request(request.method, path, body));
         } catch (error) {
           const message = error instanceof ZodError || error instanceof SyntaxError ? 'Dati della richiesta o del provider non validi' : error instanceof Error ? error.message : 'Servizio locale non disponibile';

@@ -1,0 +1,348 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "sessionId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 6000
+    },
+    "canvas": {
+      "type": "object",
+      "properties": {
+        "widthMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "heightMm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "shape": {
+          "type": "string",
+          "enum": [
+            "rectangle",
+            "square",
+            "round"
+          ]
+        },
+        "monochrome": {
+          "type": "boolean"
+        },
+        "minFontSizePt": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 2000
+        },
+        "safeMarginMm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "widthMm",
+        "heightMm",
+        "shape",
+        "monochrome",
+        "minFontSizePt",
+        "safeMarginMm"
+      ],
+      "additionalProperties": false
+    },
+    "exclusions": {
+      "maxItems": 29,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "shape": {
+            "type": "string",
+            "enum": [
+              "rect",
+              "ellipse"
+            ]
+          },
+          "xMm": {
+            "type": "number",
+            "minimum": -10000,
+            "maximum": 10000
+          },
+          "yMm": {
+            "type": "number",
+            "minimum": -10000,
+            "maximum": 10000
+          },
+          "widthMm": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10000
+          },
+          "heightMm": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "shape",
+          "xMm",
+          "yMm",
+          "widthMm",
+          "heightMm"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "objects": {
+      "maxItems": 200,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[ofi][1-9]\\d{0,3}$"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "image",
+              "other"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "selected": {
+            "type": "boolean"
+          },
+          "protected": {
+            "type": "boolean"
+          },
+          "textEditable": {
+            "type": "boolean"
+          },
+          "movable": {
+            "type": "boolean"
+          },
+          "xMm": {
+            "type": "number",
+            "minimum": -10000,
+            "maximum": 10000
+          },
+          "yMm": {
+            "type": "number",
+            "minimum": -10000,
+            "maximum": 10000
+          },
+          "widthMm": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 20000
+          },
+          "heightMm": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 20000
+          },
+          "textToken": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\[RISERVATO_\\d+\\]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "characters": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "lines": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "fontId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[ofi][1-9]\\d{0,3}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fontSizePt": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 2000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fill": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alignment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "center",
+                  "right"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "label",
+          "selected",
+          "protected",
+          "textEditable",
+          "movable",
+          "xMm",
+          "yMm",
+          "widthMm",
+          "heightMm",
+          "textToken",
+          "characters",
+          "lines",
+          "fontId",
+          "fontSizePt",
+          "fill",
+          "alignment"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "fonts": {
+      "maxItems": 500,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[ofi][1-9]\\d{0,3}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "weight": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "italic": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "weight",
+          "italic"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "images": {
+      "maxItems": 4,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[ofi][1-9]\\d{0,3}$"
+          },
+          "pixelWidth": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "pixelHeight": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "pixelWidth",
+          "pixelHeight"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "sessionId",
+    "requestId",
+    "revision",
+    "message",
+    "canvas",
+    "exclusions",
+    "objects",
+    "fonts",
+    "images"
+  ],
+  "additionalProperties": false
+}

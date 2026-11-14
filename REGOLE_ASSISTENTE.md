@@ -116,3 +116,7 @@ Usa questo modello per le richieste che non sono ancora state implementate:
 - **Da evitare:** eventuale assunzione o proposta scorretta.
 - **Dati da verificare:** informazioni necessarie dal catalogo o dal laboratorio.
 - **Stato:** proposta / in sviluppo / verificata, con riferimento al test.
+
+## Assistente grafico locale
+
+Il pannello di bozze grafiche ha istruzioni separate in `REGOLE_ASSISTENTE_GRAFICO.md`, contratto in `src/editor-assistant/contract.ts` e servizio locale in `server/editor-assistant.ts`. La generazione/verifica passa dagli stessi comandi npm, ma non modifica le istruzioni attive della selezione commerciale. [Percorso e prove](docs/iteration-editor-graphical-assistant.md).

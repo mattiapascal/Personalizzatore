@@ -1,4 +1,5 @@
 import {ShopProductChangePanel} from './ShopProductChangePanel';
+import {GraphicAssistantPanel} from '../editor-assistant/GraphicAssistantPanel';
 import {ShopSelectionPanel} from './ShopSelectionPanel';
 import {InsertionFileControl} from './InsertionFileControl';
 import {INSPECTOR_COMMIT_ERROR} from './inspector-controller';
@@ -713,6 +714,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
       }}/>
     </fieldset>}
     workflow={<>
+      {import.meta.env.DEV&&<GraphicAssistantPanel key={`assistant:${doc.documentId}:${doc.pageId??'page-1'}`} api={workflowApi} context={graphicCatalog} role={policyRole} selectedIds={selectedIds} onConfirm={(commands,source)=>validateCapturedSnapshot(source,true)&&act(()=>storeRef.current!.dispatchBatch(commands,'ai'))}/>}
       <ShopSelectionPanel document={doc} disabled={editing||drawing||assetBusy||archiveBusy||conflict||catalogOutdated} onInk={color=>sceneCommand('setInkColor','project',{color})}/>
       {import.meta.env.DEV&&doc.shopSelection&&<ShopProductChangePanel api={workflowApi} context={graphicCatalog} role={policyRole} onConfirm={(command,source,context)=>validateCapturedSnapshot(source,true)&&act(()=>{const store=storeRef.current!;store.dispatch(command,'manual',context);setRuntimeShopContext(store.catalogContext);})}/>}
       <CustomerFieldsPanel key={`${doc.documentId}:${doc.pageId??'page-1'}`} document={doc} onValidity={reportFieldsValidity} disabled={editing||drawing||assetBusy||archiveBusy} onText={(objectId,text)=>sceneCommand('setText',objectId,{text})} onSelect={id=>{select(id);adapter.current?.selectObjects(selectedRef.current);}} onImage={(objectId,file)=>{void prepareInsertion(async store=>{if(file.size>MAX_RASTER_BYTES)throw new Error('Immagine oltre 20 MB');const source=rasterSourceFromBytes(`asset-${crypto.randomUUID()}`,new Uint8Array(await file.arrayBuffer()));await prepareRasterSource(source);return()=>dispatch(store,{schemaVersion:1,tool:'replaceImageSource',objectId,expectedRevision:store.document.revision,arguments:{source}},'manual');});}}/>
