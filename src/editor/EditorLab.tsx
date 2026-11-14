@@ -241,6 +241,15 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
   const sceneCommand=(tool:string,objectId:string,args:unknown)=>{
     const store=inspectorAction();return !!store&&act(()=>dispatch(store,{schemaVersion:1,tool,objectId,expectedRevision:store.document.revision,arguments:args},'manual'));
   };
+  const attachTextToPath=(textId:string,pathObjectId:string)=>{
+    const store=inspectorAction();return !!store&&act(()=>dispatch(store,{schemaVersion:1,tool:'attachTextToPath',objectId:textId,expectedRevision:store.document.revision,arguments:{pathObjectId}},'manual'),textId);
+  };
+  const detachTextFromPath=(textId:string)=>{
+    const store=inspectorAction();if(!store)return false;
+    const current=store.document,text=current.objects.find(object=>object.id===textId);if(text?.type!=='text'||!text.textPath)return false;
+    const preferred=text.textPath.originalPathId,pathObjectId=current.objects.some(object=>object.id===preferred)||current.groups?.some(group=>group.id===preferred)?`path-${crypto.randomUUID()}`:preferred;
+    return act(()=>dispatch(store,{schemaVersion:1,tool:'detachTextFromPath',objectId:textId,expectedRevision:current.revision,arguments:{pathObjectId}},'manual'),textId);
+  };
   const removeBackground=()=>{const store=inspectorAction();if(!store)return false;const current=store.document;return act(()=>dispatch(store,current.backgroundGroupId?{schemaVersion:1,tool:'setBackgroundObjects',objectId:current.backgroundGroupId,expectedRevision:current.revision,arguments:{objects:[],groups:[]}}:{schemaVersion:1,tool:'setBackgroundImage',objectId:current.backgroundImageId!,expectedRevision:current.revision,arguments:{object:null}},'manual'));};
   const changeGuidePanel=(guides:LayoutGuides|null,expectedRevision:number)=>{
     const store=inspectorAction(expectedRevision);if(!store)return false;
@@ -652,7 +661,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
     </fieldset></>}
     properties={<fieldset className="editor-actions" disabled={cutBusy || assetBusy || drawing || archiveBusy || conflict || catalogOutdated}><legend>Ispettore</legend>
       {directRef.current&&selectedObject&&<div className="caption" data-testid="group-member-selection"><span>Elemento singolo del gruppo</span><EditorButton icon="group" label="Seleziona l’intero gruppo" onClick={()=>{select(selectedObject.id);adapter.current?.selectObjects(selectedRef.current);}}/></div>}
-      {mode==='customer'&&doc.objects.some(object=>selectedIds.includes(object.id)&&effectiveObjectProperties(doc,object.id).hideMenus)?<p className="caption">I menu di questo elemento sono nascosti nel template.</p>:selectedIds.length > 1||!directRef.current&&selectedGroups.length ? <SelectionInspector onControllerChange={controller=>{inspectorController.current=controller;}} document={doc} ids={selectedIds} onGroupProperties={mode!=='customer'?(id,properties)=>sceneCommand('setGroupProperties',id,properties):undefined} onAttachText={(textId, pathObjectId) => act(() => dispatch(storeRef.current!,{ schemaVersion: 1, tool: 'attachTextToPath', objectId: textId, expectedRevision: doc.revision, arguments: { pathObjectId } }, 'manual'), textId)} onMove={(deltaXmm, deltaYmm, expectedRevision) => {
+      {mode==='customer'&&doc.objects.some(object=>selectedIds.includes(object.id)&&effectiveObjectProperties(doc,object.id).hideMenus)?<p className="caption">I menu di questo elemento sono nascosti nel template.</p>:selectedIds.length > 1||!directRef.current&&selectedGroups.length ? <SelectionInspector onControllerChange={controller=>{inspectorController.current=controller;}} document={doc} ids={selectedIds} onGroupProperties={mode!=='customer'?(id,properties)=>sceneCommand('setGroupProperties',id,properties):undefined} onAttachText={attachTextToPath} onMove={(deltaXmm, deltaYmm, expectedRevision) => {
         const store = storeRef.current!;
         return act(() => dispatch(store,{ schemaVersion: 1, tool: 'moveObjects', objectId: selectedRef.current[0], expectedRevision, arguments: { objectIds: selectedRef.current, deltaXmm, deltaYmm } }, 'manual')) ? store.document.revision : null;
       }} onTransform={(args, expectedRevision) => {
@@ -670,7 +679,7 @@ function EditorLabSession({ product, draftText, catalogVersion, catalogOutdated 
         onProperties={mode!=='customer'?properties=>sceneCommand('setObjectProperties',selectedObject.id,properties):undefined}
         characterSelection={characterSelection}
         onFontMenuOpen={() => { if (import.meta.env.DEV) void refreshLibraryFonts(storeRef.current?.document.fontAssets).then(() => setFontNotice('')).catch(error => setFontNotice(error.message)); }}
-        onDetachText={() => { if (selectedObject.type !== 'text' || !selectedObject.textPath) return; const preferred = selectedObject.textPath.originalPathId, pathObjectId = doc.objects.some(object => object.id === preferred) || doc.groups?.some(group => group.id === preferred) ? `path-${crypto.randomUUID()}` : preferred; act(() => dispatch(storeRef.current!,{ schemaVersion: 1, tool: 'detachTextFromPath', objectId: selectedObject.id, expectedRevision: doc.revision, arguments: { pathObjectId } }, 'manual'), selectedObject.id); }}
+        onDetachText={()=>detachTextFromPath(selectedObject.id)}
         onCropFocus={(id,moveContents) => { cropContentsFocus.current = moveContents ? id : null; adapter.current?.setRasterCropFocus(id,moveContents); setCropMode(!!id); }}
         onNodeFocus={focus => { adapter.current?.setNodeFocus(focus); setNodeMode(!!focus); }}
         onKerning={value => act(() => {

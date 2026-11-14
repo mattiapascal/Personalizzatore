@@ -16,7 +16,7 @@ Gli ultimi incrementi consolidano input dell’ispettore, revisioni, salvataggio
 
 ## Amministrazione
 
-SQLite locale R638: **346 template attivi, tutti importati da PitchPrint; due composizioni; 219 file font, 218 attivi; un profilo produttivo**. Operativi miniature/cache, tag combinati e priorità, import e operazioni massive, copia cliente→template, libreria font con categorie/anteprime/varianti e backup, immagini/sfondi per categoria, impostazioni, pulizia bozze e gestione profili. Restano permessi/accessi online, storage remoto, storico completo recuperabile e distribuzione dei file. Il contatore di versione non equivale a uno storico completo.
+SQLite locale R638: **346 template attivi, tutti importati da PitchPrint; due composizioni; 219 file font, 218 attivi; un profilo produttivo**. Operativi miniature/cache, tag combinati e priorità, import e operazioni massive, copia cliente→template, libreria font con categorie/anteprime/varianti e backup, immagini/sfondi per categoria, impostazioni, pulizia bozze e gestione profili. Restano permessi/accessi online, storage remoto, storico completo recuperabile e distribuzione dei file. Il contatore di versione non equivale a uno storico completo. Lo sviluppo e il collaudo dell’amministrazione possono proseguire in locale: il server online serve per accessi condivisi e uso dei clienti.
 
 ## Chat e Fabric
 
@@ -24,12 +24,12 @@ La chat commerciale usa il modello reale per raccogliere la richiesta e il motor
 
 ## Prodotti Shopify reali
 
-L’amministrazione consulta il catalogo commerciale reale per collezioni/tag e dispone di strumenti per associazioni massive prodotto/varianti e ricostruzione delle associazioni PitchPrint. Le associazioni archivistiche non forniscono automaticamente misure utili, profili produttivi o prezzi.
+L’amministrazione consulta il catalogo commerciale reale per collezioni/tag e dispone di strumenti per associazioni massive prodotto/varianti e ricostruzione delle associazioni PitchPrint. Ora «Scegli prodotto» apre template associati, collegamenti originali recuperabili e profili tecnici, con recupero selettivo e riepilogo prima del salvataggio locale. Le associazioni archivistiche non forniscono automaticamente misure utili, profili produttivi o prezzi.
 
-La verifica dell’archivio attuale trova **zero template con associazioni commerciali salvate** e zero con associazioni ai modelli TEST. La galleria/cambio montatura usa ancora tre modelli tecnici fixture; il collegamento chat→canvas è un percorso locale distinto. Le targhe parametriche sono provabili con misure e fissaggi, ma varianti reali, misure BSS, supporti/accessori e prezzi non sono ancora collegati al flusso completo.
+La verifica dell’archivio attuale trova **zero template con associazioni commerciali salvate** e zero con associazioni ai modelli TEST. Dalle copie datate del catalogo/associazioni risultano recuperabili 290 template verso 133 prodotti (398 legami); 56 template non hanno un legame recuperabile da quella copia. Nessun recupero massivo reale eseguito durante il collaudo. La galleria/cambio montatura usa ancora tre modelli tecnici fixture; il collegamento chat→canvas è un percorso locale distinto. Le targhe parametriche sono provabili con misure e fissaggi, ma varianti reali, misure BSS, supporti/accessori e prezzi non sono ancora collegati al flusso completo.
 
 ## Priorità proposta
 
-Completare in locale un percorso reale per una famiglia di timbri e una di targhe: associazioni, misure/varianti, profili e zone, scelta template, salvataggio/riapertura e collaudo del file produttivo. Collegare poi l’AI grafica al motore già validato. Pubblicazione e sostituzione online richiedono una fase autorizzata separata, con prova e rollback.
+Secondo le nuove indicazioni: completare in locale i percorsi reali per timbri e targhe, dando priorità ad associazioni, misure/varianti, materiale e fissaggi; avviare l’assistente grafico locale per bozze semplici sullo stesso documento. Niente nuovi strumenti avanzati senza discuterne. Prezzi dopo associazioni quasi complete: riuso del Preventivometro per timbri/targhe stampate/adesivi dove applicabile, modello nuovo per targhe incise. Pubblicazione e sostituzione online richiedono una fase autorizzata separata, con prova e rollback. [Piano aggiornato](editor-integrazione-prodotti-chat-plan.md).
 
-Ultimo incremento: **1.399 unitari, 53 casi browser pertinenti verificati tra esecuzioni/ricontrolli, 13 test della chat pubblica locale e 96 campioni JSON/SVG**. Dettagli e limiti in [misure e fissaggi protetti](iteration-editor-plaque-commit.md). Questi numeri non certificano una nuova suite browser generale o la produzione fisica.
+Ultimo incremento: **1.401 unitari, 42 casi browser pertinenti, 13 test della chat pubblica locale e 97 campioni JSON/SVG**. Dettagli e limiti in [collegamenti con i prodotti reali](iteration-editor-product-integration.md). Questi numeri non certificano una nuova suite browser generale o la produzione fisica.
