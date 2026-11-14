@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "shopify",
+        "test"
+      ]
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^gid:\\/\\/shopify\\/Product\\/\\d+$"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "ARCHIVED",
+        "DRAFT",
+        "UNLISTED"
+      ]
+    },
+    "definitions": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "string",
+          "enum": [
+            "verified-mm",
+            "missing",
+            "changed"
+          ]
+        },
+        "height": {
+          "type": "string",
+          "enum": [
+            "verified-mm",
+            "missing",
+            "changed"
+          ]
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "variants": {
+      "maxItems": 2000,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^gid:\\/\\/shopify\\/ProductVariant\\/\\d+$"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "width": {
+            "type": "object",
+            "properties": {
+              "mm": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 3000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "issue": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "missing",
+                      "unsupported-type",
+                      "invalid-value",
+                      "unverified-unit"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mm",
+              "issue"
+            ],
+            "additionalProperties": false
+          },
+          "height": {
+            "type": "object",
+            "properties": {
+              "mm": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 3000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "issue": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "missing",
+                      "unsupported-type",
+                      "invalid-value",
+                      "unverified-unit"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mm",
+              "issue"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "width",
+          "height"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "source",
+    "checkedAt",
+    "id",
+    "title",
+    "status",
+    "definitions",
+    "variants"
+  ],
+  "additionalProperties": false
+}

@@ -1,4 +1,6 @@
 import { fetchEditorShopVariants } from './editor-shop-variants';
+import {fetchEditorShopMeasurements} from './editor-shop-measurements';
+import type {ShopMeasurements} from '../src/editor-admin/shop-measurements';
 import type { ShopProductDetail } from '../src/editor-admin/shop-catalog';
 import { z } from 'zod';
 import { readFile,mkdir,writeFile,rename } from 'node:fs/promises';
@@ -58,6 +60,12 @@ export class EditorShopCatalog {
  private cached:ShopBrowserCatalog|null=null;private loaded=false;private pending:Promise<ShopBrowserStatus>|null=null;private error:string|null=null;
  constructor(private config:ShopReadConfig,private path:string,private fetcher:typeof fetch=fetch){}
  private details=new Map<string,ShopProductDetail>();private detailPending=new Map<string,Promise<ShopProductDetail>>();
+ private measurementsCache=new Map<string,ShopMeasurements>();private measurementsPending=new Map<string,Promise<ShopMeasurements>>();
+ async measurements(id:string,force=false):Promise<ShopMeasurements>{
+  if(!this.configured)throw Error('Accesso Shopify in sola lettura non configurato.');const cached=this.measurementsCache.get(id);if(!force&&cached&&Date.now()-Date.parse(cached.checkedAt)<600000)return structuredClone(cached);
+  if(this.measurementsPending.has(id))return structuredClone(await this.measurementsPending.get(id)!);
+  const work=fetchEditorShopMeasurements(this.config,id,this.fetcher).then(value=>{if(this.measurementsCache.size>=200)this.measurementsCache.delete(this.measurementsCache.keys().next().value!);this.measurementsCache.set(id,value);return value;}).finally(()=>this.measurementsPending.delete(id));this.measurementsPending.set(id,work);return structuredClone(await work);
+ }
  async product(id:string,force=false):Promise<ShopProductDetail>{
   if(!this.configured)throw new Error('Accesso Shopify in sola lettura non configurato.');
   const cached=this.details.get(id);if(!force&&cached&&Date.now()-Date.parse(cached.checkedAt)<600000)return structuredClone(cached);

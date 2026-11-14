@@ -6,7 +6,8 @@ import { ReservedRegionsSchema,assertRegionsFit } from './regions';
 const nullableMm=z.number().finite().positive().max(GRAPHIC_GEOMETRY_LIMITS.pageSideMm).nullable(),label=z.string().trim().min(1).max(120);
 export const FixingProfileSchema=z.strictObject({id:z.string().uuid(),label,kind:z.enum(['holes-only','kit']),drilling:z.strictObject({diameterMm:nullableMm,offsetXMm:nullableMm,offsetYMm:nullableMm,clearanceMm:z.number().finite().min(0).max(100).nullable(),pattern:z.enum(['top-pair','bottom-pair','four-corners'])}).nullable()});
 export const ProfileAreaSchema=z.strictObject({widthMm:nullableMm,heightMm:nullableMm,shape:z.enum(['rectangle','square','round'])});
-export const VariantAreaSchema=z.strictObject({variantId:ShopProfileBindingSchema.shape.variantId,sizeMode:z.enum(['fixed','document']),usableArea:ProfileAreaSchema});
+export const NominalAreaSourceSchema=z.strictObject({kind:z.literal('shopify-variant-metafields'),contractVersion:z.literal(1),source:ShopProfileBindingSchema.shape.source,productId:ShopProfileBindingSchema.shape.productId,checkedAt:z.string().datetime(),widthMm:nullableMm.unwrap(),heightMm:nullableMm.unwrap()});
+export const VariantAreaSchema=z.strictObject({variantId:ShopProfileBindingSchema.shape.variantId,sizeMode:z.enum(['fixed','document']),usableArea:ProfileAreaSchema,nominalSource:NominalAreaSourceSchema.optional()});
 export const ProductionProfileDataSchema=z.strictObject({
  plaqueFamily:PlaqueFamilySchema.optional(),
  sizeMode:z.enum(['fixed','document','variant']).optional(),
@@ -50,6 +51,7 @@ export function validateProductionProfile(data:ProductionProfileData):void {
  if(new Set(knownVariantIds).size!==knownVariantIds.length)throw Error('Una variante compare in più prodotti del profilo.');
  if(new Set(data.variantAreas?.map(item=>item.variantId)).size!==(data.variantAreas?.length??0))throw Error('Misure duplicate per la stessa variante.');
  if(data.variantAreas?.some(item=>!bindings.some(binding=>binding.allVariants||(binding.variantIds??[binding.variantId]).includes(item.variantId))))throw Error('Le misure devono appartenere alle varianti associate al profilo.');
+ for(const area of data.variantAreas??[])if(area.nominalSource){const knownOwner=bindings.find(binding=>(binding.variantIds??[binding.variantId]).includes(area.variantId));if(knownOwner&&knownOwner.productId!==area.nominalSource.productId||!bindings.some(binding=>binding.productId===area.nominalSource!.productId&&binding.source===area.nominalSource!.source&&(binding.allVariants||(binding.variantIds??[binding.variantId]).includes(area.variantId))))throw Error('Fonte delle misure nominali diversa dal prodotto associato.');}
  if(data.kind!=='engraved-plaque'&&(data.minEngravedFeatureMm!==null||data.minDifferentPaintGapMm!==null))throw new Error('I limiti della punta e della distanza fra vernici riguardano soltanto le targhe incise.');
  if(data.kind==='engraved-plaque'&&(data.minEngravedFeatureMm!==null&&data.minEngravedFeatureMm<.5||data.minDifferentPaintGapMm!==null&&data.minDifferentPaintGapMm<30))throw new Error('Regole confermate: punta minima 0,5 mm e distanza fra colori differenti 30 mm.');
  if(data.kind==='stamp-ink'&&(data.minFontSizePt!==null&&data.minFontSizePt<7||data.rasterMode!=='binary'))throw new Error('Per i timbri inchiostrati: testo minimo 7 pt e immagini B/N.');

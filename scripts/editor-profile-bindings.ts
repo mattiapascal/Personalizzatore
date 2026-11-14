@@ -17,5 +17,6 @@ export async function verifyProfileShopBindings(data:ProductionProfileData,resol
  const ids=verified.flatMap(binding=>binding.variantIds??[binding.variantId]);
  if(new Set(ids).size!==ids.length)throw Error('Una variante compare in più prodotti del profilo.');
  if(data.variantAreas?.some(item=>!ids.includes(item.variantId)))throw Error('Misure associate a una variante rimossa o non compresa nel prodotto scelto.');
+ for(const area of data.variantAreas??[])if(area.nominalSource&&!verified.some(binding=>binding.productId===area.nominalSource!.productId&&binding.source===area.nominalSource!.source&&(binding.variantIds??[binding.variantId]).includes(area.variantId)))throw Error('Fonte delle misure nominali diversa dal prodotto della variante verificata.');
  return data.shopBindings?{...data,shopBindings:verified}:{...data,shopBinding:verified[0]};
 }
