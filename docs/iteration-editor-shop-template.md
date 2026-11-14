@@ -1,0 +1,34 @@
+# Dal prodotto reale al template modificabile
+
+14 novembre 2026, dopo `bccc036`; [piano](editor-shop-template-plan.md). Il percorso locale dei prodotti offre ora foglio vuoto oppure template associato al prodotto/variante, con anteprima e conferma prima dell’apertura.
+
+## Percorso e contratto
+
+In **Prodotti del negozio → Prova il prodotto nell’editor locale**, scegliere formato/variante e «Template associato». Elenco con miniature cache, ricerca per nome/tag e paginazione; soltanto template attivi, con ID prodotto/variante e provenienza catalogo corrispondenti. Nessuna associazione ricostruita per somiglianza dei nomi. Se il template contiene più pagine/formati già esistenti, si sceglie esplicitamente quello da usare per il singolo prodotto. L’originale conserva tutte le pagine: nessuna nuova funzione multipagina o conversione distruttiva.
+
+L’anteprima usa font incorporati e immagini esatti. Soltanto i font usati nel formato scelto vengono preparati e conservati nel nuovo progetto; nessun font del computer o fallback. ID, gruppi, proprietà dei campi, colori delle targhe, sfondi e riferimenti restano nel documento. Il profilo produttivo, i fissaggi e la scelta commerciale sono quelli del prodotto di destinazione, senza ereditare il profilo di un altro supporto dal template.
+
+Si prova prima la grafica a dimensioni fisiche invariate, traslata rispetto al centro della pagina; se non entra, si propone la massima riduzione proporzionale compatibile con l’area e i margini. Lo sfondo collegato copre il nuovo formato. Nella ricerca della riduzione si aggiungono 0,05 mm di distacco per non attribuire compatibilità ai campioni al limite della griglia diagnostica; il margine originale del profilo non viene modificato. Font minimo e limiti del documento restano validati. I timbri richiedono un sorgente già compatibile B/N, senza conversioni cromatiche silenziose. La riduzione automatica delle incisioni resta sospesa finché non sarà verificabile la finezza dei particolari.
+
+Il controllo produttivo condiviso verifica testo/immagini, poi il campionamento fisico già esistente controlla margini e zone riservate a 0,025 mm. Esiti al limite, incompleti, sovrapposti o dati mancanti non abilitano l’apertura dal template. Il risultato deve riferirsi alla stessa revisione. Non è una certificazione di incisione, verniciatura o Illustrator. Un errore richiede correggere il template/profilo o scegliere un altro formato; il percorso da foglio vuoto resta disponibile.
+
+Dopo la conferma vengono riletti template, prodotto e profilo, ricontrollata la composizione e rilette le versioni prima dell’apertura. Archiviazione, associazioni rimosse, stato prodotto/varianti e profilo cambiati impediscono l’uso dell’anteprima vecchia. Cambiare formato durante un’attesa scarta la risposta precedente. Enter nel percorso template non apre accidentalmente un foglio vuoto.
+
+La composizione ha una nuova identità, conserva scelta e profilo e usa lo stesso comando `applyTemplate` manuale/AI, con Undo/Redo. `templateOrigin.pageId` e `applyTemplate.arguments.templatePageId` sono aggiunte opzionali per conservare l’origine del formato scelto, insieme a ID/versione del template. Vecchi JSON e comandi restano validi; sei schemi rigenerati, nessuna migrazione SQLite. Salvataggio cliente crea una composizione indipendente, senza sostituire il template.
+
+## Correzione del gate geometrico
+
+Il controllo strict riutilizzato dai comandi imponeva sempre il margine TEST di 1 mm e considerava anche i riferimenti non stampabili. Nei documenti con profilo usa ora il margine dichiarato e la grafica produttiva, conservando i riferimenti nel JSON. Con margine sconosciuto controlla il bordo fisico della pagina ma l’ispezione resta «non configurata»; non salva né certifica uno zero implicito. I documenti TEST precedenti senza profilo mantengono il comportamento da 1 mm. La modalità manuale di editing, che permette oggetti parzialmente fuori pagina, rimane distinta dal controllo strict.
+
+## Evidenze
+
+- Suite completa **1.431 unitari / 197 file passati** (`.local/shop-template-all-units.log`), inclusi undici nuovi casi su associazioni, adattamento, vincoli, riferimenti/font, origine e comandi. Ulteriore **test HTTP SQLite passato** (`shop-template-http.log`): controllo accesso, salvataggio/riapertura esatti, template originale invariato e revisione superata respinta. Totale distinto **1.432 unitari/HTTP**.
+- **31 browser passati** su nuovo percorso e regressioni dei prodotti/varianti (`shop-template-regressions.log`), con quattordici nuovi casi. Altri **otto casi fissaggi** e ricontrollo del nuovo percorso passati **22/22** (`shop-template-final-browser.log`).
+- Due ricontrolli avevano condiviso la cartella Playwright: errori ENOENT nelle tracce a chiusura del browser, senza errori nelle asserzioni del flusso. Ripetuti con directory distinte; risultati definitivi **14/14** in `shop-template-proof-browser.log` e **18/18** dei percorsi precedenti in `shop-template-proof-legacy-browser.log`. Totale distinto di questo incremento: **57 casi browser pertinenti**, non una nuova suite generale. Il primo filtro dei casi precedenti non aveva selezionato test ed è stato corretto; non viene contato come verifica.
+- **100 campioni JSON/SVG riaperti/esportati**, confrontando anche `templateOrigin`, scelta e profilo; zero errori browser, richieste esterne e font privati (`shop-template-artifacts.log`). Nuovo `fixtures/illustrator/shop-template.TEST.json/svg`: 50×30 mm, due oggetti raggruppati, testo Arimo TEST incorporato, colori e origine pagina. Generato dalla UI da `scripts/capture-editor-shop-template.ts`, con zero scritture/errori/richieste esterne. Catture desktop/telefono in `.local/previews/shop-template-*`, ispezionate; contrasto delle schede corretto dopo la prima cattura. Licenza e font TEST in `fixtures/fonts`.
+- **13 test della chat pubblica locale passati** (`shop-template-public-tests.log`); JavaScript pubblico ancora `index-BG2r_x-8.js`. Build laboratorio/storefront, TypeScript Worker e scansioni segreti passati.
+- Principale **SQLite R638 invariato**, checksum identico: 346 template, due composizioni, 219 font/218 attivi, un profilo (`shop-template-archive.json`). Riavvio locale sulla stessa porta 5173, HTTP 200 e stessi conteggi. Nessuna associazione commerciale o misura reale impostata automaticamente. Cancellazione PDF preesistente esclusa dal commit.
+
+## Prossimo lavoro
+
+Completare le associazioni commerciali verificate e collegare il cambio materiale/prodotto e fissaggi nello stesso documento, con anteprima e conservazione della versione originale; completare il percorso inverso da template ai modelli reali compatibili. Assistente grafico locale per bozze semplici sui comandi già validati. Prezzi dopo le associazioni secondo le indicazioni del titolare. Nessun deploy, modifica Shopify/tema/PitchPrint/BSS/prezzi/carrello/checkout o generazione immagini AI.

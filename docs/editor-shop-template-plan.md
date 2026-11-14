@@ -1,0 +1,9 @@
+# Template associati nel percorso prodotto reale
+
+14 novembre 2026, dopo `bccc036`. Riutilizzare archivio, miniature cache, documenti/pagine già esistenti, adattamento proporzionale, comandi e controlli produttivi. Nessuna nuova funzione avanzata o multipagina; usare esplicitamente una pagina/formato già presente del template, senza eliminare le altre dall’originale.
+
+Mostrare soltanto template attivi associati al prodotto/variante e con la stessa provenienza catalogo. Leggere il record e prepararne font incorporati/immagini esatti, senza fallback. Mostrare l’anteprima sul formato del profilo, preservando colori per le targhe; i timbri richiedono sorgenti compatibili B/N. Conservarne gruppi, ID, proprietà, sfondi e riferimenti. Nessuna scalatura implicita di zone o profilo. Applicare tramite `applyTemplate`, comune manuale/AI, dopo conferma.
+
+Adattare la geometria attorno al centro della pagina, con sfondo collegato a copertura del nuovo formato. Provare prima scala 1, poi massima riduzione proporzionale compatibile. Correggere il gate strict dei documenti con profilo perché usi il margine dichiarato e la sola grafica produttiva, conservando la compatibilità dei vecchi TEST da 1 mm. Il campionamento fisico già esistente verifica le zone: esiti incerti, incompleti o dati mancanti non sono compatibilità dimostrata. La verifica non certifica l’incisione o la produzione fisica.
+
+Rileggere prodotto, profilo e template dopo l’anteprima e prima dell’apertura; rifiutare modifiche, archiviazione, associazioni rimosse e scelte concorrenti. Il documento finale ha nuova identità, profilo/scelta/versione del prodotto e origine del template/pagina, mentre gli originali non cambiano. Salvataggio/riapertura nel locale; niente Shopify, prezzi o acquisti. Collaudare motore, comandi, concorrenza, UI desktop/telefono e campione portatile JSON/SVG prima della sincronizzazione.

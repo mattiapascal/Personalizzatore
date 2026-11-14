@@ -18,7 +18,7 @@ import {coverRasterReplacement} from './raster-replacement';
 import { UnverifiedTextGeometryError } from './unverified-text-geometry';
 import { StrokeWidthSchema } from './stroke';
 import {ColorSchema,PaintSchema,isMonochromePaint} from './paint';
-import {ObjectPropertiesSchema,GroupPropertiesSchema,effectiveObjectProperties,assertObjectPolicies,type EditorRole} from './object-properties';
+import {ObjectPropertiesSchema,GroupPropertiesSchema,effectiveObjectProperties,productionDocument,assertObjectPolicies,type EditorRole} from './object-properties';
 import {visibleDocument} from './scene-visibility';
 import {cloneSceneGroup} from './scene-groups';
 import {PlaqueMountingSchema,plaqueMountingPoints} from './plaque';
@@ -106,7 +106,7 @@ const documentFields = z.strictObject({
   plaque:PlaqueMountingSchema.optional(),
   inkColor:InkColorSchema.optional(),
   colorMode:z.enum(['monochrome','color']).optional(),
-  templateOrigin: z.strictObject({id:z.string().uuid(),version:z.number().int().positive()}).optional(),
+  templateOrigin: z.strictObject({id:z.string().uuid(),version:z.number().int().positive(),pageId:id.optional()}).optional(),
   fontAssets: FontAssetsSchema.optional(),
   backgroundImageId:id.optional(),
   backgroundGroupId:id.optional(),
@@ -294,7 +294,7 @@ export const GraphicCommandSchema = z.discriminatedUnion('tool', [
   z.strictObject({...base,tool:z.literal('configurePlaque'),arguments:z.strictObject({areaMm:AreaSchema,mounting:PlaqueMountingSchema})}),
   z.strictObject({...base,tool:z.literal('setInkColor'),arguments:z.strictObject({color:InkColorSchema})}),
   z.strictObject({...base,tool:z.literal('changeFormat'),arguments:z.strictObject({profileKey:z.string().min(1).max(200),catalogVersion:z.string().min(1),allowShrink:z.boolean()})}),
-  z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),objects:z.array(SceneObjectSchema).min(0).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundImageId:id.optional(),backgroundGroupId:id.optional(),paperColor:ColorSchema.optional(),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
+  z.strictObject({...base,tool:z.literal('applyTemplate'),arguments:z.strictObject({templateId:z.string().uuid(),templateVersion:z.number().int().positive(),templatePageId:id.optional(),objects:z.array(SceneObjectSchema).min(0).max(EDITOR_LIMITS.objects),groups:z.array(SceneGroupSchema).max(EDITOR_LIMITS.groups),backgroundImageId:id.optional(),backgroundGroupId:id.optional(),paperColor:ColorSchema.optional(),fontAssets:FontAssetsSchema.optional(),inkColor:InkColorSchema.optional()})}),
   z.strictObject({ ...base, tool: z.literal('attachTextToPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...base, tool: z.literal('detachTextFromPath'), arguments: z.strictObject({ pathObjectId: id }) }),
   z.strictObject({ ...objectBase, tool: z.literal('setTextPath'), arguments: TextPathOptionsSchema }),
@@ -398,7 +398,10 @@ function validateSinglePageLayout(doc: GraphicDocument, measure: Measure, mode: 
   // The editing workspace includes the area outside the paper. Only a drag
   // gesture can request deletion; importing/resizing must preserve every object.
   if(mode==='edit'){for(const object of doc.objects)try{objectGeometry(object,measure);}catch(error){if(!(object.type==='text'&&error instanceof UnverifiedTextGeometryError))throw error;}return;}
-  doc=visibleDocument(doc);
+  // An unknown margin still enforces the paper boundary; the production
+  // inspection reports it as unconfigured, never as a verified zero margin.
+  const profiled=!!doc.productionProfile,margin=doc.productionProfile?.safeMarginMm??(profiled?0:TEST_MARGIN_MM);
+  doc=profiled?productionDocument(doc):visibleDocument(doc);
   const backgrounds=backgroundObjectIds(doc);
   const intersections=new Map<SceneObject,boolean>();
   const intersects = (object: SceneObject): boolean => {const previous=intersections.get(object);if(previous!==undefined)return previous;const visible=objectIntersectsArea(doc, object, measure);intersections.set(object,visible);return visible;};
@@ -410,13 +413,13 @@ function validateSinglePageLayout(doc: GraphicDocument, measure: Measure, mode: 
       continue;
     }
     const box = objectGeometry(object, measure), epsilon = 1e-8;
-    if (object.xMm < TEST_MARGIN_MM - epsilon || object.yMm < TEST_MARGIN_MM - epsilon || object.xMm + box.widthMm > doc.areaMm.width - TEST_MARGIN_MM + epsilon || object.yMm + box.heightMm > doc.areaMm.height - TEST_MARGIN_MM + epsilon) throw new Error('Oggetto fuori dall’area TEST o dal margine di 1 mm');
+    if (object.xMm < margin - epsilon || object.yMm < margin - epsilon || object.xMm + box.widthMm > doc.areaMm.width - margin + epsilon || object.yMm + box.heightMm > doc.areaMm.height - margin + epsilon) throw new Error(profiled?'Oggetto fuori dalla pagina o dal margine del profilo.':'Oggetto fuori dall’area TEST o dal margine di 1 mm');
     if (doc.shape === 'round') {
-      const radius = doc.areaMm.width / 2, limit = radius - TEST_MARGIN_MM;
+      const radius = doc.areaMm.width / 2, limit = radius - margin;
       const outside = object.type === 'circle'
         ? Math.hypot(object.xMm + box.widthMm / 2 - radius, object.yMm + box.heightMm / 2 - radius) + Math.max(box.widthMm, box.heightMm) / 2 > limit + epsilon
         : box.corners.some(({ x, y }) => Math.hypot(x - radius, y - radius) > limit + epsilon);
-      if (outside) throw new Error('Oggetto fuori dall’area circolare TEST: gli angoli devono entrare nel cerchio');
+      if (outside) throw new Error(profiled?'Oggetto fuori dall’area circolare o dal margine del profilo.':'Oggetto fuori dall’area circolare TEST: gli angoli devono entrare nel cerchio');
     }
   }
 }
@@ -486,7 +489,7 @@ export function applyGraphicCommand(doc: GraphicDocument, raw: unknown, measure:
     if(command.arguments.paperColor)next.paperColor=command.arguments.paperColor;else delete next.paperColor;
     if(command.arguments.backgroundImageId)next.backgroundImageId=command.arguments.backgroundImageId;else delete next.backgroundImageId;
     if(command.arguments.backgroundGroupId)next.backgroundGroupId=command.arguments.backgroundGroupId;else delete next.backgroundGroupId;
-    next.templateOrigin={id:command.arguments.templateId,version:command.arguments.templateVersion};
+    next.templateOrigin={id:command.arguments.templateId,version:command.arguments.templateVersion,...(command.arguments.templatePageId?{pageId:command.arguments.templatePageId}:{})};
     if(command.arguments.inkColor)next.inkColor=command.arguments.inkColor;
     validateLayout(next,measure);
     assertDocumentTextProduction(next,catalog);
