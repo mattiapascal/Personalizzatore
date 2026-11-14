@@ -3600,6 +3600,11 @@
                             "type": "string",
                             "const": "image"
                           },
+                          "opacity": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
                           "xMm": {
                             "type": "number",
                             "minimum": -10000,
@@ -7948,6 +7953,11 @@
                           "type": "string",
                           "const": "image"
                         },
+                        "opacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
                         "xMm": {
                           "type": "number",
                           "minimum": -10000,
@@ -11464,6 +11474,11 @@
                       "type": {
                         "type": "string",
                         "const": "image"
+                      },
+                      "opacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
                       },
                       "xMm": {
                         "type": "number",
@@ -15473,6 +15488,11 @@
                         "type": "string",
                         "const": "image"
                       },
+                      "opacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
                       "xMm": {
                         "type": "number",
                         "minimum": -10000,
@@ -19471,6 +19491,11 @@
                       "type": "string",
                       "const": "image"
                     },
+                    "opacity": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
                     "xMm": {
                       "type": "number",
                       "minimum": -10000,
@@ -23051,6 +23076,11 @@
                       "type": {
                         "type": "string",
                         "const": "image"
+                      },
+                      "opacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
                       },
                       "xMm": {
                         "type": "number",
@@ -26702,6 +26732,11 @@
                       "type": "string",
                       "const": "image"
                     },
+                    "opacity": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
                     "xMm": {
                       "type": "number",
                       "minimum": -10000,
@@ -29618,6 +29653,11 @@
             "style": {
               "type": "object",
               "properties": {
+                "opacity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
                 "fillOpacity": {
                   "type": "number",
                   "minimum": 0,

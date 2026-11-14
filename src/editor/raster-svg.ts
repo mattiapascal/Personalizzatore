@@ -25,7 +25,10 @@ export function originalRasterSvg(image: FabricImage, source: RasterSource, rawC
       else href=originalPngSvgSource(source);
       original = `<svg x="${-image.width / 2}" y="${-image.height / 2}" width="${image.width}" height="${image.height}" viewBox="${crop.leftPx} ${crop.topPx} ${crop.widthPx} ${crop.heightPx}" preserveAspectRatio="none" overflow="hidden"><g${transform}><image x="0" y="0" width="${width}" height="${height}" xlink:href="${href}" /></g></svg>`;
     }
-    const markup = serialize(), svg = markup.replace(/<image\b[^>]*(?:\/>|><\/image>)/, original);
+    // Fabric places its object opacity in the <image> style. Replacing that
+    // element must retain alpha exactly once around our original/crop viewport.
+    const replacement=image.opacity===1?original:`<g opacity="${image.opacity}">${original}</g>`;
+    const markup = serialize(), svg = markup.replace(/<image\b[^>]*(?:\/>|><\/image>)/, replacement);
     if(svg===markup)throw new Error('Serializzazione dell’immagine originale non riuscita.');
     return reviver ? reviver(svg) : svg;
   };

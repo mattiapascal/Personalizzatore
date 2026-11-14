@@ -1,3 +1,4 @@
+import {OpacitySchema} from './paint-opacity';
 import {rasterSampleWindow,assertSampleWindow,type RasterSampleWindow} from './raster-sample-window';
 import type {GraphicCatalogContext,GraphicDocument,SceneObject} from './model';
 import {graphicPages} from './pages';
@@ -22,7 +23,8 @@ export function binaryInkWindow(pixels:Uint8Array|Uint8ClampedArray,width:number
 
 /** Binary threshold/dither produces only binary samples, regardless of input.
  * Luminance removal instead keeps continuous alpha and needs pixel inspection. */
-export const guaranteesBinaryRaster=(object:RasterObject)=>(object.raster.mode===undefined||object.raster.mode==='binary')&&!object.raster.backgroundRemoval;
+export const rasterOpacity=(object:RasterObject)=>OpacitySchema.parse(object.opacity===undefined?1:object.opacity);
+export const guaranteesBinaryRaster=(object:RasterObject)=>{const opacity=rasterOpacity(object);return opacity===0||opacity===1&&(object.raster.mode===undefined||object.raster.mode==='binary')&&!object.raster.backgroundRemoval;};
 
 /** Same read-only final gate in the browser and local API. The decoder is an
  * adapter: no DOM/native code enters this domain module. Check every page and
@@ -36,8 +38,9 @@ export async function assertDocumentProduction(document:GraphicDocument,catalog:
    if((!product||product.mechanism==='emboss')&&page.productionProfile?.rasterMode!=='binary')continue;
    for(const object of productionDocument(page).objects){
     if(object.type!=='image')continue;
+    const opacity=rasterOpacity(object);if(opacity>0&&opacity<1)throw Error(`Il profilo richiede immagini B/N senza trasparenze parziali: correggi «${object.editor?.label||object.id}».`);
     let variants=checked.get(object.source.dataUrl);if(!variants){variants=new Map();checked.set(object.source.dataUrl,variants);}
-    const window=rasterSampleWindow(object.source,object.crop),key=JSON.stringify({raster:object.raster,mime:object.source.mime,width:object.source.pixelWidth,height:object.source.pixelHeight,window:guaranteesBinaryRaster(object)?null:window});let result=variants.get(key);if(!result){result=checkRaster(object);variants.set(key,result);}
+    const window=rasterSampleWindow(object.source,object.crop),key=JSON.stringify({opacity:object.opacity??1,raster:object.raster,mime:object.source.mime,width:object.source.pixelWidth,height:object.source.pixelHeight,window:guaranteesBinaryRaster(object)?null:window});let result=variants.get(key);if(!result){result=checkRaster(object);variants.set(key,result);}
     if(!await result)throw Error(`${page.productionProfile&&!page.productionProfile.kind.startsWith('stamp-')?'Il profilo tecnico':'Il timbro'} richiede immagini in bianco/nero senza grigi, colori o trasparenze parziali: converti «${object.editor?.label||object.id}» in B/N nell’ispettore prima di confermare. Il controllo considera tutti i pixel del ritaglio, anche quelli nascosti dalle maschere.`);
    }
   }catch(error){if(pages.length===1)throw error;throw Error(`${page.pageName??'Pagina'}: ${error instanceof Error?error.message:'Controllo produttivo non riuscito'}`);}

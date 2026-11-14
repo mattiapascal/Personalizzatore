@@ -7,6 +7,7 @@ import{GRAPHIC_GEOMETRY_LIMITS}from'./limits';
 import{AspectRatioControl}from'./AspectRatioControl';
 import{resizeObjectDimension}from'./resize-object';
 import { OpacityControls } from './OpacityControls';
+import {ImageOpacityControl} from './ImageOpacityControl';
 import {ImageReplacementControl} from './ImageReplacementControl';
 import { textGeometryVerified } from './font-measurement';
 import { fontCoverageVersion, subscribeFontCoverage } from './font-coverage-cache';
@@ -220,6 +221,7 @@ function MeasuredObjectInspector({ minimumFontPt = null, allowColor = false, doc
         {opacityControls}
       </>}
       {section === 'image' && current.type === 'image' && <>
+        <ImageOpacityControl opacity={current.opacity??1} revision={draft.revision} onChange={(opacity,immediate)=>patch({opacity},immediate)}/>
         {onReplaceImage&&<ImageReplacementControl revision={draft.revision} disabled={dirty} onReplace={onReplaceImage}/>}
         <p className="caption" data-testid="raster-analysis">{current.raster.mode === 'grayscale' ? 'Elaborazione monocolore; l’immagine originale resta nel progetto.' : analysis?.kind === 'grayscale' ? 'Riconosciuta automaticamente: scala di grigi (canali R, G e B uguali).' : analysis?.kind === 'near-grayscale' ? 'Canali quasi uguali: possibile grigio con artefatti JPEG. Conversione automatica sospesa per non eliminare tinte reali.' : analysis?.kind === 'empty' ? 'Immagine completamente trasparente.' : 'Immagine a colori: rimozione automatica dello sfondo da valutare separatamente.'}</p>
         <label className="ratio-toggle"><input type="checkbox" checked={current.raster.mode === 'grayscale'} onChange={event => patch({ raster: { ...DEFAULT_RASTER, ...(event.target.checked ? { mode: 'grayscale' as const } : allowColor ? { mode: 'original' as const } : {}) } }, true)}/> Immagine monocolore (scala di grigi)</label>

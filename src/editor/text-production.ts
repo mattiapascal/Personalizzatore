@@ -51,7 +51,7 @@ export function assertDocumentTextProduction(document: GraphicDocument, catalog?
   if (product && product.mechanism !== 'emboss' || document.productionProfile?.kind==='stamp-ink') {
     const partial = (value: number | undefined) => value !== undefined && value > 0 && value < 1;
     const issue = productionDocument(document).objects.find(object => {
-      if (object.type === 'image') return object.raster.mode === 'grayscale';
+      if (object.type === 'image') return object.opacity!==0&&(object.raster.mode === 'grayscale'||partial(object.opacity));
       if (object.type === 'text') {
         const guide=object.textPath?.showGuide&&!object.textPath.originalPathMetadata?.editor?.reference?object.textPath.guide:null;
         if(guide&&guide.stroke!=='none'&&guide.strokeMm>0&&partial(guide.strokeOpacity))return true;

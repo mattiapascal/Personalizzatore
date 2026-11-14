@@ -132,7 +132,7 @@ function renderObject(o: SceneObject, editable = false): FabricObject {
   } else if (o.type === 'image') {
     assertRasterParameters(o.source,o.raster);
     const crop=checkedRasterCrop(o.source,o.crop),original=o.raster.mode==='original',bitmap=original?originalRasterImage(o.source):rasterCanvas(o.source,o.raster),width=crop.widthPx,height=crop.heightPx;
-    const image = new FabricImage(bitmap, {width,height,cropX:crop.leftPx,cropY:crop.topPx, ...common, strokeWidth: 0, perPixelTargetFind: true, flipX: !!o.flipX !== !!o.mirrorX, flipY: !!o.flipY !== !!o.mirrorY, scaleX: o.widthMm * PX_PER_MM / width, scaleY: o.heightMm * PX_PER_MM / height });
+    const image = new FabricImage(bitmap, {opacity:o.opacity??1,width,height,cropX:crop.leftPx,cropY:crop.topPx, ...common, strokeWidth: 0, perPixelTargetFind: true, flipX: !!o.flipX !== !!o.mirrorX, flipY: !!o.flipY !== !!o.mirrorY, scaleX: o.widthMm * PX_PER_MM / width, scaleY: o.heightMm * PX_PER_MM / height });
     if(o.raster.mode==='original')originalRasterSvg(image,o.source,o.crop);object=image;
   } else {
     const strokeWidth = o.stroke === 'none' ? 0 : o.strokeMm * PX_PER_MM;

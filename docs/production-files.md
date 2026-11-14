@@ -1,3 +1,5 @@
+**14 novembre — trasparenza immagini:** [JSON](../fixtures/illustrator/image-opacity.TEST.json) e [SVG](../fixtures/illustrator/image-opacity.TEST.svg), 120×65 mm con Arimo OFL, originale condiviso, filtri, alpha dei pixel e opacità oggetto 50%/40%, crop frazionari e trasformazioni. [Controlli, file originali e confronti](iteration-editor-image-opacity.md). **Illustrator non collaudato.**
+
 **14 novembre — dettagli sui grandi formati:** [JSON](../fixtures/illustrator/viewport.TEST.json) e [SVG](../fixtures/illustrator/viewport.TEST.svg), 3000×2000 mm con rettangolo 20×10 mm, testo Arimo OFL di 8 pt e linea. [Vista al 400%, budget bitmap e verifiche](iteration-editor-viewport.md): lo zoom non modifica le misure fisiche o i contenuti esportati. **Illustrator non collaudato.**
 
 **14 novembre — contorni dei tracciati:** [JSON](../fixtures/illustrator/path-stroke.TEST.json) e [SVG](../fixtures/illustrator/path-stroke.TEST.svg), 140×100 mm con polilinea, Bézier, vettore e rettangolo. [Giunzioni, estremità, cornice e confronti indipendenti](iteration-editor-path-stroke.md). **Illustrator non collaudato.**

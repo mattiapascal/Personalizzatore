@@ -3212,6 +3212,11 @@
                           "type": "string",
                           "const": "image"
                         },
+                        "opacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
                         "xMm": {
                           "type": "number",
                           "minimum": -10000,
@@ -7468,6 +7473,11 @@
                               "type": {
                                 "type": "string",
                                 "const": "image"
+                              },
+                              "opacity": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
                               },
                               "xMm": {
                                 "type": "number",

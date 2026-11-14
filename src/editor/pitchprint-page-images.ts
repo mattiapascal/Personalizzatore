@@ -1,3 +1,4 @@
+import {rasterPitchprintOpacity} from './pitchprint-opacity';
 import{clippedPitchprintImageGeometry}from'./pitchprint-image-clip';
 import{pngSourceWarnings}from'./png-source';
 import type{ObjectProperties}from'./object-properties';
@@ -30,7 +31,8 @@ export function pageImageGeometry(native:RecordData,source:RasterSource,preview:
  checkedPitchprintEffects(native,'Immagine di pagina');if(native.type!=='image')throw Error('Sfondo/primo piano non rappresentato da un’immagine.');if(native.resizeFilter||native.filters!=null&&(!Array.isArray(native.filters)||native.filters.length))throw Error('Filtri dello sfondo/primo piano da convertire.');if(number(native.strokeWidth??0,'Contorno')!==0&&canonicalPaint(native.stroke)!=='none')throw Error('Contorno dello sfondo/primo piano da convertire.');
  const matrix=multiplyPitchprintMatrices(pageMatrix,pitchprintTransform(native,'Immagine di pagina')),axisX=Math.hypot(matrix[0],matrix[1]),axisY=Math.hypot(matrix[2],matrix[3]);if(Math.abs(matrix[0]*matrix[2]+matrix[1]*matrix[3])>1e-7*axisX*axisY)throw Error('Immagine di pagina inclinata: conversione esatta non disponibile.');
  const w=number(native.width,'Larghezza'),h=number(native.height,'Altezza'),ratioX=source.pixelWidth/preview.pixelWidth,ratioY=source.pixelHeight/preview.pixelHeight,crop=checkedRasterCrop(source,{leftPx:number(native.cropX??0,'Ritaglio X')*ratioX,topPx:number(native.cropY??0,'Ritaglio Y')*ratioY,widthPx:Math.min(w,preview.pixelWidth)*ratioX,heightPx:Math.min(h,preview.pixelHeight)*ratioY}),widthMm=w*axisX,heightMm=h*axisY;
- return{...clippedPitchprintImageGeometry(native,source,{widthMm,heightMm,crop,pixelAspectRatio:widthMm*crop.heightPx/(heightMm*crop.widthPx)},matrix),rotationDeg:Math.atan2(matrix[1],matrix[0])*180/Math.PI,flipY:matrix[0]*matrix[3]-matrix[1]*matrix[2]<0};
+ const opacity=rasterPitchprintOpacity(native);if(opacity===null)throw Error('Opacità immagine di pagina non valida.');
+ return{...(opacity===1?{}:{opacity}),...clippedPitchprintImageGeometry(native,source,{widthMm,heightMm,crop,pixelAspectRatio:widthMm*crop.heightPx/(heightMm*crop.widthPx)},matrix),rotationDeg:Math.atan2(matrix[1],matrix[0])*180/Math.PI,flipY:matrix[0]*matrix[3]-matrix[1]*matrix[2]<0};
 }
 export async function convertPageImage(input:PageImageInput,policy:PageImagePolicy,area:{width:number;height:number},pageMatrix:PitchprintMatrix,monochrome:boolean,read:(url:string)=>Promise<Uint8Array>,properties?:ObjectProperties,warnings?:string[]):Promise<Extract<SceneObject,{type:'image'}>|null>{
  const label=input.role==='background'?'Sfondo':'Primo piano';if(!['review','print','reference','exclude'].includes(policy))throw Error('Utilizzo dell’immagine di pagina non riconosciuto.');if(policy==='review')throw Error(`${label}: scegli se è grafica da stampare, riferimento del materiale oppure da escludere.`);if(policy==='exclude')return null;

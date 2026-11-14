@@ -1,3 +1,4 @@
+import {ImageOpacityControl} from './ImageOpacityControl';
 import {StrokeJoinControl} from './StrokeJoinControl';
 import {hasEditableStrokeJoin,effectiveStrokeJoin,effectiveMiterLimit} from './path-stroke';
 import {StrokeCapControl} from './StrokeCapControl';
@@ -13,6 +14,7 @@ import { selectionStyle } from './text-style';
 export function SelectionStyleInspector({ document, ids, onStyle }: { document: GraphicDocument; ids: string[]; onStyle: (style: SelectionStyle, revision: number) => boolean }) {
   const objects = document.objects.filter(object => ids.includes(object.id)),documentColors=useMemo(()=>documentPaintColors(document),[document]);
   const hasImage = objects.some(object => object.type === 'image'), hasText = objects.some(object => object.type === 'text');
+  const canImageOpacity=objects.length>0&&objects.every(object=>object.type==='image');
   const canFill = !hasImage && objects.every(object => object.type !== 'line' && (object.type !== 'path' && object.type !== 'bezier' || object.closed)), canStroke = !hasImage;
   const common = <T,>(values: T[]): T | null => values.every(value => value === values[0]) ? values[0]! : null;
   const fill = common(objects.map(object => {
@@ -40,7 +42,7 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
   };
   useEffect(() => { cancel(); if (document.revision !== ownRevision.current) setStatus(''); }, [document.revision, ids.join(',')]);
   useEffect(() => cancel, []);
-  if (!canFill && !canStroke) return <p className="caption">Riempimento e contorno comuni richiedono elementi compatibili. Seleziona separatamente testi, forme o immagini per modificarne lo stile.</p>;
+  if (!canFill && !canStroke && !canImageOpacity) return <p className="caption">Riempimento e contorno comuni richiedono elementi compatibili. Seleziona separatamente testi, forme o immagini per modificarne lo stile.</p>;
   return <div className="selection-style" onBlur={flush} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); cancel(); setStatus('Stile ripristinato'); } }}>
     <h3>Stile comune</h3>
     {canFill && <><h4>Riempimento</h4><PaintPicker colors={documentColors} allowColor={document.colorMode==='color'} label="Riempimento selezione" value={fill ?? 'mixed'} allowNone={!hasText} onChange={fill => change({ fill })}/>{(fill === null || fill === 'mixed') && <p className="caption">Riempimenti misti</p>}</>}
@@ -52,15 +54,16 @@ export function SelectionStyleInspector({ document, ids, onStyle }: { document: 
     </>}
     {objects.length>0&&objects.every(hasEditableStrokeCap)&&<StrokeCapControl value={common(objects.map(effectiveStrokeCap))} dotted={objects.some(object=>object.strokeDash==='dotted')} disabled={stroke==='none'} onChange={strokeLineCap=>change({strokeLineCap})}/>}
     {objects.length>0&&objects.every(hasEditableStrokeJoin)&&<StrokeJoinControl value={common(objects.map(effectiveStrokeJoin))} limit={common(objects.map(effectiveMiterLimit))} revision={document.revision} disabled={stroke==='none'} onChange={strokeLineJoin=>change({strokeLineJoin})} onLimit={strokeMiterLimit=>change({strokeMiterLimit},false)}/>}
-    <OpacityControls canFill={canFill} canStroke={canStroke} linked={linked} onLinkedChange={setLinked} revision={document.revision} selection
+    {canImageOpacity&&<ImageOpacityControl selection opacity={common(objects.map(object=>object.type==='image'?object.opacity??1:1))} revision={document.revision} onChange={(opacity,immediate)=>change({opacity},immediate)}/>}
+    {(canFill||canStroke)&&<OpacityControls canFill={canFill} canStroke={canStroke} linked={linked} onLinkedChange={setLinked} revision={document.revision} selection
       fill={common(objects.map(object => {
         if (object.type === 'image') return 1;
         if (object.type !== 'text') return object.fillOpacity ?? 1;
         const scope = selectionStyle(object,0,Array.from(object.text).length);
         return scope.mixed.includes('fillOpacity') ? null : scope.style.fillOpacity ?? object.fillOpacity ?? 1;
       }))}
-      stroke={common(strokes.map(object => {const value=scope(object);return value?.mixed.includes('strokeOpacity')?null:value?.style.strokeOpacity??object.strokeOpacity??1;}))} onChange={style => change(style)}/>
-    <p className="caption">Stesso stile per tutti gli elementi selezionati. Sui testi il colore riguarda tutti i caratteri; i centri delle forme restano fermi.</p>
+      stroke={common(strokes.map(object => {const value=scope(object);return value?.mixed.includes('strokeOpacity')?null:value?.style.strokeOpacity??object.strokeOpacity??1;}))} onChange={style => change(style)}/>}
+    <p className="caption">{canImageOpacity?'La trasparenza si applica a ciascuna immagine, anche nelle sovrapposizioni.':'Stesso stile per tutti gli elementi selezionati. Sui testi il colore riguarda tutti i caratteri; i centri delle forme restano fermi.'}</p>
     {status && <p className="caption" role="status">{status}</p>}
   </div>;
 }

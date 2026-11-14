@@ -19,7 +19,7 @@ describe('immagini originali nel documento comune', () => {
   it('impedisce sorgenti cambiate e deformazione, conservando scena e redo', () => {
     const doc = createDocument(); doc.objects = [image()]; const store = new DocumentStore(doc, measure);
     store.dispatch(command(0, 'moveObject', { xMm: 12, yMm: 5 }), 'manual'); store.undo(); const before = cloneGraphicDocument(store.document), object = image();
-    for (const changed of [{ ...object, source: { ...object.source, id: 'other-source' } }, { ...object, widthMm: 10 }, { ...object, raster: { ...object.raster, threshold: 1.5 } }, { ...object, opacity: 0.5 }]) {
+    for (const changed of [{ ...object, source: { ...object.source, id: 'other-source' } }, { ...object, widthMm: 10 }, { ...object, raster: { ...object.raster, threshold: 1.5 } }, { ...object, opacity: 1.5 }]) {
       expect(() => store.dispatch(command(before.revision, 'updateObject', { object: changed }), 'ai-simulation')).toThrow(); expect(store.document).toEqual(before);
     }
     store.redo(); expect(store.document.objects[0]!.xMm).toBe(12);
