@@ -347,6 +347,25 @@ export class FabricAdapter {
   private document: GraphicDocument | null = null;
   private dragging = false;
   private cancelled = false;
+  private beforeInteraction?:()=>boolean;
+  private onInteractionRetarget?:()=>void;
+  setInteractionGuard(before:()=>boolean,onRetarget:()=>void):void{this.beforeInteraction=before;this.onInteractionRetarget=onRetarget;}
+  private interactionTarget(event:TPointerEvent):string{
+    this.canvas.calcOffset();
+    if(this.canvas.skipTargetFind)return 'drawing';
+    if(event.altKey)return JSON.stringify({direct:this.directHit(event)});
+    const active=this.canvas.getActiveObject(),control=active?.findControl(this.canvas.getViewportPoint(event),event.type==='touchstart');
+    const {target}=this.canvas.findTarget(event);
+    return JSON.stringify({ids:target?[...this.objectIds(target)].sort():[],control:control?.key??null});
+  }
+  private guardInteraction=(event:MouseEvent|TouchEvent)=>{
+    const active=this.canvas.getActiveObject();
+    if(!this.beforeInteraction||this.disposed||!this.document||this.dragging||this.nodeDragging||active instanceof IText&&active.isEditing||'button'in event&&event.button!==0||'touches'in event&&event.touches.length!==1)return;
+    const document=this.document,target=this.interactionTarget(event);
+    let ready=this.beforeInteraction();
+    if(ready&&this.document!==document&&target!==this.interactionTarget(event)){ready=false;this.onInteractionRetarget?.();}
+    if(!ready){event.preventDefault();event.stopImmediatePropagation();}
+  };
   private guides: GuideSettings = { ...DEFAULT_GUIDES };
   private activeGuides: Pick<SnapResult, 'guideXmm' | 'guideYmm'> = {};
   private guideMeasurements = new WeakMap<SceneObject, ReturnType<Measure>>();
@@ -381,7 +400,7 @@ export class FabricAdapter {
   }
   private directObjectId:string|null=null;
   private onDirectSelection?: (id:string|null)=>void;
-  private directHit(event:MouseEvent):string|null{
+  private directHit(event:TPointerEvent):string|null{
     const groups=this.canvas.getObjects().filter((object):object is Group=>object instanceof Group),saved=groups.map(group=>({group,subTargetCheck:group.subTargetCheck,interactive:group.interactive,evented:group.evented}));
     try{
       for(const group of groups){group.set({subTargetCheck:true,interactive:true,evented:true});group.setCoords();}
@@ -448,6 +467,8 @@ export class FabricAdapter {
   }
   constructor(element: HTMLCanvasElement, revision: () => number, onMove: (id: string, xMm: number, yMm: number, expectedRevision: number) => void, onText?: (id: string, object: TextObject, expectedRevision: number) => void, onEditing?: (editing: boolean) => void, onSelect?: (id: string | null) => void, onTransform?: (id: string, args: TransformArguments, expectedRevision: number) => void, onDeleteDrag?: (id: string, expectedRevision: number) => void, onTrash?: (visible: boolean) => void, onCharacterSelection?: (selection: CharacterSelection | null) => void, onSelection?: (ids: string[]) => void, onMoveSelection?: (ids: string[], deltaXmm: number, deltaYmm: number, revision: number) => void, onDeleteSelection?: (ids: string[], revision: number) => void, onTransformSelection?: (ids: string[], args: Omit<SelectionTransformArguments, 'objectIds'>, revision: number) => void, onDirectSelection?:(id:string|null)=>void) {
     this.canvas = new WindowCanvas(element, { stopContextMenu:false,selection: true, selectionFullyContained: true, selectionKey: 'shiftKey', preserveObjectStacking: true, backgroundColor: '#ffffff', selectionColor: '#0088cc22', selectionBorderColor: '#0088cc', enableRetinaScaling: true, uniformScaling: true, centeredScaling: false, centeredRotation: true, centeredKey: null });
+    this.canvas.wrapperEl.addEventListener('mousedown',this.guardInteraction,true);
+    this.canvas.wrapperEl.addEventListener('touchstart',this.guardInteraction,{capture:true,passive:false});
     this.observeViewport();
     this.externalControls=new ExternalCanvasControls(this.canvas);
     this.geometryPointMarker=new GeometryPointMarker(this.canvas.wrapperEl);
@@ -932,5 +953,5 @@ export class FabricAdapter {
     const active = this.canvas.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
   }
-  dispose(): void { this.disposed = true;this.viewportCleanup?.();this.canvas.upperCanvasEl.removeEventListener('mousedown',this.directMouseDown,true);this.externalControls.dispose();this.geometryPointMarker.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
+  dispose(): void { this.disposed = true;this.viewportCleanup?.();this.canvas.wrapperEl.removeEventListener('mousedown',this.guardInteraction,true);this.canvas.wrapperEl.removeEventListener('touchstart',this.guardInteraction,true);this.canvas.upperCanvasEl.removeEventListener('mousedown',this.directMouseDown,true);this.externalControls.dispose();this.geometryPointMarker.dispose(); this.unsubscribeFontCoverage?.(); this.textRenderGuard?.dispose(); this.nodeControls.restore(); this.bezierControls.restore(); this.cropControls.restore(); this.textPathControls.restore(); this.primitiveDrawing?.dispose(); this.freehandDrawing?.dispose(); this.polylineDrawing?.dispose(); this.bezierDrawing?.dispose(); window.removeEventListener('keydown', this.cancelDrag, true); void this.canvas.dispose(); }
 }

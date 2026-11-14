@@ -7,10 +7,11 @@ import {expandSelection,canReorderSelection} from './selection';
 import {EditorButton,EditorIcon} from './EditorButton';
 import {ObjectIdentity,objectTypeLabel} from './ObjectIdentity';
 import {rootGroupFor} from './scene-groups';
-interface Drag{ids:string[];revision:number;documentId:string;memberId?:string;}
+interface Drag{ids:string[];revision:number;documentId:string;pageId:string;memberId?:string;}
 interface Drop{kind:'row'|'group'|'root';id:string;side:'above'|'below';parentGroupId?:string|null;}
-export function LayersPanel({customer=false,document:doc,selectedIds,directObjectId,onSelectObject,disabled,multiple,onSelect,onPlace,onPlaceMember,onReorder,onVisibility,actions}:{
+export function LayersPanel({customer=false,document:doc,selectedIds,directObjectId,onSelectObject,disabled,multiple,onSelect,onPlace,onPlaceMember,onReorder,onVisibility,onBeginDrag,actions}:{
  customer?:boolean;document:GraphicDocument;selectedIds:string[];directObjectId?:string|null;disabled:boolean;multiple:boolean;actions:ReactNode;
+ onBeginDrag?:()=>GraphicDocument|null;
  onSelect:(id:string,additive:boolean)=>void;onSelectObject?:(id:string)=>void;
  onPlace:(ids:string[],target:string,side:'above'|'below',revision:number)=>void;
  onPlaceMember?:(id:string,parentGroupId:string|null,targetObjectId:string|undefined,side:'above'|'below',revision:number)=>void;
@@ -21,8 +22,8 @@ export function LayersPanel({customer=false,document:doc,selectedIds,directObjec
  const [hover,setHover]=useState<Drop|null>(null),[dragging,setDragging]=useState(false),[memberDrag,setMemberDrag]=useState(false);
  const clear=()=>{drag.current=null;pointer.current=null;destination.current=null;setHover(null);setDragging(false);setMemberDrag(false);};
  useEffect(()=>{const key=(event:KeyboardEvent)=>{if(event.key==='Escape'&&drag.current){event.preventDefault();event.stopImmediatePropagation();clear();}};window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true);},[]);
- useEffect(()=>{if(disabled||drag.current?.documentId!==doc.documentId)clear();},[disabled,doc.documentId]);
- const begin=(ids:string[],memberId?:string)=>{if(disabled)return false;drag.current={ids,memberId,revision:doc.revision,documentId:doc.documentId};setDragging(true);setMemberDrag(!!memberId);return true;};
+ useEffect(()=>{if(disabled||drag.current&&(drag.current.documentId!==doc.documentId||drag.current.pageId!==(doc.pageId??'page-1')))clear();},[disabled,doc.documentId,doc.pageId]);
+ const begin=(ids:string[],memberId?:string)=>{if(disabled)return false;const current=onBeginDrag?onBeginDrag():doc;if(!current||current.documentId!==doc.documentId||(current.pageId??'page-1')!==(doc.pageId??'page-1')||ids.some(id=>!current.objects.some(object=>object.id===id)))return false;drag.current={ids,memberId,revision:current.revision,documentId:current.documentId,pageId:current.pageId??'page-1'};setDragging(true);setMemberDrag(!!memberId);return true;};
  const beginObject=(object:SceneObject)=>{
   if(customer&&effectiveObjectProperties(doc,object.id).selectionLocked)return false;
   const member=!!onPlaceMember&&(!!innermostGroup(doc,object.id)||!selectedIds.includes(object.id)||selectedIds.length===1);
@@ -37,7 +38,7 @@ export function LayersPanel({customer=false,document:doc,selectedIds,directObjec
   else if(source.memberId&&node.dataset.layerRootDrop)drop={kind:'root',id:node.dataset.layerRootDrop,side:node.dataset.layerRootDrop==='top'?'above':'below',parentGroupId:null};
   destination.current=drop;setHover(drop);
  };
- const commit=()=>{const source=drag.current,target=destination.current;clear();if(!source||!target||disabled||source.documentId!==doc.documentId)return;if(source.memberId&&onPlaceMember)onPlaceMember(source.memberId,target.parentGroupId??null,target.kind==='row'?target.id:undefined,target.side,source.revision);else if(target.kind==='row')onPlace(source.ids,target.id,target.side,source.revision);};
+ const commit=()=>{const source=drag.current,target=destination.current;clear();if(!source||!target||disabled||source.documentId!==doc.documentId||source.pageId!==(doc.pageId??'page-1'))return;if(source.memberId&&onPlaceMember)onPlaceMember(source.memberId,target.parentGroupId??null,target.kind==='row'?target.id:undefined,target.side,source.revision);else if(target.kind==='row')onPlace(source.ids,target.id,target.side,source.revision);};
  const gripEvents=(start:()=>boolean)=>({
   onPointerDown:(event:PointerEvent<HTMLButtonElement>)=>{if(disabled||event.button!==0)return;event.preventDefault();if(!start())return;pointer.current={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false};event.currentTarget.setPointerCapture(event.pointerId);},
   onPointerMove:(event:PointerEvent<HTMLButtonElement>)=>{const active=pointer.current;if(!active||event.pointerId!==active.id)return;active.moved||=Math.hypot(event.clientX-active.x,event.clientY-active.y)>4;if(!active.moved)return;const bounds=list.current!.getBoundingClientRect();if(event.clientY<bounds.top+25)list.current!.scrollTop-=12;else if(event.clientY>bounds.bottom-25)list.current!.scrollTop+=12;locate(document.elementFromPoint(event.clientX,event.clientY)as HTMLElement|null,event.clientY);},

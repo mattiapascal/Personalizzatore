@@ -1,0 +1,10 @@
+# Input dell’ispettore e inizio dei gesti — 14 novembre 2026
+
+Dopo `4cb0331`, controllare trascinamenti sul canvas e nei livelli. Nessun nuovo strumento avanzato: consolidare i gesti già presenti, gli stessi comandi manuali/AI e la cronologia.
+
+- Riprodurre prima trascinamento di un oggetto e riordino di un livello con una misura incompleta nell’ispettore. I valori non devono sparire a seguito del gesto.
+- Livelli: controllo prima di iniziare, snapshot aggiornato di documento/pagina/revisione. Il rilascio conserva quella revisione; cambi concorrenti non autorizzano un aggiornamento automatico del comando. Conservare drag di membri, gruppi interi, elementi non selezionati, touch, annullamento e ruoli.
+- Canvas: controllo nativo prima dei listener Fabric, anche sulle maniglie esterne. Il renderer viene aggiornato prima di acquisire la revisione del gesto. Se cambiano bersaglio o tipo di maniglia sotto il puntatore, applicare le misure valide ma fermare quel gesto, invitando a riprenderlo dalla posizione aggiornata. Non trasformare implicitamente un resize in uno spostamento o selezionare un altro oggetto.
+- Diagnosi nel confronto fisico: le dimensioni CSS frazionarie del piccolo canvas subiscono la quantizzazione della bitmap anche nella conversione del puntatore. Compensare la quantizzazione prima della camera, come per il canvas a finestra; prove indipendenti con DPR 1/2/3, senza cambiare le quote del documento o il renderer degli output.
+- Conservare scrittura/cursore del testo, PAN e click destro. Per il disegno, controllo sul primo punto; una misura applicata non deve disattivare lo strumento appena scelto. Nessun controllo ricorsivo al rilascio e nessuna riscrittura di revisioni AI.
+- Prove mouse/touch, input validi prima del timer e invalidi, cambi durante l’attesa, maniglie, Undo/Redo, confronti con comandi AI, JSON/SVG e regressioni. API simulate o SQLite temporaneo; archivio principale in sola lettura. Nessun deploy, nuova funzione multipagina, AI immagini o intervento commerciale; commit/push dopo verifica.

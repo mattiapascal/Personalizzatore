@@ -27,7 +27,8 @@ export class WindowCanvas extends Canvas{
   if(this.targetSurfaceReady&&previous!==this.backingDensity)this.setTargetFindTolerance(this.targetFindTolerance??0);
  }
  protected override _getPointerImpl(event:TPointerEvent,fromViewport=false){
-  if(!this.windowPaper)return super._getPointerImpl(event,fromViewport);
+  // The bitmap is floored to integer pixels even on small paper. Compensate
+  // that rounding before applying the camera, regardless of viewport mode.
   const point=super._getPointerImpl(event,true),retina=this.getRetinaScaling(),element=this.upperCanvasEl;
   point.x*=this.width*retina/Math.max(1,element.width);point.y*=this.height*retina/Math.max(1,element.height);
   return fromViewport?point:point.transform(util.invertTransform(this.viewportTransform));
