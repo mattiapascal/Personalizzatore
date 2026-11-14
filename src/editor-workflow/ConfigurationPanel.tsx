@@ -15,6 +15,10 @@ import type { CartSummary, ConfigurationCommand, FrozenConfiguration } from './s
 export interface WorkflowEditorApi {
   document: GraphicDocument; busy: boolean; busyReason?: string;
   peek: () => GraphicDocument;
+  /** Apply pending manual inputs before creating a proposal. */
+  prepare: () => GraphicDocument | null;
+  /** Check a captured proposal without rebasing its revision. */
+  validate: (snapshot: GraphicDocument) => boolean;
   capture: () => Promise<{ document: GraphicDocument; svg: string }>;
   open: (document: GraphicDocument) => Promise<boolean>;
 }
@@ -78,16 +82,17 @@ export function ConfigurationPanel({ api }: { api: WorkflowEditorApi }) {
   }, []);
   const startReview = async () => {
     setNotice('');
-    const catalog={version:fixtureCatalog.version,products:fixtureCatalog.list()};assertDocumentTextProduction(api.peek(),catalog,true);
-    const captured = await api.capture();validateObjectInputs(captured.document);const report = await assertDocumentFonts(captured.document);
+    const catalog={version:fixtureCatalog.version,products:fixtureCatalog.list()};
+    const captured = await api.capture();assertDocumentTextProduction(captured.document,catalog,true);validateObjectInputs(captured.document);const report = await assertDocumentFonts(captured.document);
     await assertDocumentProduction(captured.document,catalog,browserBinaryRasterCheck,true);
+    if(!api.validate(captured.document))throw Error('La grafica è cambiata. Controlla nuovamente l’anteprima.');
     setReview(captured); setFontReport(report);
     setTitle(captured.document.objects.filter(o => o.type === 'text').map(o => o.text.replace(/\s+/g, ' ')).join(' · ').trim().slice(0,120) || 'Composizione grafica');
     setView('review');
   };
   const confirm = async () => {
-    if (!review) return; const current = api.peek();
-    if (current.documentId !== review.document.documentId || current.revision !== review.document.revision) throw new Error('La grafica è cambiata. Torna nell’editor e controlla nuovamente l’anteprima.');
+    if (!review) return;
+    if (!api.validate(review.document)) throw new Error('La grafica è cambiata. Torna nell’editor e controlla nuovamente l’anteprima.');
     const key = JSON.stringify([review.document.documentId, review.document.revision, title, quantity, target?.id, target?.configurationId, target?.version]);
     if (!pending.current || pending.current.key !== key) {
       const args = { ...review, title, options: { inkColor: review.document.inkColor??'black' as const } };

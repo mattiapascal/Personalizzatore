@@ -1,3 +1,7 @@
+[Stato generale del progetto al 14 novembre](stato-progetto-2026-11-14.md): editor, amministrazione, chat/Fabric e associazioni commerciali, distinti dai checkpoint storici.
+
+**14 novembre — acquisizioni, modello e profilo:** [Correzioni e collaudi](iteration-editor-workflow-commit.md). Anteprime e profili acquisiscono gli input validi prima dell’attesa, senza aggiornare revisioni catturate alla conferma. Modulo pendente protetto, concorrenze e bozza deduplicata conservate. **1.399 unitari, 143 browser pertinenti distinti fra esecuzioni/ricontrolli, 13 pubblici e 95 campioni verificati**. SQLite R638 invariato, nessun deploy.
+
 **14 novembre — foglio, proprietà e modulo:** [Correzioni e collaudi](iteration-editor-canvas-actions.md). Azioni immediate e cambio scheda rispettano l’ispettore; testo non applicato conservato nel modulo e Conferma cliente ancora bloccata. Popup ancorati sotto tutta la barra, anche su più righe. **1.399 unitari, 208 browser pertinenti distinti fra esecuzioni/ricontrolli, 13 pubblici e 94 campioni verificati**. SQLite R638 invariato, nessun deploy.
 
 **14 novembre — inserimento di oggetti e risorse:** [Correzioni e collaudi](iteration-editor-insertion-commit.md). Creazione/import verificano gli input dell’ispettore, dialoghi e file conservano destinazione/opzioni; nessun inserimento su revisioni cambiate durante l’attesa. Comandi manuali/AI e Undo separati. **1.399 unitari, 166 browser pertinenti, 13 pubblici e 93 campioni passati**. SQLite R638 invariato, nessun deploy.
